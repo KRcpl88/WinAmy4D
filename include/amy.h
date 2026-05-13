@@ -1,0 +1,86 @@
+/*
+
+    Amy - a chess playing program
+
+    Copyright (c) 2002-2026, Thorsten Greiner
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+   ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
+/*
+ * amy.h - Amy headerfile
+ */
+
+#pragma once
+
+#ifndef AMY_H
+#define AMY_H
+
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+
+// allow use of unsafe function fopen, strerror, etc.
+// BUGBUG replace fopen with fopen_s and strerror w/ strerror_s
+#define  _CRT_SECURE_NO_WARNINGS
+
+#define VERSION "0.1"
+#define MAX_TREE_SIZE 16
+
+// infinty
+#define INF 4000
+
+#define CMLIMIT 100
+#define MAX_EPD_MOVES 256
+#define MAX_EPD_OPS 15
+#define MAX_EPD_STRING 1024
+#define MAX_EPD_LINE 1024
+#define MAX_EPD_MOVES 256
+
+// used in tbindex.cpp
+//#define T41_INCLUDE 
+
+#ifdef _WIN32
+/*
+ * Windows stuff by Dann Corbit.
+ */
+
+#define CDECL __cdecl
+#define STDC_HEADERS 1
+#define HAVE_FCNTL_H 1
+
+#include <conio.h>
+#include <io.h>
+#include <windows.h>
+#define PATH_SEPARATOR "\\"
+
+
+
+#else
+
+#define CDECL
+#define PATH_SEPARATOR "/"
+
+#endif /* _WIN32 */
+
+#endif /* AMY_H */
