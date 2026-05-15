@@ -2,8 +2,10 @@
 
 #include "CppUnitTest.h"
 
-extern "C" {
+// Include bitboard.h first (outside extern "C") so CBitboard class gets C++ linkage
 #include "bitboard.h"
+
+extern "C" {
 #include "dbase.h"
 #include "hashtable.h"
 #include "init.h"

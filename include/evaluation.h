@@ -36,8 +36,8 @@
 #include "types.h"
 
 struct PawnFacts {
-    BitBoard pf_WhitePassers;
-    BitBoard pf_BlackPassers;
+    BitBoardBits pf_WhitePassers;
+    BitBoardBits pf_BlackPassers;
     int pf_Flags;
     char pf_WhiteKingSide;
     char pf_BlackKingSide;

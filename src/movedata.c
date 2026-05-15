@@ -41,7 +41,7 @@ signed char NextSQ[64][64];
 
 static int QueenDirs[] = {16, 1, -16, -1, 15, 17, -15, -17};
 
-const BitBoard KnightEPM[64] = {
+const BitBoardBits KnightEPM[64] = {
     0x20400ULL,
     0x50800ULL,
     0xa1100ULL,
@@ -108,7 +108,7 @@ const BitBoard KnightEPM[64] = {
     0x20400000000000ULL,
 };
 
-const BitBoard KingEPM[64] = {
+const BitBoardBits KingEPM[64] = {
     0x302ULL,
     0x705ULL,
     0xe0aULL,
@@ -175,7 +175,7 @@ const BitBoard KingEPM[64] = {
     0x40c0000000000000ULL,
 };
 
-const BitBoard PawnEPM[2][64] = {{0x200ULL,
+const BitBoardBits PawnEPM[2][64] = {{0x200ULL,
                                   0x500ULL,
                                   0xa00ULL,
                                   0x1400ULL,

@@ -315,29 +315,29 @@ static int RootGamePhase;
  * Masks used in EvaluatePawns.
  */
 
-static const BitBoard FianchettoMaskWhiteKingSide =
+static const BitBoardBits FianchettoMaskWhiteKingSide =
     SetMask(f2) | SetMask(g3) | SetMask(h2);
-static const BitBoard FianchettoMaskBlackKingSide =
+static const BitBoardBits FianchettoMaskBlackKingSide =
     SetMask(f7) | SetMask(g6) | SetMask(h7);
-static const BitBoard FianchettoMaskWhiteQueenSide =
+static const BitBoardBits FianchettoMaskWhiteQueenSide =
     SetMask(c2) | SetMask(b3) | SetMask(a2);
-static const BitBoard FianchettoMaskBlackQueenSide =
+static const BitBoardBits FianchettoMaskBlackQueenSide =
     SetMask(c7) | SetMask(b6) | SetMask(a7);
 
 /**
  * Masks used in EvaluateDevelopment.
  */
-static const BitBoard WKingOpeningMask = SetMask(e1) | SetMask(d1);
-static const BitBoard BKingOpeningMask = SetMask(e8) | SetMask(d8);
+static const BitBoardBits WKingOpeningMask = SetMask(e1) | SetMask(d1);
+static const BitBoardBits BKingOpeningMask = SetMask(e8) | SetMask(d8);
 
-static const BitBoard WKingTrapsRook1 = SetMask(f1) | SetMask(g1);
-static const BitBoard WRookTrapped1 = SetMask(g1) | SetMask(h1) | SetMask(h2);
-static const BitBoard WKingTrapsRook2 = SetMask(c1) | SetMask(b1);
-static const BitBoard WRookTrapped2 = SetMask(b1) | SetMask(a1) | SetMask(a2);
-static const BitBoard BKingTrapsRook1 = SetMask(f8) | SetMask(g8);
-static const BitBoard BRookTrapped1 = SetMask(g8) | SetMask(h8) | SetMask(h7);
-static const BitBoard BKingTrapsRook2 = SetMask(c8) | SetMask(b8);
-static const BitBoard BRookTrapped2 = SetMask(b8) | SetMask(a8) | SetMask(a7);
+static const BitBoardBits WKingTrapsRook1 = SetMask(f1) | SetMask(g1);
+static const BitBoardBits WRookTrapped1 = SetMask(g1) | SetMask(h1) | SetMask(h2);
+static const BitBoardBits WKingTrapsRook2 = SetMask(c1) | SetMask(b1);
+static const BitBoardBits WRookTrapped2 = SetMask(b1) | SetMask(a1) | SetMask(a2);
+static const BitBoardBits BKingTrapsRook1 = SetMask(f8) | SetMask(g8);
+static const BitBoardBits BRookTrapped1 = SetMask(g8) | SetMask(h8) | SetMask(h7);
+static const BitBoardBits BKingTrapsRook2 = SetMask(c8) | SetMask(b8);
+static const BitBoardBits BRookTrapped2 = SetMask(b8) | SetMask(a8) | SetMask(a7);
 
 static void create_mirrored_piece_square_table(int16_t *, int16_t *);
 static bool is_edge(unsigned int);
@@ -355,7 +355,7 @@ static bool is_edge(unsigned int);
 
 static int EvaluatePawns(const struct Position *p,
                          struct PawnFacts *pawnFacts) {
-    BitBoard pcs = 0;
+    BitBoardBits pcs = 0;
     int score = 0;
     int file = 0;
     int tmp_w, tmp_b;
@@ -711,12 +711,12 @@ static int EvaluatePassedPawns(const struct Position *p, int wphase, int bphase,
     int wdistant = 0;
     int bdistant = 0;
 
-    BitBoard pcs;
-    BitBoard tmp;
-    BitBoard allpawns = p->mask[White][Pawn] | p->mask[Black][Pawn];
+    BitBoardBits pcs;
+    BitBoardBits tmp;
+    BitBoardBits allpawns = p->mask[White][Pawn] | p->mask[Black][Pawn];
 
-    BitBoard wrunner = 0;
-    BitBoard brunner = 0;
+    BitBoardBits wrunner = 0;
+    BitBoardBits brunner = 0;
 
     pcs = pawnFacts->pf_WhitePassers;
 
@@ -765,7 +765,7 @@ static int EvaluatePassedPawns(const struct Position *p, int wphase, int bphase,
 
         if (ConnectedMask[sq] & pawnFacts->pf_WhitePassers) {
             int max_rank = rank;
-            BitBoard tmp2 = ConnectedMask[sq] & pawnFacts->pf_WhitePassers;
+            BitBoardBits tmp2 = ConnectedMask[sq] & pawnFacts->pf_WhitePassers;
             while (tmp2) {
                 int sq2 = FindSetBit(tmp2);
                 tmp2 &= tmp2 - 1;
@@ -891,7 +891,7 @@ static int EvaluatePassedPawns(const struct Position *p, int wphase, int bphase,
 
         if (ConnectedMask[sq] & pawnFacts->pf_BlackPassers) {
             int max_rank = rank;
-            BitBoard tmp2 = ConnectedMask[sq] & pawnFacts->pf_BlackPassers;
+            BitBoardBits tmp2 = ConnectedMask[sq] & pawnFacts->pf_BlackPassers;
             while (tmp2) {
                 int sq2 = FindSetBit(tmp2);
                 tmp2 &= tmp2 - 1;
@@ -1182,7 +1182,7 @@ static int EvaluateKingSafety(const struct Position *p, int wphase, int bphase,
 
 static int EvaluateDevelopment(const struct Position *p) {
     int score = 0;
-    BitBoard pcs;
+    BitBoardBits pcs;
 
     /*
      * Don't develop pieces to e3/d3 if they block a pawn
@@ -1263,8 +1263,8 @@ static int EvaluatePositionForWhite(const struct Position *p) {
     int diff;
 
     int tmp, sq;
-    BitBoard pcs;
-    BitBoard tmpboard;
+    BitBoardBits pcs;
+    BitBoardBits tmpboard;
     struct PawnFacts pawnFacts;
 
     /*

@@ -150,7 +150,7 @@ move_t NextMove(struct SearchData *sd) {
         /*
          * Generate captures.
          */
-        BitBoard targets = p->mask[OPP(p->turn)][0];
+        BitBoardBits targets = p->mask[OPP(p->turn)][0];
         while (targets) {
             int to = FindSetBit(targets);
             targets &= targets - 1;
@@ -158,7 +158,7 @@ move_t NextMove(struct SearchData *sd) {
             GenTo(p, to, sd->heap);
         }
 
-        BitBoard promoting_pawns =
+        BitBoardBits promoting_pawns =
             p->mask[p->turn][Pawn] & SeventhRank[p->turn];
         while (promoting_pawns) {
             int from = FindSetBit(promoting_pawns);
@@ -316,7 +316,7 @@ move_t NextMove(struct SearchData *sd) {
 #ifdef VERBOSE
         Print(9, "GenerateRest\n");
 #endif
-        const BitBoard empty = ~(p->mask[White][0] | p->mask[Black][0]);
+        const BitBoardBits empty = ~(p->mask[White][0] | p->mask[Black][0]);
 
         if (p->castle & CastleMask[p->turn][0]) {
             append_to_heap(sd->heap,
@@ -329,12 +329,12 @@ move_t NextMove(struct SearchData *sd) {
                                      p->turn == White ? c1 : c8, M_LCASTLE));
         }
 
-        BitBoard non_pawn = p->mask[p->turn][0] & ~p->mask[p->turn][Pawn];
+        BitBoardBits non_pawn = p->mask[p->turn][0] & ~p->mask[p->turn][Pawn];
 
         while (non_pawn) {
             int from = FindSetBit(non_pawn);
             non_pawn &= non_pawn - 1;
-            BitBoard attacks = p->atkTo[from] & empty;
+            BitBoardBits attacks = p->atkTo[from] & empty;
             while (attacks) {
                 int to = FindSetBit(attacks);
                 attacks &= attacks - 1;
@@ -342,14 +342,14 @@ move_t NextMove(struct SearchData *sd) {
             }
         }
 
-        BitBoard tmp = p->mask[p->turn][Pawn] & ~SeventhRank[p->turn];
+        BitBoardBits tmp = p->mask[p->turn][Pawn] & ~SeventhRank[p->turn];
 
         if (p->turn == White)
             tmp = ShiftUp(tmp);
         else
             tmp = ShiftDown(tmp);
 
-        BitBoard tmp2 = tmp &= empty;
+        BitBoardBits tmp2 = tmp &= empty;
 
         while (tmp2) {
             int to = FindSetBit(tmp2);
@@ -444,7 +444,7 @@ move_t NextEvasion(struct SearchData *sd) {
 
         int kp = p->kingSq[p->turn];
 
-        BitBoard targets =
+        BitBoardBits targets =
             (p->atkFr[kp] | p->atkTo[kp]) & p->mask[OPP(p->turn)][0];
 
         while (targets) {
@@ -599,9 +599,9 @@ move_t NextEvasion(struct SearchData *sd) {
 #endif
 
         const int kp = p->kingSq[p->turn]; /* FindSetBit(Mask[Side][King]); */
-        const BitBoard empty = ~(p->mask[White][0] | p->mask[Black][0]);
+        const BitBoardBits empty = ~(p->mask[White][0] | p->mask[Black][0]);
 
-        BitBoard king_flight_squares = p->atkTo[kp] & empty;
+        BitBoardBits king_flight_squares = p->atkTo[kp] & empty;
 
         while (king_flight_squares) {
             int to = FindSetBit(king_flight_squares);
@@ -610,12 +610,12 @@ move_t NextEvasion(struct SearchData *sd) {
                 append_to_heap(sd->heap, make_move(kp, to, 0));
         }
 
-        BitBoard sliding_attackers =
+        BitBoardBits sliding_attackers =
             (p->mask[OPP(p->turn)][Bishop] | p->mask[OPP(p->turn)][Rook] |
              p->mask[OPP(p->turn)][Queen]) &
             p->atkFr[kp];
 
-        BitBoard interpositions = 0;
+        BitBoardBits interpositions = 0;
 
         while (sliding_attackers) {
             int attacker_sq = FindSetBit(sliding_attackers);
@@ -623,13 +623,13 @@ move_t NextEvasion(struct SearchData *sd) {
             interpositions = InterPath[kp][attacker_sq];
         }
 
-        BitBoard non_pawns = (p->mask[p->turn][0] & ~p->mask[p->turn][King]) &
+        BitBoardBits non_pawns = (p->mask[p->turn][0] & ~p->mask[p->turn][King]) &
                              ~p->mask[p->turn][Pawn];
 
         while (non_pawns) {
             int from = FindSetBit(non_pawns);
             non_pawns &= non_pawns - 1;
-            BitBoard blocking = p->atkTo[from] & empty & interpositions;
+            BitBoardBits blocking = p->atkTo[from] & empty & interpositions;
 
             while (blocking) {
                 int to = FindSetBit(blocking);
@@ -638,14 +638,14 @@ move_t NextEvasion(struct SearchData *sd) {
             }
         }
 
-        BitBoard pawns = p->mask[p->turn][Pawn];
+        BitBoardBits pawns = p->mask[p->turn][Pawn];
 
         if (p->turn == White)
             pawns = ShiftUp(pawns);
         else
             pawns = ShiftDown(pawns);
 
-        BitBoard pawns_to = pawns = (pawns & empty);
+        BitBoardBits pawns_to = pawns = (pawns & empty);
 
         while (pawns_to) {
             int to = FindSetBit(pawns_to);
@@ -717,8 +717,8 @@ move_t NextEvasion(struct SearchData *sd) {
 static void GenerateQCaptures(struct SearchData *sd, int alpha) {
     heap_section_t section = sd->heap->current_section;
     struct Position *p = sd->position;
-    BitBoard pwn7th;
-    BitBoard att, def;
+    BitBoardBits pwn7th;
+    BitBoardBits att, def;
     int score;
     int i;
 
@@ -731,7 +731,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
     while (pwn7th) {
         int next;
         int j;
-        BitBoard tmp;
+        BitBoardBits tmp;
 
         i = FindSetBit(pwn7th);
         pwn7th &= pwn7th - 1;
@@ -771,7 +771,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         return;
     def = p->mask[OPP(p->turn)][Queen];
     while (def) {
-        BitBoard tmp2;
+        BitBoardBits tmp2;
         int j;
         i = FindSetBit(def);
         def &= def - 1;
@@ -792,7 +792,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         return;
     def = p->mask[OPP(p->turn)][Rook];
     while (def) {
-        BitBoard tmp2;
+        BitBoardBits tmp2;
         int j;
         i = FindSetBit(def);
         def &= def - 1;
@@ -813,7 +813,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         return;
     def = p->mask[OPP(p->turn)][Bishop] | p->mask[OPP(p->turn)][Knight];
     while (def) {
-        BitBoard tmp2;
+        BitBoardBits tmp2;
         int j;
         i = FindSetBit(def);
         def &= def - 1;
@@ -834,7 +834,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         return;
     def = p->mask[OPP(p->turn)][Pawn];
     while (def) {
-        BitBoard tmp2;
+        BitBoardBits tmp2;
         int j;
         i = FindSetBit(def);
         def &= def - 1;

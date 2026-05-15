@@ -102,23 +102,11 @@ typedef enum {
 } Square;
 // clang-format on
 
-#if HAVE___BUILTIN_POPCOUNTLL
-#define CountBits(x) __builtin_popcountll(x)
-#else
-int CountBits(BitBoard);
-#endif
-
-#if HAVE___BUILTIN_CTZLL
-#define FindSetBit(x) __builtin_ctzll(x)
-#else
-int FindSetBit(BitBoard);
-#endif
-
 struct Position {
-    BitBoard atkTo[64];
-    BitBoard atkFr[64];
-    BitBoard mask[2][7];
-    BitBoard slidingPieces;
+    BitBoardBits atkTo[64];
+    BitBoardBits atkFr[64];
+    BitBoardBits mask[2][7];
+    BitBoardBits slidingPieces;
     hash_t hkey;
     hash_t pkey;
     struct GameLog *gameLog;

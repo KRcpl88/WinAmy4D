@@ -107,7 +107,7 @@ static void Panic(struct Position *p) {
 static void DebugEngine(struct Position *p) {
     int kingSq = p->kingSq[White];
     int i, color;
-    BitBoard temp;
+    BitBoardBits temp;
 
     for (i = 0; i < 64; i++) {
         temp = p->atkTo[i];
@@ -169,7 +169,7 @@ static void DebugEngine(struct Position *p) {
  */
 
 static void AtkSet(struct Position *p, Piece type, Color color, Square square) {
-    BitBoard attacks;
+    BitBoardBits attacks;
 
     switch (type) {
     case Pawn:
@@ -206,7 +206,7 @@ static void AtkSet(struct Position *p, Piece type, Color color, Square square) {
 }
 
 static void AtkClr(struct Position *p, Square square) {
-    BitBoard tmp = p->atkTo[square];
+    BitBoardBits tmp = p->atkTo[square];
     p->atkTo[square] = 0;
 
     while (tmp) {
@@ -224,7 +224,7 @@ static void AtkClr(struct Position *p, Square square) {
 static void GainAttack(struct Position *p, const Square from, const Square to) {
     signed char *nsq = NextSQ[from];
     int sq = to;
-    const BitBoard all = p->mask[0][0] | p->mask[1][0];
+    const BitBoardBits all = p->mask[0][0] | p->mask[1][0];
 
     for (;;) {
         sq = nsq[sq];
@@ -248,7 +248,7 @@ static void LooseAttack(struct Position *p, const Square from,
                         const Square to) {
     signed char *nsq = NextSQ[from];
     int sq = to;
-    const BitBoard all = p->mask[0][0] | p->mask[1][0];
+    const BitBoardBits all = p->mask[0][0] | p->mask[1][0];
 
     for (;;) {
         sq = nsq[sq];
@@ -269,7 +269,7 @@ static void LooseAttack(struct Position *p, const Square from,
  */
 
 static void GainAttacks(struct Position *p, Square to) {
-    BitBoard tmp = p->atkFr[to] & p->slidingPieces;
+    BitBoardBits tmp = p->atkFr[to] & p->slidingPieces;
     int i;
 
     while (tmp) {
@@ -285,7 +285,7 @@ static void GainAttacks(struct Position *p, Square to) {
  */
 
 static void LooseAttacks(struct Position *p, Square to) {
-    BitBoard tmp = p->atkFr[to] & p->slidingPieces;
+    BitBoardBits tmp = p->atkFr[to] & p->slidingPieces;
     int i;
 
     while (tmp) {
@@ -790,7 +790,7 @@ void UndoNull(struct Position *p) {
 
 void RecalcAttacks(struct Position *p) {
     int i;
-    BitBoard tmp;
+    BitBoardBits tmp;
 
     for (i = 0; i < 64; i++) {
         p->atkTo[i] = p->atkFr[i] = 0;
@@ -878,7 +878,7 @@ void RecalcAttacks(struct Position *p) {
  * Generate all capturing moves to a square "square"
  */
 void GenTo(struct Position *p, Square square, heap_t heap) {
-    BitBoard tmp = p->atkFr[square] & p->mask[p->turn][0];
+    BitBoardBits tmp = p->atkFr[square] & p->mask[p->turn][0];
 
     while (tmp) {
         int i = FindSetBit(tmp);
@@ -895,7 +895,7 @@ void GenTo(struct Position *p, Square square, heap_t heap) {
 }
 
 void GenEnpas(struct Position *p, heap_t heap) {
-    BitBoard tmp;
+    BitBoardBits tmp;
 
     if (!p->enPassant)
         return;
@@ -914,7 +914,7 @@ void GenEnpas(struct Position *p, heap_t heap) {
 
 void GenFrom(struct Position *p, Square square, heap_t heap) {
     if (TYPE(p->piece[square]) != Pawn) {
-        BitBoard tmp;
+        BitBoardBits tmp;
 
         tmp = p->atkTo[square] & ~(p->mask[White][0] | p->mask[Black][0]);
 
@@ -1108,7 +1108,7 @@ bool IsCheckingMove(struct Position *p, move_t move) {
     int to = M_TO(move);
     int tp = TYPE(p->piece[fr]);
     int kp = FindSetBit(p->mask[OPP(p->turn)][King]);
-    BitBoard tmp;
+    BitBoardBits tmp;
 
     /* Is it a direct check ? */
 
@@ -1164,7 +1164,7 @@ bool IsCheckingMove(struct Position *p, move_t move) {
 
     while (tmp) {
         int i = FindSetBit(tmp);
-        BitBoard tmp2;
+        BitBoardBits tmp2;
 
         tmp &= tmp - 1;
         if (TYPE(p->piece[i]) == Bishop && !TstBit(BishopEPM[kp], i))
@@ -1187,12 +1187,12 @@ bool IsCheckingMove(struct Position *p, move_t move) {
  */
 
 void GenChecks(struct Position *p, heap_t heap) {
-    BitBoard tmp;
-    BitBoard fr;
+    BitBoardBits tmp;
+    BitBoardBits fr;
     int kp = p->kingSq[OPP(p->turn)];
-    BitBoard *ip = InterPath[kp];
-    BitBoard fsq = p->mask[p->turn][0];
-    BitBoard all = (p->mask[White][0] | p->mask[Black][0]);
+    BitBoardBits *ip = InterPath[kp];
+    BitBoardBits fsq = p->mask[p->turn][0];
+    BitBoardBits all = (p->mask[White][0] | p->mask[Black][0]);
 
     /* First find all blockers, i.e. pieces that give check when they move
      * from their current square
@@ -1204,7 +1204,7 @@ void GenChecks(struct Position *p, heap_t heap) {
         int i = FindSetBit(tmp);
         tmp &= tmp - 1;
         if (ip[i] && !(ip[i] & p->mask[OPP(p->turn)][0])) {
-            BitBoard tmp2 = p->mask[p->turn][0] & ip[i];
+            BitBoardBits tmp2 = p->mask[p->turn][0] & ip[i];
 
             if (CountBits(tmp2) == 1) {
                 int j = FindSetBit(tmp2);
@@ -1223,7 +1223,7 @@ void GenChecks(struct Position *p, heap_t heap) {
         int i = FindSetBit(tmp);
         tmp &= tmp - 1;
         if (ip[i] && !(ip[i] & p->mask[OPP(p->turn)][0])) {
-            BitBoard tmp2 = p->mask[p->turn][0] & ip[i];
+            BitBoardBits tmp2 = p->mask[p->turn][0] & ip[i];
 
             if (CountBits(tmp2) == 1) {
                 int j = FindSetBit(tmp2);
@@ -1245,7 +1245,7 @@ void GenChecks(struct Position *p, heap_t heap) {
 
     while (fr) {
         int sq = FindSetBit(fr);
-        BitBoard tmp2 = p->atkTo[sq] & tmp;
+        BitBoardBits tmp2 = p->atkTo[sq] & tmp;
         fr &= fr - 1;
 
         while (tmp2) {
@@ -1266,7 +1266,7 @@ void GenChecks(struct Position *p, heap_t heap) {
 
     while (fr) {
         int sq = FindSetBit(fr);
-        BitBoard tmp2 = p->atkTo[sq] & tmp;
+        BitBoardBits tmp2 = p->atkTo[sq] & tmp;
         fr &= fr - 1;
 
         while (tmp2) {
@@ -1287,7 +1287,7 @@ void GenChecks(struct Position *p, heap_t heap) {
 
     while (fr) {
         int sq = FindSetBit(fr);
-        BitBoard tmp2;
+        BitBoardBits tmp2;
 
         fr &= fr - 1;
         tmp2 = p->atkTo[sq] & tmp;
@@ -1392,7 +1392,7 @@ char *SAN(struct Position *p, move_t move, char *buffer) {
             *(x++) = 'O';
         }
     } else {
-        BitBoard tmp;
+        BitBoardBits tmp;
         bool aamb = false, /* set for ambigous moves */
             ramb = false,  /* set means ambigous rank */
             famb = false;  /* set means ambigous file */
@@ -1914,7 +1914,7 @@ move_t ParseSANList(char *san, Color side, move_t *mvs, int cnt, int *pmap) {
  */
 
 void PLegalMoves(struct Position *p, heap_t heap) {
-    BitBoard tmp;
+    BitBoardBits tmp;
 
     tmp = p->mask[OPP(p->turn)][0];
     while (tmp) {
@@ -1943,7 +1943,7 @@ void PLegalMoves(struct Position *p, heap_t heap) {
  */
 
 void legal_moves_internal(struct Position *p, heap_t heap, heap_t tmp_heap) {
-    BitBoard tmp;
+    BitBoardBits tmp;
 
     tmp = p->mask[OPP(p->turn)][0];
     while (tmp) {

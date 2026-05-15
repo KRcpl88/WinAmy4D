@@ -698,7 +698,7 @@ static void Benchmark(char *args) {
     FreePosition(p);
 }
 
-static BitBoard SearchFully(struct Position *p, BitBoard cnt, int depth,
+static BitBoardBits SearchFully(struct Position *p, BitBoardBits cnt, int depth,
                             heap_t heap) {
     unsigned int i;
 
@@ -735,7 +735,7 @@ static void Perft(char *args) {
     int depth;
     sscanf(args, "%d", &depth);
 
-    BitBoard cnt = 0;
+    BitBoardBits cnt = 0;
     heap_t heap = allocate_heap();
 
     unsigned long start = GetTime();

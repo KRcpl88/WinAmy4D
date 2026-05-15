@@ -298,7 +298,7 @@ static bool IsRecapture(int piece1, int piece2) {
 
 static int CheckExtend(struct Position *p) {
     int kp = p->kingSq[p->turn];
-    BitBoard att;
+    BitBoardBits att;
 
     att = p->atkFr[kp] & p->mask[OPP(p->turn)][0];
 
@@ -310,7 +310,7 @@ static int CheckExtend(struct Position *p) {
          *
          */
 
-        BitBoard ff;
+        BitBoardBits ff;
 
         int i;
         int cnt = 0;
@@ -335,9 +335,9 @@ static int CheckExtend(struct Position *p) {
                 return ExtendDoubleCheck;
         }
     } else {
-        BitBoard ff;
-        BitBoard def;
-        BitBoard tmp;
+        BitBoardBits ff;
+        BitBoardBits def;
+        BitBoardBits tmp;
 
         int atp = FindSetBit(att);
         int cnt = 0;
@@ -372,7 +372,7 @@ static int CheckExtend(struct Position *p) {
         tmp = (p->mask[OPP(p->turn)][Bishop] | p->mask[OPP(p->turn)][Queen]) &
               BishopEPM[kp];
         while (tmp) {
-            BitBoard tmp2;
+            BitBoardBits tmp2;
             i = FindSetBit(tmp);
             tmp &= tmp - 1;
             tmp2 = InterPath[i][kp];
@@ -387,7 +387,7 @@ static int CheckExtend(struct Position *p) {
         tmp = (p->mask[OPP(p->turn)][Rook] | p->mask[OPP(p->turn)][Queen]) &
               RookEPM[kp];
         while (tmp) {
-            BitBoard tmp2;
+            BitBoardBits tmp2;
             i = FindSetBit(tmp);
             tmp &= tmp - 1;
             tmp2 = InterPath[i][kp];
@@ -410,7 +410,7 @@ static int CheckExtend(struct Position *p) {
         if (TstBit(p->slidingPieces, atp)) {
             tmp = InterPath[atp][kp];
             while (tmp) {
-                BitBoard tmp2;
+                BitBoardBits tmp2;
                 i = FindSetBit(tmp);
                 tmp &= tmp - 1;
                 if ((tmp2 = p->atkFr[i] & def)) {

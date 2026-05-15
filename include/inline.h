@@ -41,20 +41,20 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
-extern BitBoard ShiftUpMask, ShiftDownMask;
-extern BitBoard ShiftLeftMask, ShiftRightMask;
+extern BitBoardBits ShiftUpMask, ShiftDownMask;
+extern BitBoardBits ShiftLeftMask, ShiftRightMask;
 
-static inline BitBoard ShiftUp(BitBoard x) { return (x << 8) & ShiftUpMask; }
+static inline BitBoardBits ShiftUp(BitBoardBits x) { return (x << 8) & ShiftUpMask; }
 
-static inline BitBoard ShiftDown(BitBoard x) {
+static inline BitBoardBits ShiftDown(BitBoardBits x) {
     return (x >> 8) & ShiftDownMask;
 }
 
-static inline BitBoard ShiftLeft(BitBoard x) {
+static inline BitBoardBits ShiftLeft(BitBoardBits x) {
     return (x << 1) & ShiftLeftMask;
 }
 
-static inline BitBoard ShiftRight(BitBoard x) {
+static inline BitBoardBits ShiftRight(BitBoardBits x) {
     return (x >> 1) & ShiftRightMask;
 }
 

@@ -48,9 +48,9 @@ static int SwapValue[] = {
     10000      /* King, whose value is basically infinity */
 };
 
-static void SwapReRay(struct Position *p, int side, BitBoard atks[2], int from,
-                      int to, BitBoard *exclude) {
-    BitBoard tmp;
+static void SwapReRay(struct Position *p, int side, BitBoardBits atks[2], int from,
+                      int to, BitBoardBits *exclude) {
+    BitBoardBits tmp;
     int i;
     int pc = TYPE(p->piece[from]);
 
@@ -96,8 +96,8 @@ int SwapOff(struct Position *p, int move) {
     int swapval, swapside;
     int swapsign = -1;
 
-    BitBoard atks[2];
-    BitBoard exclude;
+    BitBoardBits atks[2];
+    BitBoardBits exclude;
 
     if (move & M_PROMOTION_MASK) {
         swapval = SwapValue[PromoType(move)];
@@ -118,7 +118,7 @@ int SwapOff(struct Position *p, int move) {
 
     while (atks[swapside]) {
         int at;
-        BitBoard tmp;
+        BitBoardBits tmp;
 
         /* find last valuable attacker */
         tmp = p->mask[swapside][Pawn] & atks[swapside];

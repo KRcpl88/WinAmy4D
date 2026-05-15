@@ -41,8 +41,8 @@
 bool MateThreat(struct Position *p, int side) {
     int oside = !side;
     int ekp = p->kingSq[oside];
-    BitBoard pcs;
-    BitBoard ksafe;
+    BitBoardBits pcs;
+    BitBoardBits ksafe;
     int fr;
 
     ksafe = p->atkTo[ekp] & ~p->mask[oside][0];
@@ -54,12 +54,12 @@ bool MateThreat(struct Position *p, int side) {
     pcs = p->mask[side][Queen];
     while (pcs) {
         int to;
-        BitBoard mvs;
+        BitBoardBits mvs;
         fr = FindSetBit(pcs);
         pcs &= pcs - 1;
         mvs = (p->atkTo[fr] & QueenEPM[ekp]) & ~p->mask[side][0];
         while (mvs) {
-            BitBoard tmp;
+            BitBoardBits tmp;
             to = FindSetBit(mvs);
             mvs &= mvs - 1;
             /* check whether path is obstructed */
@@ -72,7 +72,7 @@ bool MateThreat(struct Position *p, int side) {
                 int flight;
                 int free = 0;
                 do {
-                    BitBoard att;
+                    BitBoardBits att;
                     flight = FindSetBit(tmp);
                     tmp &= tmp - 1;
                     att = p->atkFr[flight] & p->mask[side][0];
@@ -87,7 +87,7 @@ bool MateThreat(struct Position *p, int side) {
             }
             if (TstBit(p->atkTo[ekp], to)) {
                 /* contact check */
-                BitBoard ray;
+                BitBoardBits ray;
                 tmp = p->atkFr[to];
                 ClrBit(tmp, fr);
                 ClrBit(tmp, ekp);
@@ -121,7 +121,7 @@ bool MateThreat(struct Position *p, int side) {
                     continue;
                 tmp = InterPath[to][ekp];
                 while (tmp) {
-                    BitBoard tmp2;
+                    BitBoardBits tmp2;
                     inter = FindSetBit(tmp);
                     tmp &= tmp - 1;
                     tmp2 = p->atkFr[inter] & p->mask[oside][0];
@@ -144,12 +144,12 @@ bool MateThreat(struct Position *p, int side) {
     pcs = p->mask[side][Rook];
     while (pcs) {
         int to;
-        BitBoard mvs;
+        BitBoardBits mvs;
         fr = FindSetBit(pcs);
         pcs &= pcs - 1;
         mvs = (p->atkTo[fr] & RookEPM[ekp]) & ~p->mask[side][0];
         while (mvs) {
-            BitBoard tmp;
+            BitBoardBits tmp;
             to = FindSetBit(mvs);
             mvs &= mvs - 1;
             /* check whether path is obstructed */
@@ -162,7 +162,7 @@ bool MateThreat(struct Position *p, int side) {
                 int flight;
                 int free = 0;
                 do {
-                    BitBoard att;
+                    BitBoardBits att;
                     flight = FindSetBit(tmp);
                     tmp &= tmp - 1;
                     att = p->atkFr[flight] & p->mask[side][0];
@@ -177,7 +177,7 @@ bool MateThreat(struct Position *p, int side) {
             }
             if (TstBit(p->atkTo[ekp], to)) {
                 /* contact check */
-                BitBoard ray;
+                BitBoardBits ray;
                 tmp = p->atkFr[to];
                 ClrBit(tmp, fr);
                 ClrBit(tmp, ekp);
@@ -211,7 +211,7 @@ bool MateThreat(struct Position *p, int side) {
                     continue;
                 tmp = InterPath[to][ekp];
                 while (tmp) {
-                    BitBoard tmp2;
+                    BitBoardBits tmp2;
                     inter = FindSetBit(tmp);
                     tmp &= tmp - 1;
                     tmp2 = p->atkFr[inter] & p->mask[oside][0];
@@ -234,12 +234,12 @@ bool MateThreat(struct Position *p, int side) {
     pcs = p->mask[side][Bishop];
     while (pcs) {
         int to;
-        BitBoard mvs;
+        BitBoardBits mvs;
         fr = FindSetBit(pcs);
         pcs &= pcs - 1;
         mvs = (p->atkTo[fr] & BishopEPM[ekp]) & ~p->mask[side][0];
         while (mvs) {
-            BitBoard tmp;
+            BitBoardBits tmp;
             to = FindSetBit(mvs);
             mvs &= mvs - 1;
             /* check whether path is obstructed */
@@ -252,7 +252,7 @@ bool MateThreat(struct Position *p, int side) {
                 int flight;
                 int free = 0;
                 do {
-                    BitBoard att;
+                    BitBoardBits att;
                     flight = FindSetBit(tmp);
                     tmp &= tmp - 1;
                     att = p->atkFr[flight] & p->mask[side][0];
@@ -267,7 +267,7 @@ bool MateThreat(struct Position *p, int side) {
             }
             if (TstBit(p->atkTo[ekp], to)) {
                 /* contact check */
-                BitBoard ray;
+                BitBoardBits ray;
                 tmp = p->atkFr[to];
                 ClrBit(tmp, fr);
                 ClrBit(tmp, ekp);
@@ -301,7 +301,7 @@ bool MateThreat(struct Position *p, int side) {
                     continue;
                 tmp = InterPath[to][ekp];
                 while (tmp) {
-                    BitBoard tmp2;
+                    BitBoardBits tmp2;
                     inter = FindSetBit(tmp);
                     tmp &= tmp - 1;
                     tmp2 = p->atkFr[inter] & p->mask[oside][0];
@@ -324,12 +324,12 @@ bool MateThreat(struct Position *p, int side) {
     pcs = p->mask[side][Knight];
     while (pcs) {
         int to;
-        BitBoard mvs;
+        BitBoardBits mvs;
         fr = FindSetBit(pcs);
         pcs &= pcs - 1;
         mvs = (p->atkTo[fr] & KnightEPM[ekp]) & ~p->mask[side][0];
         while (mvs) {
-            BitBoard def;
+            BitBoardBits def;
             to = FindSetBit(mvs);
             mvs &= mvs - 1;
             /*
@@ -339,7 +339,7 @@ bool MateThreat(struct Position *p, int side) {
             def = p->atkFr[to] & p->mask[oside][0];
             if (CountBits(def) == 1) {
                 int de = FindSetBit(def);
-                BitBoard tmp;
+                BitBoardBits tmp;
                 if (RookEPM[ekp] & def) {
                     tmp = p->atkFr[de] & Ray[ekp][de];
                     if (!(p->mask[side][Queen] & tmp) &&
@@ -359,7 +359,7 @@ bool MateThreat(struct Position *p, int side) {
                 int flight;
                 int free = 0;
                 do {
-                    BitBoard att;
+                    BitBoardBits att;
                     flight = FindSetBit(def);
                     def &= def - 1;
                     att = p->atkFr[flight] & p->mask[side][0];

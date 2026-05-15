@@ -148,7 +148,7 @@ const uint64_t bishop_magics[64] = {
     0x40102000a0a60140ULL,
 };
 
-static int poplsb(BitBoard *x) {
+static int poplsb(BitBoardBits *x) {
     int lsb = FindSetBit(*x);
     *x &= *x - 1;
     return lsb;
@@ -222,7 +222,7 @@ static uint64_t bishop_attack_mask(int sq, uint64_t blockers) {
     return x;
 }
 
-static BitBoard blockers_from_index(int index, BitBoard mask) {
+static BitBoardBits blockers_from_index(int index, BitBoardBits mask) {
     uint64_t blockers = 0;
     int bits = CountBits(mask);
     for (int i = 0; i < bits; i++) {

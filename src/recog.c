@@ -119,7 +119,7 @@ static int RecognizerKK(const struct Position *p, int *score) {
 }
 
 static int RecognizerKBK(const struct Position *p, int *score) {
-    BitBoard pcs;
+    BitBoardBits pcs;
     int color = White;
 
     if (p->material_signature[Black]) {
@@ -210,7 +210,7 @@ static int RecognizerKBNK(const struct Position *p, int *score) {
          * This is kbnk
          */
 
-        BitBoard atkd = 0;
+        BitBoardBits atkd = 0;
         int color = White;
         int sqx = 0;
 

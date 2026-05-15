@@ -52,13 +52,12 @@ TEST_CLASS(MoveTests) {
 
         RecalcAttacks(position.get());
 
-        const uint64_t occupied = position.get()->mask[White][0] | position.get()->mask[Black][0];
-        const uint64_t expectedBishopAttacks = bishop_attacks(d5, occupied);
+        const BitBoardBits occupied = position.get()->mask[White][0] | position.get()->mask[Black][0];
+        CBitboard expectedBishopAttacks(bishop_attacks(d5, occupied));
 
-        Assert::AreEqual((unsigned long long)expectedBishopAttacks,
-                         (unsigned long long)position.get()->atkTo[d5]);
-        Assert::IsTrue((position.get()->atkFr[e6] & SetMask(d5)) != 0);
-        Assert::IsTrue((position.get()->atkFr[c4] & SetMask(d5)) != 0);
+        Assert::IsTrue(CBitboard(position.get()->atkTo[d5]) == expectedBishopAttacks);
+        Assert::IsTrue((CBitboard(position.get()->atkFr[e6]) & CBitboard(SetMask(d5))).IsNotEmpty());
+        Assert::IsTrue((CBitboard(position.get()->atkFr[c4]) & CBitboard(SetMask(d5))).IsNotEmpty());
     }
 
     TEST_METHOD(DoMoveCaptureRemovesCapturedPiece) {

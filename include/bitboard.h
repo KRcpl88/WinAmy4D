@@ -43,18 +43,87 @@
 #define ClrBit(b, i) ((b) &= ClrMask(i))
 #define TstBit(b, i) ((b) & SetMask(i))
 
-typedef uint64_t BitBoard;
+typedef uint64_t BitBoardBits;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if HAVE___BUILTIN_POPCOUNTLL
 #define CountBits(x) __builtin_popcountll(x)
 #else
-int CountBits(BitBoard);
+int CountBits(BitBoardBits);
 #endif
 
 #if HAVE___BUILTIN_CTZLL
 #define FindSetBit(x) __builtin_ctzll(x)
 #else
-int FindSetBit(BitBoard);
+int FindSetBit(BitBoardBits);
 #endif
+
+#ifdef __cplusplus
+}
+
+// Undefine macros that conflict with CBitboard method names
+#undef SetBit
+#undef ClrBit
+#undef TstBit
+
+class CBitboard {
+  public:
+    CBitboard() : m_bits(0) {}
+    CBitboard(BitBoardBits bits) : m_bits(bits) {}
+
+    // Accessor methods matching the bitboard.h macros
+    void SetBit(int i) { m_bits |= (1ULL << i); }
+    void ClrBit(int i) { m_bits &= ~(1ULL << i); }
+    bool TstBit(int i) const { return (m_bits & (1ULL << i)) != 0; }
+
+    int CountBits() const;
+    int FindSetBit() const;
+
+    // Static mask helpers
+    static BitBoardBits GetSetMask(int i) { return 1ULL << i; }
+    static BitBoardBits GetClrMask(int i) { return ~(1ULL << i); }
+
+    // State queries
+    bool IsEmpty() const { return m_bits == 0; }
+    bool IsNotEmpty() const { return m_bits != 0; }
+
+    // Raw bits access
+    BitBoardBits GetBits() const { return m_bits; }
+
+    // Bitwise operators
+    friend bool operator==(const CBitboard &lhs, const CBitboard &rhs) {
+        return lhs.m_bits == rhs.m_bits;
+    }
+    friend bool operator!=(const CBitboard &lhs, const CBitboard &rhs) {
+        return lhs.m_bits != rhs.m_bits;
+    }
+    friend CBitboard operator&(const CBitboard &lhs, const CBitboard &rhs) {
+        return CBitboard(lhs.m_bits & rhs.m_bits);
+    }
+    friend CBitboard operator|(const CBitboard &lhs, const CBitboard &rhs) {
+        return CBitboard(lhs.m_bits | rhs.m_bits);
+    }
+    friend CBitboard operator~(const CBitboard &bb) {
+        return CBitboard(~bb.m_bits);
+    }
+
+    // Compound assignment operators
+    CBitboard &operator|=(const CBitboard &rhs) {
+        m_bits |= rhs.m_bits;
+        return *this;
+    }
+    CBitboard &operator&=(const CBitboard &rhs) {
+        m_bits &= rhs.m_bits;
+        return *this;
+    }
+
+  private:
+    BitBoardBits m_bits;
+};
+
+#endif /* __cplusplus */
 
 #endif

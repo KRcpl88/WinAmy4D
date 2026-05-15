@@ -34,31 +34,31 @@
 
 #include "bitboard.h"
 
-extern BitBoard FileMask[8], IsoMask[8];
-extern BitBoard RankMask[8];
-extern BitBoard ForwardRayW[64], ForwardRayB[64];
-extern BitBoard PassedMaskW[64], PassedMaskB[64];
-extern BitBoard OutpostMaskW[64], OutpostMaskB[64];
-extern BitBoard InterPath[64][64];
-extern BitBoard Ray[64][64];
-extern BitBoard WPawnEPM[64], BPawnEPM[64];
-extern const BitBoard KnightEPM[64], KingEPM[64];
-extern const BitBoard PawnEPM[2][64];
-extern BitBoard BishopEPM[64], RookEPM[64], QueenEPM[64];
-extern BitBoard SeventhRank[2], ThirdRank[2], EighthRank[2];
-extern BitBoard LeftOf[8], RightOf[8], FarLeftOf[8], FarRightOf[8];
-extern BitBoard EdgeMask;
-extern BitBoard BlackSquaresMask, WhiteSquaresMask;
-extern BitBoard KingSquareW[64], KingSquareB[64];
-extern BitBoard NotAFileMask, NotHFileMask;
-extern BitBoard CornerMaskA1, CornerMaskA8, CornerMaskH1, CornerMaskH8;
-extern BitBoard WPawnBackwardMask[64], BPawnBackwardMask[64];
-extern BitBoard KingSideMask, QueenSideMask;
-extern BitBoard ConnectedMask[64];
+extern BitBoardBits FileMask[8], IsoMask[8];
+extern BitBoardBits RankMask[8];
+extern BitBoardBits ForwardRayW[64], ForwardRayB[64];
+extern BitBoardBits PassedMaskW[64], PassedMaskB[64];
+extern BitBoardBits OutpostMaskW[64], OutpostMaskB[64];
+extern BitBoardBits InterPath[64][64];
+extern BitBoardBits Ray[64][64];
+extern BitBoardBits WPawnEPM[64], BPawnEPM[64];
+extern const BitBoardBits KnightEPM[64], KingEPM[64];
+extern const BitBoardBits PawnEPM[2][64];
+extern BitBoardBits BishopEPM[64], RookEPM[64], QueenEPM[64];
+extern BitBoardBits SeventhRank[2], ThirdRank[2], EighthRank[2];
+extern BitBoardBits LeftOf[8], RightOf[8], FarLeftOf[8], FarRightOf[8];
+extern BitBoardBits EdgeMask;
+extern BitBoardBits BlackSquaresMask, WhiteSquaresMask;
+extern BitBoardBits KingSquareW[64], KingSquareB[64];
+extern BitBoardBits NotAFileMask, NotHFileMask;
+extern BitBoardBits CornerMaskA1, CornerMaskA8, CornerMaskH1, CornerMaskH8;
+extern BitBoardBits WPawnBackwardMask[64], BPawnBackwardMask[64];
+extern BitBoardBits KingSideMask, QueenSideMask;
+extern BitBoardBits ConnectedMask[64];
 
 extern signed char NextSQ[64][64];
 
 void InitAll(void);
-void PrintBitBoard(BitBoard);
+void PrintBitBoard(BitBoardBits);
 
 #endif

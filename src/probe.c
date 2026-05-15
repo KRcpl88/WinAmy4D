@@ -78,7 +78,7 @@ void InitEGTB(char *tbpath) {
 }
 
 void InitializeCounters(int *pieceCounter, int *squares, int type,
-                        BitBoard mask) {
+                        BitBoardBits mask) {
     int count = 0;
     while (mask) {
         int index = FindSetBit(mask);

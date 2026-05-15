@@ -151,7 +151,7 @@
     <ClInclude Include="framework.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bitboard.c" />
+    <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="blunder.c" />
     <ClCompile Include="bookup.c" />
     <ClCompile Include="commands.c" />

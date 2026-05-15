@@ -14,72 +14,66 @@ TEST_CLASS(AttackTests) {
         // White pawn on e4 should attack d5 and f5
         char epd[] = "4k3/8/8/8/4P3/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromEPD(epd));
-        uint64_t expected = SetMask(d5) | SetMask(f5);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)position.get()->atkTo[e4]);
+        CBitboard expected = CBitboard(SetMask(d5)) | CBitboard(SetMask(f5));
+        Assert::IsTrue(CBitboard(position.get()->atkTo[e4]) == expected);
     }
 
     TEST_METHOD(AtkSetPawnBlackAttacksCorrectSquares) {
         // Black pawn on e5 should attack d4 and f4
         char epd[] = "4k3/8/8/4p3/8/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromEPD(epd));
-        uint64_t expected = SetMask(d4) | SetMask(f4);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)position.get()->atkTo[e5]);
+        CBitboard expected = CBitboard(SetMask(d4)) | CBitboard(SetMask(f4));
+        Assert::IsTrue(CBitboard(position.get()->atkTo[e5]) == expected);
     }
 
     TEST_METHOD(AtkSetKnightAttacksAllEightSquares) {
         // Knight on d4 attacks 8 squares
         char epd[] = "4k3/8/8/8/3N4/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromEPD(epd));
-        uint64_t expected = SetMask(c2) | SetMask(e2) | SetMask(b3) |
-                            SetMask(f3) | SetMask(b5) | SetMask(f5) |
-                            SetMask(c6) | SetMask(e6);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)position.get()->atkTo[d4]);
+        CBitboard expected = CBitboard(SetMask(c2)) | CBitboard(SetMask(e2)) |
+                             CBitboard(SetMask(b3)) | CBitboard(SetMask(f3)) |
+                             CBitboard(SetMask(b5)) | CBitboard(SetMask(f5)) |
+                             CBitboard(SetMask(c6)) | CBitboard(SetMask(e6));
+        Assert::IsTrue(CBitboard(position.get()->atkTo[d4]) == expected);
     }
 
     TEST_METHOD(AtkSetKingAttacksAllEightSquares) {
         // King on e4 attacks 8 surrounding squares
         char epd[] = "4k3/8/8/8/4K3/8/8/8 w - -";
         PositionGuard position(CreatePositionFromEPD(epd));
-        uint64_t expected = SetMask(d3) | SetMask(e3) | SetMask(f3) |
-                            SetMask(d4) | SetMask(f4) | SetMask(d5) |
-                            SetMask(e5) | SetMask(f5);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)position.get()->atkTo[e4]);
+        CBitboard expected = CBitboard(SetMask(d3)) | CBitboard(SetMask(e3)) |
+                             CBitboard(SetMask(f3)) | CBitboard(SetMask(d4)) |
+                             CBitboard(SetMask(f4)) | CBitboard(SetMask(d5)) |
+                             CBitboard(SetMask(e5)) | CBitboard(SetMask(f5));
+        Assert::IsTrue(CBitboard(position.get()->atkTo[e4]) == expected);
     }
 
     TEST_METHOD(AtkSetRookAttacksStopAtBlockers) {
         // Rook on d4 with blockers
         char epd[] = "4k3/8/8/8/1P1R1p2/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromEPD(epd));
-        uint64_t occupied = position.get()->mask[White][0] | position.get()->mask[Black][0];
-        uint64_t expected = ReferenceRookAttacks(d4, occupied);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)position.get()->atkTo[d4]);
+        BitBoardBits occupied = position.get()->mask[White][0] | position.get()->mask[Black][0];
+        CBitboard expected(ReferenceRookAttacks(d4, occupied));
+        Assert::IsTrue(CBitboard(position.get()->atkTo[d4]) == expected);
     }
 
     TEST_METHOD(AtkSetBishopAttacksStopAtBlockers) {
         // Bishop on d4 with a blocker on f6
         char epd[] = "4k3/8/5p2/8/3B4/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromEPD(epd));
-        uint64_t occupied = position.get()->mask[White][0] | position.get()->mask[Black][0];
-        uint64_t expected = ReferenceBishopAttacks(d4, occupied);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)position.get()->atkTo[d4]);
+        BitBoardBits occupied = position.get()->mask[White][0] | position.get()->mask[Black][0];
+        CBitboard expected(ReferenceBishopAttacks(d4, occupied));
+        Assert::IsTrue(CBitboard(position.get()->atkTo[d4]) == expected);
     }
 
     TEST_METHOD(AtkSetQueenCombinesRookAndBishopAttacks) {
         // Queen on d4
         char epd[] = "4k3/8/8/8/3Q4/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromEPD(epd));
-        uint64_t occupied = position.get()->mask[White][0] | position.get()->mask[Black][0];
-        uint64_t expectedRook = ReferenceRookAttacks(d4, occupied);
-        uint64_t expectedBishop = ReferenceBishopAttacks(d4, occupied);
-        uint64_t expected = expectedRook | expectedBishop;
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)position.get()->atkTo[d4]);
+        BitBoardBits occupied = position.get()->mask[White][0] | position.get()->mask[Black][0];
+        CBitboard expected(ReferenceRookAttacks(d4, occupied) |
+                           ReferenceBishopAttacks(d4, occupied));
+        Assert::IsTrue(CBitboard(position.get()->atkTo[d4]) == expected);
     }
 
     TEST_METHOD(AtkFrReflectsAtkTo) {
@@ -87,11 +81,11 @@ TEST_CLASS(AttackTests) {
         char epd[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
         PositionGuard position(CreatePositionFromEPD(epd));
         for (int sq = 0; sq < 64; sq++) {
-            BitBoard atkTo = position.get()->atkTo[sq];
+            BitBoardBits atkTo = position.get()->atkTo[sq];
             while (atkTo) {
                 int target = FindSetBit(atkTo);
                 atkTo &= atkTo - 1;
-                Assert::IsTrue(TstBit(position.get()->atkFr[target], sq) != 0,
+                Assert::IsTrue((position.get()->atkFr[target] & SetMask(sq)) != 0,
                     L"atkFr must reflect atkTo");
             }
         }
@@ -107,22 +101,21 @@ TEST_CLASS(AttackTests) {
         DoMove(position.get(), move);
 
         // d4 is now empty, so atkTo[d4] should be 0
-        Assert::AreEqual(0ULL, (uint64_t)position.get()->atkTo[d4]);
+        Assert::IsTrue(CBitboard(position.get()->atkTo[d4]) == CBitboard(0));
         // e6 should have knight attacks
-        Assert::IsTrue(position.get()->atkTo[e6] != 0);
+        Assert::IsTrue(CBitboard(position.get()->atkTo[e6]).IsNotEmpty());
     }
 
     TEST_METHOD(AtkClrViaUndoMoveRestoresAttacks) {
         char epd[] = "4k3/8/8/8/3N4/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromEPD(epd));
-        uint64_t originalAtkTo = position.get()->atkTo[d4];
+        CBitboard originalAtkTo(position.get()->atkTo[d4]);
 
         move_t move = make_move(d4, e6, 0);
         DoMove(position.get(), move);
         UndoMove(position.get(), move);
 
-        Assert::AreEqual((unsigned long long)originalAtkTo,
-                         (unsigned long long)position.get()->atkTo[d4]);
+        Assert::IsTrue(CBitboard(position.get()->atkTo[d4]) == originalAtkTo);
     }
 
     TEST_METHOD(RecalcAttacksMatchesIncrementalAttacks) {
@@ -140,10 +133,10 @@ TEST_CLASS(AttackTests) {
         RecalcAttacks(recalced.get());
 
         for (int i = 0; i < 64; i++) {
-            Assert::AreEqual((unsigned long long)position.get()->atkTo[i],
-                             (unsigned long long)recalced.get()->atkTo[i]);
-            Assert::AreEqual((unsigned long long)position.get()->atkFr[i],
-                             (unsigned long long)recalced.get()->atkFr[i]);
+            Assert::IsTrue(CBitboard(position.get()->atkTo[i]) ==
+                           CBitboard(recalced.get()->atkTo[i]));
+            Assert::IsTrue(CBitboard(position.get()->atkFr[i]) ==
+                           CBitboard(recalced.get()->atkFr[i]));
         }
     }
 
@@ -158,59 +151,55 @@ TEST_CLASS(AttackTests) {
         // Knight now on e6, no piece on d4
         Assert::AreEqual((int)Knight, (int)position.get()->piece[e6]);
         Assert::AreEqual((int)Neutral, (int)position.get()->piece[d4]);
-        Assert::AreEqual(0ULL, (uint64_t)position.get()->atkTo[d4]);
-        Assert::IsTrue(position.get()->atkTo[e6] != 0);
+        Assert::IsTrue(CBitboard(position.get()->atkTo[d4]) == CBitboard(0));
+        Assert::IsTrue(CBitboard(position.get()->atkTo[e6]).IsNotEmpty());
     }
 
     TEST_METHOD(PawnAndKnightAttackTablesMatchExpectedSquares) {
-        const uint64_t whitePawnExpected = SetMask(d3) | SetMask(f3);
-        const uint64_t blackPawnExpected = SetMask(d6) | SetMask(f6);
-        const uint64_t knightExpected = SetMask(e2) | SetMask(f3) | SetMask(h3);
+        CBitboard whitePawnExpected =
+            CBitboard(SetMask(d3)) | CBitboard(SetMask(f3));
+        CBitboard blackPawnExpected =
+            CBitboard(SetMask(d6)) | CBitboard(SetMask(f6));
+        CBitboard knightExpected =
+            CBitboard(SetMask(e2)) | CBitboard(SetMask(f3)) | CBitboard(SetMask(h3));
 
-        Assert::AreEqual((unsigned long long)whitePawnExpected,
-                         (unsigned long long)PawnEPM[White][e2]);
-        Assert::AreEqual((unsigned long long)blackPawnExpected,
-                         (unsigned long long)PawnEPM[Black][e7]);
-        Assert::AreEqual((unsigned long long)knightExpected,
-                         (unsigned long long)KnightEPM[g1]);
+        Assert::IsTrue(CBitboard(PawnEPM[White][e2]) == whitePawnExpected);
+        Assert::IsTrue(CBitboard(PawnEPM[Black][e7]) == blackPawnExpected);
+        Assert::IsTrue(CBitboard(KnightEPM[g1]) == knightExpected);
     }
 
     TEST_METHOD(RookAndBishopMagicAttacksMatchNaiveAttacks) {
-        const uint64_t occupied = SetMask(d4) | SetMask(d6) | SetMask(f4) |
-                                  SetMask(d2) | SetMask(b4) | SetMask(f6) |
-                                  SetMask(b6) | SetMask(f2) | SetMask(b2);
+        BitBoardBits occupied = SetMask(d4) | SetMask(d6) | SetMask(f4) |
+                                SetMask(d2) | SetMask(b4) | SetMask(f6) |
+                                SetMask(b6) | SetMask(f2) | SetMask(b2);
 
-        Assert::AreEqual((unsigned long long)ReferenceRookAttacks(d4, occupied),
-                         (unsigned long long)rook_attacks(d4, occupied));
+        Assert::IsTrue(CBitboard(ReferenceRookAttacks(d4, occupied)) ==
+                       CBitboard(rook_attacks(d4, occupied)));
 
-        Assert::AreEqual((unsigned long long)ReferenceBishopAttacks(d4, occupied),
-                         (unsigned long long)bishop_attacks(d4, occupied));
+        Assert::IsTrue(CBitboard(ReferenceBishopAttacks(d4, occupied)) ==
+                       CBitboard(bishop_attacks(d4, occupied)));
     }
 
     TEST_METHOD(RookMagicAttacksOnEdgeSquares) {
         // Rook on a1 with no blockers besides edges
-        uint64_t occupied = SetMask(a1);
-        uint64_t expected = ReferenceRookAttacks(a1, occupied);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)rook_attacks(a1, occupied));
+        BitBoardBits occupied = SetMask(a1);
+        Assert::IsTrue(CBitboard(ReferenceRookAttacks(a1, occupied)) ==
+                       CBitboard(rook_attacks(a1, occupied)));
 
         // Rook on h8
         occupied = SetMask(h8);
-        expected = ReferenceRookAttacks(h8, occupied);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)rook_attacks(h8, occupied));
+        Assert::IsTrue(CBitboard(ReferenceRookAttacks(h8, occupied)) ==
+                       CBitboard(rook_attacks(h8, occupied)));
     }
 
     TEST_METHOD(BishopMagicAttacksOnCornerSquares) {
-        uint64_t occupied = SetMask(a1);
-        uint64_t expected = ReferenceBishopAttacks(a1, occupied);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)bishop_attacks(a1, occupied));
+        BitBoardBits occupied = SetMask(a1);
+        Assert::IsTrue(CBitboard(ReferenceBishopAttacks(a1, occupied)) ==
+                       CBitboard(bishop_attacks(a1, occupied)));
 
         occupied = SetMask(h8);
-        expected = ReferenceBishopAttacks(h8, occupied);
-        Assert::AreEqual((unsigned long long)expected,
-                         (unsigned long long)bishop_attacks(h8, occupied));
+        Assert::IsTrue(CBitboard(ReferenceBishopAttacks(h8, occupied)) ==
+                       CBitboard(bishop_attacks(h8, occupied)));
     }
 };
 

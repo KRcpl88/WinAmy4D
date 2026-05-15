@@ -38,29 +38,29 @@
 #include "magic.h"
 #include "utils.h"
 
-BitBoard ShiftUpMask, ShiftDownMask;
-BitBoard ShiftLeftMask, ShiftRightMask;
+BitBoardBits ShiftUpMask, ShiftDownMask;
+BitBoardBits ShiftLeftMask, ShiftRightMask;
 
-BitBoard FileMask[8], IsoMask[8];
-BitBoard RankMask[8];
-BitBoard ForwardRayW[64], ForwardRayB[64];
-BitBoard PassedMaskW[64], PassedMaskB[64];
-BitBoard OutpostMaskW[64], OutpostMaskB[64];
-BitBoard InterPath[64][64];
-BitBoard Ray[64][64];
-BitBoard WPawnEPM[64], BPawnEPM[64];
-BitBoard BishopEPM[64], RookEPM[64], QueenEPM[64];
-BitBoard SeventhRank[2], EighthRank[2];
-BitBoard ThirdRank[2];
-BitBoard LeftOf[8], RightOf[8], FarLeftOf[8], FarRightOf[8];
-BitBoard EdgeMask;
-BitBoard BlackSquaresMask, WhiteSquaresMask;
-BitBoard KingSquareW[64], KingSquareB[64];
-BitBoard NotAFileMask, NotHFileMask;
-BitBoard CornerMaskA1, CornerMaskA8, CornerMaskH1, CornerMaskH8;
-BitBoard WPawnBackwardMask[64], BPawnBackwardMask[64];
-BitBoard KingSideMask, QueenSideMask;
-BitBoard ConnectedMask[64];
+BitBoardBits FileMask[8], IsoMask[8];
+BitBoardBits RankMask[8];
+BitBoardBits ForwardRayW[64], ForwardRayB[64];
+BitBoardBits PassedMaskW[64], PassedMaskB[64];
+BitBoardBits OutpostMaskW[64], OutpostMaskB[64];
+BitBoardBits InterPath[64][64];
+BitBoardBits Ray[64][64];
+BitBoardBits WPawnEPM[64], BPawnEPM[64];
+BitBoardBits BishopEPM[64], RookEPM[64], QueenEPM[64];
+BitBoardBits SeventhRank[2], EighthRank[2];
+BitBoardBits ThirdRank[2];
+BitBoardBits LeftOf[8], RightOf[8], FarLeftOf[8], FarRightOf[8];
+BitBoardBits EdgeMask;
+BitBoardBits BlackSquaresMask, WhiteSquaresMask;
+BitBoardBits KingSquareW[64], KingSquareB[64];
+BitBoardBits NotAFileMask, NotHFileMask;
+BitBoardBits CornerMaskA1, CornerMaskA8, CornerMaskH1, CornerMaskH8;
+BitBoardBits WPawnBackwardMask[64], BPawnBackwardMask[64];
+BitBoardBits KingSideMask, QueenSideMask;
+BitBoardBits ConnectedMask[64];
 
 void InitMasks(void) {
     int i;
@@ -74,7 +74,7 @@ void InitMasks(void) {
     }
 }
 
-void PrintBitBoard(BitBoard x) {
+void PrintBitBoard(BitBoardBits x) {
     int i, j;
     for (i = 7; i >= 0; i--) {
         for (j = 0; j < 8; j++) {

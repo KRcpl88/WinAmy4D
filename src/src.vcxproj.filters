@@ -20,7 +20,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bitboard.c">
+    <ClCompile Include="bitboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="bookup.c">
