@@ -30,45 +30,8 @@
 */
 
 /*
- * bitboard.cpp - bitboard routines
+ * bitboard.cpp - bitboard routines (now just a placeholder, all
+ * implementations are inline in bitboard.h)
  */
 
 #include "bitboard.h"
-#include "config.h"
-
-extern "C" {
-
-#if !HAVE___BUILTIN_CTZLL
-#if !HAVE_FFSLL
-int ffsll(long long num) {
-    if (num == 0)
-        return 0;
-
-    int position = 1;
-
-    while (!(num & 1)) {
-        num >>= 1;
-        position++;
-    }
-
-    return position;
-}
-
-#endif
-int FindSetBit(BitBoardBits b) { return ffsll(b) - 1; }
-#endif
-
-#if !HAVE___BUILTIN_POPCOUNTLL
-int CountBits(BitBoardBits i) {
-    i = i - ((i >> 1) & 0x5555555555555555);
-    i = (i & 0x3333333333333333) + ((i >> 2) & 0x3333333333333333);
-    return (((i + (i >> 4)) & 0xF0F0F0F0F0F0F0F) * 0x101010101010101) >> 56;
-}
-#endif
-
-} // extern "C"
-
-// CBitboard method implementations
-int CBitboard::CountBits() const { return ::CountBits(m_bits); }
-
-int CBitboard::FindSetBit() const { return ::FindSetBit(m_bits); }

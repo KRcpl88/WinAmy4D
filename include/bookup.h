@@ -38,7 +38,7 @@ void Bookup(char *);
 void BookupQuiet(char *);
 void FlattenBook(unsigned int);
 void CreateLearnDB(char *);
-void QueryBook(struct Position *);
-int SelectBook(struct Position *);
+void QueryBook(CPosition *);
+int SelectBook(CPosition *);
 
 #endif

@@ -41,26 +41,25 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
-extern BitBoardBits ShiftUpMask, ShiftDownMask;
-extern BitBoardBits ShiftLeftMask, ShiftRightMask;
+extern CBitBoard ShiftUpMask, ShiftDownMask;
+extern CBitBoard ShiftLeftMask, ShiftRightMask;
 
-static inline BitBoardBits ShiftUp(BitBoardBits x) { return (x << 8) & ShiftUpMask; }
+static inline CBitBoard ShiftUp(CBitBoard x) { return (x << 8) & ShiftUpMask; }
 
-static inline BitBoardBits ShiftDown(BitBoardBits x) {
+static inline CBitBoard ShiftDown(CBitBoard x) {
     return (x >> 8) & ShiftDownMask;
 }
 
-static inline BitBoardBits ShiftLeft(BitBoardBits x) {
+static inline CBitBoard ShiftLeft(CBitBoard x) {
     return (x << 1) & ShiftLeftMask;
 }
 
-static inline BitBoardBits ShiftRight(BitBoardBits x) {
+static inline CBitBoard ShiftRight(CBitBoard x) {
     return (x >> 1) & ShiftRightMask;
 }
 
 /**
  * Calculate the 'king distance' between two squares.
- * This the number of king moves to go from sq1 to sq2.
  */
 static inline int KingDist(int sq1, int sq2) {
     int file_dist = ABS((sq1 & 7) - (sq2 & 7));
@@ -71,7 +70,6 @@ static inline int KingDist(int sq1, int sq2) {
 
 /**
  * Calculate the 'minimum distance' between two squares.
- * This the minimum of the file and rank distances.
  */
 static inline int MinDist(int sq1, int sq2) {
     int file_dist = ABS((sq1 & 7) - (sq2 & 7));
@@ -124,14 +122,6 @@ static inline move_t make_promotion(int from, int to, int type, int flags) {
 static inline bool is_promo_square(int sq) {
     int rank = sq >> 3;
     return rank == 0 || rank == 7;
-}
-
-/*
- * Test whether a side is in check
- */
-static inline bool InCheck(struct Position *p, int side) {
-    int sq = p->kingSq[side];
-    return (p->atkFr[sq] & p->mask[!side][0]);
 }
 
 /*

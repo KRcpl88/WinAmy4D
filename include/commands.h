@@ -43,12 +43,12 @@ struct Command {
 };
 
 struct CommandEntry {
-    char *name;
+    const char *name;
     COMMAND command_func;
     int allowed_during_search;
     int interrupts_search;
-    char *short_help;
-    char *long_help;
+    const char *short_help;
+    const char *long_help;
 };
 
 extern char AutoSaveFileName[64];

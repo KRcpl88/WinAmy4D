@@ -2,17 +2,13 @@
 
 #include "CppUnitTest.h"
 
-// Include bitboard.h first (outside extern "C") so CBitboard class gets C++ linkage
 #include "bitboard.h"
-
-extern "C" {
 #include "dbase.h"
 #include "hashtable.h"
 #include "init.h"
 #include "inline.h"
 #include "magic.h"
 #include "movedata.h"
-}
 
 #include <cstdint>
 
@@ -22,16 +18,16 @@ namespace WinAmyTests {
 
 class PositionGuard {
   public:
-    explicit PositionGuard(Position *position) : p(position) {}
-    ~PositionGuard() { FreePosition(p); }
-    Position *get() const { return p; }
+    explicit PositionGuard(CPosition *position) : p(position) {}
+    ~PositionGuard() { CPosition::Free(p); }
+    CPosition *get() const { return p; }
 
   private:
-    Position *p;
+    CPosition *p;
 };
 
 uint64_t ReferenceRookAttacks(int sq, uint64_t occupied);
 uint64_t ReferenceBishopAttacks(int sq, uint64_t occupied);
-void AssertPositionsEqual(const Position *lhs, const Position *rhs);
+void AssertPositionsEqual(const CPosition *lhs, const CPosition *rhs);
 
 } // namespace WinAmyTests

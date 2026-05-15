@@ -36,6 +36,6 @@
 
 void ParseEcoPgn(char *);
 char *GetEcoCode(hash_t);
-bool FindEcoCode(const struct Position *, char *);
+bool FindEcoCode(const CPosition *, char *);
 
 #endif

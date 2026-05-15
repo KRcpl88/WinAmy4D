@@ -69,11 +69,11 @@ extern bool AbortSearch;
 extern int NumberOfCPUs;
 #endif
 
-int Iterate(struct Position *, int *, move_t, int *);
-void SearchRoot(struct Position *);
-void AnalysisMode(struct Position *);
-pb_result_t PermanentBrain(struct Position *);
-int QuiescenceSearch(struct Position *);
+int Iterate(CPosition *, int *, move_t, int *);
+void SearchRoot(CPosition *);
+void AnalysisMode(CPosition *);
+pb_result_t PermanentBrain(CPosition *);
+int QuiescenceSearch(CPosition *);
 void setMaxSearchDepth(int);
 
 #if MP

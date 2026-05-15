@@ -79,7 +79,7 @@ struct IntLookupResult {
 
 struct ListLookupResult {
     LookupResultCode result_code;
-    struct ListNode *result;
+    struct YamlListNode *result;
 };
 
 struct IntArrayLookupResult {
@@ -87,11 +87,11 @@ struct IntArrayLookupResult {
     unsigned int elements_read;
 };
 
-struct YamlNode *parse_yaml(char *);
-struct StringLookupResult get_as_string(struct YamlNode*, char *);
-struct IntLookupResult get_as_int(struct YamlNode*, char *);
-struct ListLookupResult get_as_list(struct YamlNode*, char *);
-struct IntArrayLookupResult get_as_int_array(struct YamlNode*, char *, int *, int);
+struct YamlNode *parse_yaml(const char *);
+struct StringLookupResult get_as_string(struct YamlNode*, const char *);
+struct IntLookupResult get_as_int(struct YamlNode*, const char *);
+struct ListLookupResult get_as_list(struct YamlNode*, const char *);
+struct IntArrayLookupResult get_as_int_array(struct YamlNode*, const char *, int *, int);
 void abort_if_allocation_failed(void *x);
 
 void free_yaml_node(struct YamlNode*);

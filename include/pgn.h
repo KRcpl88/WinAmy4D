@@ -54,8 +54,8 @@ struct PGNHeader {
 
 extern char OpponentName[OPP_NAME_LENGTH];
 
-void SaveGame(struct Position *, char *);
-void LoadGame(struct Position *, char *);
+void SaveGame(CPosition *, char *);
+void LoadGame(CPosition *, char *);
 int scanHeader(FILE *, struct PGNHeader *);
 int scanMove(FILE *, char *);
 void get_and_reset_comment(char *, unsigned int);

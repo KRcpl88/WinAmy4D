@@ -41,6 +41,6 @@
                     (p)->material_signature[Black])
 
 void RecogInit(void);
-int ProbeRecognizer(const struct Position *p, int *score);
+int ProbeRecognizer(const CPosition *p, int *score);
 
 #endif

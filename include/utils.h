@@ -38,9 +38,9 @@
 
 extern int Verbosity;
 
-void OpenLogFile(char *name);
-void Print(int, char *, ...);
-void PrintNoLog(int, char *, ...);
+void OpenLogFile(const char *name);
+void Print(int, const char *, ...);
+void PrintNoLog(int, const char *, ...);
 int InputReady(void);
 int ReadLine(char *buffer, int cnt);
 char *FormatTime(unsigned long, char *, size_t);
