@@ -158,6 +158,7 @@
     <ClCompile Include="AttackTests.cpp" />
     <ClCompile Include="MoveTests.cpp" />
     <ClCompile Include="PositionTests.cpp" />
+    <ClCompile Include="CoordTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectCapability Include="TestContainer" />

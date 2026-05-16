@@ -151,6 +151,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="..\include\scoord.h" />
+    <ClInclude Include="..\include\ucoord.h" />
+    <ClInclude Include="..\include\hcoord.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bitboard.cpp" />
@@ -180,6 +183,9 @@
     <ClCompile Include="search_io.cpp" />
     <ClCompile Include="state_machine.cpp" />
     <ClCompile Include="swap.cpp" />
+    <ClCompile Include="scoord.cpp" />
+    <ClCompile Include="ucoord.cpp" />
+    <ClCompile Include="hcoord.cpp" />
     <ClCompile Include="test_blunder.cpp" />
     <ClCompile Include="test_dbase.cpp" />
     <ClCompile Include="test_yaml.cpp" />
