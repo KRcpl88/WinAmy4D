@@ -43,3 +43,16 @@ Please fix all build warnings
 
 Please SAN parsing (including parse_san_with_heap) to parse the level, file and rank for each square instead of just file and rank, such that the SAN notation for square level 1, file a, and rank 1 would be "aa1" and level 1, file g, rank 8 would be "ag8".  In this notation, the move Nac3 would be to move the Knight piece to square "c3" on level 1.  In CSCoord, level, file and rank are 0 based, so that CSCoord(0,0,0) would be level 1 or a, file a, rank 1.  The SAN notation will support levels 1-15, or a - 0
 
+
+
+move_t is defined as a 16 bit bitfield with the rank and file of a from and to square.  We need to expand this to accomodate a level, file and rank.  
+
+1. Modify the move_t typedef to be a 32 bit DWORD
+2. Define a new typedef scoord_bitfield_t which is a 16 bit WORD bitfield contsining s level, file and rank.  bits 0-3 are the file, bits 4-7 are the rank, and bits 8-11 are the level
+3. Add a new CSCoord contructor whihc takes a scoord_bitfield_t and intiialized LEvel, Rank and File from the bitfield
+4. Add a new const CSCoord helper function GetBitField which returns a scoord_bitfield_t bitfield
+5. Modify M_FROM to construct a CSCoord from the low order 16 bit scoord_bitfield_t of the move_t type, an M_TO to use the high order scoord_bitfield_t
+
+
+
+
