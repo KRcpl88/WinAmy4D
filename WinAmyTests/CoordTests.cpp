@@ -51,6 +51,27 @@ TEST_CLASS(SCoordTests) {
         }
     }
 
+    TEST_METHOD(EnumeratingRankFileWithCSCoordMatchesBitOffsetOrder) {
+        int expectedOffset = 0;
+        for (int rank = 0; rank < 8; rank++) {
+            for (int file = 0; file < 8; file++) {
+                CSCoord square(0, file, rank);
+                Assert::AreEqual(expectedOffset, static_cast<int>(square));
+                expectedOffset++;
+            }
+        }
+        Assert::AreEqual(64, expectedOffset);
+    }
+
+    TEST_METHOD(OffsetConstructorProvidesExpectedRankAndFileAcrossBoard) {
+        for (int offset = 0; offset < 64; offset++) {
+            CSCoord square(offset);
+            Assert::AreEqual(0, square.Level);
+            Assert::AreEqual(offset / 8, square.Rank);
+            Assert::AreEqual(offset % 8, square.File);
+        }
+    }
+
     TEST_METHOD(OperatorIntReturnsBitOffset) {
         CSCoord coord(0, 3, 5);
         Assert::AreEqual(coord.BitOffset(), static_cast<int>(coord));

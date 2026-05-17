@@ -36,6 +36,7 @@
 #include "dbase.h"
 #include "inline.h"
 #include "magic.h"
+#include "scoord.h"
 #include "utils.h"
 
 CBitBoard ShiftUpMask, ShiftDownMask;
@@ -78,7 +79,7 @@ void PrintBitBoard(CBitBoard x) {
     int i, j;
     for (i = 7; i >= 0; i--) {
         for (j = 0; j < 8; j++) {
-            int k = i * 8 + j;
+            int k = static_cast<int>(CSCoord(0, j, i));
             if (x.TstBit(k))
                 Print(0, "*");
             else
@@ -95,11 +96,12 @@ void InitPawnMasks(void) {
         FileMask[i] = 0;
         IsoMask[i] = 0;
         for (j = 0; j < 8; j++) {
-            FileMask[i] |= CBitBoard::SetMask(8 * j + i);
+            const int square = static_cast<int>(CSCoord(0, i, j));
+            FileMask[i] |= CBitBoard::SetMask(square);
             if (i > 0)
-                IsoMask[i] |= CBitBoard::SetMask(8 * j + i - 1);
+                IsoMask[i] |= CBitBoard::SetMask(static_cast<int>(CSCoord(0, i - 1, j)));
             if (i < 7)
-                IsoMask[i] |= CBitBoard::SetMask(8 * j + i + 1);
+                IsoMask[i] |= CBitBoard::SetMask(static_cast<int>(CSCoord(0, i + 1, j)));
         }
 #ifdef DEBUG
         PrintBitBoard(IsoMask[i]);

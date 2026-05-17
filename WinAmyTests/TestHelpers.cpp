@@ -1,35 +1,37 @@
 #include "TestHelpers.h"
+#include "scoord.h"
 
 namespace WinAmyTests {
 
 uint64_t ReferenceRookAttacks(int sq, uint64_t occupied) {
     uint64_t attacks = 0;
-    const int file = sq & 7;
-    const int rank = sq >> 3;
+    const CSCoord sourceSquare(sq);
+    const int file = sourceSquare.File;
+    const int rank = sourceSquare.Rank;
 
     for (int r = rank + 1; r < 8; r++) {
-        const int target = r * 8 + file;
+        const int target = static_cast<int>(CSCoord(0, file, r));
         attacks |= CBitBoard::SetMask(target).GetBits();
         if (occupied & CBitBoard::SetMask(target).GetBits())
             break;
     }
 
     for (int r = rank - 1; r >= 0; r--) {
-        const int target = r * 8 + file;
+        const int target = static_cast<int>(CSCoord(0, file, r));
         attacks |= CBitBoard::SetMask(target).GetBits();
         if (occupied & CBitBoard::SetMask(target).GetBits())
             break;
     }
 
     for (int f = file + 1; f < 8; f++) {
-        const int target = rank * 8 + f;
+        const int target = static_cast<int>(CSCoord(0, f, rank));
         attacks |= CBitBoard::SetMask(target).GetBits();
         if (occupied & CBitBoard::SetMask(target).GetBits())
             break;
     }
 
     for (int f = file - 1; f >= 0; f--) {
-        const int target = rank * 8 + f;
+        const int target = static_cast<int>(CSCoord(0, f, rank));
         attacks |= CBitBoard::SetMask(target).GetBits();
         if (occupied & CBitBoard::SetMask(target).GetBits())
             break;
@@ -40,32 +42,33 @@ uint64_t ReferenceRookAttacks(int sq, uint64_t occupied) {
 
 uint64_t ReferenceBishopAttacks(int sq, uint64_t occupied) {
     uint64_t attacks = 0;
-    int file = sq & 7;
-    int rank = sq >> 3;
+    const CSCoord sourceSquare(sq);
+    const int file = sourceSquare.File;
+    const int rank = sourceSquare.Rank;
 
     for (int f = file + 1, r = rank + 1; f < 8 && r < 8; f++, r++) {
-        const int target = r * 8 + f;
+        const int target = static_cast<int>(CSCoord(0, f, r));
         attacks |= CBitBoard::SetMask(target).GetBits();
         if (occupied & CBitBoard::SetMask(target).GetBits())
             break;
     }
 
     for (int f = file - 1, r = rank + 1; f >= 0 && r < 8; f--, r++) {
-        const int target = r * 8 + f;
+        const int target = static_cast<int>(CSCoord(0, f, r));
         attacks |= CBitBoard::SetMask(target).GetBits();
         if (occupied & CBitBoard::SetMask(target).GetBits())
             break;
     }
 
     for (int f = file + 1, r = rank - 1; f < 8 && r >= 0; f++, r--) {
-        const int target = r * 8 + f;
+        const int target = static_cast<int>(CSCoord(0, f, r));
         attacks |= CBitBoard::SetMask(target).GetBits();
         if (occupied & CBitBoard::SetMask(target).GetBits())
             break;
     }
 
     for (int f = file - 1, r = rank - 1; f >= 0 && r >= 0; f--, r--) {
-        const int target = r * 8 + f;
+        const int target = static_cast<int>(CSCoord(0, f, r));
         attacks |= CBitBoard::SetMask(target).GetBits();
         if (occupied & CBitBoard::SetMask(target).GetBits())
             break;
