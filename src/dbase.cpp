@@ -319,8 +319,8 @@ static inline bool is_sliding(int tp) { return tp >= Bishop && tp <= Queen; }
  */
 
 static void DoCastle(CPosition *p, move_t move) {
-    int8_t from = M_FROM(move);
-    int8_t to = M_TO(move);
+    int8_t from = move.GetFrom();
+    int8_t to = move.GetTo();
     int8_t oldRook = (move & M_SCASTLE) ? from + 3 : from - 4;
     int8_t nr = (move & M_SCASTLE) ? from + 1 : from - 1;
 
@@ -375,8 +375,8 @@ static void DoCastle(CPosition *p, move_t move) {
  */
 
 static void UndoCastle(CPosition *p, move_t move) {
-    int8_t from = M_FROM(move);
-    int8_t to = M_TO(move);
+    int8_t from = move.GetFrom();
+    int8_t to = move.GetTo();
     int8_t oldRook = (move & M_SCASTLE) ? from + 3 : from - 4;
     int8_t nr = (move & M_SCASTLE) ? from + 1 : from - 1;
 
@@ -426,8 +426,8 @@ static void UndoCastle(CPosition *p, move_t move) {
 
 void CPosition::DoMove(move_t move) {
     CPosition *p = this;
-    int8_t from = M_FROM(move);
-    int8_t to = M_TO(move);
+    int8_t from = move.GetFrom();
+    int8_t to = move.GetTo();
     int8_t tp = TYPE(p->piece[from]);
 
     /* save EnPassant and Castling */
@@ -625,8 +625,8 @@ void CPosition::DoMove(move_t move) {
 
 void CPosition::UndoMove(move_t move) {
     CPosition *p = this;
-    int8_t from = M_FROM(move);
-    int8_t to = M_TO(move);
+    int8_t from = move.GetFrom();
+    int8_t to = move.GetTo();
     int8_t tp = TYPE(p->piece[to]);
 
     /* Swap p->turns */
@@ -994,7 +994,7 @@ bool CPosition::MayCastle(move_t move) {
     CPosition *p = this;
     /* Sometimes there might be a legal castling move, but for the
        wrong p->turn, probably from the Countermove table */
-    if (M_FROM(move) != ((p->turn == White) ? e1 : e8))
+    if (move.GetFrom() != ((p->turn == White) ? e1 : e8))
         return false;
 
     if (p->InCheck(p->turn))
@@ -1041,8 +1041,8 @@ bool CPosition::MayCastle(move_t move) {
 
 bool CPosition::LegalMove(move_t move) {
     CPosition *p = this;
-    int fr = M_FROM(move);
-    int to = M_TO(move);
+    int fr = move.GetFrom();
+    int to = move.GetTo();
 
     if (move == M_NONE || move == M_NULL)
         return false;
@@ -1128,8 +1128,8 @@ bool CPosition::LegalMove(move_t move) {
 
 bool CPosition::IsCheckingMove(move_t move) {
     CPosition *p = this;
-    int fr = M_FROM(move);
-    int to = M_TO(move);
+    int fr = move.GetFrom();
+    int to = move.GetTo();
     int tp = TYPE(p->piece[fr]);
     int kp = p->mask[OPP(p->turn)][King].FindSetBit();
     CBitBoard tmp;
@@ -1394,8 +1394,8 @@ char *CPosition::SAN(move_t move, char *buffer) {
     CPosition *p = this;
     char *x = buffer;
 
-    int8_t to = M_TO(move);
-    int8_t fr = M_FROM(move);
+    int8_t to = move.GetTo();
+    int8_t fr = move.GetFrom();
     int8_t tp = TYPE(p->piece[fr]);
 
     if (tp == Pawn) {
@@ -1500,8 +1500,8 @@ char *ICS_SAN(move_t move) {
     static char buffer[16];
     char *x = buffer;
 
-    int8_t to = M_TO(move);
-    int8_t fr = M_FROM(move);
+    int8_t to = move.GetTo();
+    int8_t fr = move.GetFrom();
 
     *(x++) = 'a' + (fr & 7);
     *(x++) = '1' + (fr >> 3);
@@ -1692,8 +1692,8 @@ static move_t parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
         for (i = heap->current_section->start; i < heap->current_section->end;
              i++) {
             move = heap->data[i];
-            int fr = M_FROM(move);
-            int to = M_TO(move);
+            int fr = move.GetFrom();
+            int to = move.GetTo();
 
             if (TYPE(p->piece[fr]) == Pawn &&
                 (move & (M_CAPTURE | M_ENPASSANT)) && (fr & 7) == ffl &&
@@ -1773,7 +1773,7 @@ static move_t parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
     for (i = heap->current_section->start; i < heap->current_section->end;
          i++) {
         move = heap->data[i];
-        int fr = M_FROM(move), to = M_TO(move);
+        int fr = move.GetFrom(), to = move.GetTo();
 
         if (TYPE(p->piece[fr]) != tp)
             continue;
@@ -1840,8 +1840,8 @@ move_t ParseSANList(char *san, Color side, move_t *mvs, int cnt, int *pmap) {
         tfl = *(san + 1) - 'a';
 
         for (i = 0; i < cnt; i++) {
-            int fr = M_FROM(mvs[i]);
-            int to = M_TO(mvs[i]);
+            int fr = mvs[i].GetFrom();
+            int to = mvs[i].GetTo();
 
             if (pmap[fr] == Pawn && (mvs[i] & (M_CAPTURE | M_ENPASSANT)) &&
                 (fr & 7) == ffl && (to & 7) == tfl)
@@ -1918,7 +1918,7 @@ move_t ParseSANList(char *san, Color side, move_t *mvs, int cnt, int *pmap) {
         tp = Pawn;
 
     for (i = 0; i < cnt; i++) {
-        int fr = M_FROM(mvs[i]), to = M_TO(mvs[i]);
+        int fr = mvs[i].GetFrom(), to = mvs[i].GetTo();
 
         if (TYPE(pmap[fr]) != tp)
             continue;

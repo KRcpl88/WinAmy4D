@@ -50,9 +50,6 @@
     (((c) == White && (p) > 0) || ((c) == Black && (p) < 0))
 #define PIECEID(p, c) (((c) == White) ? (p) : -(p))
 
-#define M_FROM(m) (static_cast<int>(CSCoord((scoord_bitfield_t)((m) & 0xffffu))))
-#define M_TO(m) (static_cast<int>(CSCoord((scoord_bitfield_t)(((m) >> 16) & 0xffffu))))
-
 #define M_CAPTURE (1u << 12)
 #define M_SCASTLE (1u << 13)
 #define M_LCASTLE (1u << 14)

@@ -345,7 +345,7 @@ static int CheckExtend(CPosition *p) {
         int nd = 0;
 
         /* discovered check */
-        if (atp != M_TO((p->actLog - 1)->gl_Move)) {
+        if (atp != (p->actLog - 1)->gl_Move.GetTo()) {
             DiscExt++;
             nd = ExtendDiscoveredCheck;
         }
@@ -442,14 +442,14 @@ static int ScoreMove(CPosition *p, move_t move) {
     int score = 0;
 
     if (move & M_CAPTURE)
-        score += Value[TYPE(p->piece[M_TO(move)])];
+        score += Value[TYPE(p->piece[move.GetTo()])];
     if (move & M_PROMOTION_MASK)
         score += Value[PromoType(move)] - Value[Pawn];
-    else if (TYPE(p->piece[M_FROM(move)]) == Pawn) {
-        if (p->turn == White && M_TO(move) >= a7) {
+    else if (TYPE(p->piece[move.GetFrom()]) == Pawn) {
+        if (p->turn == White && move.GetTo() >= a7) {
             score += Value[Bishop];
         }
-        if (p->turn == Black && M_TO(move) <= h2) {
+        if (p->turn == Black && move.GetTo() <= h2) {
             score += Value[Bishop];
         }
     }
@@ -835,20 +835,20 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
          */
 
         if ((move & M_CAPTURE) && (lmove & M_CAPTURE) &&
-            M_TO(move) == M_TO(lmove) &&
-            IsRecapture(p->piece[M_TO(move)], (p->actLog - 1)->gl_Piece)) {
+            move.GetTo() == lmove.GetTo() &&
+            IsRecapture(p->piece[move.GetTo()], (p->actLog - 1)->gl_Piece)) {
             RCExt += 1;
-            next_depth += ExtendRecapture[TYPE(p->piece[M_TO(move)])];
+            next_depth += ExtendRecapture[TYPE(p->piece[move.GetTo()])];
         }
 
         /*
          * passed pawn push extension
          */
 
-        if (TYPE(p->piece[M_FROM(move)]) == Pawn &&
+        if (TYPE(p->piece[move.GetFrom()]) == Pawn &&
             p->nonPawn[OPP(p->turn)] <= Value[Queen]) {
 
-            int to = M_TO(move);
+            int to = move.GetTo();
 
             if (((p->turn == White && to >= a7) ||
                  (p->turn == Black && to <= h2)) &&

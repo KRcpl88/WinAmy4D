@@ -106,9 +106,7 @@ static inline int EdgeDist(int sq) {
  * Create a move from from square, to square and flags.
  */
 static inline move_t make_move(int from, int to, int flags) {
-    move_t fromBitField = static_cast<move_t>(CSCoord(from).GetBitField());
-    move_t toBitField = static_cast<move_t>(CSCoord(to).GetBitField()) << 16;
-    return (move_t)(fromBitField | toBitField | flags);
+    return move_t(CSCoord(from), CSCoord(to), static_cast<uint32_t>(flags));
 }
 
 /**

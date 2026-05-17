@@ -147,8 +147,8 @@ TEST_CLASS(MoveTests) {
         const CSCoord toSquare(0, 4, 3);   // e4
         const move_t move = make_move(static_cast<int>(fromSquare), static_cast<int>(toSquare), M_PAWND);
 
-        Assert::AreEqual(static_cast<int>(fromSquare), M_FROM(move));
-        Assert::AreEqual(static_cast<int>(toSquare), M_TO(move));
+        Assert::AreEqual(static_cast<int>(fromSquare), move.GetFrom());
+        Assert::AreEqual(static_cast<int>(toSquare), move.GetTo());
     }
 };
 
