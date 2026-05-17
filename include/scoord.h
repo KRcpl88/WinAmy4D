@@ -5,9 +5,9 @@
 
 class CSCoord {
 public:
-    inline static constexpr std::array<int, 1> LEVEL_SIZE{64};
-    inline static constexpr std::array<int, 1> LEVEL_WIDTH{8};
-    inline static constexpr std::array<int, 1> LEVEL_OFFSET{0};
+    static const std::array<int, 1> LEVEL_SIZE;
+    static const std::array<int, 1> LEVEL_WIDTH;
+    static const std::array<int, 1> LEVEL_OFFSET;
 
     static constexpr int NUM_LEVELS = 1;
     static constexpr int MAX_LEVEL_WIDTH = 8;
@@ -37,4 +37,3 @@ public:
 private:
     static void ValidateOffset(int offset);
 };
-
