@@ -34,7 +34,7 @@
 
 #include <stdint.h>
 
-typedef int32_t move_t;
+typedef uint32_t move_t;
 typedef uint64_t ran_t;
 typedef uint64_t hash_t;
 

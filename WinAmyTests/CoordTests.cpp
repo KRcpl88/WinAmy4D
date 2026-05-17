@@ -115,6 +115,23 @@ TEST_CLASS(SCoordTests) {
             CSCoord coord(-1);
         });
     }
+
+    TEST_METHOD(BitfieldConstructorDecomposesLevelRankFile) {
+        const scoord_bitfield_t bitfield = static_cast<scoord_bitfield_t>((2 << 8) | (4 << 4) | 3);
+        CSCoord coord(bitfield);
+        Assert::AreEqual(2, coord.Level);
+        Assert::AreEqual(3, coord.File);
+        Assert::AreEqual(4, coord.Rank);
+    }
+
+    TEST_METHOD(GetBitFieldRoundTripsWithBitfieldConstructor) {
+        CSCoord original(0, 6, 7);
+        const scoord_bitfield_t bitfield = original.GetBitField();
+        CSCoord roundTrip(bitfield);
+        Assert::AreEqual(original.Level, roundTrip.Level);
+        Assert::AreEqual(original.File, roundTrip.File);
+        Assert::AreEqual(original.Rank, roundTrip.Rank);
+    }
 };
 
 TEST_CLASS(UCoordTests) {

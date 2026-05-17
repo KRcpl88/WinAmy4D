@@ -35,6 +35,7 @@
 #include "bitboard.h"
 #include "config.h"
 #include "heap.h"
+#include "scoord.h"
 #include "types.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -49,18 +50,18 @@
     (((c) == White && (p) > 0) || ((c) == Black && (p) < 0))
 #define PIECEID(p, c) (((c) == White) ? (p) : -(p))
 
-#define M_FROM(m) ((m) & 63)
-#define M_TO(m) (((m) >> 6) & 63)
+#define M_FROM(m) (static_cast<int>(CSCoord((scoord_bitfield_t)((m) & 0xffffu))))
+#define M_TO(m) (static_cast<int>(CSCoord((scoord_bitfield_t)(((m) >> 16) & 0xffffu))))
 
-#define M_CAPTURE (1 << 13)
-#define M_SCASTLE (1 << 14)
-#define M_LCASTLE (1 << 15)
-#define M_PAWND (1 << 16)
-#define M_PROMOTION_OFFSET 17
-#define M_PROMOTION_MASK (7 << M_PROMOTION_OFFSET)
-#define M_ENPASSANT (1 << 20)
-#define M_NULL (1 << 21)
-#define M_HASHED (1 << 22)
+#define M_CAPTURE (1u << 12)
+#define M_SCASTLE (1u << 13)
+#define M_LCASTLE (1u << 14)
+#define M_PAWND (1u << 15)
+#define M_ENPASSANT (1u << 28)
+#define M_PROMOTION_OFFSET 29
+#define M_PROMOTION_MASK (7u << M_PROMOTION_OFFSET)
+#define M_NULL ((move_t)(M_SCASTLE | M_LCASTLE | M_ENPASSANT))
+#define M_HASHED ((move_t)(M_CAPTURE | M_SCASTLE | M_LCASTLE | M_ENPASSANT))
 
 #define M_CANY (M_SCASTLE | M_LCASTLE)
 

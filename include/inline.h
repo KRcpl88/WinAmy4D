@@ -106,14 +106,16 @@ static inline int EdgeDist(int sq) {
  * Create a move from from square, to square and flags.
  */
 static inline move_t make_move(int from, int to, int flags) {
-    return (move_t)(from | (to << 6) | flags);
+    move_t fromBitField = static_cast<move_t>(CSCoord(from).GetBitField());
+    move_t toBitField = static_cast<move_t>(CSCoord(to).GetBitField()) << 16;
+    return (move_t)(fromBitField | toBitField | flags);
 }
 
 /**
  * Create a promotion move from from square, to square and flags.
  */
 static inline move_t make_promotion(int from, int to, int type, int flags) {
-    return (move_t)(from | (to << 6) | (type << M_PROMOTION_OFFSET) | flags);
+    return make_move(from, to, flags | static_cast<int>((move_t)type << M_PROMOTION_OFFSET));
 }
 
 /**

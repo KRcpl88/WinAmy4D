@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+typedef std::uint16_t scoord_bitfield_t;
+
 class CSCoord {
 public:
     static const int LEVEL_SIZE[1];
@@ -22,6 +24,7 @@ public:
     CSCoord() = default;
     CSCoord(int level, int file, int rank);
     explicit CSCoord(int offset);
+    explicit CSCoord(scoord_bitfield_t bitfield);
 
     void Validate() const;
     bool IsValid() const;
@@ -30,6 +33,7 @@ public:
     static bool IsValid(int offset);
 
     int BitOffset() const;
+    scoord_bitfield_t GetBitField() const;
 
     explicit operator int() const;
 

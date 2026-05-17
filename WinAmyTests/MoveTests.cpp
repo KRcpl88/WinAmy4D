@@ -132,7 +132,7 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        move_t move = make_move(e7, e8, (Queen << M_PROMOTION_OFFSET));
+        move_t move = make_move(e7, e8, static_cast<int>((move_t)Queen << M_PROMOTION_OFFSET));
         position.get()->DoMove(move);
 
         Assert::AreEqual((int)Queen, (int)position.get()->piece[e8]);
@@ -140,6 +140,15 @@ TEST_CLASS(MoveTests) {
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
+    }
+
+    TEST_METHOD(MFromAndMToDecodeFromScooordBitfields) {
+        const CSCoord fromSquare(0, 4, 1); // e2
+        const CSCoord toSquare(0, 4, 3);   // e4
+        const move_t move = make_move(static_cast<int>(fromSquare), static_cast<int>(toSquare), M_PAWND);
+
+        Assert::AreEqual(static_cast<int>(fromSquare), M_FROM(move));
+        Assert::AreEqual(static_cast<int>(toSquare), M_TO(move));
     }
 };
 

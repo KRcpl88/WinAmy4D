@@ -1558,13 +1558,13 @@ move_t parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
                 move = move & (~M_PROMOTION_MASK);
 
                 if (p == 'q' || p == 'Q')
-                    return move | (Queen << M_PROMOTION_OFFSET);
+                    return move | ((move_t)Queen << M_PROMOTION_OFFSET);
                 if (p == 'r' || p == 'R')
-                    return move | (Rook << M_PROMOTION_OFFSET);
+                    return move | ((move_t)Rook << M_PROMOTION_OFFSET);
                 if (p == 'n' || p == 'N')
-                    return move | (Knight << M_PROMOTION_OFFSET);
+                    return move | ((move_t)Knight << M_PROMOTION_OFFSET);
                 if (p == 'b' || p == 'B')
-                    return move | (Bishop << M_PROMOTION_OFFSET);
+                    return move | ((move_t)Bishop << M_PROMOTION_OFFSET);
             } else
                 return move;
         }
@@ -1624,13 +1624,13 @@ move_t ParseGSANList(char *san, Color side, move_t *mvs, int cnt) {
                 int move = mvs[i] & (~M_PROMOTION_MASK);
 
                 if (p == 'q' || p == 'Q')
-                    return move | (Queen << M_PROMOTION_OFFSET);
+                    return move | ((move_t)Queen << M_PROMOTION_OFFSET);
                 if (p == 'r' || p == 'R')
-                    return move | (Rook << M_PROMOTION_OFFSET);
+                    return move | ((move_t)Rook << M_PROMOTION_OFFSET);
                 if (p == 'n' || p == 'N')
-                    return move | (Knight << M_PROMOTION_OFFSET);
+                    return move | ((move_t)Knight << M_PROMOTION_OFFSET);
                 if (p == 'b' || p == 'B')
-                    return move | (Bishop << M_PROMOTION_OFFSET);
+                    return move | ((move_t)Bishop << M_PROMOTION_OFFSET);
             } else
                 return mvs[i];
         }
