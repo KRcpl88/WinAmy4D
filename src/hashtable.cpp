@@ -620,7 +620,7 @@ void GuessHTSizes(char *size) {
             break;
     }
 
-    total_size -= (1 << HT_Bits) * sizeof(struct HTEntry);
+    total_size -= ((int64_t)1 << HT_Bits) * (int64_t)sizeof(struct HTEntry);
 
     tmp = 3 * total_size / 4;
 
@@ -631,7 +631,7 @@ void GuessHTSizes(char *size) {
             break;
     }
 
-    total_size -= (1 << ST_Bits) * sizeof(struct STEntry);
+    total_size -= ((int64_t)1 << ST_Bits) * (int64_t)sizeof(struct STEntry);
 
     for (PT_Bits = 1; PT_Bits < 32; PT_Bits++) {
         int64_t tmp2 =
