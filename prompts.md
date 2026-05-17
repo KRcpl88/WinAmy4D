@@ -31,3 +31,15 @@ To prepare to expand the logic to a 3D chess board, we need to include level wit
 1. In each place where we are enumerating rank and file, add an outer for loop to enumerate level from 0 to NUM_LEVELS
 2. each place where we enumerate rank and file form 0 to 7, use LEVEL_WIDTH[level] as the upper limit instead of 8
 
+
+
+
+
+Please fix all build warnings
+
+
+
+
+
+Please SAN parsing (including parse_san_with_heap) to parse the level, file and rank for each square instead of just file and rank, such that the SAN notation for square level 1, file a, and rank 1 would be "aa1" and level 1, file g, rank 8 would be "ag8".  In this notation, the move Nac3 would be to move the Knight piece to square "c3" on level 1.  In CSCoord, level, file and rank are 0 based, so that CSCoord(0,0,0) would be level 1 or a, file a, rank 1.  The SAN notation will support levels 1-15, or a - 0
+
