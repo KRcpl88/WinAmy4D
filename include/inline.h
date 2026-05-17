@@ -113,7 +113,10 @@ static inline CMove make_move(int from, int to, int flags) {
  * Create a promotion move from from square, to square and flags.
  */
 static inline CMove make_promotion(int from, int to, int type, int flags) {
-    return make_move(from, to, flags | static_cast<int>((CMove)type << M_PROMOTION_OFFSET));
+    return make_move(from, to,
+                     flags |
+                         static_cast<int>(static_cast<uint32_t>(type)
+                                          << M_PROMOTION_OFFSET));
 }
 
 /**

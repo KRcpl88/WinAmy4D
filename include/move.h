@@ -7,7 +7,6 @@
 class CMove {
 public:
     CMove() = default;
-    CMove(std::uint32_t bits);
     CMove(const CSCoord& from, const CSCoord& to, std::uint32_t flags);
 
     std::uint32_t GetBits() const;

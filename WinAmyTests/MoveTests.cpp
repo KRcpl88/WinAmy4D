@@ -132,7 +132,9 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        CMove move = make_move(e7, e8, static_cast<int>((CMove)Queen << M_PROMOTION_OFFSET));
+        CMove move = make_move(
+            e7, e8,
+            static_cast<int>(static_cast<uint32_t>(Queen) << M_PROMOTION_OFFSET));
         position.get()->DoMove(move);
 
         Assert::AreEqual((int)Queen, (int)position.get()->piece[e8]);

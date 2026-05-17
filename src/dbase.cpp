@@ -1558,13 +1558,13 @@ CMove parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
                 move = move & (~M_PROMOTION_MASK);
 
                 if (p == 'q' || p == 'Q')
-                    return move | ((CMove)Queen << M_PROMOTION_OFFSET);
+                    return move | (static_cast<uint32_t>(Queen) << M_PROMOTION_OFFSET);
                 if (p == 'r' || p == 'R')
-                    return move | ((CMove)Rook << M_PROMOTION_OFFSET);
+                    return move | (static_cast<uint32_t>(Rook) << M_PROMOTION_OFFSET);
                 if (p == 'n' || p == 'N')
-                    return move | ((CMove)Knight << M_PROMOTION_OFFSET);
+                    return move | (static_cast<uint32_t>(Knight) << M_PROMOTION_OFFSET);
                 if (p == 'b' || p == 'B')
-                    return move | ((CMove)Bishop << M_PROMOTION_OFFSET);
+                    return move | (static_cast<uint32_t>(Bishop) << M_PROMOTION_OFFSET);
             } else
                 return move;
         }
@@ -1624,13 +1624,13 @@ CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
                 int move = mvs[i] & (~M_PROMOTION_MASK);
 
                 if (p == 'q' || p == 'Q')
-                    return move | ((CMove)Queen << M_PROMOTION_OFFSET);
+                    return move | (static_cast<uint32_t>(Queen) << M_PROMOTION_OFFSET);
                 if (p == 'r' || p == 'R')
-                    return move | ((CMove)Rook << M_PROMOTION_OFFSET);
+                    return move | (static_cast<uint32_t>(Rook) << M_PROMOTION_OFFSET);
                 if (p == 'n' || p == 'N')
-                    return move | ((CMove)Knight << M_PROMOTION_OFFSET);
+                    return move | (static_cast<uint32_t>(Knight) << M_PROMOTION_OFFSET);
                 if (p == 'b' || p == 'B')
-                    return move | ((CMove)Bishop << M_PROMOTION_OFFSET);
+                    return move | (static_cast<uint32_t>(Bishop) << M_PROMOTION_OFFSET);
             } else
                 return mvs[i];
         }

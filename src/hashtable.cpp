@@ -361,7 +361,7 @@ LookupResult ProbeST(hash_t key, int *score) {
     return Useless;
 }
 
-void StoreHT(hash_t key, int best, int alpha, int beta, int bestm, int depth,
+void StoreHT(hash_t key, int best, int alpha, int beta, CMove bestm, int depth,
              int threat, int ply
 #if MP
              ,

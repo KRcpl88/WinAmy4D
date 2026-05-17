@@ -57,14 +57,15 @@
 #define M_ENPASSANT (1u << 28)
 #define M_PROMOTION_OFFSET 29
 #define M_PROMOTION_MASK (7u << M_PROMOTION_OFFSET)
-#define M_NULL ((CMove)(M_SCASTLE | M_LCASTLE | M_ENPASSANT))
-#define M_HASHED ((CMove)(M_CAPTURE | M_SCASTLE | M_LCASTLE | M_ENPASSANT))
+#define M_NULL CMove(CSCoord(0), CSCoord(0), M_SCASTLE | M_LCASTLE | M_ENPASSANT)
+#define M_HASHED CMove(CSCoord(0), CSCoord(0), \
+                       M_CAPTURE | M_SCASTLE | M_LCASTLE | M_ENPASSANT)
 
 #define M_CANY (M_SCASTLE | M_LCASTLE)
 
 #define M_TACTICAL (M_CAPTURE | M_ENPASSANT | M_PROMOTION_MASK)
 
-#define M_NONE 0
+#define M_NONE CMove()
 
 /* Maximum number of good/bad moves we attempt to parse */
 #define MAX_EPD_MOVES 64

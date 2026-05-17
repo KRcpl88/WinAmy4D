@@ -1,10 +1,5 @@
 #include "move.h"
 
-CMove::CMove(std::uint32_t bits)
-    : m_from(static_cast<scoord_bitfield_t>(bits & 0xffffu)),
-      m_to(static_cast<scoord_bitfield_t>((bits >> 16) & 0xffffu)), m_bits(bits) {
-}
-
 CMove::CMove(const CSCoord& from, const CSCoord& to, std::uint32_t flags)
     : m_from(from), m_to(to),
       m_bits(static_cast<std::uint32_t>(from.GetBitField()) |
@@ -36,7 +31,9 @@ CMove::operator std::uint32_t() const {
 }
 
 CMove CMove::operator|(std::uint32_t flags) const {
-    return CMove(m_bits | flags);
+    CMove result = *this;
+    result |= flags;
+    return result;
 }
 
 std::uint32_t CMove::operator&(std::uint32_t flags) const {

@@ -89,10 +89,10 @@ void AllocateHT(void);
 #if MP
 LookupResult ProbeHT(hash_t, int *, int, CMove *, bool *, int, int,
                      struct HTEntry *);
-void StoreHT(hash_t, int, int, int, int, int, int, int, struct HTEntry *);
+void StoreHT(hash_t, int, int, int, CMove, int, int, int, struct HTEntry *);
 #else
 LookupResult ProbeHT(hash_t, int *, int, CMove *, bool *, int);
-void StoreHT(hash_t, int, int, int, int, int, int, int);
+void StoreHT(hash_t, int, int, int, CMove, int, int, int);
 #endif
 LookupResult ProbePT(hash_t, int *, struct PawnFacts *);
 void StorePT(hash_t, int, struct PawnFacts *);
