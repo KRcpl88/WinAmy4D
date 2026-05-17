@@ -345,7 +345,7 @@ static int CheckExtend(CPosition *p) {
         int nd = 0;
 
         /* discovered check */
-        if (atp != (p->actLog - 1)->gl_Move.GetTo()) {
+        if (atp != (p->actLog - 1)->gl_Move.GetToCoord().GetBitOffset()) {
             DiscExt++;
             nd = ExtendDiscoveredCheck;
         }
@@ -441,20 +441,20 @@ static int CheckExtend(CPosition *p) {
 static int ScoreMove(CPosition *p, CMove move) {
     int score = 0;
 
-    if (move & M_CAPTURE)
-        score += Value[TYPE(p->piece[move.GetTo()])];
-    if (move & M_PROMOTION_MASK)
+    if (move.IsCapture())
+        score += Value[TYPE(p->piece[move.GetToCoord().GetBitOffset()])];
+    if (move.HasPromotion())
         score += Value[PromoType(move)] - Value[Pawn];
-    else if (TYPE(p->piece[move.GetFrom()]) == Pawn) {
-        if (p->turn == White && move.GetTo() >= a7) {
+    else if (TYPE(p->piece[move.GetFromCoord().GetBitOffset()]) == Pawn) {
+        if (p->turn == White && move.GetToCoord().GetBitOffset() >= a7) {
             score += Value[Bishop];
         }
-        if (p->turn == Black && move.GetTo() <= h2) {
+        if (p->turn == Black && move.GetToCoord().GetBitOffset() <= h2) {
             score += Value[Bishop];
         }
     }
 
-    if (move & M_ENPASSANT)
+    if (move.IsEnPassant())
         score += Value[Pawn];
 
     return score;
@@ -468,8 +468,8 @@ static void StoreResult(struct SearchData *sd, int score, int alpha, int beta,
                         CMove move, int depth, int threat) {
     CPosition *p = sd->position;
 
-    if (!(move & M_TACTICAL) && score > alpha) {
-        sd->historyTab[p->turn][move & 4095] += depth * depth;
+    if (!(move.IsTactical()) && score > alpha) {
+        sd->historyTab[p->turn][move.GetFromToIndex()] += depth * depth;
     }
 
     StoreHT(p->hkey, score, alpha, beta, move, depth, threat, sd->ply
@@ -827,28 +827,28 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
     while ((move = incheck ? NextEvasion(sd) : NextMove(sd)) != M_NONE) {
         int next_depth = extend;
 
-        if (move & M_CANY && !p->MayCastle(move))
+        if (move.IsCastle() && !p->MayCastle(move))
             continue;
 
         /*
          * recapture extension
          */
 
-        if ((move & M_CAPTURE) && (lmove & M_CAPTURE) &&
-            move.GetTo() == lmove.GetTo() &&
-            IsRecapture(p->piece[move.GetTo()], (p->actLog - 1)->gl_Piece)) {
+        if ((move.IsCapture()) && (lmove.IsCapture()) &&
+            move.GetToCoord().GetBitOffset() == lmove.GetToCoord().GetBitOffset() &&
+            IsRecapture(p->piece[move.GetToCoord().GetBitOffset()], (p->actLog - 1)->gl_Piece)) {
             RCExt += 1;
-            next_depth += ExtendRecapture[TYPE(p->piece[move.GetTo()])];
+            next_depth += ExtendRecapture[TYPE(p->piece[move.GetToCoord().GetBitOffset()])];
         }
 
         /*
          * passed pawn push extension
          */
 
-        if (TYPE(p->piece[move.GetFrom()]) == Pawn &&
+        if (TYPE(p->piece[move.GetFromCoord().GetBitOffset()]) == Pawn &&
             p->nonPawn[OPP(p->turn)] <= Value[Queen]) {
 
-            int to = move.GetTo();
+            int to = move.GetToCoord().GetBitOffset();
 
             if (((p->turn == White && to >= a7) ||
                  (p->turn == Black && to <= h2)) &&
@@ -987,9 +987,9 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
                  */
 
                 if (tmp >= beta) {
-                    if (!(move & M_TACTICAL)) {
+                    if (!(move.IsTactical())) {
                         PutKiller(sd, move);
-                        sd->counterTab[p->turn][lmove & 4095] = move;
+                        sd->counterTab[p->turn][lmove.GetFromToIndex()] = move;
                     }
                     StoreResult(sd, tmp, alpha, beta, move, depth, threat);
                     best = tmp;
@@ -1051,9 +1051,9 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
          */
 
         if (tmp >= beta) {
-            if (!(move & M_TACTICAL)) {
+            if (!(move.IsTactical())) {
                 PutKiller(sd, move);
-                sd->counterTab[p->turn][lmove & 4095] = move;
+                sd->counterTab[p->turn][lmove.GetFromToIndex()] = move;
             }
             StoreResult(sd, tmp, alpha, beta, move, depth, threat);
             best = tmp;
@@ -1272,7 +1272,7 @@ static void *IterateInt(void *x) {
 
     sd->best_score = p->material[p->turn] - p->material[OPP(p->turn)];
 
-    if (!(mvs[0] & M_TACTICAL))
+    if (!mvs[0].IsTactical())
         PutKiller(sd, mvs[0]);
 
     MaxDepth = MAX_TREE_SIZE - 1;
@@ -1403,7 +1403,7 @@ static void *IterateInt(void *x) {
                     mvs[0] = move;
                     nodes[0] = tn;
 
-                    if (!(move & M_TACTICAL))
+                    if (!(move.IsTactical()))
                         PutKiller(sd, move);
                     PBMove = M_NONE;
                     is_pv = true;

@@ -254,7 +254,7 @@ CMove NextMove(struct SearchData *sd) {
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->counterTab[p->turn][lmove & 4095];
+            move = sd->counterTab[p->turn][lmove.GetFromToIndex()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {
@@ -537,7 +537,7 @@ CMove NextEvasion(struct SearchData *sd) {
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->counterTab[p->turn][lmove & 4095];
+            move = sd->counterTab[p->turn][lmove.GetFromToIndex()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {

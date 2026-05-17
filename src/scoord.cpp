@@ -60,7 +60,7 @@ bool CSCoord::IsValid(int level, int file, int rank) {
     return true;
 }
 
-int CSCoord::BitOffset() const {
+int CSCoord::GetBitOffset() const {
     if ((Level < 0) || (Level >= NUM_LEVELS)) {
         throw std::out_of_range("BitBoard::BitOffset(Level, File, Rank) level");
     }
@@ -70,6 +70,10 @@ int CSCoord::BitOffset() const {
     }
 
     return LEVEL_OFFSET[Level] + Rank * LEVEL_WIDTH[Level] + File;
+}
+
+int CSCoord::BitOffset() const {
+    return GetBitOffset();
 }
 
 scoord_bitfield_t CSCoord::GetBitField() const {
@@ -83,5 +87,5 @@ bool CSCoord::IsValid(int offset) {
 
 CSCoord::operator int() const {
     Validate();
-    return BitOffset();
+    return GetBitOffset();
 }

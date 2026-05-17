@@ -32,6 +32,7 @@ public:
     static bool IsValid(int level, int file, int rank);
     static bool IsValid(int offset);
 
+    int GetBitOffset() const;
     int BitOffset() const;
     scoord_bitfield_t GetBitField() const;
 

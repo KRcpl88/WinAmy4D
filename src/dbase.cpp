@@ -319,10 +319,12 @@ static inline bool is_sliding(int tp) { return tp >= Bishop && tp <= Queen; }
  */
 
 static void DoCastle(CPosition *p, CMove move) {
-    int8_t from = move.GetFrom();
-    int8_t to = move.GetTo();
-    int8_t oldRook = (move & M_SCASTLE) ? from + 3 : from - 4;
-    int8_t nr = (move & M_SCASTLE) ? from + 1 : from - 1;
+    const CSCoord& fromCoord = move.GetFromCoord();
+    const CSCoord& toCoord = move.GetToCoord();
+    int8_t from = fromCoord.GetBitOffset();
+    int8_t to = toCoord.GetBitOffset();
+    int8_t oldRook = (move.IsShortCastle()) ? from + 3 : from - 4;
+    int8_t nr = (move.IsShortCastle()) ? from + 1 : from - 1;
 
     /* king looses its attacks */
     AtkClr(p, from);
@@ -375,10 +377,12 @@ static void DoCastle(CPosition *p, CMove move) {
  */
 
 static void UndoCastle(CPosition *p, CMove move) {
-    int8_t from = move.GetFrom();
-    int8_t to = move.GetTo();
-    int8_t oldRook = (move & M_SCASTLE) ? from + 3 : from - 4;
-    int8_t nr = (move & M_SCASTLE) ? from + 1 : from - 1;
+    const CSCoord& fromCoord = move.GetFromCoord();
+    const CSCoord& toCoord = move.GetToCoord();
+    int8_t from = fromCoord.GetBitOffset();
+    int8_t to = toCoord.GetBitOffset();
+    int8_t oldRook = (move.IsShortCastle()) ? from + 3 : from - 4;
+    int8_t nr = (move.IsShortCastle()) ? from + 1 : from - 1;
 
     /* king looses its attacks */
     AtkClr(p, to);
@@ -426,8 +430,10 @@ static void UndoCastle(CPosition *p, CMove move) {
 
 void CPosition::DoMove(CMove move) {
     CPosition *p = this;
-    int8_t from = move.GetFrom();
-    int8_t to = move.GetTo();
+    const CSCoord& fromCoord = move.GetFromCoord();
+    const CSCoord& toCoord = move.GetToCoord();
+    int8_t from = fromCoord.GetBitOffset();
+    int8_t to = toCoord.GetBitOffset();
     int8_t tp = TYPE(p->piece[from]);
 
     /* save EnPassant and Castling */
@@ -436,7 +442,7 @@ void CPosition::DoMove(CMove move) {
     p->actLog->gl_HashKey = p->hkey;
     p->actLog->gl_PawnKey = p->pkey;
 
-    if (move & M_CANY) {
+    if (move.IsCastle()) {
         DoCastle(p, move);
         p->castle &= ~(CastleMask[p->turn][0] | CastleMask[p->turn][1]);
     } else {
@@ -470,7 +476,7 @@ void CPosition::DoMove(CMove move) {
             if (from == (p->turn == White ? a1 : a8))
                 p->castle &= ~(CastleMask[p->turn][1]);
         }
-        if (move & M_CAPTURE) {
+        if (move.IsCapture()) {
             int sp = TYPE(p->piece[to]);
 
             /* piece looses its attacks */
@@ -504,7 +510,7 @@ void CPosition::DoMove(CMove move) {
             if (to == (OPP(p->turn) == White ? a1 : a8)) {
                 p->castle &= ~(CastleMask[OPP(p->turn)][1]);
             }
-        } else if (move & M_ENPASSANT) {
+        } else if (move.IsEnPassant()) {
             int so = to ^ 8;
 
             /* piece looses its attacks */
@@ -541,7 +547,7 @@ void CPosition::DoMove(CMove move) {
             LooseAttacks(p, to);
         }
 
-        if (move & M_PROMOTION_MASK) {
+        if (move.HasPromotion()) {
             /* Promote piece */
             tp = PromoType(move);
 
@@ -585,7 +591,7 @@ void CPosition::DoMove(CMove move) {
      */
 
     p->enPassant = 0;
-    if (move & M_PAWND) {
+    if (move.IsPawnDoublePush()) {
         int8_t tmpPassant = to ^ 8;
         if (p->atkFr[tmpPassant] & p->mask[OPP(p->turn)][Pawn]) {
             p->enPassant = tmpPassant;
@@ -612,7 +618,7 @@ void CPosition::DoMove(CMove move) {
     }
 
     /* Check if reversible move */
-    if (move & (M_CAPTURE | M_PROMOTION_MASK | M_CANY) || tp == Pawn) {
+    if (move.IsCapture() || move.HasPromotion() || move.IsCastle() || tp == Pawn) {
         p->actLog->gl_IrrevCount = 0;
     } else {
         p->actLog->gl_IrrevCount = (p->actLog - 1)->gl_IrrevCount + 1;
@@ -625,8 +631,10 @@ void CPosition::DoMove(CMove move) {
 
 void CPosition::UndoMove(CMove move) {
     CPosition *p = this;
-    int8_t from = move.GetFrom();
-    int8_t to = move.GetTo();
+    const CSCoord& fromCoord = move.GetFromCoord();
+    const CSCoord& toCoord = move.GetToCoord();
+    int8_t from = fromCoord.GetBitOffset();
+    int8_t to = toCoord.GetBitOffset();
     int8_t tp = TYPE(p->piece[to]);
 
     /* Swap p->turns */
@@ -636,7 +644,7 @@ void CPosition::UndoMove(CMove move) {
     p->actLog--;
     p->ply--;
 
-    if (move & M_CANY) {
+    if (move.IsCastle()) {
         UndoCastle(p, move);
     } else {
         /* piece looses its attacks */
@@ -652,7 +660,7 @@ void CPosition::UndoMove(CMove move) {
         if (is_sliding(tp))
             p->slidingPieces.ClrBit(to);
 
-        if (move & M_PROMOTION_MASK) {
+        if (move.HasPromotion()) {
             /* Update own material */
             p->material[p->turn] -= Value[tp] - Value[Pawn];
             p->nonPawn[p->turn] -= Value[tp];
@@ -669,7 +677,7 @@ void CPosition::UndoMove(CMove move) {
             p->material_signature[p->turn] |= SIGNATURE_BIT(Pawn);
         }
 
-        if (move & M_CAPTURE) {
+        if (move.IsCapture()) {
             int8_t sp = p->actLog->gl_Piece;
 
             /* piece gains its attacks */
@@ -689,7 +697,7 @@ void CPosition::UndoMove(CMove move) {
 
             /* update material signature */
             p->material_signature[OPP(p->turn)] |= SIGNATURE_BIT(sp);
-        } else if (move & M_ENPASSANT) {
+        } else if (move.IsEnPassant()) {
             int so = to ^ 8;
 
             /* piece looses its attacks */
@@ -994,14 +1002,14 @@ bool CPosition::MayCastle(CMove move) {
     CPosition *p = this;
     /* Sometimes there might be a legal castling move, but for the
        wrong p->turn, probably from the Countermove table */
-    if (move.GetFrom() != ((p->turn == White) ? e1 : e8))
+    if (move.GetFromCoord().GetBitOffset() != ((p->turn == White) ? e1 : e8))
         return false;
 
     if (p->InCheck(p->turn))
         return false;
 
     /* king p->turn castling */
-    if ((move & M_SCASTLE) && (p->castle & CastleMask[p->turn][0])) {
+    if (move.IsShortCastle() && (p->castle & CastleMask[p->turn][0])) {
         int fs = (p->turn == White ? f1 : f8);
         int gs = (p->turn == White ? g1 : g8);
 
@@ -1016,7 +1024,7 @@ bool CPosition::MayCastle(CMove move) {
     }
 
     /* queen p->turn castling */
-    if ((move & M_LCASTLE) && (p->castle & CastleMask[p->turn][1])) {
+    if (move.IsLongCastle() && (p->castle & CastleMask[p->turn][1])) {
         int bs = (p->turn == White ? b1 : b8);
         int cs = (p->turn == White ? c1 : c8);
         int ds = (p->turn == White ? d1 : d8);
@@ -1041,8 +1049,8 @@ bool CPosition::MayCastle(CMove move) {
 
 bool CPosition::LegalMove(CMove move) {
     CPosition *p = this;
-    int fr = move.GetFrom();
-    int to = move.GetTo();
+    int fr = move.GetFromCoord().GetBitOffset();
+    int to = move.GetToCoord().GetBitOffset();
 
     if (move == M_NONE || move == M_NULL)
         return false;
@@ -1052,17 +1060,17 @@ bool CPosition::LegalMove(CMove move) {
         return false;
 
     /* if a promotion, moving piece must be a pawn */
-    if (move & M_PROMOTION_MASK && TYPE(p->piece[fr]) != Pawn)
+    if (move.HasPromotion() && TYPE(p->piece[fr]) != Pawn)
         return false;
 
     /* if the move is a pawn move to the 1st/8th rank, it must be
      * be a promotion.
      */
     if ((to <= h1 || to >= a8) && TYPE(p->piece[fr]) == Pawn &&
-        !(move & M_PROMOTION_MASK))
+        !move.HasPromotion())
         return false;
 
-    if (move & M_CAPTURE) {
+    if (move.IsCapture()) {
         /* There must be an enemy piece on the target square, and we
          * must attack that square
          */
@@ -1072,7 +1080,7 @@ bool CPosition::LegalMove(CMove move) {
             return false;
         }
         return true;
-    } else if (move & M_ENPASSANT) {
+    } else if (move.IsEnPassant()) {
         /* The moving piece must be a pawn, and the target square must be
          * the enpassant square
          */
@@ -1085,7 +1093,7 @@ bool CPosition::LegalMove(CMove move) {
             return false;
 
         return true;
-    } else if (move & M_CANY) {
+    } else if (move.IsCastle()) {
         /* Call the castling test routine */
         return p->MayCastle(move);
     } else {
@@ -1097,13 +1105,13 @@ bool CPosition::LegalMove(CMove move) {
             /* if no pawn, we must attack to square */
             if (!p->atkTo[fr].TstBit(to))
                 return false;
-            if (move & M_PAWND)
+            if (move.IsPawnDoublePush())
                 return false;
             return true;
         } else {
             /* use NextPos array to check if legal move */
             int tt = (p->turn == White ? fr + 8 : fr - 8);
-            if (move & M_PAWND) {
+            if (move.IsPawnDoublePush()) {
                 if (p->piece[tt] != Neutral)
                     return false;
                 tt = (p->turn == White ? tt + 8 : tt - 8);
@@ -1111,9 +1119,9 @@ bool CPosition::LegalMove(CMove move) {
             if (tt != to)
                 return false;
 
-            if (p->turn == White && to >= a8 && !(move & M_PROMOTION_MASK))
+            if (p->turn == White && to >= a8 && !move.HasPromotion())
                 return false;
-            if (p->turn == Black && to <= h1 && !(move & M_PROMOTION_MASK))
+            if (p->turn == Black && to <= h1 && !move.HasPromotion())
                 return false;
 
             return true;
@@ -1128,15 +1136,15 @@ bool CPosition::LegalMove(CMove move) {
 
 bool CPosition::IsCheckingMove(CMove move) {
     CPosition *p = this;
-    int fr = move.GetFrom();
-    int to = move.GetTo();
+    int fr = move.GetFromCoord().GetBitOffset();
+    int to = move.GetToCoord().GetBitOffset();
     int tp = TYPE(p->piece[fr]);
     int kp = p->mask[OPP(p->turn)][King].FindSetBit();
     CBitBoard tmp;
 
     /* Is it a direct check ? */
 
-    if (move & M_PROMOTION_MASK)
+    if (move.HasPromotion())
         tp = PromoType(move);
 
     switch (tp) {
@@ -1394,27 +1402,27 @@ char *CPosition::SAN(CMove move, char *buffer) {
     CPosition *p = this;
     char *x = buffer;
 
-    int8_t to = move.GetTo();
-    int8_t fr = move.GetFrom();
+    int8_t to = move.GetToCoord().GetBitOffset();
+    int8_t fr = move.GetFromCoord().GetBitOffset();
     int8_t tp = TYPE(p->piece[fr]);
 
     if (tp == Pawn) {
-        if (move & (M_CAPTURE | M_ENPASSANT)) {
+        if (move.IsCapture() || move.IsEnPassant()) {
             *(x++) = 'a' + (fr & 7);
             *(x++) = 'x';
         }
         *(x++) = 'a' + (to & 7);
         *(x++) = '1' + (to >> 3);
 
-        if (move & M_PROMOTION_MASK) {
+        if (move.HasPromotion()) {
             *(x++) = '=';
             *(x++) = PieceName[PromoType(move)];
         }
-    } else if (move & M_CANY) {
+    } else if (move.IsCastle()) {
         *(x++) = 'O';
         *(x++) = '-';
         *(x++) = 'O';
-        if (move & M_LCASTLE) {
+        if (move.IsLongCastle()) {
             *(x++) = '-';
             *(x++) = 'O';
         }
@@ -1433,7 +1441,7 @@ char *CPosition::SAN(CMove move, char *buffer) {
             tmp.ClearLowestBit();
             if (i != fr) {
                 int incheck;
-                int tmove = i | (to << 6);
+                CMove tmove(CSCoord(i), move.GetToCoord(), 0);
 
                 /* seems there is another piece of the same type which
                  * can move to the same destination square.
@@ -1441,7 +1449,7 @@ char *CPosition::SAN(CMove move, char *buffer) {
                  */
 
                 if (p->piece[to])
-                    tmove |= M_CAPTURE;
+                    tmove.SetCapture();
 
                 p->DoMove(tmove);
                 incheck = p->InCheck(OPP(p->turn));
@@ -1472,7 +1480,7 @@ char *CPosition::SAN(CMove move, char *buffer) {
             }
         }
 
-        if (move & (M_CAPTURE | M_ENPASSANT))
+        if (move.IsCapture() || move.IsEnPassant())
             *(x++) = 'x';
 
         *(x++) = 'a' + (to & 7);
@@ -1500,17 +1508,17 @@ char *ICS_SAN(CMove move) {
     static char buffer[16];
     char *x = buffer;
 
-    int8_t to = move.GetTo();
-    int8_t fr = move.GetFrom();
+    int8_t to = move.GetToCoord().GetBitOffset();
+    int8_t fr = move.GetFromCoord().GetBitOffset();
 
     *(x++) = 'a' + (fr & 7);
     *(x++) = '1' + (fr >> 3);
-    if (move & (M_CAPTURE | M_ENPASSANT)) {
+    if (move.IsCapture() || move.IsEnPassant()) {
         *(x++) = 'x';
     }
     *(x++) = 'a' + (to & 7);
     *(x++) = '1' + (to >> 3);
-    if (move & M_PROMOTION_MASK) {
+    if (move.HasPromotion()) {
         *(x++) = PieceName[PromoType(move)];
     }
     *x = '\0';
@@ -1524,16 +1532,16 @@ char *ICS_SAN(CMove move) {
 CMove parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
         !strncmp(san, "0-0-0", 5)) {
-        CMove move =
-            M_LCASTLE | (p->turn == White ? (c1 << 6) + e1 : (c8 << 6) + e8);
+        CMove move(CSCoord(p->turn == White ? e1 : e8),
+                   CSCoord(p->turn == White ? c1 : c8), M_LCASTLE);
         if (p->MayCastle(move))
             return move;
     }
 
     if (!strncmp(san, "O-O", 3) || !strncmp(san, "o-o", 3) ||
         !strncmp(san, "0-0", 3)) {
-        CMove move =
-            M_SCASTLE | (p->turn == White ? (g1 << 6) + e1 : (g8 << 6) + e8);
+        CMove move(CSCoord(p->turn == White ? e1 : e8),
+                   CSCoord(p->turn == White ? g1 : g8), M_SCASTLE);
         if (p->MayCastle(move))
             return move;
     }
@@ -1552,19 +1560,23 @@ CMove parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
     for (unsigned int i = heap->current_section->start;
          i < heap->current_section->end; i++) {
         CMove move = heap->data[i];
-        if ((move & 4095) == mask) {
-            if (move & M_PROMOTION_MASK && strlen(san) >= 5) {
+        if (move.GetFromToIndex() == mask) {
+            if (move.HasPromotion() && strlen(san) >= 5) {
                 char p = *(san + 4);
-                move = move & (~M_PROMOTION_MASK);
+                move.ClearPromotion();
 
-                if (p == 'q' || p == 'Q')
-                    return move | (static_cast<uint32_t>(Queen) << M_PROMOTION_OFFSET);
-                if (p == 'r' || p == 'R')
-                    return move | (static_cast<uint32_t>(Rook) << M_PROMOTION_OFFSET);
-                if (p == 'n' || p == 'N')
-                    return move | (static_cast<uint32_t>(Knight) << M_PROMOTION_OFFSET);
-                if (p == 'b' || p == 'B')
-                    return move | (static_cast<uint32_t>(Bishop) << M_PROMOTION_OFFSET);
+                if (p == 'q' || p == 'Q') {
+                    move.SetPromotionType(Queen);
+                } else if (p == 'r' || p == 'R') {
+                    move.SetPromotionType(Rook);
+                } else if (p == 'n' || p == 'N') {
+                    move.SetPromotionType(Knight);
+                } else if (p == 'b' || p == 'B') {
+                    move.SetPromotionType(Bishop);
+                } else {
+                    return M_NONE;
+                }
+                return move;
             } else
                 return move;
         }
@@ -1592,8 +1604,8 @@ CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
 
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
         !strncmp(san, "0-0-0", 5)) {
-        int move =
-            M_LCASTLE | (side == White ? (c1 << 6) + e1 : (c8 << 6) + e8);
+        CMove move(CSCoord(side == White ? e1 : e8),
+                   CSCoord(side == White ? c1 : c8), M_LCASTLE);
 
         for (i = 0; i < cnt; i++)
             if (move == mvs[i])
@@ -1603,8 +1615,8 @@ CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
 
     if (!strncmp(san, "O-O", 3) || !strncmp(san, "o-o", 3) ||
         !strncmp(san, "0-0", 3)) {
-        int move =
-            M_SCASTLE | (side == White ? (g1 << 6) + e1 : (g8 << 6) + e8);
+        CMove move(CSCoord(side == White ? e1 : e8),
+                   CSCoord(side == White ? g1 : g8), M_SCASTLE);
 
         for (i = 0; i < cnt; i++)
             if (move == mvs[i])
@@ -1618,19 +1630,24 @@ CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
     mask = fr + (to << 6);
 
     for (i = 0; i < cnt; i++) {
-        if ((mvs[i] & 4095) == mask) {
-            if (mvs[i] & M_PROMOTION_MASK) {
+        if (mvs[i].GetFromToIndex() == mask) {
+            if (mvs[i].HasPromotion()) {
                 char p = *(san + 4);
-                int move = mvs[i] & (~M_PROMOTION_MASK);
+                CMove move = mvs[i];
+                move.ClearPromotion();
 
-                if (p == 'q' || p == 'Q')
-                    return move | (static_cast<uint32_t>(Queen) << M_PROMOTION_OFFSET);
-                if (p == 'r' || p == 'R')
-                    return move | (static_cast<uint32_t>(Rook) << M_PROMOTION_OFFSET);
-                if (p == 'n' || p == 'N')
-                    return move | (static_cast<uint32_t>(Knight) << M_PROMOTION_OFFSET);
-                if (p == 'b' || p == 'B')
-                    return move | (static_cast<uint32_t>(Bishop) << M_PROMOTION_OFFSET);
+                if (p == 'q' || p == 'Q') {
+                    move.SetPromotionType(Queen);
+                } else if (p == 'r' || p == 'R') {
+                    move.SetPromotionType(Rook);
+                } else if (p == 'n' || p == 'N') {
+                    move.SetPromotionType(Knight);
+                } else if (p == 'b' || p == 'B') {
+                    move.SetPromotionType(Bishop);
+                } else {
+                    return M_NONE;
+                }
+                return move;
             } else
                 return mvs[i];
         }
@@ -1665,7 +1682,8 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
 
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
         !strncmp(san, "0-0-0", 5)) {
-        move = M_LCASTLE | (p->turn == White ? (c1 << 6) + e1 : (c8 << 6) + e8);
+        move = CMove(CSCoord(p->turn == White ? e1 : e8),
+                     CSCoord(p->turn == White ? c1 : c8), M_LCASTLE);
         if (p->MayCastle(move))
             return move;
         else
@@ -1674,7 +1692,8 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
 
     if (!strncmp(san, "O-O", 3) || !strncmp(san, "o-o", 3) ||
         !strncmp(san, "0-0", 3)) {
-        move = M_SCASTLE | (p->turn == White ? (g1 << 6) + e1 : (g8 << 6) + e8);
+        move = CMove(CSCoord(p->turn == White ? e1 : e8),
+                     CSCoord(p->turn == White ? g1 : g8), M_SCASTLE);
         if (p->MayCastle(move))
             return move;
         else
@@ -1692,11 +1711,11 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
         for (i = heap->current_section->start; i < heap->current_section->end;
              i++) {
             move = heap->data[i];
-            int fr = move.GetFrom();
-            int to = move.GetTo();
+            int fr = move.GetFromCoord().GetBitOffset();
+            int to = move.GetToCoord().GetBitOffset();
 
             if (TYPE(p->piece[fr]) == Pawn &&
-                (move & (M_CAPTURE | M_ENPASSANT)) && (fr & 7) == ffl &&
+                (move.IsCapture() || move.IsEnPassant()) && (fr & 7) == ffl &&
                 (to & 7) == tfl && TryMove(p, move))
                 return move;
         }
@@ -1773,7 +1792,7 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
     for (i = heap->current_section->start; i < heap->current_section->end;
          i++) {
         move = heap->data[i];
-        int fr = move.GetFrom(), to = move.GetTo();
+        int fr = move.GetFromCoord().GetBitOffset(), to = move.GetToCoord().GetBitOffset();
 
         if (TYPE(p->piece[fr]) != tp)
             continue;
@@ -1810,14 +1829,15 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
     int tp = Neutral;
     int frk = -1, ffl = -1, trk = -1, tfl = -1;
     int pro = 0;
-    int move;
+    CMove move;
     int i;
 
     /* Check castling first */
 
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
         !strncmp(san, "0-0-0", 5)) {
-        move = M_LCASTLE | (side == White ? (c1 << 6) + e1 : (c8 << 6) + e8);
+        move = CMove(CSCoord(side == White ? e1 : e8),
+                     CSCoord(side == White ? c1 : c8), M_LCASTLE);
         for (i = 0; i < cnt; i++)
             if (move == mvs[i])
                 return move;
@@ -1826,7 +1846,8 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
 
     if (!strncmp(san, "O-O", 3) || !strncmp(san, "o-o", 3) ||
         !strncmp(san, "0-0", 3)) {
-        move = M_SCASTLE | (side == White ? (g1 << 6) + e1 : (g8 << 6) + e8);
+        move = CMove(CSCoord(side == White ? e1 : e8),
+                     CSCoord(side == White ? g1 : g8), M_SCASTLE);
         for (i = 0; i < cnt; i++)
             if (move == mvs[i])
                 return move;
@@ -1840,10 +1861,10 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
         tfl = *(san + 1) - 'a';
 
         for (i = 0; i < cnt; i++) {
-            int fr = mvs[i].GetFrom();
-            int to = mvs[i].GetTo();
+            int fr = mvs[i].GetFromCoord().GetBitOffset();
+            int to = mvs[i].GetToCoord().GetBitOffset();
 
-            if (pmap[fr] == Pawn && (mvs[i] & (M_CAPTURE | M_ENPASSANT)) &&
+            if (pmap[fr] == Pawn && (mvs[i].IsCapture() || mvs[i].IsEnPassant()) &&
                 (fr & 7) == ffl && (to & 7) == tfl)
                 return mvs[i];
         }
@@ -1918,7 +1939,7 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
         tp = Pawn;
 
     for (i = 0; i < cnt; i++) {
-        int fr = mvs[i].GetFrom(), to = mvs[i].GetTo();
+        int fr = mvs[i].GetFromCoord().GetBitOffset(), to = mvs[i].GetToCoord().GetBitOffset();
 
         if (TYPE(pmap[fr]) != tp)
             continue;
@@ -2009,7 +2030,7 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
         for (i = tmp_heap->current_section->start;
              i < tmp_heap->current_section->end; i++) {
             CMove move = tmp_heap->data[i];
-            if ((move & M_CANY) && !p->MayCastle(move))
+            if ((move.IsCastle()) && !p->MayCastle(move))
                 continue;
 
             p->DoMove(move);
@@ -2177,7 +2198,7 @@ void CPosition::ShowMoves() {
         if (!p->LegalMove(move)) {
             Print(0, "(rejected?!) ");
         }
-        if (move & (M_CAPTURE | M_ENPASSANT)) {
+        if (move.IsCapture() || move.IsEnPassant()) {
             Print(0, "(%d) ", SwapOff(p, move));
         }
     }

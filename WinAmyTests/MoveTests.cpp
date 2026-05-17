@@ -149,8 +149,12 @@ TEST_CLASS(MoveTests) {
         const CSCoord toSquare(0, 4, 3);   // e4
         const CMove move = make_move(static_cast<int>(fromSquare), static_cast<int>(toSquare), M_PAWND);
 
-        Assert::AreEqual(static_cast<int>(fromSquare), move.GetFrom());
-        Assert::AreEqual(static_cast<int>(toSquare), move.GetTo());
+        Assert::AreEqual(fromSquare.Level, move.GetFromCoord().Level);
+        Assert::AreEqual(fromSquare.File, move.GetFromCoord().File);
+        Assert::AreEqual(fromSquare.Rank, move.GetFromCoord().Rank);
+        Assert::AreEqual(toSquare.Level, move.GetToCoord().Level);
+        Assert::AreEqual(toSquare.File, move.GetToCoord().File);
+        Assert::AreEqual(toSquare.Rank, move.GetToCoord().Rank);
     }
 };
 

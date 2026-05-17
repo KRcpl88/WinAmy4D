@@ -711,8 +711,8 @@ static BitBoardBits SearchFully(CPosition *p, BitBoardBits cnt, int depth,
 
     for (i = heap->current_section->start; i < heap->current_section->end;
          i++) {
-        int move = heap->data[i];
-        if (move & M_CANY && !p->MayCastle(move))
+        CMove move = heap->data[i];
+        if (move.IsCastle() && !p->MayCastle(move))
             continue;
 
         p->DoMove(move);

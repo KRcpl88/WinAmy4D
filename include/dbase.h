@@ -50,20 +50,20 @@
     (((c) == White && (p) > 0) || ((c) == Black && (p) < 0))
 #define PIECEID(p, c) (((c) == White) ? (p) : -(p))
 
-#define M_CAPTURE (1u << 12)
-#define M_SCASTLE (1u << 13)
-#define M_LCASTLE (1u << 14)
-#define M_PAWND (1u << 15)
-#define M_ENPASSANT (1u << 28)
-#define M_PROMOTION_OFFSET 29
-#define M_PROMOTION_MASK (7u << M_PROMOTION_OFFSET)
+#define M_CAPTURE CMove::FLAG_CAPTURE
+#define M_SCASTLE CMove::FLAG_SCASTLE
+#define M_LCASTLE CMove::FLAG_LCASTLE
+#define M_PAWND CMove::FLAG_PAWND
+#define M_ENPASSANT CMove::FLAG_ENPASSANT
+#define M_PROMOTION_OFFSET CMove::PROMOTION_OFFSET
+#define M_PROMOTION_MASK CMove::PROMOTION_MASK
 #define M_NULL CMove(CSCoord(0), CSCoord(0), M_SCASTLE | M_LCASTLE | M_ENPASSANT)
 #define M_HASHED CMove(CSCoord(0), CSCoord(0), \
                        M_CAPTURE | M_SCASTLE | M_LCASTLE | M_ENPASSANT)
 
-#define M_CANY (M_SCASTLE | M_LCASTLE)
+#define M_CANY CMove::FLAG_CANY
 
-#define M_TACTICAL (M_CAPTURE | M_ENPASSANT | M_PROMOTION_MASK)
+#define M_TACTICAL CMove::FLAG_TACTICAL
 
 #define M_NONE CMove()
 
