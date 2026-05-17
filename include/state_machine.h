@@ -51,7 +51,7 @@ extern bool EasyMode;
 extern bool PostMode;
 extern bool SelfPlayMode;
 extern int ComputerSide;
-extern struct Position *CurrentPosition;
+extern CPosition *CurrentPosition;
 extern bool AutoSave;
 
 void StateMachine(void);

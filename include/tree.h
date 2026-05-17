@@ -49,7 +49,7 @@ typedef struct TreeNode tree_node_t;
 
 tree_node_t *add_node(tree_node_t *node, void *key_data, size_t key_len,
                       void *value_data, size_t value_len);
-void *lookup_value(tree_node_t *node, void *key_data, size_t key_len,
+void *lookup_value(tree_node_t *node, const void *key_data, size_t key_len,
                    size_t *value_len);
 void free_node(tree_node_t *node);
 

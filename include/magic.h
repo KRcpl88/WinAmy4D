@@ -36,55 +36,41 @@
 #ifndef MAGIC_H
 #define MAGIC_H
 
-#include <stdint.h>
+#include "bitboard.h"
 
 extern uint16_t rook_table_offsets[64];
-extern uint64_t rook_table[102400];
+extern BitBoardBits rook_table[102400];
 
 extern uint16_t bishop_table_offsets[64];
-extern uint64_t bishop_table[5248];
+extern BitBoardBits bishop_table[5248];
 
-extern const uint64_t rook_blocker_mask[];
-extern const uint64_t bishop_blocker_mask[];
+extern const BitBoardBits rook_blocker_mask[];
+extern const BitBoardBits bishop_blocker_mask[];
 
-extern const uint64_t rook_magics[];
-extern const uint64_t bishop_magics[];
+extern const BitBoardBits rook_magics[];
+extern const BitBoardBits bishop_magics[];
 
 extern const uint8_t rook_index_bits[];
 extern const uint8_t bishop_index_bits[];
 
 /**
  * Calculate the attacks of a rook given occupied squares.
- *
- * Args:
- *     sq: the sq the rook is on
- *     occupied: the bitboard of occupied squares
- *
- * Returns:
- *     the bitboard of squares attacked by the rook.
  */
-static inline uint64_t rook_attacks(int sq, uint64_t occupied) {
-    uint64_t blockers = occupied & rook_blocker_mask[sq];
-    uint64_t magic_index =
+static inline CBitBoard rook_attacks(int sq, CBitBoard occupied) {
+    BitBoardBits blockers = occupied.GetBits() & rook_blocker_mask[sq];
+    BitBoardBits magic_index =
         (blockers * rook_magics[sq]) >> (64 - rook_index_bits[sq]);
-    return rook_table[2 * rook_table_offsets[sq] + magic_index];
+    return CBitBoard(rook_table[2 * rook_table_offsets[sq] + magic_index]);
 }
 
 /**
  * Calculate the attacks of a bishop given occupied squares.
- *
- * Args:
- *     sq: the sq the bishop is on
- *     occupied: the bitboard of occupied squares
- *
- * Returns:
- *     the bitboard of squares attacked by the bishop.
  */
-static inline uint64_t bishop_attacks(int sq, uint64_t occupied) {
-    uint64_t blockers = occupied & bishop_blocker_mask[sq];
-    uint64_t magic_index =
+static inline CBitBoard bishop_attacks(int sq, CBitBoard occupied) {
+    BitBoardBits blockers = occupied.GetBits() & bishop_blocker_mask[sq];
+    BitBoardBits magic_index =
         (blockers * bishop_magics[sq]) >> (64 - bishop_index_bits[sq]);
-    return bishop_table[bishop_table_offsets[sq] + magic_index];
+    return CBitBoard(bishop_table[bishop_table_offsets[sq] + magic_index]);
 }
 
 void InitMagic(void);

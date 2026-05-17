@@ -12,6 +12,9 @@
 #define SqFindThird(psq, p) (psq[C_PIECES * (p - 1) + 2])
 
 typedef int square;
+#define TBINDEX_SQUARE_DECLARED
+
 typedef unsigned int INDEX;
+#define TBINDEX_INDEX_DECLARED
 
 #include "tbindex.cpp"

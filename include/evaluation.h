@@ -36,8 +36,8 @@
 #include "types.h"
 
 struct PawnFacts {
-    BitBoard pf_WhitePassers;
-    BitBoard pf_BlackPassers;
+    CBitBoard pf_WhitePassers;
+    CBitBoard pf_BlackPassers;
     int pf_Flags;
     char pf_WhiteKingSide;
     char pf_BlackKingSide;
@@ -120,8 +120,8 @@ extern int16_t ScaleOpenFiles[];
 
 extern int MaxPos;
 
-int EvaluatePosition(const struct Position *);
-void InitEvaluation(const struct Position *);
-int MaterialBalance(const struct Position *);
+int EvaluatePosition(const CPosition *);
+void InitEvaluation(const CPosition *);
+int MaterialBalance(const CPosition *);
 
 #endif /* EVALUATION_H */

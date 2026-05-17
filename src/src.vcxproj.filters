@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -20,94 +20,94 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bitboard.c">
+    <ClCompile Include="bitboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bookup.c">
+    <ClCompile Include="bookup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="commands.c">
+    <ClCompile Include="commands.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dbase.c">
+    <ClCompile Include="dbase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="eco.c">
+    <ClCompile Include="eco.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="evaluation.c">
+    <ClCompile Include="evaluation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="evaluation_config.c">
+    <ClCompile Include="evaluation_config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hashtable.c">
+    <ClCompile Include="hashtable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="heap.c">
+    <ClCompile Include="heap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="init.c">
+    <ClCompile Include="init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="learn.c">
+    <ClCompile Include="learn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="magic.c">
+    <ClCompile Include="magic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mates.c">
+    <ClCompile Include="mates.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="movedata.c">
+    <ClCompile Include="movedata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mytb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="next.c">
+    <ClCompile Include="next.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pgn.c">
+    <ClCompile Include="pgn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="probe.c">
+    <ClCompile Include="probe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="random.c">
+    <ClCompile Include="random.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="recog.c">
+    <ClCompile Include="recog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="search.c">
+    <ClCompile Include="search.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="search_io.c">
+    <ClCompile Include="search_io.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="state_machine.c">
+    <ClCompile Include="state_machine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="swap.c">
+    <ClCompile Include="swap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_dbase.c">
+    <ClCompile Include="test_dbase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_yaml.c">
+    <ClCompile Include="test_yaml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="time_ctl.c">
+    <ClCompile Include="time_ctl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tree.c">
+    <ClCompile Include="tree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="utils.c">
+    <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="yaml.c">
+    <ClCompile Include="yaml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

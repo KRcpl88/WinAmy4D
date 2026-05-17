@@ -102,39 +102,6 @@ typedef enum {
 } Square;
 // clang-format on
 
-#if HAVE___BUILTIN_POPCOUNTLL
-#define CountBits(x) __builtin_popcountll(x)
-#else
-int CountBits(BitBoard);
-#endif
-
-#if HAVE___BUILTIN_CTZLL
-#define FindSetBit(x) __builtin_ctzll(x)
-#else
-int FindSetBit(BitBoard);
-#endif
-
-struct Position {
-    BitBoard atkTo[64];
-    BitBoard atkFr[64];
-    BitBoard mask[2][7];
-    BitBoard slidingPieces;
-    hash_t hkey;
-    hash_t pkey;
-    struct GameLog *gameLog;
-    struct GameLog *actLog;
-    unsigned int gameLogSize;
-    int material[2], nonPawn[2];
-    uint16_t outOfBookCnt[2];
-    uint16_t ply;
-    int8_t piece[64];
-    int8_t castle;
-    int8_t enPassant;
-    int8_t turn; /* 0 == white, 1 == black */
-    int8_t kingSq[2];
-    int8_t material_signature[2];
-};
-
 struct GameLog {
     move_t gl_Move;        /* the move that has been made in the position */
     int8_t gl_Piece;       /* the piece that was captured (if any) */
@@ -145,48 +112,85 @@ struct GameLog {
     hash_t gl_PawnKey;
 };
 
+class CPosition {
+  public:
+    // Data members (public for direct access from engine code)
+    CBitBoard atkTo[64];
+    CBitBoard atkFr[64];
+    CBitBoard mask[2][7];
+    CBitBoard slidingPieces;
+    hash_t hkey;
+    hash_t pkey;
+    GameLog *gameLog;
+    GameLog *actLog;
+    unsigned int gameLogSize;
+    int material[2], nonPawn[2];
+    uint16_t outOfBookCnt[2];
+    uint16_t ply;
+    int8_t piece[64];
+    int8_t castle;
+    int8_t enPassant;
+    int8_t turn; /* 0 == white, 1 == black */
+    int8_t kingSq[2];
+    int8_t material_signature[2];
+
+    // Move making/unmaking
+    void DoMove(move_t move);
+    void UndoMove(move_t move);
+    void DoNull();
+    void UndoNull();
+
+    // Move generation
+    void GenTo(int square, heap_t heap);
+    void GenEnpas(heap_t heap);
+    void GenFrom(int square, heap_t heap);
+    void GenChecks(heap_t heap);
+    bool MayCastle(move_t move);
+    bool LegalMove(move_t move);
+    bool IsCheckingMove(move_t move);
+    int LegalMoves(heap_t heap);
+    void PLegalMoves(heap_t heap);
+
+    // Position queries
+    int Repeated(int mode);
+    bool InCheck(int side) const;
+    void RecalcAttacks();
+    const char *GameEnd();
+    bool CheckDraw() const;
+    bool IsPassed(int sq, int color) const;
+
+    // Notation
+    char *SAN(move_t move, char *buffer);
+    move_t ParseSAN(const char *san);
+    move_t ParseGSAN(char *san);
+    char *MakeEPD();
+
+    // Display
+    void ShowPosition();
+    void ShowMoves();
+
+    // Static factory methods
+    static CPosition *CreateFromEPD(const char *epd);
+    static CPosition *Initial();
+    static CPosition *Clone(const CPosition *src);
+    static void Free(CPosition *p);
+};
+
+// Backward compatibility typedef
+typedef CPosition Position;
+
 extern int Value[];
 extern int goodmove[MAX_EPD_MOVES];
 extern int badmove[MAX_EPD_MOVES];
 extern char PieceName[];
 extern const int8_t CastleMask[2][2];
 
-void DoMove(struct Position *, move_t move);
-void UndoMove(struct Position *, move_t move);
-void DoNull(struct Position *);
-void UndoNull(struct Position *);
-void GenTo(struct Position *, Square, heap_t);
-void GenEnpas(struct Position *, heap_t);
-void GenFrom(struct Position *, Square, heap_t);
+// Free functions that don't operate on a position
+char *ICS_SAN(move_t move);
 void GenRest(move_t *moves);
 int GenCaps(move_t *moves, int good);
-void GenChecks(struct Position *, heap_t);
 int GenContactChecks(move_t *moves);
-bool MayCastle(struct Position *, move_t move);
-bool LegalMove(struct Position *, move_t move);
-bool IsCheckingMove(struct Position *, move_t move);
-int LegalMoves(struct Position *, heap_t);
-void PLegalMoves(struct Position *, heap_t);
-int Repeated(struct Position *, int mode);
-char *SAN(struct Position *, move_t, char *);
-move_t ParseSAN(struct Position *, char *);
-move_t ParseSANList(char *, Color, move_t *, int, int *);
-char *MakeEPD(struct Position *);
-void ShowPosition(struct Position *);
-
-struct Position *CreatePositionFromEPD(char *);
-struct Position *InitialPosition(void);
-struct Position *ClonePosition(struct Position *src);
-void FreePosition(struct Position *);
-
-void ShowMoves(struct Position *);
-move_t ParseGSAN(struct Position *, char *san);
+move_t ParseSANList(char *san, Color side, move_t *mvs, int cnt, int *pmap);
 move_t ParseGSANList(char *san, Color side, move_t *mvs, int cnt);
-char *ICS_SAN(move_t move);
-void RecalcAttacks(struct Position *);
-const char *GameEnd(struct Position *);
-
-bool CheckDraw(const struct Position *);
-bool IsPassed(const struct Position *, int, int);
 
 #endif

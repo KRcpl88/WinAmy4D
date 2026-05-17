@@ -2,7 +2,6 @@
 
 #include "CppUnitTest.h"
 
-extern "C" {
 #include "bitboard.h"
 #include "dbase.h"
 #include "hashtable.h"
@@ -10,7 +9,6 @@ extern "C" {
 #include "inline.h"
 #include "magic.h"
 #include "movedata.h"
-}
 
 #include <cstdint>
 
@@ -20,16 +18,16 @@ namespace WinAmyTests {
 
 class PositionGuard {
   public:
-    explicit PositionGuard(Position *position) : p(position) {}
-    ~PositionGuard() { FreePosition(p); }
-    Position *get() const { return p; }
+    explicit PositionGuard(CPosition *position) : p(position) {}
+    ~PositionGuard() { CPosition::Free(p); }
+    CPosition *get() const { return p; }
 
   private:
-    Position *p;
+    CPosition *p;
 };
 
 uint64_t ReferenceRookAttacks(int sq, uint64_t occupied);
 uint64_t ReferenceBishopAttacks(int sq, uint64_t occupied);
-void AssertPositionsEqual(const Position *lhs, const Position *rhs);
+void AssertPositionsEqual(const CPosition *lhs, const CPosition *rhs);
 
 } // namespace WinAmyTests

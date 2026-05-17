@@ -42,6 +42,48 @@ typedef int piece;
 #define PIECES_DECLARED
 #endif
 
+#if !defined(NEW)
+#define NEW
+#endif
+
+#if !defined(XX)
+#define XX 128
+#endif
+
+#if !defined(C_PIECES)
+#define C_PIECES 3
+#endif
+
+#if !defined(TBINDEX_SQUARE_DECLARED)
+typedef int square;
+#define TBINDEX_SQUARE_DECLARED
+#endif
+
+#if !defined(TBINDEX_INDEX_DECLARED)
+typedef unsigned int INDEX;
+#define TBINDEX_INDEX_DECLARED
+#endif
+
+#if !defined(SqFindKing)
+#define SqFindKing(psq) (psq[C_PIECES * (x_pieceKing - 1)])
+#endif
+
+#if !defined(SqFindOne)
+#define SqFindOne(psq, p) (psq[C_PIECES * (p - 1)])
+#endif
+
+#if !defined(SqFindFirst)
+#define SqFindFirst(psq, p) (psq[C_PIECES * (p - 1)])
+#endif
+
+#if !defined(SqFindSecond)
+#define SqFindSecond(psq, p) (psq[C_PIECES * (p - 1) + 1])
+#endif
+
+#if !defined(SqFindThird)
+#define SqFindThird(psq, p) (psq[C_PIECES * (p - 1) + 2])
+#endif
+
 #if !defined(SqFind2)
 #define SqFind2(psq, pi1, sq1, pi2, sq2)                                       \
     sq1 = SqFindFirst(psq, pi1);                                               \

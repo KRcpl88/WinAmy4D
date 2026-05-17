@@ -64,8 +64,10 @@ struct KillerEntry {
     uint32_t kcount1, kcount2; /* killer count */
 };
 
+class CPosition;
+
 struct SearchData {
-    struct Position *position;
+    CPosition *position;
 
     struct SearchStatus *current;
     struct SearchStatus *statusTable;
@@ -101,7 +103,7 @@ struct SearchData {
     uint16_t movenum;
 };
 
-struct SearchData *CreateSearchData(struct Position *);
+struct SearchData *CreateSearchData(CPosition *);
 void FreeSearchData(struct SearchData *);
 void EnterNode(struct SearchData *);
 void LeaveNode(struct SearchData *);
@@ -109,6 +111,6 @@ int NextMove(struct SearchData *);
 int NextEvasion(struct SearchData *);
 int NextMoveQ(struct SearchData *, int);
 void PutKiller(struct SearchData *, move_t);
-void TestNextGenerators(struct Position *);
+void TestNextGenerators(CPosition *);
 
 #endif

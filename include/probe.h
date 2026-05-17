@@ -37,6 +37,6 @@
 extern int EGTBProbe, EGTBProbeSucc;
 
 void InitEGTB(char *);
-int ProbeEGTB(const struct Position *, int *, int);
+int ProbeEGTB(const CPosition *, int *, int);
 
 #endif
