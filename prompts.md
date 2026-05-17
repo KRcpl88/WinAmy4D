@@ -25,3 +25,9 @@ The CSCoord class was designed to convert a chess square position rank and file 
 3. Please update any code whihc enumerates the rank and file in a chess board position to enumerate using a CSCoord class using the Rank and File members
 4. Please add any new unit tests to verify any logic changes created by using CSCoord instead of directly using level and rank variables inline or locally.
 
+
+To prepare to expand the logic to a 3D chess board, we need to include level with rank and file.  Because NUM_LEVELS is 1 and LEVEL_WIDTH[0] is 8, these changes will have no affect on the logic.  But, in future commits we will be expanding NUM_LEVELS and LEVEL_WIDTH will be different for each level.
+
+1. In each place where we are enumerating rank and file, add an outer for loop to enumerate level from 0 to NUM_LEVELS
+2. each place where we enumerate rank and file form 0 to 7, use LEVEL_WIDTH[level] as the upper limit instead of 8
+
