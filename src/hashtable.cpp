@@ -556,10 +556,13 @@ void AllocateHT(void) {
     ScoreTable = (struct STEntry *)safe_calloc(ST_Size, sizeof(struct STEntry));
 
     Print(0, "Hashtable sizes: %d k, %d k, %d k (%d, %d, %d bits)\n",
-          ((1 << HT_Bits) * sizeof(struct HTEntry)) / 1024,
-          ((1 << PT_Bits) * sizeof(struct PTEntry)) / 1024,
-          ((1 << ST_Bits) * sizeof(struct STEntry)) / 1024, HT_Bits, PT_Bits,
-          ST_Bits);
+          (int)((((int64_t)1 << HT_Bits) * (int64_t)sizeof(struct HTEntry)) /
+                1024),
+          (int)((((int64_t)1 << PT_Bits) * (int64_t)sizeof(struct PTEntry)) /
+                1024),
+          (int)((((int64_t)1 << ST_Bits) * (int64_t)sizeof(struct STEntry)) /
+                1024),
+          HT_Bits, PT_Bits, ST_Bits);
 
 #if MP && HAVE_LIBPTHREAD
     for (int i = 0; i < MUTEX_COUNT; i++) {
@@ -611,7 +614,8 @@ void GuessHTSizes(char *size) {
     tmp = total_size * 4 / 5;
 
     for (HT_Bits = 1; HT_Bits < 32; HT_Bits++) {
-        long tmp2 = (1 << (HT_Bits + 1)) * sizeof(struct HTEntry);
+        int64_t tmp2 =
+            ((int64_t)1 << (HT_Bits + 1)) * (int64_t)sizeof(struct HTEntry);
         if (tmp2 > tmp)
             break;
     }
@@ -621,7 +625,8 @@ void GuessHTSizes(char *size) {
     tmp = 3 * total_size / 4;
 
     for (ST_Bits = 1; ST_Bits < 32; ST_Bits++) {
-        long tmp2 = (1 << (ST_Bits + 1)) * sizeof(struct STEntry);
+        int64_t tmp2 =
+            ((int64_t)1 << (ST_Bits + 1)) * (int64_t)sizeof(struct STEntry);
         if (tmp2 > tmp)
             break;
     }
@@ -629,7 +634,8 @@ void GuessHTSizes(char *size) {
     total_size -= (1 << ST_Bits) * sizeof(struct STEntry);
 
     for (PT_Bits = 1; PT_Bits < 32; PT_Bits++) {
-        long tmp2 = (1 << (PT_Bits + 1)) * sizeof(struct PTEntry);
+        int64_t tmp2 =
+            ((int64_t)1 << (PT_Bits + 1)) * (int64_t)sizeof(struct PTEntry);
         if (tmp2 > total_size)
             break;
     }

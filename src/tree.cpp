@@ -314,7 +314,7 @@ static void save_tree_recursive(tree_node_t *node, FILE *fout) {
  * Save the tree to a file.
  */
 void save_tree(tree_node_t *node, FILE *fout) {
-    unsigned long records_written = fwrite(MAGIC, 4, 1, fout);
+    size_t records_written = fwrite(MAGIC, 4, 1, fout);
     if (records_written != 1)
         return;
     save_tree_recursive(node, fout);
@@ -354,7 +354,7 @@ static tree_node_t *load_tree_internal(FILE *fin) {
             break;
 
         key_data = (char *)safe_realloc(key_data, key_len);
-        unsigned long amount_read = fread(key_data, key_len, 1, fin);
+        size_t amount_read = fread(key_data, key_len, 1, fin);
         if (amount_read != 1)
             break;
 
@@ -381,7 +381,7 @@ static tree_node_t *load_tree_internal(FILE *fin) {
  */
 tree_node_t *load_tree(FILE *fin) {
     char buffer[4];
-    unsigned long records_read = fread(buffer, 4, 1, fin);
+    size_t records_read = fread(buffer, 4, 1, fin);
     if (records_read != 1)
         return NULL;
 
