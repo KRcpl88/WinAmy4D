@@ -819,9 +819,10 @@ void CPosition::RecalcAttacks() {
 
     p->slidingPieces = 0;
 
-    p->material[White] = p->material[Black] = p->nonPawn[White] =
-        p->nonPawn[Black] = p->material_signature[White] =
-            p->material_signature[Black] = p->hkey = p->pkey = 0;
+    p->material[White] = p->material[Black] = 0;
+    p->nonPawn[White] = p->nonPawn[Black] = 0;
+    p->material_signature[White] = p->material_signature[Black] = 0;
+    p->hkey = p->pkey = 0;
 
     tmp = p->mask[White][0];
     while (tmp) {

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if !defined(DEBUG) && !defined(EBUG)
+#if !defined(DEBUG) && !defined(EBUG) && !defined(NDEBUG)
 #define NDEBUG
 #endif
 #include <assert.h>

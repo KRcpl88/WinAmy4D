@@ -146,7 +146,7 @@ void SaveGame(CPosition *p, char *file_name) {
                 char san_buffer[16];
                 char *san = p->SAN(move, san_buffer);
                 fprintf(fout, "%s ", san);
-                width += strlen(san) + 1;
+                width += (int)strlen(san) + 1;
                 if (width > 67) {
                     width = 0;
                     fprintf(fout, "\n");

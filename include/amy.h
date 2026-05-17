@@ -40,22 +40,10 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
-// allow use of unsafe function fopen, strerror, etc.
-// BUGBUG replace fopen with fopen_s and strerror w/ strerror_s
-#define  _CRT_SECURE_NO_WARNINGS
-
 #define VERSION "0.1"
-#define MAX_TREE_SIZE 16
-
-// infinty
-#define INF 4000
-
-#define CMLIMIT 100
-#define MAX_EPD_MOVES 256
 #define MAX_EPD_OPS 15
 #define MAX_EPD_STRING 1024
 #define MAX_EPD_LINE 1024
-#define MAX_EPD_MOVES 256
 
 // used in tbindex.cpp
 //#define T41_INCLUDE 

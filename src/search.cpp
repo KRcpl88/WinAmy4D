@@ -1258,7 +1258,7 @@ static void *IterateInt(void *x) {
 
     if (!sd->master) {
 #ifdef _WIN32
-        Sleep((50 + 100 * Random()) / 1000);
+        Sleep((DWORD)((50.0 + 100.0 * Random()) / 1000.0));
 #else
         usleep((useconds_t)(50 + 100 * Random()));
 #endif
