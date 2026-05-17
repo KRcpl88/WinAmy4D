@@ -45,7 +45,7 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(BitOffsetRoundTrips) {
-        for (int offset = 0; offset < 64; offset++) {
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
             CSCoord coord(offset);
             Assert::AreEqual(offset, coord.BitOffset());
         }
@@ -53,22 +53,24 @@ TEST_CLASS(SCoordTests) {
 
     TEST_METHOD(EnumeratingRankFileWithCSCoordMatchesBitOffsetOrder) {
         int expectedOffset = 0;
-        for (int rank = 0; rank < 8; rank++) {
-            for (int file = 0; file < 8; file++) {
-                CSCoord square(0, file, rank);
-                Assert::AreEqual(expectedOffset, static_cast<int>(square));
-                expectedOffset++;
+        for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+            for (int rank = 0; rank < CSCoord::LEVEL_WIDTH[level]; rank++) {
+                for (int file = 0; file < CSCoord::LEVEL_WIDTH[level]; file++) {
+                    CSCoord square(level, file, rank);
+                    Assert::AreEqual(expectedOffset, static_cast<int>(square));
+                    expectedOffset++;
+                }
             }
         }
-        Assert::AreEqual(64, expectedOffset);
+        Assert::AreEqual(CSCoord::SIZE, expectedOffset);
     }
 
     TEST_METHOD(OffsetConstructorProvidesExpectedRankAndFileAcrossBoard) {
-        for (int offset = 0; offset < 64; offset++) {
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
             CSCoord square(offset);
-            Assert::AreEqual(0, square.Level);
-            Assert::AreEqual(offset / 8, square.Rank);
-            Assert::AreEqual(offset % 8, square.File);
+            const int levelOffset = offset - CSCoord::LEVEL_OFFSET[square.Level];
+            Assert::AreEqual(levelOffset / CSCoord::LEVEL_WIDTH[square.Level], square.Rank);
+            Assert::AreEqual(levelOffset % CSCoord::LEVEL_WIDTH[square.Level], square.File);
         }
     }
 
@@ -86,28 +88,28 @@ TEST_CLASS(SCoordTests) {
     TEST_METHOD(IsValidReturnsFalseForInvalidCoords) {
         Assert::IsFalse(CSCoord::IsValid(0, -1, 0));
         Assert::IsFalse(CSCoord::IsValid(0, 0, -1));
-        Assert::IsFalse(CSCoord::IsValid(0, 8, 0));
-        Assert::IsFalse(CSCoord::IsValid(0, 0, 8));
+        Assert::IsFalse(CSCoord::IsValid(0, CSCoord::LEVEL_WIDTH[0], 0));
+        Assert::IsFalse(CSCoord::IsValid(0, 0, CSCoord::LEVEL_WIDTH[0]));
         Assert::IsFalse(CSCoord::IsValid(1, 0, 0));  // level 1 doesn't exist
         Assert::IsFalse(CSCoord::IsValid(-1, 0, 0));
     }
 
     TEST_METHOD(IsValidOffsetReturnsTrueForValidRange) {
         Assert::IsTrue(CSCoord::IsValid(0));
-        Assert::IsTrue(CSCoord::IsValid(63));
+        Assert::IsTrue(CSCoord::IsValid(CSCoord::SIZE - 1));
     }
 
     TEST_METHOD(IsValidOffsetReturnsFalseForInvalidRange) {
         Assert::IsFalse(CSCoord::IsValid(-1));
-        Assert::IsFalse(CSCoord::IsValid(64));
+        Assert::IsFalse(CSCoord::IsValid(CSCoord::SIZE));
     }
 
     TEST_METHOD(InvalidConstructorThrows) {
         Assert::ExpectException<std::out_of_range>([]() {
-            CSCoord coord(0, 8, 0);
+            CSCoord coord(0, CSCoord::LEVEL_WIDTH[0], 0);
         });
         Assert::ExpectException<std::out_of_range>([]() {
-            CSCoord coord(64);
+            CSCoord coord(CSCoord::SIZE);
         });
         Assert::ExpectException<std::out_of_range>([]() {
             CSCoord coord(-1);
