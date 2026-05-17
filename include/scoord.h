@@ -1,13 +1,12 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
 
 class CSCoord {
 public:
-    static const std::array<int, 1> LEVEL_SIZE;
-    static const std::array<int, 1> LEVEL_WIDTH;
-    static const std::array<int, 1> LEVEL_OFFSET;
+    static const int LEVEL_SIZE[1];
+    static const int LEVEL_WIDTH[1];
+    static const int LEVEL_OFFSET[1];
 
     static constexpr int NUM_LEVELS = 1;
     static constexpr int MAX_LEVEL_WIDTH = 8;

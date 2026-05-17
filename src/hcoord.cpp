@@ -4,8 +4,8 @@
 
 #include "bitboard.h"
 
-const std::array<int, 15> CHCoord::Relu16{0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7};
-const std::array<int, 15> CHCoord::NegRelu16{7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+const int CHCoord::Relu16[15]{0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7};
+const int CHCoord::NegRelu16[15]{7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0};
 
 CHCoord::CHCoord(int level, int file, int rank)
     : Level(level), Rank(rank), File(file) {
