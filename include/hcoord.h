@@ -1,14 +1,12 @@
 #pragma once
 
-#include <array>
-
 #include "scoord.h"
 
 
 class CHCoord {
 public:
-    static const std::array<int, 15> Relu16;
-    static const std::array<int, 15> NegRelu16;
+    static const int Relu16[15];
+    static const int NegRelu16[15];
 
     int Level{0};
     int Rank{0};

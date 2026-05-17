@@ -49,7 +49,7 @@ CUCoord::operator CSCoord() const {
 
     int levelOffset;
     int fileOffset;
-    if ((scoord.Level >= 0) && (scoord.Level < static_cast<int>(CSCoord::LEVEL_WIDTH.size()))) {
+    if ((scoord.Level >= 0) && (scoord.Level < CSCoord::NUM_LEVELS)) {
         levelOffset = CSCoord::MAX_LEVEL_WIDTH - CSCoord::LEVEL_WIDTH[scoord.Level];
         fileOffset = CSCoord::LEVEL_WIDTH[scoord.Level] - 1;
     } else {
@@ -75,10 +75,14 @@ CUCoord::operator CSCoord() const {
 }
 
 bool CUCoord::operator==(const CUCoord& other) const {
-    for (std::size_t i = 0; i < data.size(); ++i) {
-        if (data[i] != other.data[i]) {
-            return false;
-        }
+    if (data[0] != other.data[0]) {
+        return false;
+    }
+    if (data[1] != other.data[1]) {
+        return false;
+    }
+    if (data[2] != other.data[2]) {
+        return false;
     }
 
     return true;
@@ -90,25 +94,24 @@ bool CUCoord::operator!=(const CUCoord& other) const {
 
 CUCoord CUCoord::operator+(const CUCoord& other) const {
     CUCoord result;
-    for (std::size_t i = 0; i < data.size(); ++i) {
-        result.data[i] = data[i] + other.data[i];
-    }
+    result.data[0] = data[0] + other.data[0];
+    result.data[1] = data[1] + other.data[1];
+    result.data[2] = data[2] + other.data[2];
     return result;
 }
 
 CUCoord CUCoord::operator-(const CUCoord& other) const {
     CUCoord result;
-    for (std::size_t i = 0; i < data.size(); ++i) {
-        result.data[i] = data[i] - other.data[i];
-    }
+    result.data[0] = data[0] - other.data[0];
+    result.data[1] = data[1] - other.data[1];
+    result.data[2] = data[2] - other.data[2];
     return result;
 }
 
 CUCoord CUCoord::operator-() const {
     CUCoord result;
-    for (std::size_t i = 0; i < data.size(); ++i) {
-        result.data[i] = -data[i];
-    }
+    result.data[0] = -data[0];
+    result.data[1] = -data[1];
+    result.data[2] = -data[2];
     return result;
 }
-

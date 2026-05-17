@@ -1,12 +1,10 @@
 #pragma once
 
-#include <array>
-
 #include "scoord.h"
 
 class CUCoord {
 public:
-    std::array<int, 3> data{};
+    int data[3]{};
 
     CUCoord() = default;
     CUCoord(int x, int y, int z);
