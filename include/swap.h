@@ -32,6 +32,6 @@
 #ifndef SWAP_H
 #define SWAP_H
 
-int SwapOff(CPosition *, move_t);
+int SwapOff(CPosition *, CMove);
 
 #endif

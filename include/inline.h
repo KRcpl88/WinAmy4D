@@ -105,15 +105,15 @@ static inline int EdgeDist(int sq) {
 /**
  * Create a move from from square, to square and flags.
  */
-static inline move_t make_move(int from, int to, int flags) {
-    return move_t(CSCoord(from), CSCoord(to), static_cast<uint32_t>(flags));
+static inline CMove make_move(int from, int to, int flags) {
+    return CMove(CSCoord(from), CSCoord(to), static_cast<uint32_t>(flags));
 }
 
 /**
  * Create a promotion move from from square, to square and flags.
  */
-static inline move_t make_promotion(int from, int to, int type, int flags) {
-    return make_move(from, to, flags | static_cast<int>((move_t)type << M_PROMOTION_OFFSET));
+static inline CMove make_promotion(int from, int to, int type, int flags) {
+    return make_move(from, to, flags | static_cast<int>((CMove)type << M_PROMOTION_OFFSET));
 }
 
 /**
@@ -127,7 +127,7 @@ static inline bool is_promo_square(int sq) {
 /*
  * Determine type of promotion from move
  */
-static inline int8_t PromoType(move_t move) {
+static inline int8_t PromoType(CMove move) {
     return (move & M_PROMOTION_MASK) >> M_PROMOTION_OFFSET;
 }
 

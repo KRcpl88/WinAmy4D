@@ -35,7 +35,6 @@
 #include <stdint.h>
 #include "move.h"
 
-typedef CMove move_t;
 typedef uint64_t ran_t;
 typedef uint64_t hash_t;
 

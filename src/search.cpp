@@ -438,7 +438,7 @@ static int CheckExtend(CPosition *p) {
  * Compute an optimistic score for a move.
  */
 
-static int ScoreMove(CPosition *p, move_t move) {
+static int ScoreMove(CPosition *p, CMove move) {
     int score = 0;
 
     if (move & M_CAPTURE)
@@ -465,7 +465,7 @@ static int ScoreMove(CPosition *p, move_t move) {
  */
 
 static void StoreResult(struct SearchData *sd, int score, int alpha, int beta,
-                        move_t move, int depth, int threat) {
+                        CMove move, int depth, int threat) {
     CPosition *p = sd->position;
 
     if (!(move & M_TACTICAL) && score > alpha) {
@@ -491,7 +491,7 @@ static void StoreResult(struct SearchData *sd, int score, int alpha, int beta,
 static int quies(struct SearchData *sd, int alpha, int beta, int depth) {
     CPosition *p = sd->position;
     int best;
-    move_t move;
+    CMove move;
     int talpha;
     int tmp;
 
@@ -589,11 +589,11 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
     CPosition *p = sd->position;
     struct SearchStatus *st;
     int best = -INF;
-    move_t bestm = M_NONE;
+    CMove bestm = M_NONE;
     int tmp;
     int talpha;
     int lmove;
-    move_t move;
+    CMove move;
     int extend = 0;
     bool threat = false;
     int reduce_extensions;
@@ -1125,7 +1125,7 @@ static char *NumberedSAN(CPosition *p, int move, char *buffer,
  */
 
 static void AnaLoop(CPosition *p, int depth) {
-    move_t move;
+    CMove move;
     bool dummy = false;
     int score;
 
@@ -1181,7 +1181,7 @@ static void AnaLoop(CPosition *p, int depth) {
     }
 }
 
-static void AnalyzeHT(CPosition *p, move_t move) {
+static void AnalyzeHT(CPosition *p, CMove move) {
     NumberedSAN(p, move, BestLine, sizeof(BestLine));
     strcat(BestLine, " ");
     char san_buffer[16];
@@ -1216,7 +1216,7 @@ static int gaps[] = {57, 23, 10, 4, 1};
  * and sorts the remaining moves by number of nodes searched
  * in decreasing order.
  */
-static void ResortMovesList(int cnt, move_t *mvs, unsigned long *nodes) {
+static void ResortMovesList(int cnt, CMove *mvs, unsigned long *nodes) {
     if (cnt <= 0)
         return;
 
@@ -1229,7 +1229,7 @@ static void ResortMovesList(int cnt, move_t *mvs, unsigned long *nodes) {
         int gap = gaps[gap_index];
         for (int i = gap; i < cnt; i++) {
             int j;
-            move_t mvs_tmp = mvs[i];
+            CMove mvs_tmp = mvs[i];
             unsigned long nodes_tmp = nodes[i];
 
             for (j = i; (j >= gap) && (nodes[j - gap] < nodes_tmp); j -= gap) {
@@ -1268,7 +1268,7 @@ static void *IterateInt(void *x) {
     InitSearch(sd);
     sd->nrootmoves = (uint16_t)p->LegalMoves(sd->heap);
 
-    move_t *mvs = sd->heap->data + sd->heap->current_section->start;
+    CMove *mvs = sd->heap->data + sd->heap->current_section->start;
 
     sd->best_score = p->material[p->turn] - p->material[OPP(p->turn)];
 
@@ -1286,7 +1286,7 @@ static void *IterateInt(void *x) {
         for (sd->movenum = 0; sd->movenum < sd->nrootmoves; sd->movenum++) {
             int tmp;
             int next_depth = (sd->depth - 2) * OnePly;
-            move_t move = mvs[sd->movenum];
+            CMove move = mvs[sd->movenum];
             bool is_alternate = !is_pv && move == sd->alternate_move;
 
             nodes[sd->movenum] = sd->nodes_cnt;
@@ -1716,7 +1716,7 @@ static void StartHelpers(CPosition *p) {
  *  alternate_move: an alternate move to search
  *  alternate_score_ptr: a pointer to return the alternate score in
  */
-int Iterate(CPosition *p, int *score_ptr, move_t alternate_move,
+int Iterate(CPosition *p, int *score_ptr, CMove alternate_move,
             int *alternate_score_ptr) {
     float soft, hard;
     int cnt;
@@ -1750,7 +1750,7 @@ int Iterate(CPosition *p, int *score_ptr, move_t alternate_move,
             strcpy(AnalysisLine, "mate");
         return M_NONE;
     } else if (cnt == 1 && SearchMode != Analyzing) {
-        move_t only_move = heap->data[heap->current_section->start];
+        CMove only_move = heap->data[heap->current_section->start];
         free_heap(heap);
         strcpy(AnalysisLine, "forced move");
         return only_move;
@@ -1775,7 +1775,7 @@ int Iterate(CPosition *p, int *score_ptr, move_t alternate_move,
     sd->alternate_move = alternate_move;
     IterateInt(sd);
 
-    move_t best_move = sd->best_move;
+    CMove best_move = sd->best_move;
     if (score_ptr != NULL) {
         *score_ptr = sd->best_score;
     }
@@ -1797,7 +1797,7 @@ int Iterate(CPosition *p, int *score_ptr, move_t alternate_move,
  * Search the root node.
  */
 void SearchRoot(CPosition *p) {
-    move_t move = M_NONE;
+    CMove move = M_NONE;
     CPosition *q;
 
     SearchMode = Searching;
@@ -1888,7 +1888,7 @@ pb_result_t PermanentBrain(CPosition *p) {
     }
 
     if (p->LegalMove(PBMove)) {
-        move_t move = M_NONE;
+        CMove move = M_NONE;
         CPosition *q;
         bool inbook = false;
         char san_buffer[16];

@@ -97,7 +97,7 @@ TEST_CLASS(AttackTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         Assert::IsTrue(position.get()->atkTo[d4] != 0);
 
-        move_t move = make_move(d4, e6, 0);
+        CMove move = make_move(d4, e6, 0);
         position.get()->DoMove(move);
 
         // d4 is now empty, so atkTo[d4] should be 0
@@ -111,7 +111,7 @@ TEST_CLASS(AttackTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         CBitBoard originalAtkTo(position.get()->atkTo[d4]);
 
-        move_t move = make_move(d4, e6, 0);
+        CMove move = make_move(d4, e6, 0);
         position.get()->DoMove(move);
         position.get()->UndoMove(move);
 
@@ -145,7 +145,7 @@ TEST_CLASS(AttackTests) {
         char epd[] = "4k3/8/4p3/8/3N4/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(d4, e6, M_CAPTURE);
+        CMove move = make_move(d4, e6, M_CAPTURE);
         position.get()->DoMove(move);
 
         // Knight now on e6, no piece on d4

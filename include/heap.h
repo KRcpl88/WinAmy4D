@@ -50,7 +50,7 @@ struct heap_section {
 typedef struct heap_section *heap_section_t;
 
 struct heap {
-    move_t *data;
+    CMove *data;
     unsigned int capacity;
     heap_section_t sections_start;
     heap_section_t sections_end;
@@ -59,11 +59,11 @@ struct heap {
 
 typedef struct heap *heap_t;
 
-static inline void append_to_heap(heap_t heap, move_t data) {
+static inline void append_to_heap(heap_t heap, CMove data) {
     if (heap->current_section->end >= heap->capacity) {
         // printf("Reallocating heap.\n");
-        move_t *new_data =
-            (move_t *)realloc(heap->data, 2 * heap->capacity * sizeof(move_t));
+        CMove *new_data =
+            (CMove *)realloc(heap->data, 2 * heap->capacity * sizeof(CMove));
         if (new_data == NULL) {
             perror("Cannot grow heap.");
             exit(1);

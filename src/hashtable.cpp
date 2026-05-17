@@ -233,11 +233,11 @@ static inline bool PutHTEntryBestEffort(hash_t key, struct HTEntry entry,
 }
 
 #if MP
-LookupResult ProbeHT(hash_t key, int *score, int depth, move_t *bestm,
+LookupResult ProbeHT(hash_t key, int *score, int depth, CMove *bestm,
                      bool *threat, int ply, int exclusiveP,
                      struct HTEntry *localHT)
 #else
-LookupResult ProbeHT(hash_t key, int *score, int depth, move_t *bestm,
+LookupResult ProbeHT(hash_t key, int *score, int depth, CMove *bestm,
                      bool *threat, int ply)
 #endif
 {

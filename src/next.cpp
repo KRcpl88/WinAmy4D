@@ -130,11 +130,11 @@ static inline void grow_data_heap(struct SearchData *sd) {
     }
 }
 
-move_t NextMove(struct SearchData *sd) {
+CMove NextMove(struct SearchData *sd) {
     heap_section_t section = sd->heap->current_section;
     struct SearchStatus *st = sd->current;
     CPosition *p = sd->position;
-    move_t move;
+    CMove move;
 
     switch (st->st_phase) {
     case HashMove:
@@ -247,7 +247,7 @@ move_t NextMove(struct SearchData *sd) {
     }
     /* fall through */
     case CounterMv: {
-        move_t lmove = (p->actLog - 1)->gl_Move;
+        CMove lmove = (p->actLog - 1)->gl_Move;
 
 #ifdef VERBOSE
         Print(9, "CounterMv\n");
@@ -419,11 +419,11 @@ move_t NextMove(struct SearchData *sd) {
     return M_NONE;
 }
 
-move_t NextEvasion(struct SearchData *sd) {
+CMove NextEvasion(struct SearchData *sd) {
     heap_section_t section = sd->heap->current_section;
     struct SearchStatus *st = sd->current;
     CPosition *p = sd->position;
-    move_t move;
+    CMove move;
 
     switch (st->st_phase) {
     case HashMove:
@@ -530,7 +530,7 @@ move_t NextEvasion(struct SearchData *sd) {
     }
         /* fall through */
     case CounterMv: {
-        move_t lmove = (p->actLog - 1)->gl_Move;
+        CMove lmove = (p->actLog - 1)->gl_Move;
 
 #ifdef VERBOSE
         Print(9, "CounterMv\n");
@@ -744,7 +744,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         next = (p->turn == White) ? i + 8 : i - 8;
 
         if (p->piece[next] == Neutral) {
-            move_t move = make_promotion(i, next, Queen, 0);
+            CMove move = make_promotion(i, next, Queen, 0);
             int sw;
             if ((sw = SwapOff(p, move)) >= 0) {
                 append_to_heap(sd->heap, move);
@@ -758,7 +758,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
             int sw;
             j = (tmp).FindSetBit();
             tmp.ClearLowestBit();
-            move_t move = make_promotion(i, j, Queen, M_CAPTURE);
+            CMove move = make_promotion(i, j, Queen, M_CAPTURE);
             if ((sw = SwapOff(p, move)) >= 0) {
                 append_to_heap(sd->heap, move);
                 grow_data_heap(sd);
@@ -785,7 +785,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
-            move_t move = make_move(j, i, M_CAPTURE);
+            CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
                 append_to_heap(sd->heap, move);
@@ -806,7 +806,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
-            move_t move = make_move(j, i, M_CAPTURE);
+            CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
                 append_to_heap(sd->heap, move);
@@ -827,7 +827,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
-            move_t move = make_move(j, i, M_CAPTURE);
+            CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
                 append_to_heap(sd->heap, move);
@@ -848,7 +848,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
-            move_t move = make_move(j, i, M_CAPTURE);
+            CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
                 append_to_heap(sd->heap, move);
@@ -859,10 +859,10 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
     }
 }
 
-move_t NextMoveQ(struct SearchData *sd, int alpha) {
+CMove NextMoveQ(struct SearchData *sd, int alpha) {
     heap_section_t section = sd->heap->current_section;
     struct SearchStatus *st = sd->current;
-    move_t move;
+    CMove move;
 
     switch (st->st_phase) {
     case HashMove:
@@ -907,7 +907,7 @@ move_t NextMoveQ(struct SearchData *sd, int alpha) {
  * Enter move in Killertable
  */
 
-void PutKiller(struct SearchData *sd, move_t m) {
+void PutKiller(struct SearchData *sd, CMove m) {
     struct KillerEntry *k = sd->killer;
 
     if (m == k->killer1) {
@@ -937,12 +937,12 @@ void PutKiller(struct SearchData *sd, move_t m) {
 }
 
 static void test_next_move(struct SearchData *sd,
-                           move_t (*func)(struct SearchData *)) {
+                           CMove (*func)(struct SearchData *)) {
     bool comma = false;
     EnterNode(sd);
 
     while (true) {
-        move_t move = func(sd);
+        CMove move = func(sd);
         if (move == M_NONE)
             break;
 
@@ -959,7 +959,7 @@ static void test_next_move(struct SearchData *sd,
     Print(0, "\n");
 }
 
-move_t next_move_q_fixed_alpha(struct SearchData *sd) {
+CMove next_move_q_fixed_alpha(struct SearchData *sd) {
     return NextMoveQ(sd, -500000);
 }
 

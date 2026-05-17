@@ -57,8 +57,8 @@
 #define M_ENPASSANT (1u << 28)
 #define M_PROMOTION_OFFSET 29
 #define M_PROMOTION_MASK (7u << M_PROMOTION_OFFSET)
-#define M_NULL ((move_t)(M_SCASTLE | M_LCASTLE | M_ENPASSANT))
-#define M_HASHED ((move_t)(M_CAPTURE | M_SCASTLE | M_LCASTLE | M_ENPASSANT))
+#define M_NULL ((CMove)(M_SCASTLE | M_LCASTLE | M_ENPASSANT))
+#define M_HASHED ((CMove)(M_CAPTURE | M_SCASTLE | M_LCASTLE | M_ENPASSANT))
 
 #define M_CANY (M_SCASTLE | M_LCASTLE)
 
@@ -101,7 +101,7 @@ typedef enum {
 // clang-format on
 
 struct GameLog {
-    move_t gl_Move;        /* the move that has been made in the position */
+    CMove gl_Move;        /* the move that has been made in the position */
     int8_t gl_Piece;       /* the piece that was captured (if any) */
     int8_t gl_Castle;      /* the castling rights */
     int8_t gl_EnPassant;   /* the enpassant target square (if any) */
@@ -133,8 +133,8 @@ class CPosition {
     int8_t material_signature[2];
 
     // Move making/unmaking
-    void DoMove(move_t move);
-    void UndoMove(move_t move);
+    void DoMove(CMove move);
+    void UndoMove(CMove move);
     void DoNull();
     void UndoNull();
 
@@ -143,9 +143,9 @@ class CPosition {
     void GenEnpas(heap_t heap);
     void GenFrom(int square, heap_t heap);
     void GenChecks(heap_t heap);
-    bool MayCastle(move_t move);
-    bool LegalMove(move_t move);
-    bool IsCheckingMove(move_t move);
+    bool MayCastle(CMove move);
+    bool LegalMove(CMove move);
+    bool IsCheckingMove(CMove move);
     int LegalMoves(heap_t heap);
     void PLegalMoves(heap_t heap);
 
@@ -158,9 +158,9 @@ class CPosition {
     bool IsPassed(int sq, int color) const;
 
     // Notation
-    char *SAN(move_t move, char *buffer);
-    move_t ParseSAN(const char *san);
-    move_t ParseGSAN(char *san);
+    char *SAN(CMove move, char *buffer);
+    CMove ParseSAN(const char *san);
+    CMove ParseGSAN(char *san);
     char *MakeEPD();
 
     // Display
@@ -184,11 +184,11 @@ extern char PieceName[];
 extern const int8_t CastleMask[2][2];
 
 // Free functions that don't operate on a position
-char *ICS_SAN(move_t move);
-void GenRest(move_t *moves);
-int GenCaps(move_t *moves, int good);
-int GenContactChecks(move_t *moves);
-move_t ParseSANList(char *san, Color side, move_t *mvs, int cnt, int *pmap);
-move_t ParseGSANList(char *san, Color side, move_t *mvs, int cnt);
+char *ICS_SAN(CMove move);
+void GenRest(CMove *moves);
+int GenCaps(CMove *moves, int good);
+int GenContactChecks(CMove *moves);
+CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap);
+CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt);
 
 #endif

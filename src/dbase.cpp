@@ -318,7 +318,7 @@ static inline bool is_sliding(int tp) { return tp >= Bishop && tp <= Queen; }
  * to move two pieces
  */
 
-static void DoCastle(CPosition *p, move_t move) {
+static void DoCastle(CPosition *p, CMove move) {
     int8_t from = move.GetFrom();
     int8_t to = move.GetTo();
     int8_t oldRook = (move & M_SCASTLE) ? from + 3 : from - 4;
@@ -374,7 +374,7 @@ static void DoCastle(CPosition *p, move_t move) {
  * Unmake a castle move
  */
 
-static void UndoCastle(CPosition *p, move_t move) {
+static void UndoCastle(CPosition *p, CMove move) {
     int8_t from = move.GetFrom();
     int8_t to = move.GetTo();
     int8_t oldRook = (move & M_SCASTLE) ? from + 3 : from - 4;
@@ -424,7 +424,7 @@ static void UndoCastle(CPosition *p, move_t move) {
  * updates the global database
  */
 
-void CPosition::DoMove(move_t move) {
+void CPosition::DoMove(CMove move) {
     CPosition *p = this;
     int8_t from = move.GetFrom();
     int8_t to = move.GetTo();
@@ -623,7 +623,7 @@ void CPosition::DoMove(move_t move) {
     p->hkey ^= STMKey;
 }
 
-void CPosition::UndoMove(move_t move) {
+void CPosition::UndoMove(CMove move) {
     CPosition *p = this;
     int8_t from = move.GetFrom();
     int8_t to = move.GetTo();
@@ -990,7 +990,7 @@ void CPosition::GenFrom(int square, heap_t heap) {
  * Test if castling is legal
  */
 
-bool CPosition::MayCastle(move_t move) {
+bool CPosition::MayCastle(CMove move) {
     CPosition *p = this;
     /* Sometimes there might be a legal castling move, but for the
        wrong p->turn, probably from the Countermove table */
@@ -1039,7 +1039,7 @@ bool CPosition::MayCastle(move_t move) {
  * Test if a move is legal
  */
 
-bool CPosition::LegalMove(move_t move) {
+bool CPosition::LegalMove(CMove move) {
     CPosition *p = this;
     int fr = move.GetFrom();
     int to = move.GetTo();
@@ -1126,7 +1126,7 @@ bool CPosition::LegalMove(move_t move) {
  * Test wether a move will give check
  */
 
-bool CPosition::IsCheckingMove(move_t move) {
+bool CPosition::IsCheckingMove(CMove move) {
     CPosition *p = this;
     int fr = move.GetFrom();
     int to = move.GetTo();
@@ -1390,7 +1390,7 @@ int CPosition::Repeated(int mode) {
  * Returns:
  *   the pointer to the generated string (buffer)
  */
-char *CPosition::SAN(move_t move, char *buffer) {
+char *CPosition::SAN(CMove move, char *buffer) {
     CPosition *p = this;
     char *x = buffer;
 
@@ -1496,7 +1496,7 @@ char *CPosition::SAN(move_t move, char *buffer) {
  * Generate the ICS SAN for a move
  */
 
-char *ICS_SAN(move_t move) {
+char *ICS_SAN(CMove move) {
     static char buffer[16];
     char *x = buffer;
 
@@ -1521,10 +1521,10 @@ char *ICS_SAN(move_t move) {
  * Parse a move string in e2e4 notation
  */
 
-move_t parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
+CMove parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
         !strncmp(san, "0-0-0", 5)) {
-        move_t move =
+        CMove move =
             M_LCASTLE | (p->turn == White ? (c1 << 6) + e1 : (c8 << 6) + e8);
         if (p->MayCastle(move))
             return move;
@@ -1532,7 +1532,7 @@ move_t parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
 
     if (!strncmp(san, "O-O", 3) || !strncmp(san, "o-o", 3) ||
         !strncmp(san, "0-0", 3)) {
-        move_t move =
+        CMove move =
             M_SCASTLE | (p->turn == White ? (g1 << 6) + e1 : (g8 << 6) + e8);
         if (p->MayCastle(move))
             return move;
@@ -1551,20 +1551,20 @@ move_t parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
 
     for (unsigned int i = heap->current_section->start;
          i < heap->current_section->end; i++) {
-        move_t move = heap->data[i];
+        CMove move = heap->data[i];
         if ((move & 4095) == mask) {
             if (move & M_PROMOTION_MASK && strlen(san) >= 5) {
                 char p = *(san + 4);
                 move = move & (~M_PROMOTION_MASK);
 
                 if (p == 'q' || p == 'Q')
-                    return move | ((move_t)Queen << M_PROMOTION_OFFSET);
+                    return move | ((CMove)Queen << M_PROMOTION_OFFSET);
                 if (p == 'r' || p == 'R')
-                    return move | ((move_t)Rook << M_PROMOTION_OFFSET);
+                    return move | ((CMove)Rook << M_PROMOTION_OFFSET);
                 if (p == 'n' || p == 'N')
-                    return move | ((move_t)Knight << M_PROMOTION_OFFSET);
+                    return move | ((CMove)Knight << M_PROMOTION_OFFSET);
                 if (p == 'b' || p == 'B')
-                    return move | ((move_t)Bishop << M_PROMOTION_OFFSET);
+                    return move | ((CMove)Bishop << M_PROMOTION_OFFSET);
             } else
                 return move;
         }
@@ -1572,10 +1572,10 @@ move_t parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
     return M_NONE;
 }
 
-move_t CPosition::ParseGSAN(char *san) {
+CMove CPosition::ParseGSAN(char *san) {
     CPosition *p = this;
     heap_t heap = allocate_heap();
-    move_t move = parse_gsan_internal(p, san, heap);
+    CMove move = parse_gsan_internal(p, san, heap);
     free_heap(heap);
 
     return move;
@@ -1585,7 +1585,7 @@ move_t CPosition::ParseGSAN(char *san) {
  * Parse a move string in e2e4 notation against a supplied move list
  */
 
-move_t ParseGSANList(char *san, Color side, move_t *mvs, int cnt) {
+CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
     int fr, to;
     int mask;
     int i;
@@ -1624,13 +1624,13 @@ move_t ParseGSANList(char *san, Color side, move_t *mvs, int cnt) {
                 int move = mvs[i] & (~M_PROMOTION_MASK);
 
                 if (p == 'q' || p == 'Q')
-                    return move | ((move_t)Queen << M_PROMOTION_OFFSET);
+                    return move | ((CMove)Queen << M_PROMOTION_OFFSET);
                 if (p == 'r' || p == 'R')
-                    return move | ((move_t)Rook << M_PROMOTION_OFFSET);
+                    return move | ((CMove)Rook << M_PROMOTION_OFFSET);
                 if (p == 'n' || p == 'N')
-                    return move | ((move_t)Knight << M_PROMOTION_OFFSET);
+                    return move | ((CMove)Knight << M_PROMOTION_OFFSET);
                 if (p == 'b' || p == 'B')
-                    return move | ((move_t)Bishop << M_PROMOTION_OFFSET);
+                    return move | ((CMove)Bishop << M_PROMOTION_OFFSET);
             } else
                 return mvs[i];
         }
@@ -1642,7 +1642,7 @@ move_t ParseGSANList(char *san, Color side, move_t *mvs, int cnt) {
  * Test a pseudolegal move for legality
  */
 
-static bool TryMove(CPosition *p, move_t move) {
+static bool TryMove(CPosition *p, CMove move) {
     bool tmp;
     p->DoMove(move);
     tmp = p->InCheck(OPP(p->turn));
@@ -1654,12 +1654,12 @@ static bool TryMove(CPosition *p, move_t move) {
 /*
  * Parse a move string (in SAN)
  */
-static move_t parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
+static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
     int tp = Neutral;
     int frk = -1, ffl = -1, trk = -1, tfl = -1;
     int pro = 0;
     unsigned int i;
-    move_t move;
+    CMove move;
 
     /* Check castling first */
 
@@ -1794,10 +1794,10 @@ static move_t parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
     return M_NONE;
 }
 
-move_t CPosition::ParseSAN(const char *san) {
+CMove CPosition::ParseSAN(const char *san) {
     CPosition *p = this;
     heap_t heap = allocate_heap();
-    move_t move = parse_san_with_heap(p, san, heap);
+    CMove move = parse_san_with_heap(p, san, heap);
     free_heap(heap);
     return move;
 }
@@ -1806,7 +1806,7 @@ move_t CPosition::ParseSAN(const char *san) {
  * Parse a move string (in SAN) against supplied move list
  */
 
-move_t ParseSANList(char *san, Color side, move_t *mvs, int cnt, int *pmap) {
+CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
     int tp = Neutral;
     int frk = -1, ffl = -1, trk = -1, tfl = -1;
     int pro = 0;
@@ -1986,7 +1986,7 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
 
         for (i = tmp_heap->current_section->start;
              i < tmp_heap->current_section->end; i++) {
-            move_t move = tmp_heap->data[i];
+            CMove move = tmp_heap->data[i];
             p->DoMove(move);
             if (!p->InCheck(OPP(p->turn))) {
                 append_to_heap(heap, move);
@@ -2008,7 +2008,7 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
 
         for (i = tmp_heap->current_section->start;
              i < tmp_heap->current_section->end; i++) {
-            move_t move = tmp_heap->data[i];
+            CMove move = tmp_heap->data[i];
             if ((move & M_CANY) && !p->MayCastle(move))
                 continue;
 
@@ -2028,7 +2028,7 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
         unsigned int i;
         for (i = tmp_heap->current_section->start;
              i < tmp_heap->current_section->end; i++) {
-            move_t move = tmp_heap->data[i];
+            CMove move = tmp_heap->data[i];
             p->DoMove(move);
             if (!p->InCheck(OPP(p->turn))) {
                 append_to_heap(heap, move);
@@ -2170,7 +2170,7 @@ void CPosition::ShowMoves() {
 
     for (i = heap->current_section->start; i < heap->current_section->end;
          i++) {
-        move_t move = heap->data[i];
+        CMove move = heap->data[i];
         Print(0, "%s ", p->SAN(move, san_buffer));
         if (p->IsCheckingMove(move))
             Print(0, "(check) ");
@@ -2192,7 +2192,7 @@ void CPosition::ShowMoves() {
         Print(0, "Checks: ");
         for (i = heap->current_section->start; i < heap->current_section->end;
              i++) {
-            move_t move = heap->data[i];
+            CMove move = heap->data[i];
             Print(0, "%s ", p->SAN(move, san_buffer));
         }
         Print(0, "\n");

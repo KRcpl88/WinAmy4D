@@ -21,7 +21,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "8/8/8/8/4k3/8/8/1N2K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(b1, c3, 0);
+        CMove move = make_move(b1, c3, 0);
         Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
@@ -30,7 +30,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "8/8/4k3/8/3N4/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(d4, c2, 0);
+        CMove move = make_move(d4, c2, 0);
         Assert::IsFalse(position.get()->IsCheckingMove(move));
     }
 
@@ -40,7 +40,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/8/8/4K2R w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(h1, h8, 0);
+        CMove move = make_move(h1, h8, 0);
         Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
@@ -51,7 +51,7 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
         // a1 to d4: bishop attacks along a1-h8 diagonal, d4 attacks h8
-        move_t move = make_move(a1, d4, 0);
+        CMove move = make_move(a1, d4, 0);
         Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
@@ -63,7 +63,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "8/2k5/8/3P4/8/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(d5, d6, 0);
+        CMove move = make_move(d5, d6, 0);
         Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
@@ -80,7 +80,7 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd3));
 
         // Bishop e4 to c2: off the e-file, rook on e1 now has open line to e8
-        move_t move = make_move(e4, c2, 0);
+        CMove move = make_move(e4, c2, 0);
         Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
@@ -90,7 +90,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/4P3/4B3/8/8/4R1K1 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e4, c2, 0);
+        CMove move = make_move(e4, c2, 0);
         Assert::IsFalse(position.get()->IsCheckingMove(move));
     }
 
@@ -101,7 +101,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/7P/8/8/8/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_promotion(h7, h8, Queen, 0);
+        CMove move = make_promotion(h7, h8, Queen, 0);
         Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
@@ -112,7 +112,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/4p3/8/3N4/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(d4, e6, M_CAPTURE);
+        CMove move = make_move(d4, e6, M_CAPTURE);
         Assert::IsTrue(position.get()->LegalMove(move));
     }
 
@@ -128,21 +128,21 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/3p4/8/8/8/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(d7, d6, 0);
+        CMove move = make_move(d7, d6, 0);
         Assert::IsFalse(position.get()->LegalMove(move));
     }
 
     TEST_METHOD(LegalMoveAcceptsValidPawnPush) {
         PositionGuard position(CPosition::Initial());
 
-        move_t move = make_move(e2, e3, 0);
+        CMove move = make_move(e2, e3, 0);
         Assert::IsTrue(position.get()->LegalMove(move));
     }
 
     TEST_METHOD(LegalMoveAcceptsValidPawnDoublePush) {
         PositionGuard position(CPosition::Initial());
 
-        move_t move = make_move(e2, e4, M_PAWND);
+        CMove move = make_move(e2, e4, M_PAWND);
         Assert::IsTrue(position.get()->LegalMove(move));
     }
 
@@ -151,14 +151,14 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/4n3/4P3/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e2, e4, M_PAWND);
+        CMove move = make_move(e2, e4, M_PAWND);
         Assert::IsFalse(position.get()->LegalMove(move));
     }
 
     TEST_METHOD(LegalMoveRejectsCaptureOnEmptySquare) {
         PositionGuard position(CPosition::Initial());
 
-        move_t move = make_move(b1, c3, M_CAPTURE);
+        CMove move = make_move(b1, c3, M_CAPTURE);
         Assert::IsFalse(position.get()->LegalMove(move));
     }
 
@@ -166,7 +166,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/3pP3/8/8/8/4K3 w - d6";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e5, d6, M_ENPASSANT);
+        CMove move = make_move(e5, d6, M_ENPASSANT);
         Assert::IsTrue(position.get()->LegalMove(move));
     }
 
@@ -174,7 +174,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/3pP3/8/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e5, d6, M_ENPASSANT);
+        CMove move = make_move(e5, d6, M_ENPASSANT);
         Assert::IsFalse(position.get()->LegalMove(move));
     }
 
@@ -184,7 +184,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/8/8/4K2R w K -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(e1, g1, M_SCASTLE);
         Assert::IsTrue(position.get()->MayCastle(move));
     }
 
@@ -192,7 +192,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/8/8/R3K3 w Q -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e1, c1, M_LCASTLE);
+        CMove move = make_move(e1, c1, M_LCASTLE);
         Assert::IsTrue(position.get()->MayCastle(move));
     }
 
@@ -201,7 +201,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4r3/8/8/8/8/8/8/4K2R w K -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(e1, g1, M_SCASTLE);
         Assert::IsFalse(position.get()->MayCastle(move));
     }
 
@@ -210,7 +210,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/8/8/4KN1R w K -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(e1, g1, M_SCASTLE);
         Assert::IsFalse(position.get()->MayCastle(move));
     }
 
@@ -219,7 +219,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4kr2/8/8/8/8/8/8/4K2R w K -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(e1, g1, M_SCASTLE);
         Assert::IsFalse(position.get()->MayCastle(move));
     }
 
@@ -228,7 +228,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/8/8/4K2R w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        move_t move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(e1, g1, M_SCASTLE);
         Assert::IsFalse(position.get()->MayCastle(move));
     }
 
@@ -305,10 +305,10 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CPosition::Initial());
 
         // Play Nf3, Nf6, Ng1, Ng8 to return to start position
-        move_t nf3 = make_move(g1, f3, 0);
-        move_t nf6 = make_move(g8, f6, 0);
-        move_t ng1 = make_move(f3, g1, 0);
-        move_t ng8 = make_move(f6, g8, 0);
+        CMove nf3 = make_move(g1, f3, 0);
+        CMove nf6 = make_move(g8, f6, 0);
+        CMove ng1 = make_move(f3, g1, 0);
+        CMove ng8 = make_move(f6, g8, 0);
 
         position.get()->DoMove(nf3);
         position.get()->DoMove(nf6);
