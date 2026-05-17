@@ -4,6 +4,9 @@
 
 #include "bitboard.h"
 
+const std::array<int, 1> CSCoord::LEVEL_SIZE{64};
+const std::array<int, 1> CSCoord::LEVEL_WIDTH{8};
+const std::array<int, 1> CSCoord::LEVEL_OFFSET{0};
 
 CSCoord::CSCoord(int level, int file, int rank)
     : Level(level), Rank(rank), File(file) {
