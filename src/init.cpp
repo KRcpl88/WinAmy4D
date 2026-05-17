@@ -76,36 +76,44 @@ void InitMasks(void) {
 }
 
 void PrintBitBoard(CBitBoard x) {
-    int i, j;
-    for (i = 7; i >= 0; i--) {
-        for (j = 0; j < 8; j++) {
-            int k = static_cast<int>(CSCoord(0, j, i));
-            if (x.TstBit(k))
-                Print(0, "*");
-            else
-                Print(0, ".");
+    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+        const int width = CSCoord::LEVEL_WIDTH[level];
+        for (int rank = width - 1; rank >= 0; rank--) {
+            for (int file = 0; file < width; file++) {
+                int k = static_cast<int>(CSCoord(level, file, rank));
+                if (x.TstBit(k))
+                    Print(0, "*");
+                else
+                    Print(0, ".");
+            }
+            Print(0, "\n");
         }
-        Print(0, "\n");
     }
 }
 
 void InitPawnMasks(void) {
     int i, j;
 
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
         FileMask[i] = 0;
         IsoMask[i] = 0;
-        for (j = 0; j < 8; j++) {
-            const int square = static_cast<int>(CSCoord(0, i, j));
-            FileMask[i] |= CBitBoard::SetMask(square);
-            if (i > 0)
-                IsoMask[i] |= CBitBoard::SetMask(static_cast<int>(CSCoord(0, i - 1, j)));
-            if (i < 7)
-                IsoMask[i] |= CBitBoard::SetMask(static_cast<int>(CSCoord(0, i + 1, j)));
-        }
+    }
+
+    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+        const int width = CSCoord::LEVEL_WIDTH[level];
+        for (i = 0; i < width; i++) {
+            for (j = 0; j < width; j++) {
+                const int square = static_cast<int>(CSCoord(level, i, j));
+                FileMask[i] |= CBitBoard::SetMask(square);
+                if (i > 0)
+                    IsoMask[i] |= CBitBoard::SetMask(static_cast<int>(CSCoord(level, i - 1, j)));
+                if (i + 1 < width)
+                    IsoMask[i] |= CBitBoard::SetMask(static_cast<int>(CSCoord(level, i + 1, j)));
+            }
 #ifdef DEBUG
-        PrintBitBoard(IsoMask[i]);
+            PrintBitBoard(IsoMask[i]);
 #endif
+        }
     }
     for (i = 0; i < 64; i++) {
         ForwardRayW[i] = ForwardRayB[i] = 0;
@@ -271,17 +279,36 @@ void InitMiscMasks(void) {
     EighthRank[White] = EighthRank[Black] = 0;
     ThirdRank[White] = ThirdRank[Black] = 0;
 
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
         RankMask[i] = 0;
-        SeventhRank[White] |= CBitBoard::SetMask(a7 + i);
-        SeventhRank[Black] |= CBitBoard::SetMask(a2 + i);
-        EighthRank[White] |= CBitBoard::SetMask(a8 + i);
-        EighthRank[Black] |= CBitBoard::SetMask(a1 + i);
-        ThirdRank[White] |= CBitBoard::SetMask(a3 + i);
-        ThirdRank[Black] |= CBitBoard::SetMask(a6 + i);
+    }
 
-        for (j = 0; j < 8; j++) {
-            RankMask[i] |= CBitBoard::SetMask(8 * i + j);
+    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+        const int width = CSCoord::LEVEL_WIDTH[level];
+        for (i = 0; i < width; i++) {
+            for (j = 0; j < width; j++) {
+                const int square = static_cast<int>(CSCoord(level, j, i));
+                RankMask[i] |= CBitBoard::SetMask(square);
+
+                if (i == 6) {
+                    SeventhRank[White] |= CBitBoard::SetMask(square);
+                }
+                if (i == 1) {
+                    SeventhRank[Black] |= CBitBoard::SetMask(square);
+                }
+                if (i == 7) {
+                    EighthRank[White] |= CBitBoard::SetMask(square);
+                }
+                if (i == 0) {
+                    EighthRank[Black] |= CBitBoard::SetMask(square);
+                }
+                if (i == 2) {
+                    ThirdRank[White] |= CBitBoard::SetMask(square);
+                }
+                if (i == 5) {
+                    ThirdRank[Black] |= CBitBoard::SetMask(square);
+                }
+            }
         }
     }
 
@@ -307,12 +334,16 @@ void InitMiscMasks(void) {
     }
 
     WhiteSquaresMask = BlackSquaresMask = 0;
-    for (i = 0; i < 8; i++) {
-        for (j = 0; j < 8; j++) {
-            if (((i + j) & 1) == 0) {
-                BlackSquaresMask.SetBit((i * 8 + j));
-            } else {
-                WhiteSquaresMask.SetBit((i * 8 + j));
+    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+        const int width = CSCoord::LEVEL_WIDTH[level];
+        for (i = 0; i < width; i++) {
+            for (j = 0; j < width; j++) {
+                const int square = static_cast<int>(CSCoord(level, j, i));
+                if (((i + j) & 1) == 0) {
+                    BlackSquaresMask.SetBit(square);
+                } else {
+                    WhiteSquaresMask.SetBit(square);
+                }
             }
         }
     }

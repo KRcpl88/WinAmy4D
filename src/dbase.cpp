@@ -45,6 +45,7 @@
 #include "mates.h"
 #include "recog.h"
 #include "safe_malloc.h"
+#include "scoord.h"
 #include "swap.h"
 #include "types.h"
 #include "utils.h"
@@ -2066,66 +2067,90 @@ int CPosition::LegalMoves(heap_t heap) {
 
 void CPosition::ShowPosition() {
     CPosition *p = this;
-    int rk, fl;
+    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+        const int width = CSCoord::LEVEL_WIDTH[level];
 
-    Print(0, "        +---+---+---+---+---+---+---+---+\n");
-    for (rk = 7; rk >= 0; rk--) {
-        char indicator =
-            ((rk == 7) && (p->turn)) || ((rk == 0) && (!p->turn)) ? '>' : ' ';
-        Print(0, "    %c %c ", indicator, '1' + rk);
-        for (fl = 0; fl < 8; fl++) {
-            int i = (rk << 3) + fl;
+        if (level > 0) {
+            Print(0, "\n");
+        }
+        if (CSCoord::NUM_LEVELS > 1) {
+            Print(0, "      Level %d\n", level + 1);
+        }
 
-            Print(0, "|");
-            if (p->enPassant && i == p->enPassant)
-                Print(0, "<E>");
-            else {
-                if (p->piece[i] < 0)
-                    Print(0, "*");
-                else
-                    Print(0, " ");
-                Print(0, "%c", PieceName[TYPE(p->piece[i])]);
-                if (p->piece[i] < 0)
-                    Print(0, "*");
-                else
-                    Print(0, " ");
-            }
+        Print(0, "        ");
+        for (int file = 0; file < width; file++) {
+            Print(0, "+---");
         }
-        if (rk == 4) {
-            int bit;
-            Print(0, "|   Black (%5d, %5d)  ", p->material[Black],
-                  p->nonPawn[Black]);
-            for (bit = 0; bit < 5; bit++) {
-                Print(0, "%c",
-                      (p->material_signature[Black] & (1 << bit))
-                          ? PieceName[bit + 1]
-                          : '.');
+        Print(0, "+\n");
+
+        for (int rk = width - 1; rk >= 0; rk--) {
+            char indicator =
+                ((rk == width - 1) && (p->turn)) || ((rk == 0) && (!p->turn)) ? '>' : ' ';
+            Print(0, "    %c %c ", indicator, '1' + rk);
+            for (int fl = 0; fl < width; fl++) {
+                const int square = static_cast<int>(CSCoord(level, fl, rk));
+
+                Print(0, "|");
+                if (p->enPassant && square == p->enPassant)
+                    Print(0, "<E>");
+                else {
+                    if (p->piece[square] < 0)
+                        Print(0, "*");
+                    else
+                        Print(0, " ");
+                    Print(0, "%c", PieceName[TYPE(p->piece[square])]);
+                    if (p->piece[square] < 0)
+                        Print(0, "*");
+                    else
+                        Print(0, " ");
+                }
             }
-            Print(0, "\n");
-        } else if (rk == 3) {
-            int bit;
-            Print(0, "|   White (%5d, %5d)  ", p->material[White],
-                  p->nonPawn[White]);
-            for (bit = 0; bit < 5; bit++) {
-                Print(0, "%c",
-                      (p->material_signature[White] & (1 << bit))
-                          ? PieceName[bit + 1]
-                          : '.');
+            if (rk == 4) {
+                int bit;
+                Print(0, "|   Black (%5d, %5d)  ", p->material[Black],
+                      p->nonPawn[Black]);
+                for (bit = 0; bit < 5; bit++) {
+                    Print(0, "%c",
+                          (p->material_signature[Black] & (1 << bit))
+                              ? PieceName[bit + 1]
+                              : '.');
+                }
+                Print(0, "\n");
+            } else if (rk == 3) {
+                int bit;
+                Print(0, "|   White (%5d, %5d)  ", p->material[White],
+                      p->nonPawn[White]);
+                for (bit = 0; bit < 5; bit++) {
+                    Print(0, "%c",
+                          (p->material_signature[White] & (1 << bit))
+                              ? PieceName[bit + 1]
+                              : '.');
+                }
+                Print(0, "\n");
+            } else if (rk == 6) {
+                Print(0, "|   Hashkey: %llx\n", p->hkey);
+            } else if (rk == 1) {
+                Print(0, "|   Index: %d\n", RECOGNIZER_INDEX(p));
+            } else if (rk == 0) {
+                Print(0, "|   MateThreat: %d %d\n", MateThreat(p, White),
+                      MateThreat(p, Black));
+            } else {
+                Print(0, "|\n");
             }
-            Print(0, "\n");
-        } else if (rk == 6) {
-            Print(0, "|   Hashkey: %llx\n", p->hkey);
-        } else if (rk == 1) {
-            Print(0, "|   Index: %d\n", RECOGNIZER_INDEX(p));
-        } else if (rk == 0) {
-            Print(0, "|   MateThreat: %d %d\n", MateThreat(p, White),
-                  MateThreat(p, Black));
-        } else {
-            Print(0, "|\n");
+
+            Print(0, "        ");
+            for (int file = 0; file < width; file++) {
+                Print(0, "+---");
+            }
+            Print(0, "+\n");
         }
-        Print(0, "        +---+---+---+---+---+---+---+---+\n");
+
+        Print(0, "         ");
+        for (int file = 0; file < width; file++) {
+            Print(0, "  %c ", 'a' + file);
+        }
+        Print(0, "\n");
     }
-    Print(0, "          a   b   c   d   e   f   g   h\n");
 }
 
 /*
@@ -2410,27 +2435,33 @@ char *CPosition::MakeEPD() {
 
     char *x = epdbuffer;
 
-    for (int i = 7; i >= 0; i--) {
-        uint8_t cnt = 0;
-        for (int j = 0; j < 8; j++) {
-            if (p->piece[i * 8 + j] == Neutral) {
-                cnt++;
-                if (j == 7)
-                    *(x++) = '0' + cnt;
-            } else {
-                if (cnt)
-                    *(x++) = '0' + cnt;
-                cnt = 0;
-                if (p->piece[i * 8 + j] > 0)
-                    *(x++) = wname[TYPE(p->piece[i * 8 + j])];
-                else
-                    *(x++) = bname[TYPE(p->piece[i * 8 + j])];
+    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+        const int width = CSCoord::LEVEL_WIDTH[level];
+        for (int i = width - 1; i >= 0; i--) {
+            uint8_t cnt = 0;
+            for (int j = 0; j < width; j++) {
+                const int square = static_cast<int>(CSCoord(level, j, i));
+                if (p->piece[square] == Neutral) {
+                    cnt++;
+                    if (j == width - 1)
+                        *(x++) = '0' + cnt;
+                } else {
+                    if (cnt)
+                        *(x++) = '0' + cnt;
+                    cnt = 0;
+                    if (p->piece[square] > 0)
+                        *(x++) = wname[TYPE(p->piece[square])];
+                    else
+                        *(x++) = bname[TYPE(p->piece[square])];
+                }
             }
+            if ((level == CSCoord::NUM_LEVELS - 1) && (i == 0))
+                *(x++) = ' ';
+            else if (i == 0)
+                *(x++) = '|';
+            else
+                *(x++) = '/';
         }
-        if (i == 0)
-            *(x++) = ' ';
-        else
-            *(x++) = '/';
     }
     if (p->turn == White)
         *(x++) = 'w';
