@@ -37,6 +37,7 @@
 #include "dbase.h"
 #include "evaluation.h"
 #include "safe_malloc.h"
+#include "scoord.h"
 #include "search.h"
 #include "utils.h"
 #include "yaml.h"
@@ -222,12 +223,15 @@ void SaveEvaluationConfig(char *file_name) {
  * Writes a piece-square table to file fout.
  */
 static void print_piece_square_table(FILE *fout, int16_t *piece_square_table) {
-    for (int rank = 0; rank < 8; rank++) {
-        fprintf(fout, "    ");
-        for (int file = 0; file < 8; file++) {
-            fprintf(fout, "%5d, ", (int)piece_square_table[8 * rank + file]);
+    for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+        const CSCoord square(offset);
+        if (square.File == 0) {
+            fprintf(fout, "    ");
         }
-        fprintf(fout, "\n");
+        fprintf(fout, "%5d, ", (int)piece_square_table[static_cast<int>(square)]);
+        if (square.File == 7) {
+            fprintf(fout, "\n");
+        }
     }
 }
 

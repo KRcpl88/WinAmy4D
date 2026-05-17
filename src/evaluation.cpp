@@ -40,6 +40,7 @@
 #include "init.h"
 #include "inline.h"
 #include "recog.h"
+#include "scoord.h"
 #include <stdint.h>
 
 #define REFLECT_X(a) ((a) ^ 0x38)
@@ -1882,11 +1883,9 @@ static bool is_edge(unsigned int sq) {
 }
 
 static void create_mirrored_piece_square_table(int16_t *src, int16_t *dest) {
-    for (int rank = 0; rank < 8; rank++) {
-        for (int file = 0; file < 8; file++) {
-            int src_idx = 8 * rank + file;
-            int dest_idx = 8 * rank + 7 - file;
-            dest[dest_idx] = src[src_idx];
-        }
+    for (int src_idx = 0; src_idx < CSCoord::SIZE; src_idx++) {
+        const CSCoord source(src_idx);
+        const CSCoord mirrored(0, 7 - source.File, source.Rank);
+        dest[static_cast<int>(mirrored)] = src[static_cast<int>(source)];
     }
 }
