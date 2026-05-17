@@ -16,3 +16,12 @@ Please refactor Position to C++
 4. Rename CBitboard to CBitBoard
 5. Remove the #define for SetMask, ClrMask, SetBit, ClrBit, TstBit, and remove the golbal scope functions CountBits and FindSetBit.  All those typedefs and functions should instead be using the same functions in CBitBoard
 6. Update all unit tests and other code to use CPosition instead of Position when possible.
+
+
+The CSCoord class was designed to convert a chess square position rank and file into a bit offset for the CBitBoard class.
+
+1. The CSCoord Level member is for a multidimensional chessboard, for traditional 2 dimiensional chess on an 8x8 board, it will always be 0.
+2. Please update any code which converts a bitboard offset too or from a rank and file to use the SCoord class to do that.
+3. Please update any code whihc enumerates the rank and file in a chess board position to enumerate using a CSCoord class using the Rank and File members
+4. Please add any new unit tests to verify any logic changes created by using CSCoord instead of directly using level and rank variables inline or locally.
+
