@@ -59,7 +59,8 @@ bool CPosition::InCheck(int side) const {
     return (bool)(atkFr[kingSq[side].BitOffset()] & mask[!side][0]);
 }
 
-bool CPosition::IsPassed(int sq, int side) const {
+bool CPosition::IsPassed(const CSCoord& sqCoord, int side) const {
+    int sq = sqCoord.BitOffset();
     if (side == White)
         return !(mask[Black][Pawn] & PassedMaskW[sq]);
     else
@@ -945,20 +946,21 @@ void CPosition::RecalcAttacks() {
 /*
  * Generate all capturing moves to a square "square"
  */
-void CPosition::GenTo(int square, heap_t heap) {
+void CPosition::GenTo(const CSCoord& squareCoord, heap_t heap) {
     CPosition *p = this;
+    int square = squareCoord.BitOffset();
     CBitBoard tmp = p->atkFr[square] & p->mask[p->turn][0];
 
     while (tmp) {
         int i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        if (TYPE(p->piece[i]) == Pawn && is_promo_square(CSCoord(square))) {
-            append_to_heap(heap, make_promotion(i, square, Queen, M_CAPTURE));
-            append_to_heap(heap, make_promotion(i, square, Knight, M_CAPTURE));
-            append_to_heap(heap, make_promotion(i, square, Rook, M_CAPTURE));
-            append_to_heap(heap, make_promotion(i, square, Bishop, M_CAPTURE));
+        if (TYPE(p->piece[i]) == Pawn && is_promo_square(squareCoord)) {
+            append_to_heap(heap, make_promotion(CSCoord(i), squareCoord, Queen, M_CAPTURE));
+            append_to_heap(heap, make_promotion(CSCoord(i), squareCoord, Knight, M_CAPTURE));
+            append_to_heap(heap, make_promotion(CSCoord(i), squareCoord, Rook, M_CAPTURE));
+            append_to_heap(heap, make_promotion(CSCoord(i), squareCoord, Bishop, M_CAPTURE));
         } else {
-            append_to_heap(heap, make_move(i, square, M_CAPTURE));
+            append_to_heap(heap, make_move(CSCoord(i), squareCoord, M_CAPTURE));
         }
     }
 }
@@ -974,7 +976,7 @@ void CPosition::GenEnpas(heap_t heap) {
     while (tmp) {
         int i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        append_to_heap(heap, make_move(i, p->enPassant.BitOffset(), M_ENPASSANT));
+        append_to_heap(heap, make_move(CSCoord(i), p->enPassant, M_ENPASSANT));
     }
 }
 
@@ -982,8 +984,9 @@ void CPosition::GenEnpas(heap_t heap) {
  * Generate all non-capturing moves from "square"
  */
 
-void CPosition::GenFrom(int square, heap_t heap) {
+void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
     CPosition *p = this;
+    int square = squareCoord.BitOffset();
     if (TYPE(p->piece[square]) != Pawn) {
         CBitBoard tmp;
 
@@ -992,7 +995,7 @@ void CPosition::GenFrom(int square, heap_t heap) {
         while (tmp) {
             int i = (tmp).FindSetBit();
             tmp.ClearLowestBit();
-            append_to_heap(heap, make_move(square, i, 0));
+            append_to_heap(heap, make_move(squareCoord, CSCoord(i), 0));
         }
 
         /* Generate castling moves
@@ -1013,22 +1016,28 @@ void CPosition::GenFrom(int square, heap_t heap) {
             }
         }
     } else {
-        int sq = (p->turn == White ? square + 8 : square - 8);
+        const int width = CSCoord::LEVEL_WIDTH[squareCoord.Level];
+        const int direction = (p->turn == White) ? 1 : -1;
+        CSCoord sqCoord(squareCoord.Level, squareCoord.File,
+                        squareCoord.Rank + direction);
+        int sq = sqCoord.BitOffset();
 
         if (p->piece[sq] == Neutral) {
-            if (is_promo_square(CSCoord(sq))) {
-                append_to_heap(heap, make_promotion(square, sq, Queen, 0));
-                append_to_heap(heap, make_promotion(square, sq, Knight, 0));
-                append_to_heap(heap, make_promotion(square, sq, Rook, 0));
-                append_to_heap(heap, make_promotion(square, sq, Bishop, 0));
+            if (is_promo_square(sqCoord)) {
+                append_to_heap(heap, make_promotion(squareCoord, sqCoord, Queen, 0));
+                append_to_heap(heap, make_promotion(squareCoord, sqCoord, Knight, 0));
+                append_to_heap(heap, make_promotion(squareCoord, sqCoord, Rook, 0));
+                append_to_heap(heap, make_promotion(squareCoord, sqCoord, Bishop, 0));
             } else {
-                append_to_heap(heap, make_move(square, sq, 0));
+                append_to_heap(heap, make_move(squareCoord, sqCoord, 0));
 
-                if ((p->turn == White && square <= h2) ||
-                    (p->turn == Black && square >= a7)) {
-                    sq = (p->turn == White ? sq + 8 : sq - 8);
+                const int homeRank = (p->turn == White) ? 1 : (width - 2);
+                if (squareCoord.Rank == homeRank) {
+                    CSCoord dblCoord(squareCoord.Level, squareCoord.File,
+                                     squareCoord.Rank + 2 * direction);
+                    sq = dblCoord.BitOffset();
                     if (p->piece[sq] == Neutral) {
-                        append_to_heap(heap, make_move(square, sq, M_PAWND));
+                        append_to_heap(heap, make_move(squareCoord, dblCoord, M_PAWND));
                     }
                 }
             }
@@ -1305,7 +1314,7 @@ void CPosition::GenChecks(heap_t heap) {
                 int j = (tmp2).FindSetBit();
 
                 if (fsq.TstBit(j)) {
-                    p->GenFrom(j, heap);
+                    p->GenFrom(CSCoord(j), heap);
                     fsq.ClrBit(j);
                 }
             }
@@ -1324,7 +1333,7 @@ void CPosition::GenChecks(heap_t heap) {
                 int j = (tmp2).FindSetBit();
 
                 if (fsq.TstBit(j)) {
-                    p->GenFrom(j, heap);
+                    p->GenFrom(CSCoord(j), heap);
                     fsq.ClrBit(j);
                 }
             }
@@ -2042,7 +2051,7 @@ void CPosition::PLegalMoves(heap_t heap) {
         int j = (tmp).FindSetBit();
         tmp.ClearLowestBit();
 
-        p->GenTo(j, heap);
+        p->GenTo(CSCoord(j), heap);
     }
 
     tmp = p->mask[p->turn][0];
@@ -2050,7 +2059,7 @@ void CPosition::PLegalMoves(heap_t heap) {
         int j = (tmp).FindSetBit();
         tmp.ClearLowestBit();
 
-        p->GenFrom(j, heap);
+        p->GenFrom(CSCoord(j), heap);
     }
 
     p->GenEnpas(heap);
@@ -2073,7 +2082,7 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
         tmp.ClearLowestBit();
 
         push_section(tmp_heap);
-        p->GenTo(j, tmp_heap);
+        p->GenTo(CSCoord(j), tmp_heap);
 
         for (i = tmp_heap->current_section->start;
              i < tmp_heap->current_section->end; i++) {
@@ -2095,7 +2104,7 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
         tmp.ClearLowestBit();
 
         push_section(tmp_heap);
-        p->GenFrom(j, tmp_heap);
+        p->GenFrom(CSCoord(j), tmp_heap);
 
         for (i = tmp_heap->current_section->start;
              i < tmp_heap->current_section->end; i++) {
@@ -2705,7 +2714,8 @@ bool CPosition::CheckDraw() const {
  * Check if the pawn is passed
  */
 
-bool IsPassed(const CPosition *p, int sq, int side) {
+bool IsPassed(const CPosition *p, const CSCoord& sqCoord, int side) {
+    int sq = sqCoord.BitOffset();
     if (side == White)
         return !(p->mask[Black][Pawn] & PassedMaskW[sq]);
     else

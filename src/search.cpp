@@ -847,12 +847,12 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
 
         if (TYPE(p->piece[move.GetFromCoord().BitOffset()]) == Pawn &&
             p->nonPawn[OPP(p->turn)] <= Value[Queen]) {
+            const CSCoord& toCoord = move.GetToCoord();
+            const int width = CSCoord::LEVEL_WIDTH[toCoord.Level];
 
-            int to = move.GetToCoord().BitOffset();
-
-            if (((p->turn == White && to >= a7) ||
-                 (p->turn == Black && to <= h2)) &&
-                p->IsPassed(to, p->turn) && SwapOff(p, move) >= 0) {
+            if (((p->turn == White && toCoord.Rank >= width - 2) ||
+                 (p->turn == Black && toCoord.Rank <= 1)) &&
+                p->IsPassed(toCoord, p->turn) && SwapOff(p, move) >= 0) {
                 next_depth += ExtendPassedPawn;
                 PPExt += 1;
             }

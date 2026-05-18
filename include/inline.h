@@ -106,13 +106,23 @@ static inline int EdgeDist(CSCoord sq) {
 /**
  * Create a move from from square, to square and flags.
  */
+static inline CMove make_move(CSCoord from, CSCoord to, int flags) {
+    return CMove(from, to, static_cast<uint32_t>(flags));
+}
+
 static inline CMove make_move(int from, int to, int flags) {
-    return CMove(CSCoord(from), CSCoord(to), static_cast<uint32_t>(flags));
+    return make_move(CSCoord(from), CSCoord(to), flags);
 }
 
 /**
  * Create a promotion move from from square, to square and flags.
  */
+static inline CMove make_promotion(CSCoord from, CSCoord to, int type, int flags) {
+    CMove move = make_move(from, to, flags);
+    move.SetPromotionType(type);
+    return move;
+}
+
 static inline CMove make_promotion(int from, int to, int type, int flags) {
     CMove move = make_move(from, to, flags);
     move.SetPromotionType(type);

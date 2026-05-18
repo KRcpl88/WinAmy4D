@@ -341,7 +341,7 @@ static const CBitBoard BKingTrapsRook2 = CBitBoard::SetMask(c8) | CBitBoard::Set
 static const CBitBoard BRookTrapped2 = CBitBoard::SetMask(b8) | CBitBoard::SetMask(a8) | CBitBoard::SetMask(a7);
 
 static void create_mirrored_piece_square_table(int16_t *, int16_t *);
-static bool is_edge(unsigned int);
+static bool is_edge(CSCoord);
 
 /**
  * Evaluate the pawn structure.
@@ -1467,7 +1467,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
 
         score += KnightPos[sq];
 
-        if (is_edge(sq)) {
+        if (is_edge(CSCoord(sq))) {
             score += KnightEdgePenalty;
         }
 
@@ -1496,7 +1496,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
 
         score -= KnightPos[REFLECT_X(sq)];
 
-        if (is_edge(sq)) {
+        if (is_edge(CSCoord(sq))) {
             score -= KnightEdgePenalty;
         }
 
@@ -1889,8 +1889,7 @@ void InitEvaluation(const CPosition *p) {
     MaxPos = MaxPosInit;
 }
 
-static bool is_edge(unsigned int sq) {
-    const CSCoord coord(static_cast<int>(sq));
+static bool is_edge(CSCoord coord) {
     const int width = CSCoord::LEVEL_WIDTH[coord.Level];
     return (coord.File == 0 || coord.File == (width - 1) || coord.Rank == 0 ||
             coord.Rank == (width - 1));

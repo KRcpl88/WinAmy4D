@@ -161,7 +161,7 @@ CMove NextMove(struct SearchData *sd) {
             int to = (targets).FindSetBit();
             targets.ClearLowestBit();
 
-            p->GenTo(to, sd->heap);
+            p->GenTo(CSCoord(to), sd->heap);
         }
 
         CBitBoard promoting_pawns =
@@ -170,7 +170,7 @@ CMove NextMove(struct SearchData *sd) {
             int from = (promoting_pawns).FindSetBit();
             promoting_pawns.ClearLowestBit();
 
-            p->GenFrom(from, sd->heap);
+            p->GenFrom(CSCoord(from), sd->heap);
         }
 
         grow_data_heap(sd);
@@ -458,7 +458,7 @@ CMove NextEvasion(struct SearchData *sd) {
         while (targets) {
             int to = (targets).FindSetBit();
             targets.ClearLowestBit();
-            p->GenTo(to, sd->heap);
+            p->GenTo(CSCoord(to), sd->heap);
         }
 
         grow_data_heap(sd);

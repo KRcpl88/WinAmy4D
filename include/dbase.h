@@ -146,9 +146,9 @@ class CPosition {
     void UndoNull();
 
     // Move generation
-    void GenTo(int square, heap_t heap);
+    void GenTo(const CSCoord& square, heap_t heap);
     void GenEnpas(heap_t heap);
-    void GenFrom(int square, heap_t heap);
+    void GenFrom(const CSCoord& square, heap_t heap);
     void GenChecks(heap_t heap);
     bool MayCastle(CMove move);
     bool LegalMove(CMove move);
@@ -162,7 +162,7 @@ class CPosition {
     void RecalcAttacks();
     const char *GameEnd();
     bool CheckDraw() const;
-    bool IsPassed(int sq, int color) const;
+    bool IsPassed(const CSCoord& sq, int color) const;
 
     // Notation
     char *SAN(CMove move, char *buffer);
