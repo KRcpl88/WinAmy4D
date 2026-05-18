@@ -161,7 +161,7 @@ CMove NextMove(struct SearchData *sd) {
             int to = (targets).FindSetBit();
             targets.ClearLowestBit();
 
-            p->GenTo(to, sd->heap);
+            p->GenTo(CSCoord(to), sd->heap);
         }
 
         CBitBoard promoting_pawns =
@@ -170,7 +170,7 @@ CMove NextMove(struct SearchData *sd) {
             int from = (promoting_pawns).FindSetBit();
             promoting_pawns.ClearLowestBit();
 
-            p->GenFrom(from, sd->heap);
+            p->GenFrom(CSCoord(from), sd->heap);
         }
 
         grow_data_heap(sd);
@@ -450,7 +450,7 @@ CMove NextEvasion(struct SearchData *sd) {
          * check
          */
 
-        int kp = p->kingSq[p->turn];
+        int kp = p->kingSq[p->turn].BitOffset();
 
         CBitBoard targets =
             (p->atkFr[kp] | p->atkTo[kp]) & p->mask[OPP(p->turn)][0];
@@ -458,7 +458,7 @@ CMove NextEvasion(struct SearchData *sd) {
         while (targets) {
             int to = (targets).FindSetBit();
             targets.ClearLowestBit();
-            p->GenTo(to, sd->heap);
+            p->GenTo(CSCoord(to), sd->heap);
         }
 
         grow_data_heap(sd);
@@ -606,7 +606,8 @@ CMove NextEvasion(struct SearchData *sd) {
         Print(9, "HistoryMoves\n");
 #endif
 
-        const int kp = p->kingSq[p->turn]; /* (Mask[Side][King]).FindSetBit(); */
+        const int kp =
+            p->kingSq[p->turn].BitOffset(); /* (Mask[Side][King]).FindSetBit(); */
         const CBitBoard empty = ~(p->mask[White][0] | p->mask[Black][0]);
 
         CBitBoard king_flight_squares = p->atkTo[kp] & empty;
@@ -660,7 +661,7 @@ CMove NextEvasion(struct SearchData *sd) {
             pawns_to.ClearLowestBit();
             int fr = (p->turn == White) ? to - 8 : to + 8;
 
-            if (is_promo_square(to)) {
+            if (is_promo_square(CSCoord(to))) {
                 append_to_heap(sd->heap, make_promotion(fr, to, Queen, 0));
                 append_to_heap(sd->heap, make_promotion(fr, to, Knight, 0));
                 append_to_heap(sd->heap, make_promotion(fr, to, Rook, 0));

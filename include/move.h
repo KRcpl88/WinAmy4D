@@ -22,8 +22,6 @@ public:
 
     const CSCoord& GetFromCoord() const;
     const CSCoord& GetToCoord() const;
-    int GetFromBitOffset() const;
-    int GetToBitOffset() const;
     int GetFromToIndex() const;
 
     bool IsCapture() const;

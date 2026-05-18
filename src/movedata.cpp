@@ -312,7 +312,9 @@ void InitMoves(void) {
     }
     for (sq = 0; sq < 128; sq++) {
         if (!(sq & 0x88)) {
-            sq2 = (sq & 7) | (sq & 0x70) >> 1;
+            const int file = sq % 16;
+            const int rank = sq / 16;
+            sq2 = rank * 8 + file;
             conv[sq] = (signed char)sq2;
         }
     }

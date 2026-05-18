@@ -40,7 +40,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SQUARE(x) 'a' + ((x) & 7), '1' + ((x) >> 3)
+#define SQUARE(x) 'a' + CSCoord(x).File, '1' + CSCoord(x).Rank
 
 #define OPP(x) (1 ^ (x))
 
@@ -85,6 +85,12 @@ typedef enum {
 } Piece;
 typedef enum { White = 0, Black = 1 } Color;
 
+static inline CSCoord InvalidSquareCoord(void) {
+    CSCoord coord;
+    coord.Level = -1;
+    return coord;
+}
+
 /*
  * Constants for chess board squares.
  */
@@ -105,7 +111,7 @@ struct GameLog {
     CMove gl_Move;        /* the move that has been made in the position */
     int8_t gl_Piece;       /* the piece that was captured (if any) */
     int8_t gl_Castle;      /* the castling rights */
-    int8_t gl_EnPassant;   /* the enpassant target square (if any) */
+    CSCoord gl_EnPassant;  /* the enpassant target square (if any) */
     uint8_t gl_IrrevCount; /* number of moves since last irreversible move */
     hash_t gl_HashKey;     /* used to detect repetitions */
     hash_t gl_PawnKey;
@@ -128,9 +134,9 @@ class CPosition {
     uint16_t ply;
     int8_t piece[64];
     int8_t castle;
-    int8_t enPassant;
+    CSCoord enPassant;
     int8_t turn; /* 0 == white, 1 == black */
-    int8_t kingSq[2];
+    CSCoord kingSq[2];
     int8_t material_signature[2];
 
     // Move making/unmaking
@@ -140,9 +146,9 @@ class CPosition {
     void UndoNull();
 
     // Move generation
-    void GenTo(int square, heap_t heap);
+    void GenTo(const CSCoord& square, heap_t heap);
     void GenEnpas(heap_t heap);
-    void GenFrom(int square, heap_t heap);
+    void GenFrom(const CSCoord& square, heap_t heap);
     void GenChecks(heap_t heap);
     bool MayCastle(CMove move);
     bool LegalMove(CMove move);
@@ -156,7 +162,7 @@ class CPosition {
     void RecalcAttacks();
     const char *GameEnd();
     bool CheckDraw() const;
-    bool IsPassed(int sq, int color) const;
+    bool IsPassed(const CSCoord& sq, int color) const;
 
     // Notation
     char *SAN(CMove move, char *buffer);

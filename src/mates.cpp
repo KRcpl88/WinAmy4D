@@ -40,7 +40,7 @@
 
 bool MateThreat(CPosition *p, int side) {
     int oside = !side;
-    int ekp = p->kingSq[oside];
+    int ekp = p->kingSq[oside].BitOffset();
     CBitBoard pcs;
     CBitBoard ksafe;
     int fr;

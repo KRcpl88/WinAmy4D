@@ -482,7 +482,8 @@ void Edit(char *args) {
         }
     }
 
-    p->castle = p->enPassant = 0;
+    p->castle = 0;
+    p->enPassant = InvalidSquareCoord();
 
     p->RecalcAttacks();
     if (p->piece[e1] == King) {

@@ -235,8 +235,8 @@ static const square rgsqReflectInvertMask[] = {0, 0x38};
 
 /* useful macros */
 
-#define TbRow(sq) ((sq) >> 3)
-#define TbColumn(sq) ((sq) & 7)
+#define TbRow(sq) ((sq) / 8)
+#define TbColumn(sq) ((sq) % 8)
 
 #if defined(NEW)
 #define PchExt(side) ((x_colorWhite == side) ? ".nbw" : ".nbb")
@@ -1542,11 +1542,11 @@ static INLINE INDEX TB_FASTCALL IndEnPassant11W(square sqw, square sqb,
     (void)sqb;
     if (sqw + 7 == sqEnP)
         // Capture to the left
-        return (sqw & 7) - 1;
+        return TbColumn(sqw) - 1;
     else {
         // Capture to the right
         assert(sqw + 9 == sqEnP);
-        return (sqw & 7) + 7;
+        return TbColumn(sqw) + 7;
     }
 }
 
@@ -1556,11 +1556,11 @@ static INLINE INDEX TB_FASTCALL IndEnPassant11B(square sqw, square sqb,
     (void)sqw;
     if (sqb - 9 == sqEnP)
         // Capture to the left
-        return (sqb & 7) - 1;
+        return TbColumn(sqb) - 1;
     else {
         // Capture to the right
         assert(sqb - 7 == sqEnP);
-        return (sqb & 7) + 7;
+        return TbColumn(sqb) + 7;
     }
 }
 
@@ -1570,20 +1570,20 @@ static INLINE INDEX TB_FASTCALL IndEnPassant21W(square sqw1, square sqw2,
     SORT(sqw1, sqw2);
     if (sqw1 + 7 == sqEnP && 0 != TbColumn(sqw1))
         // Capture to the left
-        return (sqw1 & 7) - 1 +
+        return TbColumn(sqw1) - 1 +
                (EXCLUDE3(sqw2, sqb, sqEnP, sqEnP + 8) - i8 - 1) * i14;
     else if (sqw1 + 9 == sqEnP && 7 != TbColumn(sqw1))
         // Capture to the right
-        return (sqw1 & 7) + 7 +
+        return TbColumn(sqw1) + 7 +
                (EXCLUDE3(sqw2, sqb, sqEnP, sqEnP + 8) - i8 - 1) * i14;
     else if (sqw2 + 7 == sqEnP && 0 != TbColumn(sqw2))
         // Capture to the left
-        return (sqw2 & 7) - 1 +
+        return TbColumn(sqw2) - 1 +
                (EXCLUDE3(sqw1, sqb, sqEnP, sqEnP + 8) - i8) * i14;
     else {
         // Capture to the right
         assert(sqw2 + 9 == sqEnP && 7 != TbColumn(sqw2));
-        return (sqw2 & 7) + 7 +
+        return TbColumn(sqw2) + 7 +
                (EXCLUDE3(sqw1, sqb, sqEnP, sqEnP + 8) - i8) * i14;
     }
 }
@@ -1594,22 +1594,22 @@ static INLINE INDEX TB_FASTCALL IndEnPassant21B(square sqw1, square sqw2,
     if (sqb - 9 == sqEnP && 0 != TbColumn(sqb))
         // Capture to the left
         if (sqw1 - 8 == sqEnP)
-            return (sqb & 7) - 1 +
+            return TbColumn(sqb) - 1 +
                    (EXCLUDE3(sqw2, sqb, sqEnP, sqEnP - 8) - i8 - 1) * i14;
         else {
             assert(sqw2 - 8 == sqEnP);
-            return (sqb & 7) - 1 +
+            return TbColumn(sqb) - 1 +
                    (EXCLUDE3(sqw1, sqb, sqEnP, sqEnP - 8) - i8) * i14;
         }
     else {
         // Capture to the right
         assert(sqb - 7 == sqEnP && 7 != TbColumn(sqb));
         if (sqw1 - 8 == sqEnP)
-            return (sqb & 7) + 7 +
+            return TbColumn(sqb) + 7 +
                    (EXCLUDE3(sqw2, sqb, sqEnP, sqEnP - 8) - i8 - 1) * i14;
         else {
             assert(sqw2 - 8 == sqEnP);
-            return (sqb & 7) + 7 +
+            return TbColumn(sqb) + 7 +
                    (EXCLUDE3(sqw1, sqb, sqEnP, sqEnP - 8) - i8) * i14;
         }
     }

@@ -61,9 +61,9 @@ static inline CBitBoard ShiftRight(CBitBoard x) {
 /**
  * Calculate the 'king distance' between two squares.
  */
-static inline int KingDist(int sq1, int sq2) {
-    int file_dist = ABS((sq1 & 7) - (sq2 & 7));
-    int rank_dist = ABS((sq1 >> 3) - (sq2 >> 3));
+static inline int KingDist(CSCoord sq1, CSCoord sq2) {
+    int file_dist = ABS(sq1.File - sq2.File);
+    int rank_dist = ABS(sq1.Rank - sq2.Rank);
 
     return MAX(file_dist, rank_dist);
 }
@@ -71,9 +71,9 @@ static inline int KingDist(int sq1, int sq2) {
 /**
  * Calculate the 'minimum distance' between two squares.
  */
-static inline int MinDist(int sq1, int sq2) {
-    int file_dist = ABS((sq1 & 7) - (sq2 & 7));
-    int rank_dist = ABS((sq1 >> 3) - (sq2 >> 3));
+static inline int MinDist(CSCoord sq1, CSCoord sq2) {
+    int file_dist = ABS(sq1.File - sq2.File);
+    int rank_dist = ABS(sq1.Rank - sq2.Rank);
 
     return MIN(file_dist, rank_dist);
 }
@@ -81,23 +81,24 @@ static inline int MinDist(int sq1, int sq2) {
 /**
  * Calculate the 'Manhattan distance' between two squares.
  */
-static inline int ManhattanDist(int sq1, int sq2) {
-    int file_dist = ABS((sq1 & 7) - (sq2 & 7));
-    int rank_dist = ABS((sq1 >> 3) - (sq2 >> 3));
+static inline int ManhattanDist(CSCoord sq1, CSCoord sq2) {
+    int file_dist = ABS(sq1.File - sq2.File);
+    int rank_dist = ABS(sq1.Rank - sq2.Rank);
 
     return file_dist + rank_dist;
 }
 
-static inline int FileDist(int sq1, int sq2) {
-    return ABS((sq1 & 7) - (sq2 & 7));
+static inline int FileDist(CSCoord sq1, CSCoord sq2) {
+    return ABS(sq1.File - sq2.File);
 }
 
 /**
  * Calculate the distance of 'sq' to any edge on the chessboard
  */
-static inline int EdgeDist(int sq) {
-    int filedist = MIN(sq & 7, 7 - (sq & 7));
-    int rankdist = MIN(sq >> 3, 7 - (sq >> 3));
+static inline int EdgeDist(CSCoord sq) {
+    const int width = CSCoord::LEVEL_WIDTH[sq.Level];
+    int filedist = MIN(sq.File, (width - 1) - sq.File);
+    int rankdist = MIN(sq.Rank, (width - 1) - sq.Rank);
 
     return MAX(filedist, rankdist);
 }
@@ -105,13 +106,23 @@ static inline int EdgeDist(int sq) {
 /**
  * Create a move from from square, to square and flags.
  */
+static inline CMove make_move(CSCoord from, CSCoord to, int flags) {
+    return CMove(from, to, static_cast<uint32_t>(flags));
+}
+
 static inline CMove make_move(int from, int to, int flags) {
-    return CMove(CSCoord(from), CSCoord(to), static_cast<uint32_t>(flags));
+    return make_move(CSCoord(from), CSCoord(to), flags);
 }
 
 /**
  * Create a promotion move from from square, to square and flags.
  */
+static inline CMove make_promotion(CSCoord from, CSCoord to, int type, int flags) {
+    CMove move = make_move(from, to, flags);
+    move.SetPromotionType(type);
+    return move;
+}
+
 static inline CMove make_promotion(int from, int to, int type, int flags) {
     CMove move = make_move(from, to, flags);
     move.SetPromotionType(type);
@@ -121,9 +132,9 @@ static inline CMove make_promotion(int from, int to, int type, int flags) {
 /**
  * Returns if the square is a promotion square.
  */
-static inline bool is_promo_square(int sq) {
-    int rank = sq >> 3;
-    return rank == 0 || rank == 7;
+static inline bool is_promo_square(CSCoord sq) {
+    const int width = CSCoord::LEVEL_WIDTH[sq.Level];
+    return sq.Rank == 0 || sq.Rank == (width - 1);
 }
 
 /*

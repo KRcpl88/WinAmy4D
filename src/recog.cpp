@@ -150,7 +150,7 @@ static int RecognizerKBK(const CPosition *p, int *score) {
      * do not recognize when losers king attacks a piece
      */
 
-    if (p->atkTo[p->kingSq[OPP(color)]] & p->mask[color][0]) {
+    if (p->atkTo[p->kingSq[OPP(color)].BitOffset()] & p->mask[color][0]) {
         return Useless;
     }
 
@@ -222,7 +222,7 @@ static int RecognizerKBNK(const CPosition *p, int *score) {
          * do not recognize when losers king attacks a piece
          */
 
-        atkd = p->atkTo[p->kingSq[OPP(color)]] & p->mask[color][0];
+        atkd = p->atkTo[p->kingSq[OPP(color)].BitOffset()] & p->mask[color][0];
         if (atkd) {
             if (p->turn != color || (atkd).CountBits() > 1) {
                 return Useless;
@@ -244,11 +244,11 @@ static int RecognizerKBNK(const CPosition *p, int *score) {
          */
 
         if (p->mask[color][Bishop] & BlackSquaresMask) {
-            sqx = KBNKTab[p->kingSq[OPP(color)]];
+            sqx = KBNKTab[p->kingSq[OPP(color)].BitOffset()];
         }
 
         if (p->mask[color][Bishop] & WhiteSquaresMask) {
-            sqx = KBNKTab[7 ^ p->kingSq[OPP(color)]];
+            sqx = KBNKTab[7 ^ p->kingSq[OPP(color)].BitOffset()];
         }
 
         *score = p->material[color] + 3 * Value[Pawn] + sqx -

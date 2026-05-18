@@ -106,7 +106,10 @@ void AssertPositionsEqual(const CPosition *lhs, const CPosition *rhs) {
     Assert::AreEqual((unsigned long long)lhs->hkey, (unsigned long long)rhs->hkey);
     Assert::AreEqual((unsigned long long)lhs->pkey, (unsigned long long)rhs->pkey);
     Assert::AreEqual((int)lhs->castle, (int)rhs->castle);
-    Assert::AreEqual((int)lhs->enPassant, (int)rhs->enPassant);
+    Assert::AreEqual(lhs->enPassant.IsValid(), rhs->enPassant.IsValid());
+    if (lhs->enPassant.IsValid() && rhs->enPassant.IsValid()) {
+        Assert::AreEqual(lhs->enPassant.BitOffset(), rhs->enPassant.BitOffset());
+    }
     Assert::AreEqual((int)lhs->turn, (int)rhs->turn);
     Assert::AreEqual((int)lhs->ply, (int)rhs->ply);
 }
