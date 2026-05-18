@@ -36,7 +36,7 @@
 
 typedef void (*COMMAND)(char *args);
 
-struct Command {
+struct SCommand {
     CMove move;
     COMMAND command_func;
     int allowed_during_search;
@@ -44,7 +44,7 @@ struct Command {
     char *args;
 };
 
-struct CommandEntry {
+struct SCommandEntry {
     const char *name;
     COMMAND command_func;
     int allowed_during_search;
@@ -55,8 +55,8 @@ struct CommandEntry {
 
 extern char AutoSaveFileName[64];
 
-struct Command *ParseInput(char *line);
-void ExecuteCommand(struct Command *theCommand);
+struct SCommand *ParseInput(char *line);
+void ExecuteCommand(struct SCommand *theCommand);
 void NewGame(char *);
 
 #endif
