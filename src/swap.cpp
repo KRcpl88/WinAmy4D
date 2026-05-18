@@ -87,8 +87,8 @@ static void SwapReRay(CPosition *p, int side, CBitBoard atks[2], int from,
 }
 
 int SwapOff(CPosition *p, CMove move) {
-    int to = move.GetToCoord().GetBitOffset();
-    int fr = move.GetFromCoord().GetBitOffset();
+    int to = move.GetToCoord().BitOffset();
+    int fr = move.GetFromCoord().BitOffset();
     int side = COLOR(p->piece[fr]);
     int oside = !side;
     int swaplist[32];

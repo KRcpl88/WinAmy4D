@@ -321,10 +321,10 @@ static inline bool is_sliding(int tp) { return tp >= Bishop && tp <= Queen; }
 static void DoCastle(CPosition *p, CMove move) {
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int8_t from = fromCoord.GetBitOffset();
-    int8_t to = toCoord.GetBitOffset();
-    int8_t oldRook = (move.IsShortCastle()) ? from + 3 : from - 4;
-    int8_t nr = (move.IsShortCastle()) ? from + 1 : from - 1;
+    int from = fromCoord.BitOffset();
+    int to = toCoord.BitOffset();
+    int oldRook = (move.IsShortCastle()) ? from + 3 : from - 4;
+    int nr = (move.IsShortCastle()) ? from + 1 : from - 1;
 
     /* king looses its attacks */
     AtkClr(p, from);
@@ -379,10 +379,10 @@ static void DoCastle(CPosition *p, CMove move) {
 static void UndoCastle(CPosition *p, CMove move) {
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int8_t from = fromCoord.GetBitOffset();
-    int8_t to = toCoord.GetBitOffset();
-    int8_t oldRook = (move.IsShortCastle()) ? from + 3 : from - 4;
-    int8_t nr = (move.IsShortCastle()) ? from + 1 : from - 1;
+    int from = fromCoord.BitOffset();
+    int to = toCoord.BitOffset();
+    int oldRook = (move.IsShortCastle()) ? from + 3 : from - 4;
+    int nr = (move.IsShortCastle()) ? from + 1 : from - 1;
 
     /* king looses its attacks */
     AtkClr(p, to);
@@ -432,8 +432,8 @@ void CPosition::DoMove(CMove move) {
     CPosition *p = this;
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int8_t from = fromCoord.GetBitOffset();
-    int8_t to = toCoord.GetBitOffset();
+    int from = fromCoord.BitOffset();
+    int to = toCoord.BitOffset();
     int8_t tp = TYPE(p->piece[from]);
 
     /* save EnPassant and Castling */
@@ -633,8 +633,8 @@ void CPosition::UndoMove(CMove move) {
     CPosition *p = this;
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int8_t from = fromCoord.GetBitOffset();
-    int8_t to = toCoord.GetBitOffset();
+    int from = fromCoord.BitOffset();
+    int to = toCoord.BitOffset();
     int8_t tp = TYPE(p->piece[to]);
 
     /* Swap p->turns */
@@ -888,8 +888,8 @@ void CPosition::RecalcAttacks() {
         AtkSet(p, -p->piece[i], Black, i);
     }
 
-    p->kingSq[White] = (int8_t)(p->mask[White][King]).FindSetBit();
-    p->kingSq[Black] = (int8_t)(p->mask[Black][King]).FindSetBit();
+    p->kingSq[White] = (p->mask[White][King]).FindSetBit();
+    p->kingSq[Black] = (p->mask[Black][King]).FindSetBit();
 
     p->hkey ^= HashKeysCastle[p->castle];
     if (p->turn == Black)
@@ -1002,7 +1002,7 @@ bool CPosition::MayCastle(CMove move) {
     CPosition *p = this;
     /* Sometimes there might be a legal castling move, but for the
        wrong p->turn, probably from the Countermove table */
-    if (move.GetFromCoord().GetBitOffset() != ((p->turn == White) ? e1 : e8))
+    if (move.GetFromCoord().BitOffset() != ((p->turn == White) ? e1 : e8))
         return false;
 
     if (p->InCheck(p->turn))
@@ -1049,8 +1049,8 @@ bool CPosition::MayCastle(CMove move) {
 
 bool CPosition::LegalMove(CMove move) {
     CPosition *p = this;
-    int fr = move.GetFromCoord().GetBitOffset();
-    int to = move.GetToCoord().GetBitOffset();
+    int fr = move.GetFromCoord().BitOffset();
+    int to = move.GetToCoord().BitOffset();
 
     if (move == M_NONE || move == M_NULL)
         return false;
@@ -1066,9 +1066,12 @@ bool CPosition::LegalMove(CMove move) {
     /* if the move is a pawn move to the 1st/8th rank, it must be
      * be a promotion.
      */
-    if ((to <= h1 || to >= a8) && TYPE(p->piece[fr]) == Pawn &&
-        !move.HasPromotion())
-        return false;
+    if (TYPE(p->piece[fr]) == Pawn && !move.HasPromotion()) {
+        const CSCoord toCoord(to);
+        const int levelWidth = CSCoord::LEVEL_WIDTH[toCoord.Level];
+        if (toCoord.Rank == 0 || toCoord.Rank == (levelWidth - 1))
+            return false;
+    }
 
     if (move.IsCapture()) {
         /* There must be an enemy piece on the target square, and we
@@ -1136,8 +1139,10 @@ bool CPosition::LegalMove(CMove move) {
 
 bool CPosition::IsCheckingMove(CMove move) {
     CPosition *p = this;
-    int fr = move.GetFromCoord().GetBitOffset();
-    int to = move.GetToCoord().GetBitOffset();
+    int fr = move.GetFromCoord().BitOffset();
+    int to = move.GetToCoord().BitOffset();
+    const CSCoord toCoord(to);
+    const int levelWidth = CSCoord::LEVEL_WIDTH[toCoord.Level];
     int tp = TYPE(p->piece[fr]);
     int kp = p->mask[OPP(p->turn)][King].FindSetBit();
     CBitBoard tmp;
@@ -1172,14 +1177,14 @@ bool CPosition::IsCheckingMove(CMove move) {
         break;
     case Pawn:
         if (p->turn == White) {
-            if ((to & 7) < 7 && (to + 9) == kp)
+            if (toCoord.File < (levelWidth - 1) && (to + 9) == kp)
                 return true;
-            if ((to & 7) > 0 && (to + 7) == kp)
+            if (toCoord.File > 0 && (to + 7) == kp)
                 return true;
         } else {
-            if ((to & 7) < 7 && (to - 9) == kp)
+            if (toCoord.File < (levelWidth - 1) && (to - 9) == kp)
                 return true;
-            if ((to & 7) > 0 && (to - 7) == kp)
+            if (toCoord.File > 0 && (to - 7) == kp)
                 return true;
         }
         break;
@@ -1402,17 +1407,19 @@ char *CPosition::SAN(CMove move, char *buffer) {
     CPosition *p = this;
     char *x = buffer;
 
-    int8_t to = move.GetToCoord().GetBitOffset();
-    int8_t fr = move.GetFromCoord().GetBitOffset();
+    int to = move.GetToCoord().BitOffset();
+    int fr = move.GetFromCoord().BitOffset();
     int8_t tp = TYPE(p->piece[fr]);
+    const CSCoord toCoord(to);
+    const CSCoord frCoord(fr);
 
     if (tp == Pawn) {
         if (move.IsCapture() || move.IsEnPassant()) {
-            *(x++) = 'a' + (fr & 7);
+            *(x++) = 'a' + frCoord.File;
             *(x++) = 'x';
         }
-        *(x++) = 'a' + (to & 7);
-        *(x++) = '1' + (to >> 3);
+        *(x++) = 'a' + toCoord.File;
+        *(x++) = '1' + toCoord.Rank;
 
         if (move.HasPromotion()) {
             *(x++) = '=';
@@ -1459,9 +1466,9 @@ char *CPosition::SAN(CMove move, char *buffer) {
                     continue;
 
                 aamb = true;
-                if ((i & 7) == (fr & 7))
+                if (CSCoord(i).File == frCoord.File)
                     famb = true;
-                if ((i >> 3) == (fr >> 3))
+                if (CSCoord(i).Rank == frCoord.Rank)
                     ramb = true;
             }
         }
@@ -1469,13 +1476,13 @@ char *CPosition::SAN(CMove move, char *buffer) {
         *(x++) = PieceName[tp];
         if (aamb) {
             if (!famb)
-                *(x++) = 'a' + (fr & 7);
+                *(x++) = 'a' + frCoord.File;
             else {
                 if (!ramb)
-                    *(x++) = '1' + (fr >> 3);
+                    *(x++) = '1' + frCoord.Rank;
                 else {
-                    *(x++) = 'a' + (fr & 7);
-                    *(x++) = '1' + (fr >> 3);
+                    *(x++) = 'a' + frCoord.File;
+                    *(x++) = '1' + frCoord.Rank;
                 }
             }
         }
@@ -1483,8 +1490,8 @@ char *CPosition::SAN(CMove move, char *buffer) {
         if (move.IsCapture() || move.IsEnPassant())
             *(x++) = 'x';
 
-        *(x++) = 'a' + (to & 7);
-        *(x++) = '1' + (to >> 3);
+        *(x++) = 'a' + toCoord.File;
+        *(x++) = '1' + toCoord.Rank;
     }
 
     p->DoMove(move);
@@ -1508,16 +1515,16 @@ char *ICS_SAN(CMove move) {
     static char buffer[16];
     char *x = buffer;
 
-    int8_t to = move.GetToCoord().GetBitOffset();
-    int8_t fr = move.GetFromCoord().GetBitOffset();
+    const CSCoord toCoord = move.GetToCoord();
+    const CSCoord frCoord = move.GetFromCoord();
 
-    *(x++) = 'a' + (fr & 7);
-    *(x++) = '1' + (fr >> 3);
+    *(x++) = 'a' + frCoord.File;
+    *(x++) = '1' + frCoord.Rank;
     if (move.IsCapture() || move.IsEnPassant()) {
         *(x++) = 'x';
     }
-    *(x++) = 'a' + (to & 7);
-    *(x++) = '1' + (to >> 3);
+    *(x++) = 'a' + toCoord.File;
+    *(x++) = '1' + toCoord.Rank;
     if (move.HasPromotion()) {
         *(x++) = PieceName[PromoType(move)];
     }
@@ -1711,12 +1718,14 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
         for (i = heap->current_section->start; i < heap->current_section->end;
              i++) {
             move = heap->data[i];
-            int fr = move.GetFromCoord().GetBitOffset();
-            int to = move.GetToCoord().GetBitOffset();
+            int fr = move.GetFromCoord().BitOffset();
+            int to = move.GetToCoord().BitOffset();
+            const CSCoord frCoord(fr);
+            const CSCoord toCoord(to);
 
             if (TYPE(p->piece[fr]) == Pawn &&
-                (move.IsCapture() || move.IsEnPassant()) && (fr & 7) == ffl &&
-                (to & 7) == tfl && TryMove(p, move))
+                (move.IsCapture() || move.IsEnPassant()) && frCoord.File == ffl &&
+                toCoord.File == tfl && TryMove(p, move))
                 return move;
         }
         return M_NONE;
@@ -1792,15 +1801,17 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
     for (i = heap->current_section->start; i < heap->current_section->end;
          i++) {
         move = heap->data[i];
-        int fr = move.GetFromCoord().GetBitOffset(), to = move.GetToCoord().GetBitOffset();
+        int fr = move.GetFromCoord().BitOffset(), to = move.GetToCoord().BitOffset();
+        const CSCoord frCoord(fr);
+        const CSCoord toCoord(to);
 
         if (TYPE(p->piece[fr]) != tp)
             continue;
-        if ((to & 7) != tfl || (to >> 3) != trk)
+        if (toCoord.File != tfl || toCoord.Rank != trk)
             continue;
-        if (ffl != -1 && (fr & 7) != ffl)
+        if (ffl != -1 && frCoord.File != ffl)
             continue;
-        if (frk != -1 && (fr >> 3) != frk)
+        if (frk != -1 && frCoord.Rank != frk)
             continue;
         if (pro && (PromoType(move) != pro))
             continue;
@@ -1861,11 +1872,13 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
         tfl = *(san + 1) - 'a';
 
         for (i = 0; i < cnt; i++) {
-            int fr = mvs[i].GetFromCoord().GetBitOffset();
-            int to = mvs[i].GetToCoord().GetBitOffset();
+            int fr = mvs[i].GetFromCoord().BitOffset();
+            int to = mvs[i].GetToCoord().BitOffset();
+            const CSCoord frCoord(fr);
+            const CSCoord toCoord(to);
 
             if (pmap[fr] == Pawn && (mvs[i].IsCapture() || mvs[i].IsEnPassant()) &&
-                (fr & 7) == ffl && (to & 7) == tfl)
+                frCoord.File == ffl && toCoord.File == tfl)
                 return mvs[i];
         }
         return M_NONE;
@@ -1939,15 +1952,17 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
         tp = Pawn;
 
     for (i = 0; i < cnt; i++) {
-        int fr = mvs[i].GetFromCoord().GetBitOffset(), to = mvs[i].GetToCoord().GetBitOffset();
+        int fr = mvs[i].GetFromCoord().BitOffset(), to = mvs[i].GetToCoord().BitOffset();
+        const CSCoord frCoord(fr);
+        const CSCoord toCoord(to);
 
         if (TYPE(pmap[fr]) != tp)
             continue;
-        if ((to & 7) != tfl || (to >> 3) != trk)
+        if (toCoord.File != tfl || toCoord.Rank != trk)
             continue;
-        if (ffl != -1 && (fr & 7) != ffl)
+        if (ffl != -1 && frCoord.File != ffl)
             continue;
-        if (frk != -1 && (fr >> 3) != frk)
+        if (frk != -1 && frCoord.Rank != frk)
             continue;
         if (pro && (PromoType(mvs[i]) != pro))
             continue;
@@ -2377,7 +2392,8 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
     /* scan enpassant status */
     p->enPassant = 0;
     if (*x != '-') {
-        p->enPassant = (int8_t)(*x - 'a' + ((*(x + 1) - '1') << 3));
+        p->enPassant = static_cast<int16_t>(
+            CSCoord(0, *x - 'a', *(x + 1) - '1').BitOffset());
         x++;
     }
 
@@ -2504,8 +2520,9 @@ char *CPosition::MakeEPD() {
     *(x++) = ' ';
 
     if (p->enPassant) {
-        *(x++) = 'a' + (p->enPassant & 7);
-        *(x++) = '1' + (p->enPassant >> 3);
+        const CSCoord enPassantCoord(p->enPassant);
+        *(x++) = 'a' + enPassantCoord.File;
+        *(x++) = '1' + enPassantCoord.Rank;
     } else
         *(x++) = '-';
     *(x++) = '\0';

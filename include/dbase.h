@@ -40,7 +40,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SQUARE(x) 'a' + ((x) & 7), '1' + ((x) >> 3)
+#define SQUARE(x) 'a' + CSCoord(x).File, '1' + CSCoord(x).Rank
 
 #define OPP(x) (1 ^ (x))
 
@@ -105,7 +105,7 @@ struct GameLog {
     CMove gl_Move;        /* the move that has been made in the position */
     int8_t gl_Piece;       /* the piece that was captured (if any) */
     int8_t gl_Castle;      /* the castling rights */
-    int8_t gl_EnPassant;   /* the enpassant target square (if any) */
+    int16_t gl_EnPassant;  /* the enpassant target square (if any) */
     uint8_t gl_IrrevCount; /* number of moves since last irreversible move */
     hash_t gl_HashKey;     /* used to detect repetitions */
     hash_t gl_PawnKey;
@@ -128,9 +128,9 @@ class CPosition {
     uint16_t ply;
     int8_t piece[64];
     int8_t castle;
-    int8_t enPassant;
+    int16_t enPassant;
     int8_t turn; /* 0 == white, 1 == black */
-    int8_t kingSq[2];
+    int16_t kingSq[2];
     int8_t material_signature[2];
 
     // Move making/unmaking

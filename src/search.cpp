@@ -345,7 +345,7 @@ static int CheckExtend(CPosition *p) {
         int nd = 0;
 
         /* discovered check */
-        if (atp != (p->actLog - 1)->gl_Move.GetToCoord().GetBitOffset()) {
+        if (atp != (p->actLog - 1)->gl_Move.GetToCoord().BitOffset()) {
             DiscExt++;
             nd = ExtendDiscoveredCheck;
         }
@@ -442,14 +442,14 @@ static int ScoreMove(CPosition *p, CMove move) {
     int score = 0;
 
     if (move.IsCapture())
-        score += Value[TYPE(p->piece[move.GetToCoord().GetBitOffset()])];
+        score += Value[TYPE(p->piece[move.GetToCoord().BitOffset()])];
     if (move.HasPromotion())
         score += Value[PromoType(move)] - Value[Pawn];
-    else if (TYPE(p->piece[move.GetFromCoord().GetBitOffset()]) == Pawn) {
-        if (p->turn == White && move.GetToCoord().GetBitOffset() >= a7) {
+    else if (TYPE(p->piece[move.GetFromCoord().BitOffset()]) == Pawn) {
+        if (p->turn == White && move.GetToCoord().BitOffset() >= a7) {
             score += Value[Bishop];
         }
-        if (p->turn == Black && move.GetToCoord().GetBitOffset() <= h2) {
+        if (p->turn == Black && move.GetToCoord().BitOffset() <= h2) {
             score += Value[Bishop];
         }
     }
@@ -835,20 +835,20 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
          */
 
         if ((move.IsCapture()) && (lmove.IsCapture()) &&
-            move.GetToCoord().GetBitOffset() == lmove.GetToCoord().GetBitOffset() &&
-            IsRecapture(p->piece[move.GetToCoord().GetBitOffset()], (p->actLog - 1)->gl_Piece)) {
+            move.GetToCoord().BitOffset() == lmove.GetToCoord().BitOffset() &&
+            IsRecapture(p->piece[move.GetToCoord().BitOffset()], (p->actLog - 1)->gl_Piece)) {
             RCExt += 1;
-            next_depth += ExtendRecapture[TYPE(p->piece[move.GetToCoord().GetBitOffset()])];
+            next_depth += ExtendRecapture[TYPE(p->piece[move.GetToCoord().BitOffset()])];
         }
 
         /*
          * passed pawn push extension
          */
 
-        if (TYPE(p->piece[move.GetFromCoord().GetBitOffset()]) == Pawn &&
+        if (TYPE(p->piece[move.GetFromCoord().BitOffset()]) == Pawn &&
             p->nonPawn[OPP(p->turn)] <= Value[Queen]) {
 
-            int to = move.GetToCoord().GetBitOffset();
+            int to = move.GetToCoord().BitOffset();
 
             if (((p->turn == White && to >= a7) ||
                  (p->turn == Black && to <= h2)) &&
