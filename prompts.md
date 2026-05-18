@@ -67,3 +67,8 @@ The original C implementation of Amy chess used a 64 bit int bitboard as a bit r
 6. GetBitOffset returns an int, not a int8_t or uint8_t.  Conversion from int to an 8 bit integer type will cause data loss from truncation.  Anyplace we are storing a bit offset as an 8 bit integer type, make sure the integer is at list 16 bits of more.
 7. BitOffset and GetBitOffset are redundant functions, remove GetBitOffset and just use BitOffset, if it is still needed, but only if the bit offset is NOT being used to measure the rank or file location of a square on the chess board.
 8. In many places we convert a square position to an offset for the purpose of enumerating squares, this is OK as long as we convert back to a CSCoord to compute the rank and file location of the chess square. However, the chessboard square or bit offset must be stored at least as 16 bits, because the final 3D chess board will have 344 squares and will require bit offsets > 255
+
+
+
+1. Rename all structs to begin with S and use PascalCase, for example SGameLog
+2. Rename all class member variables to begin with m_, use  hungarian notation, and PascalCase.   For example int m_nRank.   The correct hungarian notation for a member which is a class or struct 
