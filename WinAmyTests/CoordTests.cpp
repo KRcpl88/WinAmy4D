@@ -117,9 +117,10 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(BitfieldConstructorDecomposesLevelRankFile) {
-        const scoord_bitfield_t bitfield = static_cast<scoord_bitfield_t>((2 << 8) | (4 << 4) | 3);
+        // level=0, rank=4, file=3
+        const scoord_bitfield_t bitfield = static_cast<scoord_bitfield_t>((0 << 8) | (4 << 4) | 3);
         CSCoord coord(bitfield);
-        Assert::AreEqual(2, coord.Level);
+        Assert::AreEqual(0, coord.Level);
         Assert::AreEqual(3, coord.File);
         Assert::AreEqual(4, coord.Rank);
     }

@@ -34,7 +34,7 @@ TEST_CLASS(MoveTests) {
 
         position.get()->DoNull();
         Assert::AreEqual((int)Black, (int)position.get()->turn);
-        Assert::AreEqual(0, (int)position.get()->enPassant);
+        Assert::IsFalse(position.get()->enPassant.IsValid());
 
         position.get()->UndoNull();
         AssertPositionsEqual(position.get(), snapshot.get());

@@ -239,7 +239,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/4P3/8/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        Assert::IsTrue(position.get()->IsPassed(e5, White));
+        Assert::IsTrue(position.get()->IsPassed(CSCoord(e5), White));
     }
 
     TEST_METHOD(IsPassedReturnsFalseWhenBlockedByEnemyPawn) {
@@ -247,7 +247,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/4p3/4P3/8/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        Assert::IsFalse(position.get()->IsPassed(e5, White));
+        Assert::IsFalse(position.get()->IsPassed(CSCoord(e5), White));
     }
 
     TEST_METHOD(IsPassedReturnsFalseWhenEnemyPawnOnAdjacentFile) {
@@ -255,7 +255,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/3p4/4P3/8/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        Assert::IsFalse(position.get()->IsPassed(e5, White));
+        Assert::IsFalse(position.get()->IsPassed(CSCoord(e5), White));
     }
 
     TEST_METHOD(IsPassedBlackPassedPawn) {
@@ -263,7 +263,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/3p4/8/8/4K3 b - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        Assert::IsTrue(position.get()->IsPassed(d4, Black));
+        Assert::IsTrue(position.get()->IsPassed(CSCoord(d4), Black));
     }
 
     TEST_METHOD(IsPassedBlackNotPassedPawn) {
@@ -271,7 +271,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/3p4/2P5/8/4K3 b - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        Assert::IsFalse(position.get()->IsPassed(d4, Black));
+        Assert::IsFalse(position.get()->IsPassed(CSCoord(d4), Black));
     }
 
     // --- LegalMoves count tests ---
