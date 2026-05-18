@@ -297,7 +297,7 @@ static bool IsRecapture(int piece1, int piece2) {
  */
 
 static int CheckExtend(CPosition *p) {
-    int kp = p->kingSq[p->turn];
+    int kp = p->kingSq[p->turn].BitOffset();
     CBitBoard att;
 
     att = p->atkFr[kp] & p->mask[OPP(p->turn)][0];

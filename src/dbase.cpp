@@ -56,7 +56,7 @@
 #define MAX_EPD_OPS 15
 
 bool CPosition::InCheck(int side) const {
-    return (bool)(atkFr[kingSq[side]] & mask[!side][0]);
+    return (bool)(atkFr[kingSq[side].BitOffset()] & mask[!side][0]);
 }
 
 bool CPosition::IsPassed(int sq, int side) const {
@@ -117,7 +117,7 @@ static void Panic(CPosition *p) {
 
 #ifdef DEBUG
 static void DebugEngine(CPosition *p) {
-    int kingSq = p->kingSq[White];
+    int kingSq = p->kingSq[White].BitOffset();
     int i, color;
     CBitBoard temp;
 
@@ -163,7 +163,7 @@ static void DebugEngine(CPosition *p) {
         p->ShowPosition();
         abort();
     }
-    kingSq = p->kingSq[Black];
+    kingSq = p->kingSq[Black].BitOffset();
     if (p->atkTo[kingSq] != KingEPM[kingSq]) {
         Print(0, "Black king is bad:\n");
         PrintBitBoard(p->atkTo[kingSq]);
@@ -363,7 +363,7 @@ static void DoCastle(CPosition *p, CMove move) {
 
     AtkSet(p, King, p->turn, to);
     AtkSet(p, Rook, p->turn, nr);
-    p->kingSq[p->turn] = to;
+    p->kingSq[p->turn] = CSCoord(to);
 
     /* update hashkey */
     /* Das koennte ich vorher berechnen! Ist dann nur eine Anweisung! */
@@ -420,7 +420,7 @@ static void UndoCastle(CPosition *p, CMove move) {
 
     AtkSet(p, King, p->turn, from);
     AtkSet(p, Rook, p->turn, oldRook);
-    p->kingSq[p->turn] = from;
+    p->kingSq[p->turn] = CSCoord(from);
 }
 
 /*
@@ -450,7 +450,7 @@ void CPosition::DoMove(CMove move) {
         AtkClr(p, from);
 
         if (tp == King) {
-            p->kingSq[p->turn] = to;
+            p->kingSq[p->turn] = CSCoord(to);
         }
 
         /* remove it from the board */
@@ -590,17 +590,23 @@ void CPosition::DoMove(CMove move) {
      * the transposition table.
      */
 
-    p->enPassant = 0;
+    p->enPassant = InvalidSquareCoord();
     if (move.IsPawnDoublePush()) {
-        int8_t tmpPassant = to ^ 8;
+        int tmpPassant = to ^ 8;
         if (p->atkFr[tmpPassant] & p->mask[OPP(p->turn)][Pawn]) {
-            p->enPassant = tmpPassant;
+            p->enPassant = CSCoord(tmpPassant);
         }
     }
 
-    if (p->enPassant != p->actLog->gl_EnPassant) {
-        p->hkey ^= HashKeysEP[p->actLog->gl_EnPassant];
-        p->hkey ^= HashKeysEP[p->enPassant];
+    if ((p->enPassant.IsValid() != p->actLog->gl_EnPassant.IsValid()) ||
+        (p->enPassant.IsValid() &&
+         p->enPassant.BitOffset() != p->actLog->gl_EnPassant.BitOffset())) {
+        p->hkey ^=
+            HashKeysEP[p->actLog->gl_EnPassant.IsValid()
+                           ? p->actLog->gl_EnPassant.BitOffset()
+                           : 0];
+        p->hkey ^= HashKeysEP[p->enPassant.IsValid() ? p->enPassant.BitOffset()
+                                                     : 0];
     }
 
     /* Update GameLog */
@@ -651,7 +657,7 @@ void CPosition::UndoMove(CMove move) {
         AtkClr(p, to);
 
         if (tp == King) {
-            p->kingSq[p->turn] = from;
+            p->kingSq[p->turn] = CSCoord(from);
         }
 
         /* update masks */
@@ -765,11 +771,17 @@ void CPosition::DoNull() {
     p->actLog->gl_EnPassant = p->enPassant;
     p->actLog->gl_Castle = p->castle;
     p->actLog->gl_HashKey = p->hkey;
-    p->enPassant = 0;
+    p->enPassant = InvalidSquareCoord();
 
-    if (p->enPassant != p->actLog->gl_EnPassant) {
-        p->hkey ^= HashKeysEP[p->actLog->gl_EnPassant];
-        p->hkey ^= HashKeysEP[p->enPassant];
+    if ((p->enPassant.IsValid() != p->actLog->gl_EnPassant.IsValid()) ||
+        (p->enPassant.IsValid() &&
+         p->enPassant.BitOffset() != p->actLog->gl_EnPassant.BitOffset())) {
+        p->hkey ^=
+            HashKeysEP[p->actLog->gl_EnPassant.IsValid()
+                           ? p->actLog->gl_EnPassant.BitOffset()
+                           : 0];
+        p->hkey ^= HashKeysEP[p->enPassant.IsValid() ? p->enPassant.BitOffset()
+                                                     : 0];
     }
 
     p->ply++;
@@ -888,15 +900,15 @@ void CPosition::RecalcAttacks() {
         AtkSet(p, -p->piece[i], Black, i);
     }
 
-    p->kingSq[White] = (p->mask[White][King]).FindSetBit();
-    p->kingSq[Black] = (p->mask[Black][King]).FindSetBit();
+    p->kingSq[White] = CSCoord((p->mask[White][King]).FindSetBit());
+    p->kingSq[Black] = CSCoord((p->mask[Black][King]).FindSetBit());
 
     p->hkey ^= HashKeysCastle[p->castle];
     if (p->turn == Black)
         p->hkey ^= STMKey;
 
-    if (p->enPassant != 0) {
-        p->hkey ^= HashKeysEP[p->enPassant];
+    if (p->enPassant.IsValid()) {
+        p->hkey ^= HashKeysEP[p->enPassant.BitOffset()];
     }
 }
 
@@ -925,14 +937,14 @@ void CPosition::GenEnpas(heap_t heap) {
     CPosition *p = this;
     CBitBoard tmp;
 
-    if (!p->enPassant)
+    if (!p->enPassant.IsValid())
         return;
 
-    tmp = p->atkFr[p->enPassant] & p->mask[p->turn][Pawn];
+    tmp = p->atkFr[p->enPassant.BitOffset()] & p->mask[p->turn][Pawn];
     while (tmp) {
         int i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        append_to_heap(heap, make_move(i, p->enPassant, M_ENPASSANT));
+        append_to_heap(heap, make_move(i, p->enPassant.BitOffset(), M_ENPASSANT));
     }
 }
 
@@ -1088,9 +1100,9 @@ bool CPosition::LegalMove(CMove move) {
          * the enpassant square
          */
 
-        if (!p->enPassant)
+        if (!p->enPassant.IsValid())
             return false;
-        if (TYPE(p->piece[fr]) != Pawn || to != p->enPassant)
+        if (TYPE(p->piece[fr]) != Pawn || to != p->enPassant.BitOffset())
             return false;
         if (!p->atkTo[fr].TstBit(to))
             return false;
@@ -1227,7 +1239,7 @@ void CPosition::GenChecks(heap_t heap) {
     CPosition *p = this;
     CBitBoard tmp;
     CBitBoard fr;
-    int kp = p->kingSq[OPP(p->turn)];
+    int kp = p->kingSq[OPP(p->turn)].BitOffset();
     CBitBoard *ip = InterPath[kp];
     CBitBoard fsq = p->mask[p->turn][0];
     CBitBoard all = (p->mask[White][0] | p->mask[Black][0]);
@@ -2128,7 +2140,7 @@ void CPosition::ShowPosition() {
                 const int square = static_cast<int>(CSCoord(level, fl, rk));
 
                 Print(0, "|");
-                if (p->enPassant && square == p->enPassant)
+                if (p->enPassant.IsValid() && square == p->enPassant.BitOffset())
                     Print(0, "<E>");
                 else {
                     if (p->piece[square] < 0)
@@ -2390,10 +2402,9 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
         ;
 
     /* scan enpassant status */
-    p->enPassant = 0;
+    p->enPassant = InvalidSquareCoord();
     if (*x != '-') {
-        p->enPassant = static_cast<int16_t>(
-            CSCoord(0, *x - 'a', *(x + 1) - '1').BitOffset());
+        p->enPassant = CSCoord(0, *x - 'a', *(x + 1) - '1');
         x++;
     }
 
@@ -2519,10 +2530,9 @@ char *CPosition::MakeEPD() {
         *(x++) = '-';
     *(x++) = ' ';
 
-    if (p->enPassant) {
-        const CSCoord enPassantCoord(p->enPassant);
-        *(x++) = 'a' + enPassantCoord.File;
-        *(x++) = '1' + enPassantCoord.Rank;
+    if (p->enPassant.IsValid()) {
+        *(x++) = 'a' + p->enPassant.File;
+        *(x++) = '1' + p->enPassant.Rank;
     } else
         *(x++) = '-';
     *(x++) = '\0';

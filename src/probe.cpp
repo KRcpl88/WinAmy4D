@@ -129,8 +129,8 @@ int ProbeEGTB(const CPosition *p, int *score, int ply) {
             break;
         }
 
-        wSquares[15] = p->kingSq[White];
-        bSquares[15] = p->kingSq[Black];
+        wSquares[15] = p->kingSq[White].BitOffset();
+        bSquares[15] = p->kingSq[Black].BitOffset();
 
         if (iTB > 0) {
             color = (p->turn == White) ? 0 : 1;
@@ -150,7 +150,7 @@ int ProbeEGTB(const CPosition *p, int *score, int ply) {
             break;
         }
 
-        ep = p->enPassant ? p->enPassant : XX;
+        ep = p->enPassant.IsValid() ? p->enPassant.BitOffset() : XX;
         index = PfnIndCalcFun(iTB, color)(wp, bp, ep, invert);
         value = L_TbtProbeTable(iTB, color, index);
         if (value == bev_broken) {

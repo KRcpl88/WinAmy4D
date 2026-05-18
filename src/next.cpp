@@ -450,7 +450,7 @@ CMove NextEvasion(struct SearchData *sd) {
          * check
          */
 
-        int kp = p->kingSq[p->turn];
+        int kp = p->kingSq[p->turn].BitOffset();
 
         CBitBoard targets =
             (p->atkFr[kp] | p->atkTo[kp]) & p->mask[OPP(p->turn)][0];
@@ -606,7 +606,8 @@ CMove NextEvasion(struct SearchData *sd) {
         Print(9, "HistoryMoves\n");
 #endif
 
-        const int kp = p->kingSq[p->turn]; /* (Mask[Side][King]).FindSetBit(); */
+        const int kp =
+            p->kingSq[p->turn].BitOffset(); /* (Mask[Side][King]).FindSetBit(); */
         const CBitBoard empty = ~(p->mask[White][0] | p->mask[Black][0]);
 
         CBitBoard king_flight_squares = p->atkTo[kp] & empty;

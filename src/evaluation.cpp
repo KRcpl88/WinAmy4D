@@ -1092,7 +1092,7 @@ static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
      * white king safety
      */
 
-    if (CSCoord(p->kingSq[White]).File >= 4) {
+    if (p->kingSq[White].File >= 4) {
 
         /* king side */
 
@@ -1135,7 +1135,7 @@ static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
      * black king safety
      */
 
-    if (CSCoord(p->kingSq[Black]).File >= 4) {
+    if (p->kingSq[Black].File >= 4) {
 
         /* king side */
 
@@ -1410,8 +1410,8 @@ static int EvaluatePositionForWhite(const CPosition *p) {
      * Evaluate white king
      */
 
-    score += (KingPosMiddlegame[p->kingSq[White]] * ScaleUp[wphase] +
-              kingPST[p->kingSq[White]] * ScaleDown[wphase]) >>
+    score += (KingPosMiddlegame[p->kingSq[White].BitOffset()] * ScaleUp[wphase] +
+              kingPST[p->kingSq[White].BitOffset()] * ScaleDown[wphase]) >>
              4;
 
     /*
@@ -1429,8 +1429,8 @@ static int EvaluatePositionForWhite(const CPosition *p) {
      * Evaluate black king
      */
 
-    score -= (KingPosMiddlegame[REFLECT_X(p->kingSq[Black])] * ScaleUp[bphase] +
-              kingPST[REFLECT_X(p->kingSq[Black])] * ScaleDown[bphase]) >>
+    score -= (KingPosMiddlegame[REFLECT_X(p->kingSq[Black].BitOffset())] * ScaleUp[bphase] +
+              kingPST[REFLECT_X(p->kingSq[Black].BitOffset())] * ScaleDown[bphase]) >>
              4;
 
     /*
@@ -1476,7 +1476,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         }
 
         score += (ScaleUp[wphase] * KnightKingProximity *
-                  (4 - KingDist(sq, p->kingSq[Black]))) >>
+                  (4 - KingDist(sq, p->kingSq[Black].BitOffset()))) >>
                  4;
 
         if (sq == c3 && pawnFacts.pf_Flags & QueensPawnOpening &&
@@ -1505,7 +1505,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         }
 
         score -= (ScaleUp[bphase] * KnightKingProximity *
-                  (4 - KingDist(sq, p->kingSq[White]))) >>
+                  (4 - KingDist(sq, p->kingSq[White].BitOffset()))) >>
                  4;
 
         if (sq == c6 && pawnFacts.pf_Flags & QueensPawnOpening &&
@@ -1546,7 +1546,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         score += BishopMobility * (tmp - 7);
 
         score += (ScaleUp[wphase] * BishopKingProximity *
-                  (4 - KingDist(sq, p->kingSq[Black]))) >>
+                  (4 - KingDist(sq, p->kingSq[Black].BitOffset()))) >>
                  4;
     }
 
@@ -1570,7 +1570,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         score -= BishopMobility * (tmp - 7);
 
         score -= (ScaleUp[bphase] * BishopKingProximity *
-                  (4 - KingDist(sq, p->kingSq[White]))) >>
+                  (4 - KingDist(sq, p->kingSq[White].BitOffset()))) >>
                  4;
     }
 
@@ -1612,7 +1612,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         }
 
         score += (ScaleUp[wphase] * RookKingProximity *
-                  (4 - KingDist(sq, p->kingSq[Black]))) >>
+                  (4 - KingDist(sq, p->kingSq[Black].BitOffset()))) >>
                  4;
 
         tmpboard = p->atkTo[sq] & ForwardRayW[sq];
@@ -1620,7 +1620,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
             score += RookConnected;
         }
 
-        if (CSCoord(sq).Rank == 6 && p->kingSq[Black] >= a8) {
+        if (CSCoord(sq).Rank == 6 && p->kingSq[Black].Rank == 7) {
             score += RookOn7thRank;
         }
     }
@@ -1650,7 +1650,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         }
 
         score -= (ScaleUp[bphase] * RookKingProximity *
-                  (4 - KingDist(sq, p->kingSq[White]))) >>
+                  (4 - KingDist(sq, p->kingSq[White].BitOffset()))) >>
                  4;
 
         tmpboard = p->atkTo[sq] & ForwardRayB[sq];
@@ -1658,7 +1658,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
             score -= RookConnected;
         }
 
-        if (CSCoord(sq).Rank == 1 && p->kingSq[White] <= h1) {
+        if (CSCoord(sq).Rank == 1 && p->kingSq[White].Rank == 0) {
             score -= RookOn7thRank;
         }
     }
@@ -1687,7 +1687,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         score += QueenPos[sq];
 
         score += (ScaleUp[wphase] * QueenKingProximity *
-                  (4 - KingDist(sq, p->kingSq[Black]))) >>
+                  (4 - KingDist(sq, p->kingSq[Black].BitOffset()))) >>
                  4;
     }
 
@@ -1703,7 +1703,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         score -= QueenPos[REFLECT_X(sq)];
 
         score -= (ScaleUp[bphase] * QueenKingProximity *
-                  (4 - KingDist(sq, p->kingSq[White]))) >>
+                  (4 - KingDist(sq, p->kingSq[White].BitOffset()))) >>
                  4;
     }
 
@@ -1792,8 +1792,8 @@ void InitEvaluation(const CPosition *p) {
 
     int npmat = (p->nonPawn[White] + p->nonPawn[Black]) / Value[Pawn];
 
-    int wkfile = CSCoord(p->kingSq[White]).File;
-    int bkfile = CSCoord(p->kingSq[Black]).File;
+    int wkfile = p->kingSq[White].File;
+    int bkfile = p->kingSq[Black].File;
     int pawnstorm = 0;
 
     if (wkfile < 3 && bkfile > 4) {
@@ -1814,9 +1814,9 @@ void InitEvaluation(const CPosition *p) {
         int wfile = sqCoord.File;
         int bfile = sqCoord.File;
 
-        if (CSCoord(p->kingSq[White]).File < 4)
+        if (p->kingSq[White].File < 4)
             wfile = 7 - wfile;
-        if (CSCoord(p->kingSq[Black]).File < 4)
+        if (p->kingSq[Black].File < 4)
             bfile = 7 - bfile;
 
         if (p->nonPawn[Black] < eg_threshold) {
