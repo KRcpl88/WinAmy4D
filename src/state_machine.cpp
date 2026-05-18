@@ -82,7 +82,7 @@ void StateMachine(void) {
             if (!ReadLine(InputBuffer, 1023)) {
                 State = STATE_END;
             } else {
-                struct Command *command = ParseInput(InputBuffer);
+                struct SCommand *command = ParseInput(InputBuffer);
                 if (command) {
                     ExecuteCommand(command);
                     if (command->move != M_NONE) {

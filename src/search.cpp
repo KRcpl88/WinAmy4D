@@ -208,7 +208,7 @@ static bool TerminateSearch(struct SearchData *sd) {
 
         if (sd->master && InputReady()) {
             char buffer[64];
-            struct Command *theCommand;
+            struct SCommand *theCommand;
 
             ReadLine(buffer, 64);
 

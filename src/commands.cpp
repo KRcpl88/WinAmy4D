@@ -100,7 +100,7 @@ static void SetSearchDepth(char *);
 extern unsigned long FHTime;
 extern bool AbortSearch;
 
-static struct CommandEntry Commands[] = {
+static struct SCommandEntry Commands[] = {
     {"analyze", &Analyze, false, false, "enter analyze mode (xboard)", NULL},
     {"anno", &Anno, false, false, "annotate a game", NULL},
     {"bench", &Benchmark, false, false, "run a benchmark", NULL},
@@ -155,11 +155,11 @@ static struct CommandEntry Commands[] = {
 
 char AutoSaveFileName[64];
 
-struct Command *ParseInput(char *line) {
-    static struct Command theCommand;
+struct SCommand *ParseInput(char *line) {
+    static struct SCommand theCommand;
     char *token;
     CMove move;
-    struct CommandEntry *entry;
+    struct SCommandEntry *entry;
 
     token = nextToken(&line, " \t\n\r");
     if (token == NULL)
@@ -197,7 +197,7 @@ struct Command *ParseInput(char *line) {
     return NULL;
 }
 
-void ExecuteCommand(struct Command *theCommand) {
+void ExecuteCommand(struct SCommand *theCommand) {
     if (theCommand->move != M_NONE) {
         CurrentPosition->DoMove(theCommand->move);
     } else {
@@ -653,7 +653,7 @@ static void ShowDistribution(char *args) {
 }
 
 static void Help(char *args) {
-    struct CommandEntry *entry = Commands;
+    struct SCommandEntry *entry = Commands;
 
     (void)args;
     Print(2, "\nEnter a legal move (like e4, Nxd5, O-O, d1=Q+) or one of the\n"
