@@ -71,4 +71,15 @@ The original C implementation of Amy chess used a 64 bit int bitboard as a bit r
 
 
 1. Rename all structs to begin with S and use PascalCase, for example SGameLog
-2. Rename all class member variables to begin with m_, use  hungarian notation, and PascalCase.   For example int m_nRank.   The correct hungarian notation for a member which is a class or struct 
+2. Rename all class member variables to begin with m_, use  hungarian notation, and PascalCase.   For example int m_nRank.   The correct hungarian notation for a member which is a class or struct  is just an empty notation, for example CSCoord m_From or CSCoord From.  Other common hungarian notations are c for a count of elements, cb for a count of bytes, f for a boolean or flag, bf for a bit field, and rg for an array.   p is a pointer.   p or rg are followed by the type of array or pointer for exampl pn is a pointer to an  int and rgn is an array of ints.  Also w is a word and dw is a double word, usually 16 and 32 bit unsigned ints respectivly.   ul is an insigned long integer and ull is an unsigned long long or 64 bit integer.
+3. Rename all local variables with correct hungarian notation
+
+
+
+
+
+
+
+
+
+
