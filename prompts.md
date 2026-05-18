@@ -56,3 +56,17 @@ move_t is defined as a 16 bit bitfield with the rank and file of a from and to s
 
 
 
+The original C implementation of Amy chess used a 64 bit int bitboard as a bit representation of a chess board, which relied on the specific geometry of the chessboard being exactly 8x8 squares, whcih is exactly 64 squares and fits in a single 64 bit int as a bitfield.  The original impmentation also made extensive use of convierting a square's file and rank position into a bit offest, and assumed the low order 3 bits of the offset were the file and the high order was the rank.  However, the goal of WinAmy4D is to expand this chessboard into 3 dimensions, with many more than the original 64 sqaures.  So all the assumptions of the bit offests and the rank and file of the chessboard being in certain bit positions in the bit offset are all invalid.  This is why the CSCoord class has been introduced, to work with the rank, file, and level position of each square artihemtically instead of making assumptions about the relationship of the rank and file to the bit offsets.  In order to fix this, we need to find every place in the code where the original code makes assumptions about the rank and file in the bit offset ansd instead convert the bit offset into a CSCoord object and then use level, rank and file of the CSCoord instead of meaking any assumptions about the bit offset.
+
+1. Anyplace we use a bitwise mask operation & 0x7 against a bit offset to obtaain the file position of a chess square, use CSCoord instead to convert the bit offset to a CSCoord and compute the rank using CSCoord.File
+2. Anyplace we use a bitwise shift operation >> 3 to obtaain the rank position of a chess square, use CSCoord instead to convert the bit offset to a CSCoord and compute the rank using CSCoord.Rank
+3. Any place we are using a bit offset and making assumptions about which bits in the bit offset encode the rank or file of an actual chess square on the board, use CSCoord instead.
+4. Avoid using BitOffset, GetBitOffset, GetFromBitOffset or GetToBitOffset, or converting a CSCoord to or from an int bit offset, if the code is using the bit offset to enumerate, manipulate or compute the file and rank location of a square on a chessboard, convert the code to using a CSCoord to convert the bit offset into a rank and file location of the square.
+5. If after these changes, BitOffset, GetBitOffset, GetFromBitOffset or GetToBitOffset are not longer used, remove them from the code.
+6. GetBitOffset returns an int, not a int8_t or uint8_t.  Converstion from int to an 8 bit interger type will cause data loss from trunctation.  Anyplace we are storing a bit offset as an 8 bit interger type, make sure the interger is at list 16 bits of more.
+7. BitOffset and GetBitOffset are redundant functions, remove GetBitOffset and just use BitOffset, if it is still needed, but only if the bit offset is NOT being used to measure the rank or file location of a square on the chess board.
+8. In many places we convert a suare position to an offset for the prupsoe or enumerating squares, this is OK as long as we convert back to a CSCoord to compute the rank and file location of the chess square.  However, the chessboard square or bit offset must be stored at least as 16 bits, because the final 3D chess board will have 344 squares and will require bit offsets > 255
+
+
+
+
