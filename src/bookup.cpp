@@ -216,7 +216,7 @@ static void BookupInternal(char *file_name, int verbosity) {
                 exit(1);
             }
 
-            move_t themove = p->ParseSAN(move);
+            CMove themove = p->ParseSAN(move);
             if (themove != M_NONE) {
                 p->DoMove(themove);
                 char *eco_code = GetEcoCode(p->hkey);
@@ -271,7 +271,7 @@ void Bookup(char *file_name) { BookupInternal(file_name, 0); }
 
 void BookupQuiet(char *file_name) { BookupInternal(file_name, 9); }
 
-static void GetAllBookMoves(CPosition *p, int *cnt, move_t *book_moves,
+static void GetAllBookMoves(CPosition *p, int *cnt, CMove *book_moves,
                             struct BookQuery *entries) {
     unsigned int i;
 
@@ -280,7 +280,7 @@ static void GetAllBookMoves(CPosition *p, int *cnt, move_t *book_moves,
 
     for (i = heap->current_section->start; i < heap->current_section->end;
          i++) {
-        move_t move = heap->data[i];
+        CMove move = heap->data[i];
         struct BookEntry *be = NULL;
         struct LearnEntry *le = NULL;
 
@@ -308,7 +308,7 @@ static void GetAllBookMoves(CPosition *p, int *cnt, move_t *book_moves,
     free_heap(heap);
 }
 
-static void SortBook(int cnt, move_t *mvs, struct BookQuery *entries) {
+static void SortBook(int cnt, CMove *mvs, struct BookQuery *entries) {
     bool done = false;
 
     while (!done) {
@@ -323,7 +323,7 @@ static void SortBook(int cnt, move_t *mvs, struct BookQuery *entries) {
                 entries[i].be.win + entries[i].be.loss + entries[i].be.draw;
             if (f1 < f2) {
                 struct BookQuery betmp = entries[i];
-                move_t move;
+                CMove move;
                 entries[i] = entries[i - 1];
                 entries[i - 1] = betmp;
                 move = mvs[i];
@@ -399,10 +399,10 @@ static void CalculatePropabilities(int cnt, struct BookQuery *entries,
     }
 }
 
-int SelectBook(CPosition *p) {
+CMove SelectBook(CPosition *p) {
     int i, cnt = 0;
     struct BookQuery be[32];
-    move_t moves[32];
+    CMove moves[32];
     double props[32];
     double random_value = Random();
 
@@ -428,7 +428,7 @@ int SelectBook(CPosition *p) {
 void QueryBook(CPosition *p) {
     int i, cnt = 0;
     struct BookQuery be[32];
-    move_t moves[32];
+    CMove moves[32];
     double props[32];
 
     GetAllBookMoves(p, &cnt, moves, be);
@@ -504,7 +504,7 @@ void CreateLearnDB(char *file_name) {
         while ((move = nextToken(&x, " \n\r\t")) != NULL) {
             int flags = 0;
             char *modifier = move + strlen(move) - 1;
-            move_t themove;
+            CMove themove;
 
             if (*modifier == '!') {
                 flags = GoodMove;

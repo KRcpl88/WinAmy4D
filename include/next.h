@@ -55,12 +55,12 @@ typedef enum {
 
 struct SearchStatus {
     SearchPhase st_phase;
-    move_t st_hashmove;
-    move_t st_k1, st_k2, st_kl, st_cm, st_k3;
+    CMove st_hashmove;
+    CMove st_k1, st_k2, st_kl, st_cm, st_k3;
 };
 
 struct KillerEntry {
-    move_t killer1, killer2;   /* killer moves */
+    CMove killer1, killer2;   /* killer moves */
     uint32_t kcount1, kcount2; /* killer count */
 };
 
@@ -82,21 +82,21 @@ struct SearchData {
     int32_t *data_heap;
     unsigned int data_heap_size;
 
-    unsigned int counterTab[2][4096]; /* counter moves per side */
+    CMove counterTab[2][4096]; /* counter moves per side */
     unsigned int historyTab[2][4096]; /* history moves per side */
 
-    int pv_save[64];
+    CMove pv_save[64];
 
     uint16_t ply;
 
     bool master; /* true if a master process */
     unsigned long nodes_cnt, qnodes_cnt, check_nodes_cnt;
 
-    move_t best_move;
+    CMove best_move;
     int best_score;
     uint16_t depth;
 
-    move_t alternate_move;
+    CMove alternate_move;
     int alternate_score;
 
     uint16_t nrootmoves;
@@ -107,10 +107,10 @@ struct SearchData *CreateSearchData(CPosition *);
 void FreeSearchData(struct SearchData *);
 void EnterNode(struct SearchData *);
 void LeaveNode(struct SearchData *);
-int NextMove(struct SearchData *);
-int NextEvasion(struct SearchData *);
-int NextMoveQ(struct SearchData *, int);
-void PutKiller(struct SearchData *, move_t);
+CMove NextMove(struct SearchData *);
+CMove NextEvasion(struct SearchData *);
+CMove NextMoveQ(struct SearchData *, int);
+void PutKiller(struct SearchData *, CMove);
 void TestNextGenerators(CPosition *);
 
 #endif

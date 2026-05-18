@@ -57,7 +57,7 @@ typedef enum {
 
 struct HTEntry {
     unsigned int ht_Signature;
-    move_t ht_Move;
+    CMove ht_Move;
     int ht_Score;
     short ht_Flags;
     short ht_Depth;
@@ -87,12 +87,12 @@ void AgeHashTable(void);
 void ClearPawnHashTable(void);
 void AllocateHT(void);
 #if MP
-LookupResult ProbeHT(hash_t, int *, int, move_t *, bool *, int, int,
+LookupResult ProbeHT(hash_t, int *, int, CMove *, bool *, int, int,
                      struct HTEntry *);
-void StoreHT(hash_t, int, int, int, int, int, int, int, struct HTEntry *);
+void StoreHT(hash_t, int, int, int, CMove, int, int, int, struct HTEntry *);
 #else
-LookupResult ProbeHT(hash_t, int *, int, move_t *, bool *, int);
-void StoreHT(hash_t, int, int, int, int, int, int, int);
+LookupResult ProbeHT(hash_t, int *, int, CMove *, bool *, int);
+void StoreHT(hash_t, int, int, int, CMove, int, int, int);
 #endif
 LookupResult ProbePT(hash_t, int *, struct PawnFacts *);
 void StorePT(hash_t, int, struct PawnFacts *);

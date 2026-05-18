@@ -14,7 +14,7 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::Initial());
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        const move_t move = make_move(e2, e4, M_PAWND);
+        const CMove move = make_move(e2, e4, M_PAWND);
         position.get()->DoMove(move);
 
         Assert::AreEqual((int)Pawn, (int)position.get()->piece[e4]);
@@ -66,7 +66,7 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        move_t move = make_move(d4, e6, M_CAPTURE);
+        CMove move = make_move(d4, e6, M_CAPTURE);
         position.get()->DoMove(move);
 
         Assert::AreEqual((int)Knight, (int)position.get()->piece[e6]);
@@ -82,7 +82,7 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        move_t move = make_move(e5, d6, M_ENPASSANT);
+        CMove move = make_move(e5, d6, M_ENPASSANT);
         position.get()->DoMove(move);
 
         Assert::AreEqual((int)Pawn, (int)position.get()->piece[d6]);
@@ -98,7 +98,7 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        move_t move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(e1, g1, M_SCASTLE);
         position.get()->DoMove(move);
 
         Assert::AreEqual((int)King, (int)position.get()->piece[g1]);
@@ -115,7 +115,7 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        move_t move = make_move(e1, c1, M_LCASTLE);
+        CMove move = make_move(e1, c1, M_LCASTLE);
         position.get()->DoMove(move);
 
         Assert::AreEqual((int)King, (int)position.get()->piece[c1]);
@@ -132,7 +132,9 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        move_t move = make_move(e7, e8, (Queen << M_PROMOTION_OFFSET));
+        CMove move = make_move(
+            e7, e8,
+            static_cast<int>(static_cast<uint32_t>(Queen) << M_PROMOTION_OFFSET));
         position.get()->DoMove(move);
 
         Assert::AreEqual((int)Queen, (int)position.get()->piece[e8]);
@@ -140,6 +142,19 @@ TEST_CLASS(MoveTests) {
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
+    }
+
+    TEST_METHOD(MFromAndMToDecodeFromScooordBitfields) {
+        const CSCoord fromSquare(0, 4, 1); // e2
+        const CSCoord toSquare(0, 4, 3);   // e4
+        const CMove move = make_move(static_cast<int>(fromSquare), static_cast<int>(toSquare), M_PAWND);
+
+        Assert::AreEqual(fromSquare.Level, move.GetFromCoord().Level);
+        Assert::AreEqual(fromSquare.File, move.GetFromCoord().File);
+        Assert::AreEqual(fromSquare.Rank, move.GetFromCoord().Rank);
+        Assert::AreEqual(toSquare.Level, move.GetToCoord().Level);
+        Assert::AreEqual(toSquare.File, move.GetToCoord().File);
+        Assert::AreEqual(toSquare.Rank, move.GetToCoord().Rank);
     }
 };
 

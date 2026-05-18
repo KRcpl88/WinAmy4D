@@ -166,9 +166,9 @@ enum { PVNode = 0, AllNode = 1, CutNode = 2, CutNodeNoNull = 3 };
 static int SearchMode = Searching;
 
 /* Permanent Brain Variables */
-int PBMove, PBActMove;
+CMove PBMove, PBActMove;
 int PBHit;
-int PBAltMove;
+CMove PBAltMove;
 
 static char BestLine[2048];
 static char ShortBestLine[2048];
@@ -345,7 +345,7 @@ static int CheckExtend(CPosition *p) {
         int nd = 0;
 
         /* discovered check */
-        if (atp != M_TO((p->actLog - 1)->gl_Move)) {
+        if (atp != (p->actLog - 1)->gl_Move.GetToCoord().GetBitOffset()) {
             DiscExt++;
             nd = ExtendDiscoveredCheck;
         }
@@ -438,23 +438,23 @@ static int CheckExtend(CPosition *p) {
  * Compute an optimistic score for a move.
  */
 
-static int ScoreMove(CPosition *p, move_t move) {
+static int ScoreMove(CPosition *p, CMove move) {
     int score = 0;
 
-    if (move & M_CAPTURE)
-        score += Value[TYPE(p->piece[M_TO(move)])];
-    if (move & M_PROMOTION_MASK)
+    if (move.IsCapture())
+        score += Value[TYPE(p->piece[move.GetToCoord().GetBitOffset()])];
+    if (move.HasPromotion())
         score += Value[PromoType(move)] - Value[Pawn];
-    else if (TYPE(p->piece[M_FROM(move)]) == Pawn) {
-        if (p->turn == White && M_TO(move) >= a7) {
+    else if (TYPE(p->piece[move.GetFromCoord().GetBitOffset()]) == Pawn) {
+        if (p->turn == White && move.GetToCoord().GetBitOffset() >= a7) {
             score += Value[Bishop];
         }
-        if (p->turn == Black && M_TO(move) <= h2) {
+        if (p->turn == Black && move.GetToCoord().GetBitOffset() <= h2) {
             score += Value[Bishop];
         }
     }
 
-    if (move & M_ENPASSANT)
+    if (move.IsEnPassant())
         score += Value[Pawn];
 
     return score;
@@ -465,11 +465,11 @@ static int ScoreMove(CPosition *p, move_t move) {
  */
 
 static void StoreResult(struct SearchData *sd, int score, int alpha, int beta,
-                        move_t move, int depth, int threat) {
+                        CMove move, int depth, int threat) {
     CPosition *p = sd->position;
 
-    if (!(move & M_TACTICAL) && score > alpha) {
-        sd->historyTab[p->turn][move & 4095] += depth * depth;
+    if (!(move.IsTactical()) && score > alpha) {
+        sd->historyTab[p->turn][move.GetFromToIndex()] += depth * depth;
     }
 
     StoreHT(p->hkey, score, alpha, beta, move, depth, threat, sd->ply
@@ -491,7 +491,7 @@ static void StoreResult(struct SearchData *sd, int score, int alpha, int beta,
 static int quies(struct SearchData *sd, int alpha, int beta, int depth) {
     CPosition *p = sd->position;
     int best;
-    move_t move;
+    CMove move;
     int talpha;
     int tmp;
 
@@ -589,11 +589,11 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
     CPosition *p = sd->position;
     struct SearchStatus *st;
     int best = -INF;
-    move_t bestm = M_NONE;
+    CMove bestm = M_NONE;
     int tmp;
     int talpha;
-    int lmove;
-    move_t move;
+    CMove lmove;
+    CMove move;
     int extend = 0;
     bool threat = false;
     int reduce_extensions;
@@ -827,28 +827,28 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
     while ((move = incheck ? NextEvasion(sd) : NextMove(sd)) != M_NONE) {
         int next_depth = extend;
 
-        if (move & M_CANY && !p->MayCastle(move))
+        if (move.IsCastle() && !p->MayCastle(move))
             continue;
 
         /*
          * recapture extension
          */
 
-        if ((move & M_CAPTURE) && (lmove & M_CAPTURE) &&
-            M_TO(move) == M_TO(lmove) &&
-            IsRecapture(p->piece[M_TO(move)], (p->actLog - 1)->gl_Piece)) {
+        if ((move.IsCapture()) && (lmove.IsCapture()) &&
+            move.GetToCoord().GetBitOffset() == lmove.GetToCoord().GetBitOffset() &&
+            IsRecapture(p->piece[move.GetToCoord().GetBitOffset()], (p->actLog - 1)->gl_Piece)) {
             RCExt += 1;
-            next_depth += ExtendRecapture[TYPE(p->piece[M_TO(move)])];
+            next_depth += ExtendRecapture[TYPE(p->piece[move.GetToCoord().GetBitOffset()])];
         }
 
         /*
          * passed pawn push extension
          */
 
-        if (TYPE(p->piece[M_FROM(move)]) == Pawn &&
+        if (TYPE(p->piece[move.GetFromCoord().GetBitOffset()]) == Pawn &&
             p->nonPawn[OPP(p->turn)] <= Value[Queen]) {
 
-            int to = M_TO(move);
+            int to = move.GetToCoord().GetBitOffset();
 
             if (((p->turn == White && to >= a7) ||
                  (p->turn == Black && to <= h2)) &&
@@ -987,9 +987,9 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
                  */
 
                 if (tmp >= beta) {
-                    if (!(move & M_TACTICAL)) {
+                    if (!(move.IsTactical())) {
                         PutKiller(sd, move);
-                        sd->counterTab[p->turn][lmove & 4095] = move;
+                        sd->counterTab[p->turn][lmove.GetFromToIndex()] = move;
                     }
                     StoreResult(sd, tmp, alpha, beta, move, depth, threat);
                     best = tmp;
@@ -1051,9 +1051,9 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
          */
 
         if (tmp >= beta) {
-            if (!(move & M_TACTICAL)) {
+            if (!(move.IsTactical())) {
                 PutKiller(sd, move);
-                sd->counterTab[p->turn][lmove & 4095] = move;
+                sd->counterTab[p->turn][lmove.GetFromToIndex()] = move;
             }
             StoreResult(sd, tmp, alpha, beta, move, depth, threat);
             best = tmp;
@@ -1107,7 +1107,7 @@ EXIT:
 /**
  * Print the SAN of a move prefixed by the move number.
  */
-static char *NumberedSAN(CPosition *p, int move, char *buffer,
+static char *NumberedSAN(CPosition *p, CMove move, char *buffer,
                          size_t len) {
     char san_buffer[16];
     if (p->turn == White)
@@ -1125,7 +1125,7 @@ static char *NumberedSAN(CPosition *p, int move, char *buffer,
  */
 
 static void AnaLoop(CPosition *p, int depth) {
-    move_t move;
+    CMove move;
     bool dummy = false;
     int score;
 
@@ -1181,7 +1181,7 @@ static void AnaLoop(CPosition *p, int depth) {
     }
 }
 
-static void AnalyzeHT(CPosition *p, move_t move) {
+static void AnalyzeHT(CPosition *p, CMove move) {
     NumberedSAN(p, move, BestLine, sizeof(BestLine));
     strcat(BestLine, " ");
     char san_buffer[16];
@@ -1216,7 +1216,7 @@ static int gaps[] = {57, 23, 10, 4, 1};
  * and sorts the remaining moves by number of nodes searched
  * in decreasing order.
  */
-static void ResortMovesList(int cnt, move_t *mvs, unsigned long *nodes) {
+static void ResortMovesList(int cnt, CMove *mvs, unsigned long *nodes) {
     if (cnt <= 0)
         return;
 
@@ -1229,7 +1229,7 @@ static void ResortMovesList(int cnt, move_t *mvs, unsigned long *nodes) {
         int gap = gaps[gap_index];
         for (int i = gap; i < cnt; i++) {
             int j;
-            move_t mvs_tmp = mvs[i];
+            CMove mvs_tmp = mvs[i];
             unsigned long nodes_tmp = nodes[i];
 
             for (j = i; (j >= gap) && (nodes[j - gap] < nodes_tmp); j -= gap) {
@@ -1268,11 +1268,11 @@ static void *IterateInt(void *x) {
     InitSearch(sd);
     sd->nrootmoves = (uint16_t)p->LegalMoves(sd->heap);
 
-    move_t *mvs = sd->heap->data + sd->heap->current_section->start;
+    CMove *mvs = sd->heap->data + sd->heap->current_section->start;
 
     sd->best_score = p->material[p->turn] - p->material[OPP(p->turn)];
 
-    if (!(mvs[0] & M_TACTICAL))
+    if (!mvs[0].IsTactical())
         PutKiller(sd, mvs[0]);
 
     MaxDepth = MAX_TREE_SIZE - 1;
@@ -1286,7 +1286,7 @@ static void *IterateInt(void *x) {
         for (sd->movenum = 0; sd->movenum < sd->nrootmoves; sd->movenum++) {
             int tmp;
             int next_depth = (sd->depth - 2) * OnePly;
-            move_t move = mvs[sd->movenum];
+            CMove move = mvs[sd->movenum];
             bool is_alternate = !is_pv && move == sd->alternate_move;
 
             nodes[sd->movenum] = sd->nodes_cnt;
@@ -1403,7 +1403,7 @@ static void *IterateInt(void *x) {
                     mvs[0] = move;
                     nodes[0] = tn;
 
-                    if (!(move & M_TACTICAL))
+                    if (!(move.IsTactical()))
                         PutKiller(sd, move);
                     PBMove = M_NONE;
                     is_pv = true;
@@ -1716,8 +1716,8 @@ static void StartHelpers(CPosition *p) {
  *  alternate_move: an alternate move to search
  *  alternate_score_ptr: a pointer to return the alternate score in
  */
-int Iterate(CPosition *p, int *score_ptr, move_t alternate_move,
-            int *alternate_score_ptr) {
+CMove Iterate(CPosition *p, int *score_ptr, CMove alternate_move,
+              int *alternate_score_ptr) {
     float soft, hard;
     int cnt;
     struct SearchData *sd;
@@ -1750,7 +1750,7 @@ int Iterate(CPosition *p, int *score_ptr, move_t alternate_move,
             strcpy(AnalysisLine, "mate");
         return M_NONE;
     } else if (cnt == 1 && SearchMode != Analyzing) {
-        move_t only_move = heap->data[heap->current_section->start];
+        CMove only_move = heap->data[heap->current_section->start];
         free_heap(heap);
         strcpy(AnalysisLine, "forced move");
         return only_move;
@@ -1775,7 +1775,7 @@ int Iterate(CPosition *p, int *score_ptr, move_t alternate_move,
     sd->alternate_move = alternate_move;
     IterateInt(sd);
 
-    move_t best_move = sd->best_move;
+    CMove best_move = sd->best_move;
     if (score_ptr != NULL) {
         *score_ptr = sd->best_score;
     }
@@ -1797,7 +1797,7 @@ int Iterate(CPosition *p, int *score_ptr, move_t alternate_move,
  * Search the root node.
  */
 void SearchRoot(CPosition *p) {
-    move_t move = M_NONE;
+    CMove move = M_NONE;
     CPosition *q;
 
     SearchMode = Searching;
@@ -1888,7 +1888,7 @@ pb_result_t PermanentBrain(CPosition *p) {
     }
 
     if (p->LegalMove(PBMove)) {
-        move_t move = M_NONE;
+        CMove move = M_NONE;
         CPosition *q;
         bool inbook = false;
         char san_buffer[16];

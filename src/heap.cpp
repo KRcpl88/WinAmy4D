@@ -40,7 +40,7 @@ static const int SECTION_SIZE = 32;
 heap_t allocate_heap(void) {
     heap_t heap = (heap_t)safe_malloc(sizeof(struct heap));
 
-    move_t *data = (move_t *)safe_malloc(DATA_SIZE * sizeof(move_t));
+    CMove *data = (CMove *)safe_malloc(DATA_SIZE * sizeof(CMove));
 
     heap->data = data;
     heap->capacity = DATA_SIZE;

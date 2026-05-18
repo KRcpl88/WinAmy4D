@@ -79,7 +79,7 @@ void FilterQuiescentPositions(char *file_name) {
                 fprintf(fout, "{ %s }\n", strip(comment));
             }
 
-            move_t themove = p->ParseSAN(move);
+            CMove themove = p->ParseSAN(move);
 
             if (themove == M_NONE)
                 break;

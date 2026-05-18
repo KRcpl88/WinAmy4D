@@ -233,11 +233,11 @@ static inline bool PutHTEntryBestEffort(hash_t key, struct HTEntry entry,
 }
 
 #if MP
-LookupResult ProbeHT(hash_t key, int *score, int depth, move_t *bestm,
+LookupResult ProbeHT(hash_t key, int *score, int depth, CMove *bestm,
                      bool *threat, int ply, int exclusiveP,
                      struct HTEntry *localHT)
 #else
-LookupResult ProbeHT(hash_t key, int *score, int depth, move_t *bestm,
+LookupResult ProbeHT(hash_t key, int *score, int depth, CMove *bestm,
                      bool *threat, int ply)
 #endif
 {
@@ -361,7 +361,7 @@ LookupResult ProbeST(hash_t key, int *score) {
     return Useless;
 }
 
-void StoreHT(hash_t key, int best, int alpha, int beta, int bestm, int depth,
+void StoreHT(hash_t key, int best, int alpha, int beta, CMove bestm, int depth,
              int threat, int ply
 #if MP
              ,

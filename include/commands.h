@@ -32,10 +32,12 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
+#include "types.h"
+
 typedef void (*COMMAND)(char *args);
 
 struct Command {
-    int move;
+    CMove move;
     COMMAND command_func;
     int allowed_during_search;
     int interrupts_search;

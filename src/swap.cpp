@@ -86,9 +86,9 @@ static void SwapReRay(CPosition *p, int side, CBitBoard atks[2], int from,
     }
 }
 
-int SwapOff(CPosition *p, int move) {
-    int to = M_TO(move);
-    int fr = M_FROM(move);
+int SwapOff(CPosition *p, CMove move) {
+    int to = move.GetToCoord().GetBitOffset();
+    int fr = move.GetFromCoord().GetBitOffset();
     int side = COLOR(p->piece[fr]);
     int oside = !side;
     int swaplist[32];
@@ -99,7 +99,7 @@ int SwapOff(CPosition *p, int move) {
     CBitBoard atks[2];
     CBitBoard exclude;
 
-    if (move & M_PROMOTION_MASK) {
+    if (move.HasPromotion()) {
         swapval = SwapValue[PromoType(move)];
         swaplist[0] = SwapValue[TYPE(p->piece[to])] - SwapValue[Pawn] + swapval;
     } else {

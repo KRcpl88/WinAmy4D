@@ -45,11 +45,11 @@
 
 #define THRESHOLD 2000
 
-move_t get_best_move_from_comment(char *comment, CPosition *p,
+CMove get_best_move_from_comment(char *comment, CPosition *p,
                                   char *eval_buf) {
     char *ptr = comment;
 
-    move_t best_move = M_NONE;
+    CMove best_move = M_NONE;
     int best_count = -1;
 
     while (*ptr && *ptr != '=') {
@@ -88,7 +88,7 @@ move_t get_best_move_from_comment(char *comment, CPosition *p,
         char *move = strtok_r(elem, ":", &brki);
         char *count = strtok_r(NULL, ":", &brki);
 
-        move_t parsed_move = p->ParseSAN(move);
+        CMove parsed_move = p->ParseSAN(move);
 
         if (parsed_move != M_NONE) {
             int parsed_count = atoi(count);
@@ -129,7 +129,7 @@ void BlunderCheck(char *file_name) {
 
         print_header(fout, &header);
 
-        move_t last_move = M_NONE;
+        CMove last_move = M_NONE;
 
         while (!scanMove(fin, move)) {
             if (!(strlen(move) < 12)) {
@@ -144,13 +144,13 @@ void BlunderCheck(char *file_name) {
 
                 p->UndoMove(last_move);
 
-                move_t best_move =
+                CMove best_move =
                     get_best_move_from_comment(comment, p, evalbuf);
 
                 int search_evaluation;
                 int alternate_evaluation;
 
-                move_t optimal_move = Iterate(p, &search_evaluation, best_move,
+                CMove optimal_move = Iterate(p, &search_evaluation, best_move,
                                               &alternate_evaluation);
                 int score_diff = search_evaluation - alternate_evaluation;
 
@@ -170,7 +170,7 @@ void BlunderCheck(char *file_name) {
                 p->DoMove(last_move);
             }
 
-            move_t themove = p->ParseSAN(move);
+            CMove themove = p->ParseSAN(move);
 
             if (themove == M_NONE)
                 break;

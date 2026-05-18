@@ -58,7 +58,7 @@
 
 char OpponentName[OPP_NAME_LENGTH] = "Opponent";
 
-static int PGNMoveHistory[1024];
+static CMove PGNMoveHistory[1024];
 static char DateBuf[16];
 static char TimeBuf[16];
 static char HostNameBuf[256];
@@ -127,13 +127,13 @@ void SaveGame(CPosition *p, char *file_name) {
             fprintf(fout, "[Result \"%s\"]\n\n", shortgameend);
 
             for (i = ply; i > 0; i--) {
-                int move = (p->actLog - 1)->gl_Move;
+                CMove move = (p->actLog - 1)->gl_Move;
                 PGNMoveHistory[i - 1] = move;
                 p->UndoMove(move);
             }
 
             for (i = 0; i < ply; i++) {
-                int move = PGNMoveHistory[i];
+                CMove move = PGNMoveHistory[i];
                 if ((i & 1) == 0) {
                     fprintf(fout, "%d. ", (i / 2) + 1);
                     width += 3;
@@ -167,7 +167,7 @@ void LoadGame(CPosition *p, char *file_name) {
         char move[16];
         if (!scanHeader(fin, &header)) {
             while (!scanMove(fin, move)) {
-                int themove = p->ParseSAN(move);
+                CMove themove = p->ParseSAN(move);
                 if (themove != M_NONE) {
                     p->DoMove(themove);
                 }
