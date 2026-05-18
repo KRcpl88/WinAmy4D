@@ -166,9 +166,9 @@ enum { PVNode = 0, AllNode = 1, CutNode = 2, CutNodeNoNull = 3 };
 static int SearchMode = Searching;
 
 /* Permanent Brain Variables */
-int PBMove, PBActMove;
+CMove PBMove, PBActMove;
 int PBHit;
-int PBAltMove;
+CMove PBAltMove;
 
 static char BestLine[2048];
 static char ShortBestLine[2048];
