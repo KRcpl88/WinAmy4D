@@ -81,6 +81,11 @@ bool CSCoord::IsValid(int offset) {
     return (offset < SIZE) && (offset >= 0);
 }
 
+CSCoord CSCoord::ReflectRank() const {
+    int maxRank = LEVEL_WIDTH[Level] - 1;
+    return CSCoord(Level, File, maxRank - Rank);
+}
+
 CSCoord::operator int() const {
     Validate();
     return BitOffset();

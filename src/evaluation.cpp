@@ -43,8 +43,6 @@
 #include "scoord.h"
 #include <stdint.h>
 
-#define REFLECT_X(a) ((a) ^ 0x38)
-
 /**
  * Debugging stuff
  */
@@ -1243,7 +1241,7 @@ static int EvaluateDevelopment(const CPosition *p) {
     while (pcs) {
         int sq = (pcs).FindSetBit();
         pcs.ClearLowestBit();
-        score -= QueenPosDevelopment[REFLECT_X(sq)];
+        score -= QueenPosDevelopment[CSCoord(sq).ReflectRank().BitOffset()];
     }
 
     return score;
@@ -1429,8 +1427,8 @@ static int EvaluatePositionForWhite(const CPosition *p) {
      * Evaluate black king
      */
 
-    score -= (KingPosMiddlegame[REFLECT_X(p->kingSq[Black].BitOffset())] * ScaleUp[bphase] +
-              kingPST[REFLECT_X(p->kingSq[Black].BitOffset())] * ScaleDown[bphase]) >>
+    score -= (KingPosMiddlegame[p->kingSq[Black].ReflectRank().BitOffset()] * ScaleUp[bphase] +
+              kingPST[p->kingSq[Black].ReflectRank().BitOffset()] * ScaleDown[bphase]) >>
              4;
 
     /*
@@ -1494,14 +1492,14 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         sq = (pcs).FindSetBit();
         pcs.ClearLowestBit();
 
-        score -= KnightPos[REFLECT_X(sq)];
+        score -= KnightPos[CSCoord(sq).ReflectRank().BitOffset()];
 
         if (is_edge(CSCoord(sq))) {
             score -= KnightEdgePenalty;
         }
 
         if (!(p->mask[White][Pawn] & OutpostMaskB[sq])) {
-            score -= KnightOutpost[REFLECT_X(sq)];
+            score -= KnightOutpost[CSCoord(sq).ReflectRank().BitOffset()];
         }
 
         score -= (ScaleUp[bphase] * KnightKingProximity *
@@ -1564,7 +1562,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         sq = (pcs).FindSetBit();
         pcs.ClearLowestBit();
 
-        score -= (ScaleUp[bphase] * BishopPos[REFLECT_X(sq)]) >> 4;
+        score -= (ScaleUp[bphase] * BishopPos[CSCoord(sq).ReflectRank().BitOffset()]) >> 4;
 
         tmp = (p->atkTo[sq] & ~p->mask[Black][0]).CountBits();
         score -= BishopMobility * (tmp - 7);
@@ -1636,7 +1634,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         pcs.ClearLowestBit();
         file = CSCoord(sq).File;
 
-        score -= (ScaleUp[bphase] * RookPos[REFLECT_X(sq)]) >> 4;
+        score -= (ScaleUp[bphase] * RookPos[CSCoord(sq).ReflectRank().BitOffset()]) >> 4;
 
         tmp = (p->atkTo[sq] & ~p->mask[Black][0]).CountBits();
         score -= RookMobility * (tmp - 7);
@@ -1700,7 +1698,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         sq = (pcs).FindSetBit();
         pcs.ClearLowestBit();
 
-        score -= QueenPos[REFLECT_X(sq)];
+        score -= QueenPos[CSCoord(sq).ReflectRank().BitOffset()];
 
         score -= (ScaleUp[bphase] * QueenKingProximity *
                   (4 - KingDist(CSCoord(sq), p->kingSq[White]))) >>

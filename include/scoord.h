@@ -35,6 +35,9 @@ public:
     int BitOffset() const;
     scoord_bitfield_t GetBitField() const;
 
+    // Mirror rank within the level (rank 0↔max, 1↔max-1, etc.)
+    CSCoord ReflectRank() const;
+
     explicit operator int() const;
 
 private:
