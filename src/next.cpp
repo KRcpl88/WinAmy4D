@@ -661,7 +661,7 @@ CMove NextEvasion(struct SearchData *sd) {
             pawns_to.ClearLowestBit();
             int fr = (p->turn == White) ? to - 8 : to + 8;
 
-            if (is_promo_square(to)) {
+            if (is_promo_square(CSCoord(to))) {
                 append_to_heap(sd->heap, make_promotion(fr, to, Queen, 0));
                 append_to_heap(sd->heap, make_promotion(fr, to, Knight, 0));
                 append_to_heap(sd->heap, make_promotion(fr, to, Rook, 0));

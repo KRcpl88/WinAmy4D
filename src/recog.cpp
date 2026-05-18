@@ -160,7 +160,7 @@ static int RecognizerKBK(const CPosition *p, int *score) {
      */
 
     if (p->turn != color && (p->mask[OPP(color)][King] & EdgeMask) &&
-        (KingDist(p->kingSq[White].BitOffset(), p->kingSq[Black].BitOffset()) == 2)) {
+        (KingDist(p->kingSq[White], p->kingSq[Black]) == 2)) {
         return Useless;
     }
 
@@ -169,8 +169,8 @@ static int RecognizerKBK(const CPosition *p, int *score) {
      */
 
     *score = p->material[color] + 2 * Value[Pawn] -
-             250 * EdgeDist(p->kingSq[OPP(color)].BitOffset()) -
-             125 * KingDist(p->kingSq[White].BitOffset(), p->kingSq[Black].BitOffset());
+             250 * EdgeDist(p->kingSq[OPP(color)]) -
+             125 * KingDist(p->kingSq[White], p->kingSq[Black]);
 
     if (p->turn != color) {
         *score = -*score;
@@ -235,7 +235,7 @@ static int RecognizerKBNK(const CPosition *p, int *score) {
          */
 
         if (p->turn != color && (p->mask[OPP(color)][King] & EdgeMask) &&
-            (KingDist(p->kingSq[White].BitOffset(), p->kingSq[Black].BitOffset()) == 2)) {
+            (KingDist(p->kingSq[White], p->kingSq[Black]) == 2)) {
             return Useless;
         }
 
@@ -252,7 +252,7 @@ static int RecognizerKBNK(const CPosition *p, int *score) {
         }
 
         *score = p->material[color] + 3 * Value[Pawn] + sqx -
-                 125 * KingDist(p->kingSq[White].BitOffset(), p->kingSq[Black].BitOffset());
+                 125 * KingDist(p->kingSq[White], p->kingSq[Black]);
 
         if (p->turn != color) {
             *score = -*score;

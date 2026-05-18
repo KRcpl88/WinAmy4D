@@ -1476,7 +1476,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         }
 
         score += (ScaleUp[wphase] * KnightKingProximity *
-                  (4 - KingDist(sq, p->kingSq[Black].BitOffset()))) >>
+                  (4 - KingDist(CSCoord(sq), p->kingSq[Black]))) >>
                  4;
 
         if (sq == c3 && pawnFacts.pf_Flags & QueensPawnOpening &&
@@ -1505,7 +1505,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         }
 
         score -= (ScaleUp[bphase] * KnightKingProximity *
-                  (4 - KingDist(sq, p->kingSq[White].BitOffset()))) >>
+                  (4 - KingDist(CSCoord(sq), p->kingSq[White]))) >>
                  4;
 
         if (sq == c6 && pawnFacts.pf_Flags & QueensPawnOpening &&
@@ -1546,7 +1546,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         score += BishopMobility * (tmp - 7);
 
         score += (ScaleUp[wphase] * BishopKingProximity *
-                  (4 - KingDist(sq, p->kingSq[Black].BitOffset()))) >>
+                  (4 - KingDist(CSCoord(sq), p->kingSq[Black]))) >>
                  4;
     }
 
@@ -1570,7 +1570,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         score -= BishopMobility * (tmp - 7);
 
         score -= (ScaleUp[bphase] * BishopKingProximity *
-                  (4 - KingDist(sq, p->kingSq[White].BitOffset()))) >>
+                  (4 - KingDist(CSCoord(sq), p->kingSq[White]))) >>
                  4;
     }
 
@@ -1612,7 +1612,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         }
 
         score += (ScaleUp[wphase] * RookKingProximity *
-                  (4 - KingDist(sq, p->kingSq[Black].BitOffset()))) >>
+                  (4 - KingDist(CSCoord(sq), p->kingSq[Black]))) >>
                  4;
 
         tmpboard = p->atkTo[sq] & ForwardRayW[sq];
@@ -1650,7 +1650,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         }
 
         score -= (ScaleUp[bphase] * RookKingProximity *
-                  (4 - KingDist(sq, p->kingSq[White].BitOffset()))) >>
+                  (4 - KingDist(CSCoord(sq), p->kingSq[White]))) >>
                  4;
 
         tmpboard = p->atkTo[sq] & ForwardRayB[sq];
@@ -1687,7 +1687,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         score += QueenPos[sq];
 
         score += (ScaleUp[wphase] * QueenKingProximity *
-                  (4 - KingDist(sq, p->kingSq[Black].BitOffset()))) >>
+                  (4 - KingDist(CSCoord(sq), p->kingSq[Black]))) >>
                  4;
     }
 
@@ -1703,7 +1703,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         score -= QueenPos[REFLECT_X(sq)];
 
         score -= (ScaleUp[bphase] * QueenKingProximity *
-                  (4 - KingDist(sq, p->kingSq[White].BitOffset()))) >>
+                  (4 - KingDist(CSCoord(sq), p->kingSq[White]))) >>
                  4;
     }
 

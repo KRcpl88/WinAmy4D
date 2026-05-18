@@ -922,7 +922,7 @@ void CPosition::GenTo(int square, heap_t heap) {
     while (tmp) {
         int i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        if (TYPE(p->piece[i]) == Pawn && is_promo_square(square)) {
+        if (TYPE(p->piece[i]) == Pawn && is_promo_square(CSCoord(square))) {
             append_to_heap(heap, make_promotion(i, square, Queen, M_CAPTURE));
             append_to_heap(heap, make_promotion(i, square, Knight, M_CAPTURE));
             append_to_heap(heap, make_promotion(i, square, Rook, M_CAPTURE));
@@ -986,7 +986,7 @@ void CPosition::GenFrom(int square, heap_t heap) {
         int sq = (p->turn == White ? square + 8 : square - 8);
 
         if (p->piece[sq] == Neutral) {
-            if (is_promo_square(sq)) {
+            if (is_promo_square(CSCoord(sq))) {
                 append_to_heap(heap, make_promotion(square, sq, Queen, 0));
                 append_to_heap(heap, make_promotion(square, sq, Knight, 0));
                 append_to_heap(heap, make_promotion(square, sq, Rook, 0));
