@@ -39,6 +39,6 @@ void BookupQuiet(char *);
 void FlattenBook(unsigned int);
 void CreateLearnDB(char *);
 void QueryBook(CPosition *);
-int SelectBook(CPosition *);
+CMove SelectBook(CPosition *);
 
 #endif

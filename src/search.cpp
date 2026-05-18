@@ -592,7 +592,7 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
     CMove bestm = M_NONE;
     int tmp;
     int talpha;
-    int lmove;
+    CMove lmove;
     CMove move;
     int extend = 0;
     bool threat = false;
@@ -1107,7 +1107,7 @@ EXIT:
 /**
  * Print the SAN of a move prefixed by the move number.
  */
-static char *NumberedSAN(CPosition *p, int move, char *buffer,
+static char *NumberedSAN(CPosition *p, CMove move, char *buffer,
                          size_t len) {
     char san_buffer[16];
     if (p->turn == White)
@@ -1716,8 +1716,8 @@ static void StartHelpers(CPosition *p) {
  *  alternate_move: an alternate move to search
  *  alternate_score_ptr: a pointer to return the alternate score in
  */
-int Iterate(CPosition *p, int *score_ptr, CMove alternate_move,
-            int *alternate_score_ptr) {
+CMove Iterate(CPosition *p, int *score_ptr, CMove alternate_move,
+              int *alternate_score_ptr) {
     float soft, hard;
     int cnt;
     struct SearchData *sd;

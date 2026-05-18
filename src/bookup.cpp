@@ -399,7 +399,7 @@ static void CalculatePropabilities(int cnt, struct BookQuery *entries,
     }
 }
 
-int SelectBook(CPosition *p) {
+CMove SelectBook(CPosition *p) {
     int i, cnt = 0;
     struct BookQuery be[32];
     CMove moves[32];

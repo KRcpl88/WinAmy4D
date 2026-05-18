@@ -82,10 +82,10 @@ struct SearchData {
     int32_t *data_heap;
     unsigned int data_heap_size;
 
-    unsigned int counterTab[2][4096]; /* counter moves per side */
+    CMove counterTab[2][4096]; /* counter moves per side */
     unsigned int historyTab[2][4096]; /* history moves per side */
 
-    int pv_save[64];
+    CMove pv_save[64];
 
     uint16_t ply;
 
@@ -107,9 +107,9 @@ struct SearchData *CreateSearchData(CPosition *);
 void FreeSearchData(struct SearchData *);
 void EnterNode(struct SearchData *);
 void LeaveNode(struct SearchData *);
-int NextMove(struct SearchData *);
-int NextEvasion(struct SearchData *);
-int NextMoveQ(struct SearchData *, int);
+CMove NextMove(struct SearchData *);
+CMove NextEvasion(struct SearchData *);
+CMove NextMoveQ(struct SearchData *, int);
 void PutKiller(struct SearchData *, CMove);
 void TestNextGenerators(CPosition *);
 

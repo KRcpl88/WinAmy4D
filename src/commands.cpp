@@ -158,7 +158,7 @@ char AutoSaveFileName[64];
 struct Command *ParseInput(char *line) {
     static struct Command theCommand;
     char *token;
-    int move;
+    CMove move;
     struct CommandEntry *entry;
 
     token = nextToken(&line, " \t\n\r");
@@ -255,7 +255,8 @@ static void Test(char *fname) {
     fout = fopen("nsolved.epd", "w");
 
     for (i = 1;; i++) {
-        int move, j;
+        CMove move;
+        int j;
         bool correct = false;
 
         if (fgets(line, 256, fin) == NULL)
@@ -557,7 +558,7 @@ static void RunAnnotate(char *fname, int side) {
         while (!scanHeader(fin, &header)) {
             p = CPosition::Initial();
             while (!scanMove(fin, move)) {
-                int themove = p->ParseSAN(move);
+                CMove themove = p->ParseSAN(move);
                 if (themove != M_NONE) {
                     char san_buffer[16];
                     p->ShowPosition();
@@ -673,7 +674,7 @@ static void Help(char *args) {
 
 static void Benchmark(char *args) {
     (void)args;
-    int move = g1 | (f3 << 6);
+    CMove move = make_move(g1, f3, 0);
     int i;
     const int cycles = 10000000;
     unsigned long start, end;

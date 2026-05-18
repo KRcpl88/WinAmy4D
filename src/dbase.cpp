@@ -103,7 +103,7 @@ static void LooseAttacks(CPosition *, int);
 static void ShowMoveList(CPosition *p) {
     int ply;
     for (ply = 0; ply < p->ply; ply++) {
-        int move = p->gameLog[ply].gl_Move;
+        CMove move = p->gameLog[ply].gl_Move;
         Print(0, "%s\n", ICS_SAN(move));
     }
 }
@@ -2226,8 +2226,8 @@ void CPosition::ShowMoves() {
  * EPD stuff
  */
 
-int goodmove[MAX_EPD_MOVES];
-int badmove[MAX_EPD_MOVES];
+CMove goodmove[MAX_EPD_MOVES];
+CMove badmove[MAX_EPD_MOVES];
 
 /**
  * Read a position from an EPD string.
@@ -2408,8 +2408,8 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
                 int cnt = 0;
 
                 while ((op = strtok(NULL, " "))) {
-                    int mv = p->ParseSAN(op);
-                    if (mv != 0) {
+                    CMove mv = p->ParseSAN(op);
+                    if (mv != M_NONE) {
                         goodmove[cnt] = mv;
                         Print(0, "best move is %s\n",
                               p->SAN(goodmove[cnt], san_buffer));
@@ -2423,8 +2423,8 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
                 int cnt = 0;
 
                 while ((op = strtok(NULL, " "))) {
-                    int mv = p->ParseSAN(op);
-                    if (mv != 0) {
+                    CMove mv = p->ParseSAN(op);
+                    if (mv != M_NONE) {
                         badmove[cnt] = mv;
                         Print(0, "bad move is %s\n",
                               p->SAN(badmove[cnt], san_buffer));

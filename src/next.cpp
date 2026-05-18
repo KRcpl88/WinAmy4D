@@ -391,10 +391,12 @@ CMove NextMove(struct SearchData *sd) {
 #endif
         while (section->end > section->start) {
             int besti = section->start;
-            int best = sd->historyTab[p->turn][sd->heap->data[besti] & 4095];
+            int best =
+                sd->historyTab[p->turn][sd->heap->data[besti].GetFromToIndex()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                int hval = sd->historyTab[p->turn][sd->heap->data[i] & 4095];
+                int hval = sd->historyTab[p->turn]
+                                        [sd->heap->data[i].GetFromToIndex()];
                 if (hval > best) {
                     best = hval;
                     besti = i;
@@ -693,10 +695,12 @@ CMove NextEvasion(struct SearchData *sd) {
 #endif
         while (section->end > section->start) {
             unsigned int besti = section->start;
-            int best = sd->historyTab[p->turn][sd->heap->data[besti] & 4095];
+            int best =
+                sd->historyTab[p->turn][sd->heap->data[besti].GetFromToIndex()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                int hval = sd->historyTab[p->turn][sd->heap->data[i] & 4095];
+                int hval = sd->historyTab[p->turn]
+                                        [sd->heap->data[i].GetFromToIndex()];
                 if (hval > best) {
                     best = hval;
                     besti = i;
@@ -915,15 +919,16 @@ void PutKiller(struct SearchData *sd, CMove m) {
     } else if (m == k->killer2) {
         k->kcount2 += 1;
         if (k->kcount2 > k->kcount1) {
-            int tmp;
+            int tmpCount;
+            CMove tmpMove;
 
-            tmp = k->kcount1;
+            tmpCount = k->kcount1;
             k->kcount1 = k->kcount2;
-            k->kcount2 = tmp;
+            k->kcount2 = tmpCount;
 
-            tmp = k->killer1;
+            tmpMove = k->killer1;
             k->killer1 = k->killer2;
-            k->killer2 = tmp;
+            k->killer2 = tmpMove;
         }
     } else {
         if (k->killer1 == M_NONE) {

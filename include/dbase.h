@@ -179,8 +179,8 @@ class CPosition {
 typedef CPosition Position;
 
 extern int Value[];
-extern int goodmove[MAX_EPD_MOVES];
-extern int badmove[MAX_EPD_MOVES];
+extern CMove goodmove[MAX_EPD_MOVES];
+extern CMove badmove[MAX_EPD_MOVES];
 extern char PieceName[];
 extern const int8_t CastleMask[2][2];
 
