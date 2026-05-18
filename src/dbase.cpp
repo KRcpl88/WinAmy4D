@@ -89,12 +89,12 @@ const int8_t CastleMask[2][2] = {
 /* local prototypes
  */
 
-static void AtkSet(CPosition *, int, int, int);
-static void AtkClr(CPosition *, int);
-static void GainAttack(CPosition *, int, int);
-static void LooseAttack(CPosition *, int, int);
-static void GainAttacks(CPosition *, int);
-static void LooseAttacks(CPosition *, int);
+static void AtkSet(CPosition *, int, int, const CSCoord&);
+static void AtkClr(CPosition *, const CSCoord&);
+static void GainAttack(CPosition *, const CSCoord&, const CSCoord&);
+static void LooseAttack(CPosition *, const CSCoord&, const CSCoord&);
+static void GainAttacks(CPosition *, const CSCoord&);
+static void LooseAttacks(CPosition *, const CSCoord&);
 
 /*
  * Routines to up/downdate the global database
@@ -180,7 +180,8 @@ static void DebugEngine(CPosition *p) {
  * Generate attacks for a piece "type" of "color" on square "square"
  */
 
-static void AtkSet(CPosition *p, int type, int color, int square) {
+static void AtkSet(CPosition *p, int type, int color, const CSCoord& squareCoord) {
+    int square = squareCoord.BitOffset();
     CBitBoard attacks;
 
     switch (type) {
@@ -217,7 +218,8 @@ static void AtkSet(CPosition *p, int type, int color, int square) {
     }
 }
 
-static void AtkClr(CPosition *p, int square) {
+static void AtkClr(CPosition *p, const CSCoord& squareCoord) {
+    int square = squareCoord.BitOffset();
     CBitBoard tmp = p->atkTo[square];
     p->atkTo[square] = 0;
 
@@ -233,7 +235,10 @@ static void AtkClr(CPosition *p, int square) {
  * been removed
  */
 
-static void GainAttack(CPosition *p, int from, int to) {
+static void GainAttack(CPosition *p, const CSCoord& fromCoord,
+                       const CSCoord& toCoord) {
+    int from = fromCoord.BitOffset();
+    int to = toCoord.BitOffset();
     signed char *nsq = NextSQ[from];
     int sq = to;
     const CBitBoard all = p->mask[0][0] | p->mask[1][0];
@@ -256,8 +261,10 @@ static void GainAttack(CPosition *p, int from, int to) {
  * onto "to"
  */
 
-static void LooseAttack(CPosition *p, int from,
-                        int to) {
+static void LooseAttack(CPosition *p, const CSCoord& fromCoord,
+                        const CSCoord& toCoord) {
+    int from = fromCoord.BitOffset();
+    int to = toCoord.BitOffset();
     signed char *nsq = NextSQ[from];
     int sq = to;
     const CBitBoard all = p->mask[0][0] | p->mask[1][0];
@@ -280,14 +287,15 @@ static void LooseAttack(CPosition *p, int from,
  * the piece on this square has been removed
  */
 
-static void GainAttacks(CPosition *p, int to) {
+static void GainAttacks(CPosition *p, const CSCoord& toCoord) {
+    int to = toCoord.BitOffset();
     CBitBoard tmp = p->atkFr[to] & p->slidingPieces;
     int i;
 
     while (tmp) {
         i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        GainAttack(p, i, to);
+        GainAttack(p, CSCoord(i), toCoord);
     }
 }
 
@@ -296,14 +304,15 @@ static void GainAttacks(CPosition *p, int to) {
  * a piece has been put onto this square
  */
 
-static void LooseAttacks(CPosition *p, int to) {
+static void LooseAttacks(CPosition *p, const CSCoord& toCoord) {
+    int to = toCoord.BitOffset();
     CBitBoard tmp = p->atkFr[to] & p->slidingPieces;
     int i;
 
     while (tmp) {
         i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        LooseAttack(p, i, to);
+        LooseAttack(p, CSCoord(i), toCoord);
     }
 }
 
@@ -333,10 +342,10 @@ static void DoCastle(CPosition *p, CMove move) {
     int newRookOffset = newRookCoord.BitOffset();
 
     /* king looses its attacks */
-    AtkClr(p, fromOffset);
+    AtkClr(p, fromCoord);
 
     /* rook looses its attacks */
-    AtkClr(p, oldRookOffset);
+    AtkClr(p, oldRookCoord);
 
     /* move king on the board */
     p->piece[toOffset] = p->piece[fromOffset];
@@ -362,13 +371,13 @@ static void DoCastle(CPosition *p, CMove move) {
      * new king/rook squares
      */
 
-    GainAttacks(p, fromOffset);
+    GainAttacks(p, fromCoord);
 
     /* King and rook gain their attacks
      */
 
-    AtkSet(p, King, p->turn, toOffset);
-    AtkSet(p, Rook, p->turn, newRookOffset);
+    AtkSet(p, King, p->turn, toCoord);
+    AtkSet(p, Rook, p->turn, newRookCoord);
     p->kingSq[p->turn] = toCoord;
 
     /* update hashkey */
@@ -398,17 +407,17 @@ static void UndoCastle(CPosition *p, CMove move) {
     int newRookOffset = newRookCoord.BitOffset();
 
     /* king looses its attacks */
-    AtkClr(p, toOffset);
+    AtkClr(p, toCoord);
 
     /* rook looses its attacks */
-    AtkClr(p, newRookOffset);
+    AtkClr(p, newRookCoord);
 
     /* re-calculate attacks through king-square
      * no need to do it for the rook, since it was on the edge of the board
      * For the same reason we don't have to LooseAttacks on any of the
      * new king/rook squares
      */
-    LooseAttacks(p, fromOffset);
+    LooseAttacks(p, fromCoord);
 
     /* move king on the board */
     p->piece[fromOffset] = p->piece[toOffset];
@@ -431,8 +440,8 @@ static void UndoCastle(CPosition *p, CMove move) {
     /* King and rook gain their attacks
      */
 
-    AtkSet(p, King, p->turn, fromOffset);
-    AtkSet(p, Rook, p->turn, oldRookOffset);
+    AtkSet(p, King, p->turn, fromCoord);
+    AtkSet(p, Rook, p->turn, oldRookCoord);
     p->kingSq[p->turn] = fromCoord;
 }
 
@@ -460,7 +469,7 @@ void CPosition::DoMove(CMove move) {
         p->castle &= ~(CastleMask[p->turn][0] | CastleMask[p->turn][1]);
     } else {
         /* piece looses its attacks */
-        AtkClr(p, fromOffset);
+        AtkClr(p, fromCoord);
 
         if (tp == King) {
             p->kingSq[p->turn] = toCoord;
@@ -473,7 +482,7 @@ void CPosition::DoMove(CMove move) {
         if (is_sliding(tp))
             p->slidingPieces.ClrBit(fromOffset);
         /* re-calculate attacks through from-square */
-        GainAttacks(p, fromOffset);
+        GainAttacks(p, fromCoord);
 
         /* update hashkey */
         p->hkey ^= HashKeys[p->turn][tp][fromOffset];
@@ -493,7 +502,7 @@ void CPosition::DoMove(CMove move) {
             int sp = TYPE(p->piece[toOffset]);
 
             /* piece looses its attacks */
-            AtkClr(p, toOffset);
+            AtkClr(p, toCoord);
 
             /* remember type of captured piece */
             p->actLog->gl_Piece = p->piece[toOffset];
@@ -530,7 +539,7 @@ void CPosition::DoMove(CMove move) {
             int capturedPawnOffset = capturedPawnCoord.BitOffset();
 
             /* piece looses its attacks */
-            AtkClr(p, capturedPawnOffset);
+            AtkClr(p, capturedPawnCoord);
 
             /* captured piece must be a pawn */
             p->actLog->gl_Piece = ((OPP(p->turn) == White) ? Pawn : -Pawn);
@@ -539,7 +548,7 @@ void CPosition::DoMove(CMove move) {
             p->mask[OPP(p->turn)][Pawn].ClrBit(capturedPawnOffset);
 
             /* re-calculate attacks through to-square */
-            GainAttacks(p, capturedPawnOffset);
+            GainAttacks(p, capturedPawnCoord);
 
             /* remove captured pawn from the board */
             p->piece[capturedPawnOffset] = Neutral;
@@ -557,10 +566,10 @@ void CPosition::DoMove(CMove move) {
             p->pkey ^= HashKeys[OPP(p->turn)][Pawn][capturedPawnOffset];
 
             /* re-calculate attacks through to-square */
-            LooseAttacks(p, toOffset);
+            LooseAttacks(p, toCoord);
         } else {
             /* re-calculate attacks through to-square */
-            LooseAttacks(p, toOffset);
+            LooseAttacks(p, toCoord);
         }
 
         if (move.HasPromotion()) {
@@ -585,7 +594,7 @@ void CPosition::DoMove(CMove move) {
             p->slidingPieces.SetBit(toOffset);
 
         /* piece gains its attacks */
-        AtkSet(p, tp, p->turn, toOffset);
+        AtkSet(p, tp, p->turn, toCoord);
 
         /* update hashkey */
         p->hkey ^= HashKeys[p->turn][tp][toOffset];
@@ -672,7 +681,7 @@ void CPosition::UndoMove(CMove move) {
         UndoCastle(p, move);
     } else {
         /* piece looses its attacks */
-        AtkClr(p, toOffset);
+        AtkClr(p, toCoord);
 
         if (tp == King) {
             p->kingSq[p->turn] = fromCoord;
@@ -705,7 +714,7 @@ void CPosition::UndoMove(CMove move) {
             int8_t sp = p->actLog->gl_Piece;
 
             /* piece gains its attacks */
-            AtkSet(p, TYPE(sp), OPP(p->turn), toOffset);
+            AtkSet(p, TYPE(sp), OPP(p->turn), toCoord);
 
             p->piece[toOffset] = sp;
             sp = TYPE(sp);
@@ -728,20 +737,20 @@ void CPosition::UndoMove(CMove move) {
             int capturedPawnOffset = capturedPawnCoord.BitOffset();
 
             /* piece looses its attacks */
-            AtkSet(p, Pawn, OPP(p->turn), capturedPawnOffset);
+            AtkSet(p, Pawn, OPP(p->turn), capturedPawnCoord);
 
             p->mask[OPP(p->turn)][0].SetBit(capturedPawnOffset);
             p->mask[OPP(p->turn)][Pawn].SetBit(capturedPawnOffset);
 
             /* re-calculate attacks through to-square */
-            LooseAttacks(p, capturedPawnOffset);
+            LooseAttacks(p, capturedPawnCoord);
 
             /* remove captured pawn from the board */
             p->piece[capturedPawnOffset] = (OPP(p->turn) == White) ? Pawn : -Pawn;
             p->piece[toOffset] = Neutral;
 
             /* re-calculate attacks through to-square */
-            GainAttacks(p, toOffset);
+            GainAttacks(p, toCoord);
 
             /* Update oppponents material */
             p->material[OPP(p->turn)] += Value[Pawn];
@@ -752,11 +761,11 @@ void CPosition::UndoMove(CMove move) {
             p->piece[toOffset] = Neutral;
 
             /* re-calculate attacks through to-square */
-            GainAttacks(p, toOffset);
+            GainAttacks(p, toCoord);
         }
 
         /* re-calculate attacks through from-square */
-        LooseAttacks(p, fromOffset);
+        LooseAttacks(p, fromCoord);
 
         /* put it on the board again */
         p->piece[fromOffset] = (p->turn == White) ? tp : -tp;
@@ -766,7 +775,7 @@ void CPosition::UndoMove(CMove move) {
             p->slidingPieces.SetBit(fromOffset);
 
         /* piece gains its attacks */
-        AtkSet(p, tp, p->turn, fromOffset);
+        AtkSet(p, tp, p->turn, fromCoord);
     }
 
     /* restore EnPassant and Castling */
@@ -911,14 +920,14 @@ void CPosition::RecalcAttacks() {
     while (tmp) {
         int i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        AtkSet(p, p->piece[i], White, i);
+        AtkSet(p, p->piece[i], White, CSCoord(i));
     }
 
     tmp = p->mask[Black][0];
     while (tmp) {
         int i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        AtkSet(p, -p->piece[i], Black, i);
+        AtkSet(p, -p->piece[i], Black, CSCoord(i));
     }
 
     p->kingSq[White] = CSCoord((p->mask[White][King]).FindSetBit());
