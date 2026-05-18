@@ -4,7 +4,7 @@
         {
             "label": "Build WinAmy (Debug x64)",
             "type": "shell",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
             "args": [
                 "${workspaceFolder}\\WinAmy.sln",
                 "/p:Configuration=Debug",
@@ -21,7 +21,7 @@
         {
             "label": "Build WinAmy (Release x64)",
             "type": "shell",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
             "args": [
                 "${workspaceFolder}\\WinAmy.sln",
                 "/p:Configuration=Release",
@@ -35,7 +35,7 @@
         {
             "label": "Clean WinAmy",
             "type": "shell",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
             "args": [
                 "${workspaceFolder}\\WinAmy.sln",
                 "/t:Clean",
@@ -49,7 +49,7 @@
         {
             "label": "Rebuild WinAmy (Debug x64)",
             "type": "shell",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
             "args": [
                 "${workspaceFolder}\\WinAmy.sln",
                 "/t:Rebuild",
@@ -64,7 +64,7 @@
         {
             "label": "Run Unit Tests (Debug x64)",
             "type": "shell",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
             "args": [
                 "${workspaceFolder}\\x64\\Debug\\WinAmyTests.dll",
                 "/Platform:x64"
