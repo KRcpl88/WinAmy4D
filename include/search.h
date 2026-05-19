@@ -147,6 +147,12 @@ class CSearchData {
     void PutKiller(CMove mvMove);
 };
 
+class CSearch {
+  public:
+    static bool TerminateSearch(CSearchData *pSearchData);
+    static void InitSearch(CSearchData *pSearchData);
+};
+
 void setMaxSearchDepth(int);
 
 #if MP

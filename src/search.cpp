@@ -193,7 +193,7 @@ static int negascout(CSearchData *, int, int, int, int);
  * check for user input.
  *
  */
-static bool TerminateSearch(CSearchData *sd) {
+bool CSearch::TerminateSearch(CSearchData *sd) {
     if ((sd->m_ulNodesCount + sd->m_ulQNodesCount) > sd->m_ulCheckNodesCount) {
         unsigned long now = GetTime();
 
@@ -610,7 +610,7 @@ static int negascout(CSearchData *sd, int alpha, int beta,
     TotalNodes++;
 
     /* check for search termination */
-    if (sd->m_fMaster && TerminateSearch(sd)) {
+    if (sd->m_fMaster && CSearch::TerminateSearch(sd)) {
         AbortSearch = true;
         goto EXIT;
     }
@@ -1194,7 +1194,7 @@ static void AnalyzeHT(CPosition *p, CMove move) {
 /**
  * Initialize the search variables.
  */
-static void InitSearch(CSearchData *sd) {
+void CSearch::InitSearch(CSearchData *sd) {
     sd->m_wPly = 0;
     sd->m_ulNodesCount = sd->m_ulQNodesCount = sd->m_ulCheckNodesCount = 0;
     RCExt = ChkExt = DiscExt = DblExt = SingExt = PPExt = ZZExt = 0;
@@ -1264,7 +1264,7 @@ static void *IterateInt(void *x) {
     }
     p = sd->m_pPosition;
 
-    InitSearch(sd);
+    CSearch::InitSearch(sd);
     sd->m_wRootMoves = (uint16_t)p->LegalMoves(sd->m_hHeap);
 
     CMove *mvs = sd->m_hHeap->data + sd->m_hHeap->current_section->start;
@@ -1851,7 +1851,7 @@ int CPosition::QuiescenceSearch() {
 
     sd = new CSearchData(p);
     sd->m_fMaster = true;
-    InitSearch(sd);
+    CSearch::InitSearch(sd);
 
     int score = quies(sd, -INF, INF, 0);
     delete sd;
