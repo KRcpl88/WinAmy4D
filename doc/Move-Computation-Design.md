@@ -92,15 +92,46 @@ These are built on precomputed attack maps in `CPosition` (`m_rgAtkTo`, `m_rgAtk
 
 `GenTo` and `GenFrom` are `CPosition` methods (declared in `include/dbase.h`, implemented in `src/dbase.cpp:950` and `:988`) that convert attack/mask information into move objects. The underlying movement geometry is computed earlier in the engine initialization and attack-update layers:
 
-- Knight/king geometry comes from precomputed lookup tables `KnightEPM[64]` and `KingEPM[64]` (`src/movedata.cpp:44`, `111`).
-- Sliding ray geometry for bishop/rook/queen comes from `InitAll()`-built tables (`BishopEPM`, `RookEPM`, `QueenEPM`, `InterPath`, `Ray`) (`src/init.cpp:235-279`).
-- Blocker-aware sliding attacks are resolved at runtime by magic helpers `bishop_attacks` / `rook_attacks` (`include/magic.h:59-74`, initialized in `src/magic.cpp`).
-- `AtkSet(...)` selects the correct per-piece attack model at runtime (`src/dbase.cpp:185-221`), and generation functions (`GenTo`/`GenFrom`/`LegalMoves`) enumerate candidates from those attacks.
+- Knight/king geometry comes from precomputed lookup tables `KnightEPM[CSCoord::SIZE]` and `KingEPM[CSCoord::SIZE]` (`src/movedata.cpp:45`, `112`).
+- Sliding ray geometry (line-of-sight relationships) comes from `InitAll()` → `InitGeometry()`, which builds `BishopEPM`, `RookEPM`, `QueenEPM`, `InterPath`, and `Ray` (`src/init.cpp:392-398`, `235-279`).
+- Blocker-aware sliding attacks are resolved at runtime by magic helpers `bishop_attacks` / `rook_attacks` (`include/magic.h:60-75`, tables initialized in `src/magic.cpp:237-288`).
+- `AtkSet(...)` chooses the piece attack model for the current board occupancy and writes results into `m_rgAtkTo` / `m_rgAtkFr` (`src/dbase.cpp:185-221`), then `GenTo`/`GenFrom`/`LegalMoves` enumerate from those maps.
+
+#### How `bishop_attacks` / `rook_attacks` work for a specific `CPosition`
+
+For a bishop/rook on square `sq` in a concrete position `p`:
+
+1. `AtkSet` computes `occupied = p->m_rgMask[0][0] | p->m_rgMask[1][0]` and calls `bishop_attacks(sq, occupied)` or `rook_attacks(sq, occupied)` (`src/dbase.cpp:197-200`).
+2. The helper first keeps only relevant line blockers with `occupied & <piece>_blocker_mask[sq]` (`include/magic.h:61-62`, `71-72`).
+3. It hashes that blocker subset with square-specific magic multiplier and shift:
+   - `(blockers * rook_magics[sq]) >> (CSCoord::SIZE - rook_index_bits[sq])`
+   - `(blockers * bishop_magics[sq]) >> (CSCoord::SIZE - bishop_index_bits[sq])`  
+   (`include/magic.h:62-64`, `72-74`)
+4. The hash indexes prebuilt attack tables (`rook_table`, `bishop_table`) and returns the exact reachable ray squares up to first blocker (`include/magic.h:64`, `74`).
+5. `AtkSet` stores that result in `m_rgAtkTo[sq]` and updates reverse map `m_rgAtkFr[*]` (`src/dbase.cpp:215-220`).
+6. Move generators then apply occupancy/side constraints:
+   - non-captures: `m_rgAtkTo[from] & empty` (`src/dbase.cpp:993-999`)
+   - captures: target-driven from `m_rgAtkFr[to]` (`src/dbase.cpp:950-967`)
+   - strict legality: `DoMove` + `!InCheck` + `UndoMove` in `legal_moves_internal` (`src/dbase.cpp:2091-2096`, `2116-2120`).
+
+`InitAll()`-generated EPM tables (`BishopEPM`/`RookEPM`/`QueenEPM`) are not used directly inside `bishop_attacks` / `rook_attacks`; those helpers use magic tables. EPM tables are the geometry layer used elsewhere (e.g., `InterPath`/`Ray` line tests and check-detection prefilters in `LegalMove`/`IsCheckingMove`) (`src/dbase.cpp:1225-1239`, `1266-1367`).
+
+#### How queen legal moves are generated for a specific `CPosition`
+
+Yes. For queen attack generation on a specific board, `AtkSet` computes the union of magic bishop and magic rook attacks on the same occupancy:
+
+`bishop_attacks(square, occupied) | rook_attacks(square, occupied)` (`src/dbase.cpp:202-205`).
+
+That union is then consumed by normal generation/legality filters (`GenTo`/`GenFrom`, then `DoMove`/`InCheck`/`UndoMove` in strict legal generation), so final queen moves are legal moves, not just raw attack squares.
 
 Special rules are integrated into the same generation/legality/application pipeline rather than a separate subsystem:
 
 - Promotion candidates are emitted in `GenTo`/`GenFrom` using `make_promotion(...)` and `is_promo_square(...)` (`src/dbase.cpp:958-963`, `1027-1031`, `include/inline.h:120-138`), then materialized/reverted in `DoMove`/`UndoMove` via `PromoType(...)` (`src/dbase.cpp:577-589`, `698-713`).
 - Castling candidates are produced in `GenFrom` and search `GenerateRest` (`src/dbase.cpp:1006-1017`, `src/search_data.cpp:354-363`), validated by `MayCastle` (`src/dbase.cpp:1053-1099`), and applied/reverted through `DoCastle`/`UndoCastle` from `DoMove`/`UndoMove` (`src/dbase.cpp:332-448`, `469-472`, `682-684`).
+- Pawn two-square advances (`M_PAWND`) are computed with blocker checks in both root and staged generators:
+  - Root legal list path: `GenFrom` first requires the one-step square to be empty, then requires the two-step square to be empty before appending `M_PAWND` (`src/dbase.cpp:1025-1041`).
+  - Search staged path: `GenerateRest` and `NextEvasion` do the same in bitboard form by shifting one rank, masking with `empty`, restricting to start-rank pawns (`ThirdRank`), shifting again, then masking with `empty` before appending `M_PAWND` (`src/search_data.cpp:378-410`, `683-721`).
+  - Final legality guard: `LegalMove` rechecks midpoint and destination emptiness for `move.IsPawnDoublePush()` (`src/dbase.cpp:1177-1186`).
 - En-passant is generated by `GenEnpas` (`src/dbase.cpp:969-982`), checked in `LegalMove` (`src/dbase.cpp:1177-1234`), and applied/reverted in `DoMove`/`UndoMove` (`src/dbase.cpp:537-572`, `735-762`), with EP-target state set on pawn double pushes (`src/dbase.cpp:620-628`).
 
 ---
