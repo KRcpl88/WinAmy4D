@@ -34,14 +34,15 @@
  */
 
 #include "bitboard.h"
+#include "scoord.h"
 
 static signed char conv[128];
 
-signed char NextSQ[64][64];
+signed char NextSQ[CSCoord::SIZE][CSCoord::SIZE];
 
 static int QueenDirs[] = {16, 1, -16, -1, 15, 17, -15, -17};
 
-extern const CBitBoard KnightEPM[64] = {
+extern const CBitBoard KnightEPM[CSCoord::SIZE] = {
     0x20400ULL,
     0x50800ULL,
     0xa1100ULL,
@@ -108,7 +109,7 @@ extern const CBitBoard KnightEPM[64] = {
     0x20400000000000ULL,
 };
 
-extern const CBitBoard KingEPM[64] = {
+extern const CBitBoard KingEPM[CSCoord::SIZE] = {
     0x302ULL,
     0x705ULL,
     0xe0aULL,
@@ -175,7 +176,7 @@ extern const CBitBoard KingEPM[64] = {
     0x40c0000000000000ULL,
 };
 
-extern const CBitBoard PawnEPM[2][64] = {{0x200ULL,
+extern const CBitBoard PawnEPM[2][CSCoord::SIZE] = {{0x200ULL,
                                   0x500ULL,
                                   0xa00ULL,
                                   0x1400ULL,
@@ -319,8 +320,8 @@ void InitMoves(void) {
         }
     }
 
-    for (sq = 0; sq < 64; sq++) {
-        for (sq2 = 0; sq2 < 64; sq2++) {
+    for (sq = 0; sq < CSCoord::SIZE; sq++) {
+        for (sq2 = 0; sq2 < CSCoord::SIZE; sq2++) {
             NextSQ[sq][sq2] = -1;
         }
     }
@@ -352,3 +353,4 @@ void InitMoves(void) {
         }
     }
 }
+

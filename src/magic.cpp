@@ -39,9 +39,9 @@
 #include "inline.h"
 #include <stdint.h>
 
-uint16_t rook_table_offsets[64];
+uint16_t rook_table_offsets[CSCoord::SIZE];
 uint64_t rook_table[102400];
-uint16_t bishop_table_offsets[64];
+uint16_t bishop_table_offsets[CSCoord::SIZE];
 uint64_t bishop_table[5248];
 
 extern const uint64_t rook_blocker_mask[] = {
@@ -87,18 +87,18 @@ extern const uint64_t bishop_blocker_mask[] = {
     0x28440200000000, 0x50080402000000, 0x20100804020000, 0x40201008040200,
 };
 
-extern const uint8_t rook_index_bits[64] = {
+extern const uint8_t rook_index_bits[CSCoord::SIZE] = {
     12, 11, 11, 11, 11, 11, 11, 12, 11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11, 12, 11, 11, 11, 11, 11, 11, 12};
 
-extern const uint8_t bishop_index_bits[64] = {
+extern const uint8_t bishop_index_bits[CSCoord::SIZE] = {
     6, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 7, 7, 7, 7,
     5, 5, 5, 5, 7, 9, 9, 7, 5, 5, 5, 5, 7, 9, 9, 7, 5, 5, 5, 5, 7, 7,
     7, 7, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 6};
 
-extern const uint64_t rook_magics[64] = {
+extern const uint64_t rook_magics[CSCoord::SIZE] = {
     0xa8002c000108020ULL,  0x6c00049b0002001ULL,  0x100200010090040ULL,
     0x2480041000800801ULL, 0x280028004000800ULL,  0x900410008040022ULL,
     0x280020001001080ULL,  0x2880002041000080ULL, 0xa000800080400034ULL,
@@ -123,7 +123,7 @@ extern const uint64_t rook_magics[64] = {
     0x26002114058042ULL,
 };
 
-extern const uint64_t bishop_magics[64] = {
+extern const uint64_t bishop_magics[CSCoord::SIZE] = {
     0x89a1121896040240ULL, 0x2004844802002010ULL, 0x2068080051921000ULL,
     0x62880a0220200808ULL, 0x4042004000000ULL,    0x100822020200011ULL,
     0xc00444222012000aULL, 0x28808801216001ULL,   0x400492088408100ULL,
@@ -237,7 +237,7 @@ static CBitBoard blockers_from_index(int index, CBitBoard mask) {
 static void init_rook_table(void) {
     int offset = 0;
 
-    for (int sq = 0; sq < 64; sq++) {
+    for (int sq = 0; sq < CSCoord::SIZE; sq++) {
         int bits = rook_index_bits[sq];
 
         rook_table_offsets[sq] = (uint16_t)(offset >> 1);
@@ -246,7 +246,7 @@ static void init_rook_table(void) {
             uint64_t blockers =
                 blockers_from_index(index, rook_blocker_mask[sq]).GetBits();
             uint64_t magic_index =
-                (blockers * rook_magics[sq]) >> (64 - rook_index_bits[sq]);
+                (blockers * rook_magics[sq]) >> (CSCoord::SIZE - rook_index_bits[sq]);
             rook_table[offset + magic_index] = rook_attack_mask(sq, blockers);
         }
 
@@ -259,7 +259,7 @@ static void init_rook_table(void) {
 static void init_bishop_table(void) {
     int offset = 0;
 
-    for (int sq = 0; sq < 64; sq++) {
+    for (int sq = 0; sq < CSCoord::SIZE; sq++) {
         int bits = bishop_index_bits[sq];
 
         bishop_table_offsets[sq] = (uint16_t)offset;
@@ -268,7 +268,7 @@ static void init_bishop_table(void) {
             uint64_t blockers =
                 blockers_from_index(index, bishop_blocker_mask[sq]).GetBits();
             uint64_t magic_index =
-                (blockers * bishop_magics[sq]) >> (64 - bishop_index_bits[sq]);
+                (blockers * bishop_magics[sq]) >> (CSCoord::SIZE - bishop_index_bits[sq]);
             bishop_table[offset + magic_index] =
                 bishop_attack_mask(sq, blockers);
         }

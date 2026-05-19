@@ -44,24 +44,24 @@ CBitBoard ShiftLeftMask, ShiftRightMask;
 
 CBitBoard FileMask[8], IsoMask[8];
 CBitBoard RankMask[8];
-CBitBoard ForwardRayW[64], ForwardRayB[64];
-CBitBoard PassedMaskW[64], PassedMaskB[64];
-CBitBoard OutpostMaskW[64], OutpostMaskB[64];
-CBitBoard InterPath[64][64];
-CBitBoard Ray[64][64];
-CBitBoard WPawnEPM[64], BPawnEPM[64];
-CBitBoard BishopEPM[64], RookEPM[64], QueenEPM[64];
+CBitBoard ForwardRayW[CSCoord::SIZE], ForwardRayB[CSCoord::SIZE];
+CBitBoard PassedMaskW[CSCoord::SIZE], PassedMaskB[CSCoord::SIZE];
+CBitBoard OutpostMaskW[CSCoord::SIZE], OutpostMaskB[CSCoord::SIZE];
+CBitBoard InterPath[CSCoord::SIZE][CSCoord::SIZE];
+CBitBoard Ray[CSCoord::SIZE][CSCoord::SIZE];
+CBitBoard WPawnEPM[CSCoord::SIZE], BPawnEPM[CSCoord::SIZE];
+CBitBoard BishopEPM[CSCoord::SIZE], RookEPM[CSCoord::SIZE], QueenEPM[CSCoord::SIZE];
 CBitBoard SeventhRank[2], EighthRank[2];
 CBitBoard ThirdRank[2];
 CBitBoard LeftOf[8], RightOf[8], FarLeftOf[8], FarRightOf[8];
 CBitBoard EdgeMask;
 CBitBoard BlackSquaresMask, WhiteSquaresMask;
-CBitBoard KingSquareW[64], KingSquareB[64];
+CBitBoard KingSquareW[CSCoord::SIZE], KingSquareB[CSCoord::SIZE];
 CBitBoard NotAFileMask, NotHFileMask;
 CBitBoard CornerMaskA1, CornerMaskA8, CornerMaskH1, CornerMaskH8;
-CBitBoard WPawnBackwardMask[64], BPawnBackwardMask[64];
+CBitBoard WPawnBackwardMask[CSCoord::SIZE], BPawnBackwardMask[CSCoord::SIZE];
 CBitBoard KingSideMask, QueenSideMask;
-CBitBoard ConnectedMask[64];
+CBitBoard ConnectedMask[CSCoord::SIZE];
 
 void InitMasks(void) {
     int i;
@@ -115,9 +115,9 @@ void InitPawnMasks(void) {
 #endif
         }
     }
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < CSCoord::SIZE; i++) {
         ForwardRayW[i] = ForwardRayB[i] = 0;
-        for (j = i + 8; j < 64; j += 8) {
+        for (j = i + 8; j < CSCoord::SIZE; j += 8) {
             ForwardRayW[i] |= CBitBoard::SetMask(j);
         }
         for (j = i - 8; j >= 0; j -= 8) {
@@ -128,7 +128,7 @@ void InitPawnMasks(void) {
         PrintBitBoard(ForwardRayB[i]);
 #endif
     }
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < CSCoord::SIZE; i++) {
         const CSCoord coord(i);
         const int width = CSCoord::LEVEL_WIDTH[coord.m_nLevel];
         PassedMaskW[i] = ForwardRayW[i];
@@ -158,7 +158,7 @@ void InitPawnMasks(void) {
         */
     }
 
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < CSCoord::SIZE; i++) {
         int sq;
 
         WPawnBackwardMask[i] = BPawnBackwardMask[i] = 0;
@@ -171,7 +171,7 @@ void InitPawnMasks(void) {
                 WPawnBackwardMask[i] |= CBitBoard::SetMask(sq + 1);
             }
         }
-        for (sq = i; sq < 64; sq += 8) {
+        for (sq = i; sq < CSCoord::SIZE; sq += 8) {
             const CSCoord sqCoord(sq);
             if (sqCoord.m_nFile > 0) {
                 BPawnBackwardMask[i] |= CBitBoard::SetMask(sq - 1);
@@ -182,7 +182,7 @@ void InitPawnMasks(void) {
         }
     }
 
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < CSCoord::SIZE; i++) {
         const CSCoord iCoord(i);
         const int width = CSCoord::LEVEL_WIDTH[iCoord.m_nLevel];
         ConnectedMask[i] = 0;
@@ -232,8 +232,8 @@ void InitGeometry(void) {
         }
     }
 
-    for (i = 0; i < 64; i++) {
-        for (j = 0; j < 64; j++) {
+    for (i = 0; i < CSCoord::SIZE; i++) {
+        for (j = 0; j < CSCoord::SIZE; j++) {
             InterPath[i][j] = 0;
             Ray[i][j] = 0;
         }
@@ -354,7 +354,7 @@ void InitMiscMasks(void) {
         }
     }
 
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < CSCoord::SIZE; i++) {
         const CSCoord coord(i);
         const int width = CSCoord::LEVEL_WIDTH[coord.m_nLevel];
         int bdist = coord.m_nRank;
@@ -363,7 +363,7 @@ void InitMiscMasks(void) {
         int btarget = static_cast<int>(CSCoord(coord.m_nLevel, coord.m_nFile, 0));
 
         KingSquareW[i] = KingSquareB[i] = 0;
-        for (j = 0; j < 64; j++) {
+        for (j = 0; j < CSCoord::SIZE; j++) {
             if (KingDist(CSCoord(wtarget), CSCoord(j)) <= wdist) {
                 KingSquareW[i].SetBit(j);
             }
@@ -395,3 +395,4 @@ void InitAll(void) {
     InitMiscMasks();
     InitMagic();
 }
+

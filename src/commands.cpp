@@ -435,7 +435,7 @@ void Edit(char *args) {
     char buffer[16];
     CPosition *p = CurrentPosition;
 
-    for (i = 0; i < 64; i++)
+    for (i = 0; i < CSCoord::SIZE; i++)
         p->m_rgPiece[i] = Neutral;
     p->m_rgMask[White][0] = p->m_rgMask[Black][0] = 0;
 
@@ -860,3 +860,4 @@ static void SetSearchDepth(char *args) {
 
     setMaxSearchDepth(atoi(args));
 }
+

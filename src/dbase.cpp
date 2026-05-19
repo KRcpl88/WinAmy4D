@@ -123,7 +123,7 @@ static void DebugEngine(CPosition *p) {
     int i, color;
     CBitBoard temp;
 
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < CSCoord::SIZE; i++) {
         temp = p->m_rgAtkTo[i];
         while (temp) {
             int sq = (temp).FindSetBit();
@@ -861,7 +861,7 @@ void CPosition::RecalcAttacks() {
     int i;
     CBitBoard tmp;
 
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < CSCoord::SIZE; i++) {
         p->m_rgAtkTo[i] = p->m_rgAtkFr[i] = 0;
     }
 
@@ -2385,7 +2385,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
     strcpy(line, epd_input);
     x = line;
 
-    for (i = 0; i < 64; i++)
+    for (i = 0; i < CSCoord::SIZE; i++)
         p->m_rgPiece[i] = Neutral;
     p->m_rgMask[White][0] = p->m_rgMask[Black][0] = 0;
 
@@ -2835,3 +2835,4 @@ void CPosition::Free(CPosition *p) {
         free(p);
     }
 }
+
