@@ -17,9 +17,9 @@ public:
     static constexpr int SIZE_LONG = 1;
 
 
-    int Level{0};
-    int Rank{0};
-    int File{0};
+    int m_nLevel{0};
+    int m_nRank{0};
+    int m_nFile{0};
 
     CSCoord() = default;
     CSCoord(int level, int file, int rank);

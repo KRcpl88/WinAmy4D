@@ -62,8 +62,8 @@ static inline CBitBoard ShiftRight(CBitBoard x) {
  * Calculate the 'king distance' between two squares.
  */
 static inline int KingDist(CSCoord sq1, CSCoord sq2) {
-    int file_dist = ABS(sq1.File - sq2.File);
-    int rank_dist = ABS(sq1.Rank - sq2.Rank);
+    int file_dist = ABS(sq1.m_nFile - sq2.m_nFile);
+    int rank_dist = ABS(sq1.m_nRank - sq2.m_nRank);
 
     return MAX(file_dist, rank_dist);
 }
@@ -72,8 +72,8 @@ static inline int KingDist(CSCoord sq1, CSCoord sq2) {
  * Calculate the 'minimum distance' between two squares.
  */
 static inline int MinDist(CSCoord sq1, CSCoord sq2) {
-    int file_dist = ABS(sq1.File - sq2.File);
-    int rank_dist = ABS(sq1.Rank - sq2.Rank);
+    int file_dist = ABS(sq1.m_nFile - sq2.m_nFile);
+    int rank_dist = ABS(sq1.m_nRank - sq2.m_nRank);
 
     return MIN(file_dist, rank_dist);
 }
@@ -82,23 +82,23 @@ static inline int MinDist(CSCoord sq1, CSCoord sq2) {
  * Calculate the 'Manhattan distance' between two squares.
  */
 static inline int ManhattanDist(CSCoord sq1, CSCoord sq2) {
-    int file_dist = ABS(sq1.File - sq2.File);
-    int rank_dist = ABS(sq1.Rank - sq2.Rank);
+    int file_dist = ABS(sq1.m_nFile - sq2.m_nFile);
+    int rank_dist = ABS(sq1.m_nRank - sq2.m_nRank);
 
     return file_dist + rank_dist;
 }
 
 static inline int FileDist(CSCoord sq1, CSCoord sq2) {
-    return ABS(sq1.File - sq2.File);
+    return ABS(sq1.m_nFile - sq2.m_nFile);
 }
 
 /**
  * Calculate the distance of 'sq' to any edge on the chessboard
  */
 static inline int EdgeDist(CSCoord sq) {
-    const int width = CSCoord::LEVEL_WIDTH[sq.Level];
-    int filedist = MIN(sq.File, (width - 1) - sq.File);
-    int rankdist = MIN(sq.Rank, (width - 1) - sq.Rank);
+    const int width = CSCoord::LEVEL_WIDTH[sq.m_nLevel];
+    int filedist = MIN(sq.m_nFile, (width - 1) - sq.m_nFile);
+    int rankdist = MIN(sq.m_nRank, (width - 1) - sq.m_nRank);
 
     return MAX(filedist, rankdist);
 }
@@ -133,8 +133,8 @@ static inline CMove make_promotion(int from, int to, int type, int flags) {
  * Returns if the square is a promotion square.
  */
 static inline bool is_promo_square(CSCoord sq) {
-    const int width = CSCoord::LEVEL_WIDTH[sq.Level];
-    return sq.Rank == 0 || sq.Rank == (width - 1);
+    const int width = CSCoord::LEVEL_WIDTH[sq.m_nLevel];
+    return sq.m_nRank == 0 || sq.m_nRank == (width - 1);
 }
 
 /*

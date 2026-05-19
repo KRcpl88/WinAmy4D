@@ -219,7 +219,7 @@ static void BookupInternal(char *file_name, int verbosity) {
             CMove themove = p->ParseSAN(move);
             if (themove != M_NONE) {
                 p->DoMove(themove);
-                char *eco_code = GetEcoCode(p->hkey);
+                char *eco_code = GetEcoCode(p->m_ullHKey);
                 if (eco_code) {
                     afterEco = 0;
                     free(eco_code);
@@ -227,13 +227,13 @@ static void BookupInternal(char *file_name, int verbosity) {
                     afterEco++;
                 }
                 if (afterEco <= 20) {
-                    if (p->turn == Black) {
+                    if (p->m_nTurn == Black) {
                         /* white played the move */
-                        database = PutBookEntry(database, p->hkey, result,
+                        database = PutBookEntry(database, p->m_ullHKey, result,
                                                 header.white_elo);
                     } else {
                         /* black played the move */
-                        database = PutBookEntry(database, p->hkey, -result,
+                        database = PutBookEntry(database, p->m_ullHKey, -result,
                                                 header.black_elo);
                     }
                 }
@@ -287,8 +287,8 @@ static void GetAllBookMoves(CPosition *p, int *cnt, CMove *book_moves,
         p->DoMove(move);
         /* If the move leads to a repetition, do not accept it. */
         if (!p->Repeated(false)) {
-            be = GetBookEntry(p->hkey);
-            le = GetLearnEntry(p->hkey);
+            be = GetBookEntry(p->m_ullHKey);
+            le = GetLearnEntry(p->m_ullHKey);
         }
         p->UndoMove(move);
 
@@ -522,7 +522,7 @@ void CreateLearnDB(char *file_name) {
                 p->DoMove(themove);
 
                 if (flags != 0) {
-                    PutLearnEntry(p->hkey, 0, flags);
+                    PutLearnEntry(p->m_ullHKey, 0, flags);
                 }
             } else {
                 Print(0, "can't parse >%s<\n", move);

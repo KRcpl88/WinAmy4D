@@ -8,15 +8,15 @@ const int CHCoord::Relu16[15]{0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7};
 const int CHCoord::NegRelu16[15]{7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0};
 
 CHCoord::CHCoord(int level, int file, int rank)
-    : Level(level), Rank(rank), File(file) {
+    : m_nLevel(level), m_nRank(rank), m_nFile(file) {
 }
 
 CHCoord::CHCoord(const CSCoord& scoord) {
     scoord.Validate();
 
-    Level = scoord.Rank + Relu16[scoord.Level];
-    Rank = scoord.Rank + NegRelu16[scoord.Level];
-    File = scoord.File + Relu16[scoord.Level];
+    m_nLevel = scoord.m_nRank + Relu16[scoord.m_nLevel];
+    m_nRank = scoord.m_nRank + NegRelu16[scoord.m_nLevel];
+    m_nFile = scoord.m_nFile + Relu16[scoord.m_nLevel];
 }
 
 void CHCoord::Validate() const {
@@ -26,7 +26,7 @@ void CHCoord::Validate() const {
 }
 
 bool CHCoord::IsValid() const {
-    return IsValid(Level, File, Rank);
+    return IsValid(m_nLevel, m_nFile, m_nRank);
 }
 
 bool CHCoord::IsValid(int level, int file, int rank) {
@@ -67,8 +67,8 @@ CHCoord::operator int() const {
 
 CHCoord::operator CSCoord() const {
     CSCoord ret;
-    ret.Level = 7 + Level - Rank;
-    ret.File = File - NegRelu16[Rank + 7 - Level];
-    ret.Rank = Level - NegRelu16[Rank + 7 - Level];
+    ret.m_nLevel = 7 + m_nLevel - m_nRank;
+    ret.m_nFile = m_nFile - NegRelu16[m_nRank + 7 - m_nLevel];
+    ret.m_nRank = m_nLevel - NegRelu16[m_nRank + 7 - m_nLevel];
     return ret;
 }

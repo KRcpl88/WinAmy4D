@@ -175,8 +175,8 @@ void BlunderCheck(char *file_name) {
             if (themove == M_NONE)
                 break;
 
-            if ((p->ply % 2) == 0) {
-                fprintf(fout, "%d. ", 1 + p->ply / 2);
+            if ((p->m_wPly % 2) == 0) {
+                fprintf(fout, "%d. ", 1 + p->m_wPly / 2);
             }
             fprintf(fout, "%s ", p->SAN(themove, san_buffer));
 

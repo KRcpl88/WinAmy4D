@@ -40,7 +40,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SQUARE(x) 'a' + CSCoord(x).File, '1' + CSCoord(x).Rank
+#define SQUARE(x) 'a' + CSCoord(x).m_nFile, '1' + CSCoord(x).m_nRank
 
 #define OPP(x) (1 ^ (x))
 
@@ -87,7 +87,7 @@ typedef enum { White = 0, Black = 1 } Color;
 
 static inline CSCoord InvalidSquareCoord(void) {
     CSCoord coord;
-    coord.Level = -1;
+    coord.m_nLevel = -1;
     return coord;
 }
 
@@ -107,7 +107,7 @@ typedef enum {
 } Square;
 // clang-format on
 
-struct GameLog {
+struct SGameLog {
     CMove gl_Move;        /* the move that has been made in the position */
     int8_t gl_Piece;       /* the piece that was captured (if any) */
     int8_t gl_Castle;      /* the castling rights */
@@ -120,24 +120,24 @@ struct GameLog {
 class CPosition {
   public:
     // Data members (public for direct access from engine code)
-    CBitBoard atkTo[64];
-    CBitBoard atkFr[64];
-    CBitBoard mask[2][7];
-    CBitBoard slidingPieces;
-    hash_t hkey;
-    hash_t pkey;
-    GameLog *gameLog;
-    GameLog *actLog;
-    unsigned int gameLogSize;
-    int material[2], nonPawn[2];
-    uint16_t outOfBookCnt[2];
-    uint16_t ply;
-    int8_t piece[64];
-    int8_t castle;
-    CSCoord enPassant;
-    int8_t turn; /* 0 == white, 1 == black */
-    CSCoord kingSq[2];
-    int8_t material_signature[2];
+    CBitBoard m_rgAtkTo[64];
+    CBitBoard m_rgAtkFr[64];
+    CBitBoard m_rgMask[2][7];
+    CBitBoard m_SlidingPieces;
+    hash_t m_ullHKey;
+    hash_t m_ullPKey;
+    SGameLog *m_pGameLog;
+    SGameLog *m_pActLog;
+    unsigned int m_cGameLog;
+    int m_rgnMaterial[2], m_rgnNonPawn[2];
+    uint16_t m_rgwOutOfBookCnt[2];
+    uint16_t m_wPly;
+    int8_t m_rgPiece[64];
+    int8_t m_bCastle;
+    CSCoord m_EnPassant;
+    int8_t m_nTurn; /* 0 == white, 1 == black */
+    CSCoord m_rgKingSq[2];
+    int8_t m_rgbMaterialSignature[2];
 
     // Move making/unmaking
     void DoMove(CMove move);

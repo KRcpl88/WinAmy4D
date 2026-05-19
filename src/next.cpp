@@ -156,7 +156,7 @@ CMove NextMove(struct SearchData *sd) {
         /*
          * Generate captures.
          */
-        CBitBoard targets = p->mask[OPP(p->turn)][0];
+        CBitBoard targets = p->m_rgMask[OPP(p->m_nTurn)][0];
         while (targets) {
             int to = (targets).FindSetBit();
             targets.ClearLowestBit();
@@ -165,7 +165,7 @@ CMove NextMove(struct SearchData *sd) {
         }
 
         CBitBoard promoting_pawns =
-            p->mask[p->turn][Pawn] & SeventhRank[p->turn];
+            p->m_rgMask[p->m_nTurn][Pawn] & SeventhRank[p->m_nTurn];
         while (promoting_pawns) {
             int from = (promoting_pawns).FindSetBit();
             promoting_pawns.ClearLowestBit();
@@ -247,14 +247,14 @@ CMove NextMove(struct SearchData *sd) {
     }
     /* fall through */
     case CounterMv: {
-        CMove lmove = (p->actLog - 1)->gl_Move;
+        CMove lmove = (p->m_pActLog - 1)->gl_Move;
 
 #ifdef VERBOSE
         Print(9, "CounterMv\n");
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->counterTab[p->turn][lmove.GetFromToIndex()];
+            move = sd->counterTab[p->m_nTurn][lmove.GetFromToIndex()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {
@@ -322,25 +322,25 @@ CMove NextMove(struct SearchData *sd) {
 #ifdef VERBOSE
         Print(9, "GenerateRest\n");
 #endif
-        const CBitBoard empty = ~(p->mask[White][0] | p->mask[Black][0]);
+        const CBitBoard empty = ~(p->m_rgMask[White][0] | p->m_rgMask[Black][0]);
 
-        if (p->castle & CastleMask[p->turn][0]) {
+        if (p->m_bCastle & CastleMask[p->m_nTurn][0]) {
             append_to_heap(sd->heap,
-                           make_move(p->turn == White ? e1 : e8,
-                                     p->turn == White ? g1 : g8, M_SCASTLE));
+                           make_move(p->m_nTurn == White ? e1 : e8,
+                                     p->m_nTurn == White ? g1 : g8, M_SCASTLE));
         }
-        if (p->castle & CastleMask[p->turn][1]) {
+        if (p->m_bCastle & CastleMask[p->m_nTurn][1]) {
             append_to_heap(sd->heap,
-                           make_move(p->turn == White ? e1 : e8,
-                                     p->turn == White ? c1 : c8, M_LCASTLE));
+                           make_move(p->m_nTurn == White ? e1 : e8,
+                                     p->m_nTurn == White ? c1 : c8, M_LCASTLE));
         }
 
-        CBitBoard non_pawn = p->mask[p->turn][0] & ~p->mask[p->turn][Pawn];
+        CBitBoard non_pawn = p->m_rgMask[p->m_nTurn][0] & ~p->m_rgMask[p->m_nTurn][Pawn];
 
         while (non_pawn) {
             int from = (non_pawn).FindSetBit();
             non_pawn.ClearLowestBit();
-            CBitBoard attacks = p->atkTo[from] & empty;
+            CBitBoard attacks = p->m_rgAtkTo[from] & empty;
             while (attacks) {
                 int to = (attacks).FindSetBit();
                 attacks.ClearLowestBit();
@@ -348,9 +348,9 @@ CMove NextMove(struct SearchData *sd) {
             }
         }
 
-        CBitBoard tmp = p->mask[p->turn][Pawn] & ~SeventhRank[p->turn];
+        CBitBoard tmp = p->m_rgMask[p->m_nTurn][Pawn] & ~SeventhRank[p->m_nTurn];
 
-        if (p->turn == White)
+        if (p->m_nTurn == White)
             tmp = ShiftUp(tmp);
         else
             tmp = ShiftDown(tmp);
@@ -361,13 +361,13 @@ CMove NextMove(struct SearchData *sd) {
             int to = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
 
-            int fr = (p->turn == White) ? to - 8 : to + 8;
+            int fr = (p->m_nTurn == White) ? to - 8 : to + 8;
             append_to_heap(sd->heap, make_move(fr, to, 0));
         }
 
-        tmp &= ThirdRank[p->turn];
+        tmp &= ThirdRank[p->m_nTurn];
 
-        if (p->turn == White)
+        if (p->m_nTurn == White)
             tmp = ShiftUp(tmp);
         else
             tmp = ShiftDown(tmp);
@@ -378,7 +378,7 @@ CMove NextMove(struct SearchData *sd) {
             int to = (tmp).FindSetBit();
             tmp.ClearLowestBit();
 
-            int fr = (p->turn == White) ? to - 16 : to + 16;
+            int fr = (p->m_nTurn == White) ? to - 16 : to + 16;
             append_to_heap(sd->heap, make_move(fr, to, M_PAWND));
         }
 
@@ -392,10 +392,10 @@ CMove NextMove(struct SearchData *sd) {
         while (section->end > section->start) {
             int besti = section->start;
             int best =
-                sd->historyTab[p->turn][sd->heap->data[besti].GetFromToIndex()];
+                sd->historyTab[p->m_nTurn][sd->heap->data[besti].GetFromToIndex()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                int hval = sd->historyTab[p->turn]
+                int hval = sd->historyTab[p->m_nTurn]
                                         [sd->heap->data[i].GetFromToIndex()];
                 if (hval > best) {
                     best = hval;
@@ -450,10 +450,10 @@ CMove NextEvasion(struct SearchData *sd) {
          * check
          */
 
-        int kp = p->kingSq[p->turn].BitOffset();
+        int kp = p->m_rgKingSq[p->m_nTurn].BitOffset();
 
         CBitBoard targets =
-            (p->atkFr[kp] | p->atkTo[kp]) & p->mask[OPP(p->turn)][0];
+            (p->m_rgAtkFr[kp] | p->m_rgAtkTo[kp]) & p->m_rgMask[OPP(p->m_nTurn)][0];
 
         while (targets) {
             int to = (targets).FindSetBit();
@@ -532,14 +532,14 @@ CMove NextEvasion(struct SearchData *sd) {
     }
         /* fall through */
     case CounterMv: {
-        CMove lmove = (p->actLog - 1)->gl_Move;
+        CMove lmove = (p->m_pActLog - 1)->gl_Move;
 
 #ifdef VERBOSE
         Print(9, "CounterMv\n");
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->counterTab[p->turn][lmove.GetFromToIndex()];
+            move = sd->counterTab[p->m_nTurn][lmove.GetFromToIndex()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {
@@ -607,22 +607,22 @@ CMove NextEvasion(struct SearchData *sd) {
 #endif
 
         const int kp =
-            p->kingSq[p->turn].BitOffset(); /* (Mask[Side][King]).FindSetBit(); */
-        const CBitBoard empty = ~(p->mask[White][0] | p->mask[Black][0]);
+            p->m_rgKingSq[p->m_nTurn].BitOffset(); /* (Mask[Side][King]).FindSetBit(); */
+        const CBitBoard empty = ~(p->m_rgMask[White][0] | p->m_rgMask[Black][0]);
 
-        CBitBoard king_flight_squares = p->atkTo[kp] & empty;
+        CBitBoard king_flight_squares = p->m_rgAtkTo[kp] & empty;
 
         while (king_flight_squares) {
             int to = (king_flight_squares).FindSetBit();
             king_flight_squares.ClearLowestBit();
-            if (!(p->atkFr[to] & p->mask[OPP(p->turn)][0]))
+            if (!(p->m_rgAtkFr[to] & p->m_rgMask[OPP(p->m_nTurn)][0]))
                 append_to_heap(sd->heap, make_move(kp, to, 0));
         }
 
         CBitBoard sliding_attackers =
-            (p->mask[OPP(p->turn)][Bishop] | p->mask[OPP(p->turn)][Rook] |
-             p->mask[OPP(p->turn)][Queen]) &
-            p->atkFr[kp];
+            (p->m_rgMask[OPP(p->m_nTurn)][Bishop] | p->m_rgMask[OPP(p->m_nTurn)][Rook] |
+             p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
+            p->m_rgAtkFr[kp];
 
         CBitBoard interpositions = 0;
 
@@ -632,13 +632,13 @@ CMove NextEvasion(struct SearchData *sd) {
             interpositions = InterPath[kp][attacker_sq];
         }
 
-        CBitBoard non_pawns = (p->mask[p->turn][0] & ~p->mask[p->turn][King]) &
-                             ~p->mask[p->turn][Pawn];
+        CBitBoard non_pawns = (p->m_rgMask[p->m_nTurn][0] & ~p->m_rgMask[p->m_nTurn][King]) &
+                             ~p->m_rgMask[p->m_nTurn][Pawn];
 
         while (non_pawns) {
             int from = (non_pawns).FindSetBit();
             non_pawns.ClearLowestBit();
-            CBitBoard blocking = p->atkTo[from] & empty & interpositions;
+            CBitBoard blocking = p->m_rgAtkTo[from] & empty & interpositions;
 
             while (blocking) {
                 int to = (blocking).FindSetBit();
@@ -647,9 +647,9 @@ CMove NextEvasion(struct SearchData *sd) {
             }
         }
 
-        CBitBoard pawns = p->mask[p->turn][Pawn];
+        CBitBoard pawns = p->m_rgMask[p->m_nTurn][Pawn];
 
-        if (p->turn == White)
+        if (p->m_nTurn == White)
             pawns = ShiftUp(pawns);
         else
             pawns = ShiftDown(pawns);
@@ -659,7 +659,7 @@ CMove NextEvasion(struct SearchData *sd) {
         while (pawns_to) {
             int to = (pawns_to).FindSetBit();
             pawns_to.ClearLowestBit();
-            int fr = (p->turn == White) ? to - 8 : to + 8;
+            int fr = (p->m_nTurn == White) ? to - 8 : to + 8;
 
             if (is_promo_square(CSCoord(to))) {
                 append_to_heap(sd->heap, make_promotion(fr, to, Queen, 0));
@@ -670,9 +670,9 @@ CMove NextEvasion(struct SearchData *sd) {
                 append_to_heap(sd->heap, make_move(fr, to, 0));
         }
 
-        pawns &= ThirdRank[p->turn];
+        pawns &= ThirdRank[p->m_nTurn];
 
-        if (p->turn == White)
+        if (p->m_nTurn == White)
             pawns = ShiftUp(pawns);
         else
             pawns = ShiftDown(pawns);
@@ -682,7 +682,7 @@ CMove NextEvasion(struct SearchData *sd) {
         while (pawns) {
             int to = (pawns).FindSetBit();
             pawns.ClearLowestBit();
-            int fr = (p->turn == White) ? to - 16 : to + 16;
+            int fr = (p->m_nTurn == White) ? to - 16 : to + 16;
             append_to_heap(sd->heap, make_move(fr, to, M_PAWND));
         }
 
@@ -697,10 +697,10 @@ CMove NextEvasion(struct SearchData *sd) {
         while (section->end > section->start) {
             unsigned int besti = section->start;
             int best =
-                sd->historyTab[p->turn][sd->heap->data[besti].GetFromToIndex()];
+                sd->historyTab[p->m_nTurn][sd->heap->data[besti].GetFromToIndex()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                int hval = sd->historyTab[p->turn]
+                int hval = sd->historyTab[p->m_nTurn]
                                         [sd->heap->data[i].GetFromToIndex()];
                 if (hval > best) {
                     best = hval;
@@ -733,10 +733,10 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
     int score;
     int i;
 
-    att = p->mask[p->turn][0];
+    att = p->m_rgMask[p->m_nTurn][0];
 
     /* Handle pawn promotions first */
-    pwn7th = p->mask[p->turn][Pawn] & SeventhRank[p->turn];
+    pwn7th = p->m_rgMask[p->m_nTurn][Pawn] & SeventhRank[p->m_nTurn];
     att &= ~pwn7th;
 
     while (pwn7th) {
@@ -746,9 +746,9 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
 
         i = (pwn7th).FindSetBit();
         pwn7th.ClearLowestBit();
-        next = (p->turn == White) ? i + 8 : i - 8;
+        next = (p->m_nTurn == White) ? i + 8 : i - 8;
 
-        if (p->piece[next] == Neutral) {
+        if (p->m_rgPiece[next] == Neutral) {
             CMove move = make_promotion(i, next, Queen, 0);
             int sw;
             if ((sw = SwapOff(p, move)) >= 0) {
@@ -758,7 +758,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
             }
         }
 
-        tmp = p->atkTo[i] & p->mask[OPP(p->turn)][0];
+        tmp = p->m_rgAtkTo[i] & p->m_rgMask[OPP(p->m_nTurn)][0];
         while (tmp) {
             int sw;
             j = (tmp).FindSetBit();
@@ -772,7 +772,7 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
         }
     }
 
-    if (p->turn == White) {
+    if (p->m_nTurn == White) {
         score = MaterialBalance(p) + MaxPos;
     } else {
         score = -MaterialBalance(p) + MaxPos;
@@ -780,13 +780,13 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
 
     if (score + Value[Queen] <= alpha)
         return;
-    def = p->mask[OPP(p->turn)][Queen];
+    def = p->m_rgMask[OPP(p->m_nTurn)][Queen];
     while (def) {
         CBitBoard tmp2;
         int j;
         i = (def).FindSetBit();
         def.ClearLowestBit();
-        tmp2 = p->atkFr[i] & att;
+        tmp2 = p->m_rgAtkFr[i] & att;
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
@@ -801,13 +801,13 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
     }
     if (score + Value[Rook] <= alpha)
         return;
-    def = p->mask[OPP(p->turn)][Rook];
+    def = p->m_rgMask[OPP(p->m_nTurn)][Rook];
     while (def) {
         CBitBoard tmp2;
         int j;
         i = (def).FindSetBit();
         def.ClearLowestBit();
-        tmp2 = p->atkFr[i] & att;
+        tmp2 = p->m_rgAtkFr[i] & att;
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
@@ -822,13 +822,13 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
     }
     if (score + Value[Bishop] <= alpha)
         return;
-    def = p->mask[OPP(p->turn)][Bishop] | p->mask[OPP(p->turn)][Knight];
+    def = p->m_rgMask[OPP(p->m_nTurn)][Bishop] | p->m_rgMask[OPP(p->m_nTurn)][Knight];
     while (def) {
         CBitBoard tmp2;
         int j;
         i = (def).FindSetBit();
         def.ClearLowestBit();
-        tmp2 = p->atkFr[i] & att;
+        tmp2 = p->m_rgAtkFr[i] & att;
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
@@ -843,13 +843,13 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
     }
     if (score + Value[Pawn] <= alpha)
         return;
-    def = p->mask[OPP(p->turn)][Pawn];
+    def = p->m_rgMask[OPP(p->m_nTurn)][Pawn];
     while (def) {
         CBitBoard tmp2;
         int j;
         i = (def).FindSetBit();
         def.ClearLowestBit();
-        tmp2 = p->atkFr[i] & att;
+        tmp2 = p->m_rgAtkFr[i] & att;
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();

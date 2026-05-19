@@ -75,8 +75,8 @@ void StateMachine(void) {
         case STATE_WAITING:
             if (!XBoardMode) {
                 Print(0, "%s(%d): ",
-                      CurrentPosition->turn == White ? "White" : "Black",
-                      (CurrentPosition->ply / 2) + 1);
+                      CurrentPosition->m_nTurn == White ? "White" : "Black",
+                      (CurrentPosition->m_wPly / 2) + 1);
             }
 
             if (!ReadLine(InputBuffer, 1023)) {
@@ -93,7 +93,7 @@ void StateMachine(void) {
             }
             break;
         case STATE_CALCULATING:
-            ComputerSide = CurrentPosition->turn;
+            ComputerSide = CurrentPosition->m_nTurn;
             SearchRoot(CurrentPosition);
             if (EasyMode || ForceMode) {
                 State = STATE_WAITING;
