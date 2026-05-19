@@ -294,9 +294,9 @@ static void GainAttacks(CPosition *p, const CSCoord& toCoord) {
     CBitBoard tmp = p->m_rgAtkFr[to] & p->m_SlidingPieces;
 
     while (tmp) {
-        CSCoord iCoord = (tmp).FindSetBitCoord();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        GainAttack(p, iCoord, toCoord);
+        GainAttack(p, coord, toCoord);
     }
 }
 
@@ -310,9 +310,9 @@ static void LooseAttacks(CPosition *p, const CSCoord& toCoord) {
     CBitBoard tmp = p->m_rgAtkFr[to] & p->m_SlidingPieces;
 
     while (tmp) {
-        CSCoord iCoord = (tmp).FindSetBitCoord();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        LooseAttack(p, iCoord, toCoord);
+        LooseAttack(p, coord, toCoord);
     }
 }
 
