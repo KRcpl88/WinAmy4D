@@ -60,7 +60,7 @@ Inside `NegaScout()`, moves are not generated all at once; they are produced inc
 
 - `move = incheck ? sd->NextEvasion() : sd->NextMove()` (`src/search.cpp:824`)
 
-`CSearchData::NextMove()` (`src/search_data.cpp:159`) uses staged ordering phases:
+`CSearchData::NextMove()` (`src/search_data.cpp:159`) is a **search-ordering iterator** over legal candidates for normal nodes. It does not define piece geometry (for example, “bishop moves diagonally”); that geometry is precomputed elsewhere and consumed by lower-level generators. `NextMove()` controls *when* each move class is produced so alpha-beta can cut quickly:
 
 1. `HashMove`
 2. `GenerateCaptures`
@@ -73,9 +73,9 @@ Inside `NegaScout()`, moves are not generated all at once; they are produced inc
 9. `HistoryMoves`  
 (`SearchPhase` in `include/searchdata.h:38-52`, logic in `src/search_data.cpp:166-448`)
 
-`NextEvasion()` (`src/search_data.cpp:456`) is similar but restricts generation to check evasions (king flights, captures/blocking/interpositions).
+`NextEvasion()` (`src/search_data.cpp:456`) is the in-check companion iterator. It uses similar staging but limits candidates to legal evasions (king moves, captures of the checking piece, and interpositions when applicable).
 
-`NextMoveQ()` (`src/search_data.cpp:905`) is a tactical-only generator used by quiescence (`Quies`) and built from `GenerateQCaptures()` (`src/search_data.cpp:761`).
+`NextMoveQ()` (`src/search_data.cpp:905`) is the quiescence iterator. It is tactical-only (primarily captures/check continuations) and is built from `GenerateQCaptures()` (`src/search_data.cpp:761`) so `Quies()` searches forcing lines rather than all quiet continuations.
 
 ### 1.4 Low-level generators
 
@@ -86,24 +86,20 @@ Inside `NegaScout()`, moves are not generated all at once; they are produced inc
 
 These are built on precomputed attack maps in `CPosition` (`m_rgAtkTo`, `m_rgAtkFr`) and piece masks (`m_rgMask`).
 
-### 1.5 Where piece-move rules are actually computed (review follow-up)
+### 1.5 Piece-move geometry and special-move rules in the pipeline
 
-Direct answers to the review questions:
+`GenTo` and `GenFrom` are `CPosition` methods (declared in `include/dbase.h`, implemented in `src/dbase.cpp:950` and `:988`) that convert attack/mask information into move objects. The underlying movement geometry is computed earlier in the engine initialization and attack-update layers:
 
-1. **`GenTo` and `GenFrom` are methods of class `CPosition`.**  
-   They are declared in `include/dbase.h` and implemented as `void CPosition::GenTo(...)` / `void CPosition::GenFrom(...)` in `src/dbase.cpp:950` and `src/dbase.cpp:988`.
+- Knight/king geometry comes from precomputed lookup tables `KnightEPM[64]` and `KingEPM[64]` (`src/movedata.cpp:44`, `111`).
+- Sliding ray geometry for bishop/rook/queen comes from `InitAll()`-built tables (`BishopEPM`, `RookEPM`, `QueenEPM`, `InterPath`, `Ray`) (`src/init.cpp:235-279`).
+- Blocker-aware sliding attacks are resolved at runtime by magic helpers `bishop_attacks` / `rook_attacks` (`include/magic.h:59-74`, initialized in `src/magic.cpp`).
+- `AtkSet(...)` selects the correct per-piece attack model at runtime (`src/dbase.cpp:185-221`), and generation functions (`GenTo`/`GenFrom`/`LegalMoves`) enumerate candidates from those attacks.
 
-2. **Piece geometry (how each piece moves) is computed in attack tables + magic attack functions, then consumed by move generators.**
-   - **Knight/King move geometry:** precomputed lookup tables `KnightEPM[64]` and `KingEPM[64]` in `src/movedata.cpp:44` and `:111`.
-   - **Sliding piece geometry (bishop/rook/queen rays):** built in `InitAll()` setup (`src/init.cpp:235-279`) into `BishopEPM`, `RookEPM`, `QueenEPM`, `InterPath`, and `Ray`.
-   - **Sliding piece legal attack squares with blockers:** computed by magic-bitboard helpers `bishop_attacks` / `rook_attacks` in `include/magic.h:59-74` (tables initialized in `src/magic.cpp`).
-   - **Per-piece attack selection at runtime:** `AtkSet(...)` switch in `src/dbase.cpp:185-221` chooses `PawnEPM`, `KnightEPM`, `KingEPM`, or magic sliding attacks.
-   - **Move list generation from those attacks:** `GenTo`/`GenFrom`/`LegalMoves` in `src/dbase.cpp`.
+Special rules are integrated into the same generation/legality/application pipeline rather than a separate subsystem:
 
-3. **Special move logic locations:**
-   - **Promotion:** generation in `GenTo`/`GenFrom` using `make_promotion(...)` and `is_promo_square(...)` (`src/dbase.cpp:958-963`, `1027-1031`, `include/inline.h:120-138`); application in `DoMove`/`UndoMove` via `PromoType(...)` (`src/dbase.cpp:577-589`, `698-713`).
-   - **Castling:** candidate generation in `GenFrom` and search `GenerateRest` (`src/dbase.cpp:1006-1017`, `src/search_data.cpp:354-363`), legality in `MayCastle` (`src/dbase.cpp:1053-1099`), board update in `DoCastle`/`UndoCastle` called from `DoMove`/`UndoMove` (`src/dbase.cpp:332-448`, `469-472`, `682-684`).
-   - **En passant:** candidate generation in `GenEnpas` (`src/dbase.cpp:969-982`), legality checks in `LegalMove` (`src/dbase.cpp:1177-1234`), application/rollback in `DoMove`/`UndoMove` (`src/dbase.cpp:537-572`, `735-762`), and EP-target setup after pawn double push (`src/dbase.cpp:620-628`).
+- Promotion candidates are emitted in `GenTo`/`GenFrom` using `make_promotion(...)` and `is_promo_square(...)` (`src/dbase.cpp:958-963`, `1027-1031`, `include/inline.h:120-138`), then materialized/reverted in `DoMove`/`UndoMove` via `PromoType(...)` (`src/dbase.cpp:577-589`, `698-713`).
+- Castling candidates are produced in `GenFrom` and search `GenerateRest` (`src/dbase.cpp:1006-1017`, `src/search_data.cpp:354-363`), validated by `MayCastle` (`src/dbase.cpp:1053-1099`), and applied/reverted through `DoCastle`/`UndoCastle` from `DoMove`/`UndoMove` (`src/dbase.cpp:332-448`, `469-472`, `682-684`).
+- En-passant is generated by `GenEnpas` (`src/dbase.cpp:969-982`), checked in `LegalMove` (`src/dbase.cpp:1177-1234`), and applied/reverted in `DoMove`/`UndoMove` (`src/dbase.cpp:537-572`, `735-762`), with EP-target state set on pawn double pushes (`src/dbase.cpp:620-628`).
 
 ---
 
@@ -121,8 +117,7 @@ WinAmy scores moves using recursive search scores (primary), with static evaluat
 - `CPosition`: mutable position searched via `DoMove`/`UndoMove`.
 - `PawnFacts` (`include/evaluation.h:38`) and evaluation hash tables used by `EvaluatePosition`.
 
-**What is a “killer move”?**  
-In this engine, a killer move is a **non-tactical move** (not a capture/promotion/check tactic) that previously caused a **beta cutoff** at the same search ply. It is stored in `SKillerEntry` (`killer1`/`killer2` + hit counters in `include/searchdata.h:60-63`) via `CSearchData::PutKiller` (`src/search_data.cpp:959-988`) and then tried early in later siblings during `Killer1`/`Killer2`/`Killer3` phases (`src/search_data.cpp:248-299`, `539-590`) to speed up pruning.
+The killer-move heuristic is one of these ordering tools: a **non-tactical move** that previously caused a **beta cutoff** at the same ply is stored in `SKillerEntry` (`killer1`/`killer2` + hit counters in `include/searchdata.h:60-63`) via `CSearchData::PutKiller` (`src/search_data.cpp:959-988`). On later sibling nodes at that ply, the move is tried early in `Killer1`/`Killer2`/`Killer3` phases (`src/search_data.cpp:248-299`, `539-590`) to increase pruning efficiency.
 
 ### 2.2 Recursive scoring in full search (`NegaScout`)
 
