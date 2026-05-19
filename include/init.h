@@ -33,32 +33,34 @@
 #define INIT_H
 
 #include "bitboard.h"
+#include "scoord.h"
 
 extern CBitBoard FileMask[8], IsoMask[8];
 extern CBitBoard RankMask[8];
-extern CBitBoard ForwardRayW[64], ForwardRayB[64];
-extern CBitBoard PassedMaskW[64], PassedMaskB[64];
-extern CBitBoard OutpostMaskW[64], OutpostMaskB[64];
-extern CBitBoard InterPath[64][64];
-extern CBitBoard Ray[64][64];
-extern CBitBoard WPawnEPM[64], BPawnEPM[64];
-extern const CBitBoard KnightEPM[64], KingEPM[64];
-extern const CBitBoard PawnEPM[2][64];
-extern CBitBoard BishopEPM[64], RookEPM[64], QueenEPM[64];
+extern CBitBoard ForwardRayW[CSCoord::SIZE], ForwardRayB[CSCoord::SIZE];
+extern CBitBoard PassedMaskW[CSCoord::SIZE], PassedMaskB[CSCoord::SIZE];
+extern CBitBoard OutpostMaskW[CSCoord::SIZE], OutpostMaskB[CSCoord::SIZE];
+extern CBitBoard InterPath[CSCoord::SIZE][CSCoord::SIZE];
+extern CBitBoard Ray[CSCoord::SIZE][CSCoord::SIZE];
+extern CBitBoard WPawnEPM[CSCoord::SIZE], BPawnEPM[CSCoord::SIZE];
+extern const CBitBoard KnightEPM[CSCoord::SIZE], KingEPM[CSCoord::SIZE];
+extern const CBitBoard PawnEPM[2][CSCoord::SIZE];
+extern CBitBoard BishopEPM[CSCoord::SIZE], RookEPM[CSCoord::SIZE], QueenEPM[CSCoord::SIZE];
 extern CBitBoard SeventhRank[2], ThirdRank[2], EighthRank[2];
 extern CBitBoard LeftOf[8], RightOf[8], FarLeftOf[8], FarRightOf[8];
 extern CBitBoard EdgeMask;
 extern CBitBoard BlackSquaresMask, WhiteSquaresMask;
-extern CBitBoard KingSquareW[64], KingSquareB[64];
+extern CBitBoard KingSquareW[CSCoord::SIZE], KingSquareB[CSCoord::SIZE];
 extern CBitBoard NotAFileMask, NotHFileMask;
 extern CBitBoard CornerMaskA1, CornerMaskA8, CornerMaskH1, CornerMaskH8;
-extern CBitBoard WPawnBackwardMask[64], BPawnBackwardMask[64];
+extern CBitBoard WPawnBackwardMask[CSCoord::SIZE], BPawnBackwardMask[CSCoord::SIZE];
 extern CBitBoard KingSideMask, QueenSideMask;
-extern CBitBoard ConnectedMask[64];
+extern CBitBoard ConnectedMask[CSCoord::SIZE];
 
-extern signed char NextSQ[64][64];
+extern signed char NextSQ[CSCoord::SIZE][CSCoord::SIZE];
 
 void InitAll(void);
 void PrintBitBoard(CBitBoard);
 
 #endif
+

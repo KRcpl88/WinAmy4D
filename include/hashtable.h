@@ -74,8 +74,8 @@ struct STEntry {
     int st_Score;
 };
 
-extern hash_t HashKeys[2][8][64];
-extern hash_t HashKeysEP[64];
+extern hash_t HashKeys[2][8][CSCoord::SIZE];
+extern hash_t HashKeysEP[CSCoord::SIZE];
 extern hash_t HashKeysCastle[16];
 extern hash_t STMKey;
 
@@ -103,3 +103,4 @@ void GuessHTSizes(char *);
 void HashInit(void);
 
 #endif
+

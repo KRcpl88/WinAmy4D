@@ -119,8 +119,8 @@ int16_t DistantPassedPawn[] = {500, 300, 300, 300, 200, 200, 150, 150, 150,
                                0,   0,   0,   0,   0,   0,   0,   0,   0,
                                0,   0,   0,   0,   0,   0,   0,   0};
 
-static int16_t WPawnPos[64];
-static int16_t BPawnPos[64];
+static int16_t WPawnPos[CSCoord::SIZE];
+static int16_t BPawnPos[CSCoord::SIZE];
 
 /**
  * Knight scoring parameters
@@ -131,7 +131,7 @@ int KnightBlocksCPawn = -100;
 int KnightEdgePenalty = -130;
 
 // clang-format off
-int16_t KnightPos[64] = {
+int16_t KnightPos[CSCoord::SIZE] = {
      -30,  -30,  -30,  -30,  -30,  -30,  -30,  -30,
      -30,  -30,   60,   60,   60,   60,  -30,  -30,
      -30,   60,  130,  130,  130,  130,   60,  -30,
@@ -142,7 +142,7 @@ int16_t KnightPos[64] = {
        0,    0,    0,    0,    0,    0,    0,    0
 };
 
-int16_t KnightOutpost[64] = {
+int16_t KnightOutpost[CSCoord::SIZE] = {
     0, 0,  0,   0,   0,  0, 0, 0,
     0, 0,  0,   0,   0,  0, 0, 0,
     0, 0,  0,   0,   0,  0, 0, 0,
@@ -168,7 +168,7 @@ int BishopKingProximity = 7;
 int BishopTrapped = -1500;
 
 // clang-format off
-int16_t BishopPos[64] = {
+int16_t BishopPos[CSCoord::SIZE] = {
      60,  60,  60,  60,  60,  60,  60,  60,
      60, 250,  60,  60,  60,  60, 250,  60,
      60, 160, 160, 160, 160, 160, 160,  60,
@@ -197,7 +197,7 @@ int RookBehindPasser = 12; /* will be scaled by phase */
 int RookOn7thRank = 300;
 
 // clang-format off
-int16_t RookPos[64] = {
+int16_t RookPos[CSCoord::SIZE] = {
       0,  90, 130, 220, 220, 130,  90,   0,
       0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,
@@ -216,7 +216,7 @@ int16_t RookPos[64] = {
 int QueenKingProximity = 8;
 
 // clang-format off
-int16_t QueenPos[64] = {
+int16_t QueenPos[CSCoord::SIZE] = {
     0, 0,  0,  0,  0,  0,  0,  0,
     0, 30, 30, 30, 30, 30, 30, 0,
     0, 30, 60, 60, 60, 60, 30, 0,
@@ -227,7 +227,7 @@ int16_t QueenPos[64] = {
     0, 0,  0,  0,  0,  0,  0,  0
 };
 
-int16_t QueenPosDevelopment[64] = {
+int16_t QueenPosDevelopment[CSCoord::SIZE] = {
     -200, -200,  0,  0,  0, 0, -200, -200,
     -200, -200, 30, 30, 30, 0, -200, -200,
     -200, -200,  0,  0,  0, 0, -200, -200,
@@ -248,7 +248,7 @@ int KingInCenter = -100;
 int KingSafetyScale = 1024;
 
 // clang-format off
-int16_t KingPosMiddlegame[64] = {
+int16_t KingPosMiddlegame[CSCoord::SIZE] = {
     -100, 0,    -200, -300, -300, -200,    0, -100,
     -100, -100, -200, -300, -300, -200, -100, -100,
     -300, -300, -300, -300, -300, -300, -300, -300,
@@ -258,7 +258,7 @@ int16_t KingPosMiddlegame[64] = {
     -700, -700, -700, -700, -700, -700, -700, -700,
     -800, -800, -800, -800, -800, -800, -800, -800};
 
-int16_t KingPosEndgame[64] = {
+int16_t KingPosEndgame[CSCoord::SIZE] = {
     -300, -300, -300, -300, -300, -300, -300, -300,
     -300, -200, -100, -100, -100, -100, -200, -300,
     -300, -100,    0,  100,  100,    0, -100, -300,
@@ -268,7 +268,7 @@ int16_t KingPosEndgame[64] = {
     -300, -100, -100, -100, -100, -100, -100, -300,
     -300, -300, -300, -300, -300, -300, -300, -300};
 
-int16_t KingPosEndgameQueenSide[64] = {
+int16_t KingPosEndgameQueenSide[CSCoord::SIZE] = {
     -300, -300, -300, -300, -300, -400, -500, -600,
     -100, -100, -100, -100, -100, -200, -300, -600,
        0,  100,  100,    0, -100, -200, -300, -600,
@@ -280,7 +280,7 @@ int16_t KingPosEndgameQueenSide[64] = {
 // clang-format on
 
 // Calculated by mirroring KingPosEndgameQueenSide
-static int16_t KingPosEndgameKingSide[64];
+static int16_t KingPosEndgameKingSide[CSCoord::SIZE];
 
 int16_t ScaleHalfOpenFilesMine[] = {0, 4, 7, 9, 11};
 
@@ -1900,3 +1900,4 @@ static void create_mirrored_piece_square_table(int16_t *src, int16_t *dest) {
         dest[static_cast<int>(mirrored)] = src[static_cast<int>(source)];
     }
 }
+

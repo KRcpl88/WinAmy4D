@@ -37,11 +37,12 @@
 #define MAGIC_H
 
 #include "bitboard.h"
+#include "scoord.h"
 
-extern uint16_t rook_table_offsets[64];
+extern uint16_t rook_table_offsets[CSCoord::SIZE];
 extern BitBoardBits rook_table[102400];
 
-extern uint16_t bishop_table_offsets[64];
+extern uint16_t bishop_table_offsets[CSCoord::SIZE];
 extern BitBoardBits bishop_table[5248];
 
 extern const BitBoardBits rook_blocker_mask[];
@@ -59,7 +60,7 @@ extern const uint8_t bishop_index_bits[];
 static inline CBitBoard rook_attacks(int sq, CBitBoard occupied) {
     BitBoardBits blockers = occupied.GetBits() & rook_blocker_mask[sq];
     BitBoardBits magic_index =
-        (blockers * rook_magics[sq]) >> (64 - rook_index_bits[sq]);
+        (blockers * rook_magics[sq]) >> (CSCoord::SIZE - rook_index_bits[sq]);
     return CBitBoard(rook_table[2 * rook_table_offsets[sq] + magic_index]);
 }
 
@@ -69,10 +70,11 @@ static inline CBitBoard rook_attacks(int sq, CBitBoard occupied) {
 static inline CBitBoard bishop_attacks(int sq, CBitBoard occupied) {
     BitBoardBits blockers = occupied.GetBits() & bishop_blocker_mask[sq];
     BitBoardBits magic_index =
-        (blockers * bishop_magics[sq]) >> (64 - bishop_index_bits[sq]);
+        (blockers * bishop_magics[sq]) >> (CSCoord::SIZE - bishop_index_bits[sq]);
     return CBitBoard(bishop_table[bishop_table_offsets[sq] + magic_index]);
 }
 
 void InitMagic(void);
 
 #endif /* MAGIC_H */
+

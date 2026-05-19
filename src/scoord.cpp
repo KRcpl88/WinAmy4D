@@ -4,7 +4,7 @@
 
 #include "bitboard.h"
 
-const int CSCoord::LEVEL_SIZE[1]{64};
+const int CSCoord::LEVEL_SIZE[1]{CSCoord::SIZE};
 const int CSCoord::LEVEL_WIDTH[1]{8};
 const int CSCoord::LEVEL_OFFSET[1]{0};
 
@@ -90,3 +90,4 @@ CSCoord::operator int() const {
     Validate();
     return BitOffset();
 }
+

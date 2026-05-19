@@ -121,8 +121,8 @@ struct SGameLog {
 class CPosition {
   public:
     // Data members (public for direct access from engine code)
-    CBitBoard m_rgAtkTo[64];
-    CBitBoard m_rgAtkFr[64];
+    CBitBoard m_rgAtkTo[CSCoord::SIZE];
+    CBitBoard m_rgAtkFr[CSCoord::SIZE];
     CBitBoard m_rgMask[2][7];
     CBitBoard m_SlidingPieces;
     hash_t m_ullHKey;
@@ -133,7 +133,7 @@ class CPosition {
     int m_rgnMaterial[2], m_rgnNonPawn[2];
     uint16_t m_rgwOutOfBookCnt[2];
     uint16_t m_wPly;
-    int8_t m_rgPiece[64];
+    int8_t m_rgPiece[CSCoord::SIZE];
     int8_t m_bCastle;
     CSCoord m_EnPassant;
     int8_t m_nTurn; /* 0 == white, 1 == black */
@@ -216,3 +216,4 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap);
 CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt);
 
 #endif
+

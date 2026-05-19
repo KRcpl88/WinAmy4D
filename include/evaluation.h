@@ -33,6 +33,7 @@
 #define EVALUATION_H
 
 #include "bitboard.h"
+#include "scoord.h"
 #include "types.h"
 
 struct PawnFacts {
@@ -74,8 +75,8 @@ extern int16_t DistantPassedPawn[];
 extern int KnightKingProximity;
 extern int KnightBlocksCPawn;
 extern int KnightEdgePenalty;
-extern int16_t KnightPos[64];
-extern int16_t KnightOutpost[64];
+extern int16_t KnightPos[CSCoord::SIZE];
+extern int16_t KnightOutpost[CSCoord::SIZE];
 
 /**
  * Bishop scoring parameters
@@ -84,7 +85,7 @@ extern int16_t BishopPair[];
 extern int BishopMobility;
 extern int BishopKingProximity;
 extern int BishopTrapped;
-extern int16_t BishopPos[64];
+extern int16_t BishopPos[CSCoord::SIZE];
 
 /**
  * Rook scoring parameters
@@ -96,14 +97,14 @@ extern int RookKingProximity;
 extern int RookConnected;
 extern int RookBehindPasser;
 extern int RookOn7thRank;
-extern int16_t RookPos[64];
+extern int16_t RookPos[CSCoord::SIZE];
 
 /**
  * Queen scoring parameters
  */
 extern int QueenKingProximity;
-extern int16_t QueenPos[64];
-extern int16_t QueenPosDevelopment[64];
+extern int16_t QueenPos[CSCoord::SIZE];
+extern int16_t QueenPosDevelopment[CSCoord::SIZE];
 
 /**
  * King scoring parameters
@@ -111,9 +112,9 @@ extern int16_t QueenPosDevelopment[64];
 extern int KingBlocksRook;
 extern int KingInCenter;
 extern int KingSafetyScale;
-extern int16_t KingPosMiddlegame[64];
-extern int16_t KingPosEndgame[64];
-extern int16_t KingPosEndgameQueenSide[64];
+extern int16_t KingPosMiddlegame[CSCoord::SIZE];
+extern int16_t KingPosEndgame[CSCoord::SIZE];
+extern int16_t KingPosEndgameQueenSide[CSCoord::SIZE];
 extern int16_t ScaleHalfOpenFilesMine[];
 extern int16_t ScaleHalfOpenFilesYours[];
 extern int16_t ScaleOpenFiles[];
@@ -125,3 +126,4 @@ void InitEvaluation(const CPosition *);
 int MaterialBalance(const CPosition *);
 
 #endif /* EVALUATION_H */
+

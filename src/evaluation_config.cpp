@@ -263,15 +263,15 @@ static void set_parameter(struct YamlNode *node, const char *name, int *paramete
 
 static void set_piece_square_table(struct YamlNode *node, const char *name,
                                    int16_t *target_table) {
-    int piece_square_table[64];
+    int piece_square_table[CSCoord::SIZE];
 
     struct IntArrayLookupResult array_result =
-        get_as_int_array(node, name, piece_square_table, 64);
+        get_as_int_array(node, name, piece_square_table, CSCoord::SIZE);
 
     if (array_result.result_code == OK) {
-        if (array_result.elements_read != 64) {
-            Print(0, "Warning: expected 64 entries for %s, got %d!\n", name,
-                  array_result.elements_read);
+        if (array_result.elements_read != CSCoord::SIZE) {
+            Print(0, "Warning: expected %d entries for %s, got %d!\n",
+                  CSCoord::SIZE, name, array_result.elements_read);
         }
         Print(9, "%s:\n", name);
         for (unsigned int i = 0; i < array_result.elements_read; i++) {
@@ -452,3 +452,5 @@ static char *read_file(char *file_name) {
 
     return buffer;
 }
+
+
