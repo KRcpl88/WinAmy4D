@@ -292,12 +292,11 @@ static void LooseAttack(CPosition *p, const CSCoord& fromCoord,
 static void GainAttacks(CPosition *p, const CSCoord& toCoord) {
     int to = toCoord.BitOffset();
     CBitBoard tmp = p->m_rgAtkFr[to] & p->m_SlidingPieces;
-    int i;
 
     while (tmp) {
-        i = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        GainAttack(p, CSCoord(i), toCoord);
+        GainAttack(p, coord, toCoord);
     }
 }
 
@@ -309,12 +308,11 @@ static void GainAttacks(CPosition *p, const CSCoord& toCoord) {
 static void LooseAttacks(CPosition *p, const CSCoord& toCoord) {
     int to = toCoord.BitOffset();
     CBitBoard tmp = p->m_rgAtkFr[to] & p->m_SlidingPieces;
-    int i;
 
     while (tmp) {
-        i = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        LooseAttack(p, CSCoord(i), toCoord);
+        LooseAttack(p, coord, toCoord);
     }
 }
 
@@ -920,20 +918,20 @@ void CPosition::RecalcAttacks() {
 
     tmp = p->m_rgMask[White][0];
     while (tmp) {
-        int i = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        AtkSet(p, p->m_rgPiece[i], White, CSCoord(i));
+        AtkSet(p, p->m_rgPiece[coord.BitOffset()], White, coord);
     }
 
     tmp = p->m_rgMask[Black][0];
     while (tmp) {
-        int i = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        AtkSet(p, -p->m_rgPiece[i], Black, CSCoord(i));
+        AtkSet(p, -p->m_rgPiece[coord.BitOffset()], Black, coord);
     }
 
-    p->m_rgKingSq[White] = CSCoord((p->m_rgMask[White][King]).FindSetBit());
-    p->m_rgKingSq[Black] = CSCoord((p->m_rgMask[Black][King]).FindSetBit());
+    p->m_rgKingSq[White] = (p->m_rgMask[White][King]).FindSetBitCoord();
+    p->m_rgKingSq[Black] = (p->m_rgMask[Black][King]).FindSetBitCoord();
 
     p->m_ullHKey ^= HashKeysCastle[p->m_bCastle];
     if (p->m_nTurn == Black)
@@ -953,15 +951,16 @@ void CPosition::GenTo(const CSCoord& squareCoord, heap_t heap) {
     CBitBoard tmp = p->m_rgAtkFr[square] & p->m_rgMask[p->m_nTurn][0];
 
     while (tmp) {
-        int i = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        if (TYPE(p->m_rgPiece[i]) == Pawn && is_promo_square(squareCoord)) {
-            append_to_heap(heap, make_promotion(CSCoord(i), squareCoord, Queen, M_CAPTURE));
-            append_to_heap(heap, make_promotion(CSCoord(i), squareCoord, Knight, M_CAPTURE));
-            append_to_heap(heap, make_promotion(CSCoord(i), squareCoord, Rook, M_CAPTURE));
-            append_to_heap(heap, make_promotion(CSCoord(i), squareCoord, Bishop, M_CAPTURE));
+        if (TYPE(p->m_rgPiece[coord.BitOffset()]) == Pawn &&
+            is_promo_square(squareCoord)) {
+            append_to_heap(heap, make_promotion(coord, squareCoord, Queen, M_CAPTURE));
+            append_to_heap(heap, make_promotion(coord, squareCoord, Knight, M_CAPTURE));
+            append_to_heap(heap, make_promotion(coord, squareCoord, Rook, M_CAPTURE));
+            append_to_heap(heap, make_promotion(coord, squareCoord, Bishop, M_CAPTURE));
         } else {
-            append_to_heap(heap, make_move(CSCoord(i), squareCoord, M_CAPTURE));
+            append_to_heap(heap, make_move(coord, squareCoord, M_CAPTURE));
         }
     }
 }
@@ -975,9 +974,9 @@ void CPosition::GenEnpas(heap_t heap) {
 
     tmp = p->m_rgAtkFr[p->m_EnPassant.BitOffset()] & p->m_rgMask[p->m_nTurn][Pawn];
     while (tmp) {
-        int i = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        append_to_heap(heap, make_move(CSCoord(i), p->m_EnPassant, M_ENPASSANT));
+        append_to_heap(heap, make_move(coord, p->m_EnPassant, M_ENPASSANT));
     }
 }
 
@@ -994,9 +993,9 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
         tmp = p->m_rgAtkTo[square] & ~(p->m_rgMask[White][0] | p->m_rgMask[Black][0]);
 
         while (tmp) {
-            int i = (tmp).FindSetBit();
+            CSCoord coord = (tmp).FindSetBitCoord();
             tmp.ClearLowestBit();
-            append_to_heap(heap, make_move(squareCoord, CSCoord(i), 0));
+            append_to_heap(heap, make_move(squareCoord, coord, 0));
         }
 
         /* Generate castling moves
@@ -1312,11 +1311,11 @@ void CPosition::GenChecks(heap_t heap) {
             CBitBoard tmp2 = p->m_rgMask[p->m_nTurn][0] & ip[i];
 
             if ((tmp2).CountBits() == 1) {
-                int j = (tmp2).FindSetBit();
+                CSCoord coord = (tmp2).FindSetBitCoord();
 
-                if (fsq.TstBit(j)) {
-                    p->GenFrom(CSCoord(j), heap);
-                    fsq.ClrBit(j);
+                if (fsq.TstBit(coord.BitOffset())) {
+                    p->GenFrom(coord, heap);
+                    fsq.ClrBit(coord.BitOffset());
                 }
             }
         }
@@ -1331,11 +1330,11 @@ void CPosition::GenChecks(heap_t heap) {
             CBitBoard tmp2 = p->m_rgMask[p->m_nTurn][0] & ip[i];
 
             if ((tmp2).CountBits() == 1) {
-                int j = (tmp2).FindSetBit();
+                CSCoord coord = (tmp2).FindSetBitCoord();
 
-                if (fsq.TstBit(j)) {
-                    p->GenFrom(CSCoord(j), heap);
-                    fsq.ClrBit(j);
+                if (fsq.TstBit(coord.BitOffset())) {
+                    p->GenFrom(coord, heap);
+                    fsq.ClrBit(coord.BitOffset());
                 }
             }
         }
@@ -1505,17 +1504,16 @@ char *CPosition::SAN(CMove move, char *buffer) {
         bool aamb = false, /* set for ambigous moves */
             ramb = false,  /* set means ambigous rank */
             famb = false;  /* set means ambigous file */
-        int i;
 
         tmp = p->m_rgAtkFr[to] & p->m_rgMask[p->m_nTurn][tp];
 
         /* check for ambigous move */
         while (tmp) {
-            i = (tmp).FindSetBit();
+            CSCoord coord = (tmp).FindSetBitCoord();
             tmp.ClearLowestBit();
-            if (i != fr) {
+            if (coord.BitOffset() != fr) {
                 int incheck;
-                CMove tmove(CSCoord(i), move.GetToCoord(), 0);
+                CMove tmove(coord, move.GetToCoord(), 0);
 
                 /* seems there is another piece of the same type which
                  * can move to the same destination square.
@@ -1533,9 +1531,9 @@ char *CPosition::SAN(CMove move, char *buffer) {
                     continue;
 
                 aamb = true;
-                if (CSCoord(i).m_nFile == frCoord.m_nFile)
+                if (coord.m_nFile == frCoord.m_nFile)
                     famb = true;
-                if (CSCoord(i).m_nRank == frCoord.m_nRank)
+                if (coord.m_nRank == frCoord.m_nRank)
                     ramb = true;
             }
         }
@@ -2049,18 +2047,18 @@ void CPosition::PLegalMoves(heap_t heap) {
 
     tmp = p->m_rgMask[OPP(p->m_nTurn)][0];
     while (tmp) {
-        int j = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
 
-        p->GenTo(CSCoord(j), heap);
+        p->GenTo(coord, heap);
     }
 
     tmp = p->m_rgMask[p->m_nTurn][0];
     while (tmp) {
-        int j = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
 
-        p->GenFrom(CSCoord(j), heap);
+        p->GenFrom(coord, heap);
     }
 
     p->GenEnpas(heap);
@@ -2078,12 +2076,12 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
 
     tmp = p->m_rgMask[OPP(p->m_nTurn)][0];
     while (tmp) {
-        int j = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         unsigned int i;
         tmp.ClearLowestBit();
 
         push_section(tmp_heap);
-        p->GenTo(CSCoord(j), tmp_heap);
+        p->GenTo(coord, tmp_heap);
 
         for (i = tmp_heap->current_section->start;
              i < tmp_heap->current_section->end; i++) {
@@ -2100,12 +2098,12 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
 
     tmp = p->m_rgMask[p->m_nTurn][0];
     while (tmp) {
-        int j = (tmp).FindSetBit();
+        CSCoord coord = (tmp).FindSetBitCoord();
         unsigned int i;
         tmp.ClearLowestBit();
 
         push_section(tmp_heap);
-        p->GenFrom(CSCoord(j), tmp_heap);
+        p->GenFrom(coord, tmp_heap);
 
         for (i = tmp_heap->current_section->start;
              i < tmp_heap->current_section->end; i++) {

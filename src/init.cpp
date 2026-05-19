@@ -359,15 +359,16 @@ void InitMiscMasks(void) {
         const int width = CSCoord::LEVEL_WIDTH[coord.m_nLevel];
         int bdist = coord.m_nRank;
         int wdist = (width - 1) - bdist;
-        int wtarget = static_cast<int>(CSCoord(coord.m_nLevel, coord.m_nFile, width - 1));
-        int btarget = static_cast<int>(CSCoord(coord.m_nLevel, coord.m_nFile, 0));
+        CSCoord wtargetCoord(coord.m_nLevel, coord.m_nFile, width - 1);
+        CSCoord btargetCoord(coord.m_nLevel, coord.m_nFile, 0);
 
         KingSquareW[i] = KingSquareB[i] = 0;
         for (j = 0; j < CSCoord::SIZE; j++) {
-            if (KingDist(CSCoord(wtarget), CSCoord(j)) <= wdist) {
+            CSCoord coord(j);
+            if (KingDist(wtargetCoord, coord) <= wdist) {
                 KingSquareW[i].SetBit(j);
             }
-            if (KingDist(CSCoord(btarget), CSCoord(j)) <= bdist) {
+            if (KingDist(btargetCoord, coord) <= bdist) {
                 KingSquareB[i].SetBit(j);
             }
         }
