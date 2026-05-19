@@ -87,6 +87,10 @@ The original C implementation of Amy chess used a 64 bit int bitboard as a bit r
 7. Add a descriptive comment to each member function with a list of the inputs and outputs, what each one does, and an overall description of what the function does
 
 
+# CPosition
+move all non class global or static functions in search.cpp which take a CPosition as a first parameter into the CPosition class and move their implementation with the associated function header comments into the position.cpp file with the rest of the CPosition class implementation
+
+
 
 
 
