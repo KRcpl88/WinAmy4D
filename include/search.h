@@ -145,12 +145,15 @@ class CSearchData {
     CMove NextEvasion();
     CMove NextMoveQ(int nAlpha);
     void PutKiller(CMove mvMove);
-};
-
-class CSearch {
-  public:
-    static bool TerminateSearch(CSearchData *pSearchData);
-    static void InitSearch(CSearchData *pSearchData);
+    bool TerminateSearch();
+    void InitSearch();
+    void StoreResult(int nScore, int nAlpha, int nBeta, CMove mvMove, int nDepth, int nThreat);
+    int Quies(int nAlpha, int nBeta, int nDepth);
+#if MP
+    int NegaScout(int nAlpha, int nBeta, int nDepth, int nNodeType, int nExclusiveP);
+#else
+    int NegaScout(int nAlpha, int nBeta, int nDepth, int nNodeType);
+#endif
 };
 
 void setMaxSearchDepth(int);
