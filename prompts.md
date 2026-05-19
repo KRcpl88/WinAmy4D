@@ -91,6 +91,19 @@ The original C implementation of Amy chess used a 64 bit int bitboard as a bit r
 move all non class global or static functions in search.cpp which take a CPosition as a first parameter into the CPosition class and move their implementation with the associated function header comments into the position.cpp file with the rest of the CPosition class implementation
 
 
+#algorithm
+
+The process of computing an optimal chess move fir each side in WinAmy consists of 3 steps
+
+1. Enumerating all possible moves from the current position
+2. Evaluating and scoring each move
+3. Choosing the best next move from all possible moves
+
+Create a detailed design document of each of these 3 steps, including which classes and structs are used, which functions are called in which order, and how they work in the code.
+
+Create a report in md format and commit it to the repo
+
+
 
 
 
