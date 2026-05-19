@@ -178,6 +178,7 @@
     <ClCompile Include="mytb.cpp" />
     <ClCompile Include="search_data.cpp" />
     <ClCompile Include="pgn.cpp" />
+    <ClCompile Include="position.cpp" />
     <ClCompile Include="probe.cpp" />
     <ClCompile Include="tbindex.cpp" />
     <ClCompile Include="random.cpp" />

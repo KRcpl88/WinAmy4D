@@ -38,6 +38,7 @@
 #include "scoord.h"
 #include "types.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define SQUARE(x) 'a' + CSCoord(x).m_nFile, '1' + CSCoord(x).m_nRank
@@ -181,6 +182,14 @@ class CPosition {
     void AnalysisMode();
     int PermanentBrain();
     int QuiescenceSearch();
+    int CheckExtend();
+    int ScoreMove(CMove move);
+    char *NumberedSAN(CMove move, char *buffer, size_t len);
+    void AnaLoop(int depth);
+    void AnalyzeHT(CMove move);
+#if MP
+    void StartHelpers();
+#endif
 
     // Static factory methods
     static CPosition *CreateFromEPD(const char *epd);
