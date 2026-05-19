@@ -1,0 +1,81 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build WinAmy (Debug x64)",
+            "type": "shell",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "args": [
+                "${workspaceFolder}\\WinAmy.sln",
+                "/p:Configuration=Debug",
+                "/p:Platform=x64",
+                "/m"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile",
+            "detail": "Build the WinAmy solution in Debug x64 configuration"
+        },
+        {
+            "label": "Build WinAmy (Release x64)",
+            "type": "shell",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "args": [
+                "${workspaceFolder}\\WinAmy.sln",
+                "/p:Configuration=Release",
+                "/p:Platform=x64",
+                "/m"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "detail": "Build the WinAmy solution in Release x64 configuration"
+        },
+        {
+            "label": "Clean WinAmy",
+            "type": "shell",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "args": [
+                "${workspaceFolder}\\WinAmy.sln",
+                "/t:Clean",
+                "/p:Configuration=Debug",
+                "/p:Platform=x64"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "detail": "Clean the WinAmy solution"
+        },
+        {
+            "label": "Rebuild WinAmy (Debug x64)",
+            "type": "shell",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "args": [
+                "${workspaceFolder}\\WinAmy.sln",
+                "/t:Rebuild",
+                "/p:Configuration=Debug",
+                "/p:Platform=x64",
+                "/m"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "detail": "Clean and rebuild the WinAmy solution in Debug x64 configuration"
+        },
+        {
+            "label": "Run Unit Tests (Debug x64)",
+            "type": "shell",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
+            "args": [
+                "${workspaceFolder}\\x64\\Debug\\WinAmyTests.dll",
+                "/Platform:x64"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "dependsOn": "Build WinAmy (Debug x64)",
+            "problemMatcher": "$msCompile",
+            "detail": "Build and run the WinAmyTests C++ unit tests (Debug x64)"
+        }
+    ]
+}

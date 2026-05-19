@@ -185,19 +185,19 @@ CMove CSearchData::NextMove() {
          */
         CBitBoard targets = p->m_rgMask[OPP(p->m_nTurn)][0];
         while (targets) {
-            int to = (targets).FindSetBit();
+            CSCoord to = (targets).FindSetBitCoord();
             targets.ClearLowestBit();
 
-            p->GenTo(CSCoord(to), sd->m_hHeap);
+            p->GenTo(to, sd->m_hHeap);
         }
 
         CBitBoard promoting_pawns =
             p->m_rgMask[p->m_nTurn][Pawn] & SeventhRank[p->m_nTurn];
         while (promoting_pawns) {
-            int from = (promoting_pawns).FindSetBit();
+            CSCoord from = (promoting_pawns).FindSetBitCoord();
             promoting_pawns.ClearLowestBit();
 
-            p->GenFrom(CSCoord(from), sd->m_hHeap);
+            p->GenFrom(from, sd->m_hHeap);
         }
 
         GrowDataHeap(sd);
@@ -489,9 +489,9 @@ CMove CSearchData::NextEvasion() {
             (p->m_rgAtkFr[kp] | p->m_rgAtkTo[kp]) & p->m_rgMask[OPP(p->m_nTurn)][0];
 
         while (targets) {
-            int to = (targets).FindSetBit();
+            CSCoord to = (targets).FindSetBitCoord();
             targets.ClearLowestBit();
-            p->GenTo(CSCoord(to), sd->m_hHeap);
+            p->GenTo(to, sd->m_hHeap);
         }
 
         GrowDataHeap(sd);
@@ -690,11 +690,12 @@ CMove CSearchData::NextEvasion() {
         CBitBoard pawns_to = pawns = (pawns & empty);
 
         while (pawns_to) {
-            int to = (pawns_to).FindSetBit();
+            CSCoord toCoord = (pawns_to).FindSetBitCoord();
+            int to = toCoord.BitOffset();
             pawns_to.ClearLowestBit();
             int fr = (p->m_nTurn == White) ? to - 8 : to + 8;
 
-            if (is_promo_square(CSCoord(to))) {
+            if (is_promo_square(toCoord)) {
                 append_to_heap(sd->m_hHeap, make_promotion(fr, to, Queen, 0));
                 append_to_heap(sd->m_hHeap, make_promotion(fr, to, Knight, 0));
                 append_to_heap(sd->m_hHeap, make_promotion(fr, to, Rook, 0));

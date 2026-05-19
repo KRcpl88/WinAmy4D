@@ -34,6 +34,7 @@
 
 #include "amy.h"
 #include "config.h"
+#include "scoord.h"
 
 #include <stdint.h>
 
@@ -82,6 +83,8 @@ class CBitBoard {
         return index64[((m_ullBits ^ (m_ullBits - 1)) * debruijn64) >> 58];
 #endif
     }
+
+    CSCoord FindSetBitCoord() const { return CSCoord(FindSetBit()); }
 
     // State queries
     bool IsEmpty() const { return m_ullBits == 0; }
