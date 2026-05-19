@@ -8,7 +8,7 @@ This document describes how WinAmy computes the optimal move for the side to mov
 
 ---
 
-## 0) Main entry points and high-level flow
+## Main entry points and high-level flow
 
 Primary game-search entry points:
 
@@ -24,7 +24,9 @@ High-level control:
 
 ---
 
-## 1) Step 1 — Enumerating all possible moves
+## 1 - Move Enumeration
+
+Strict legal generation at root (`LegalMoves` + `GenTo/GenFrom/GenEnpas` + legality filter), and phased incremental generation in search (`NextMove`/`NextEvasion`/`NextMoveQ`).
 
 ### 1.1 Core classes/structs used
 
@@ -103,9 +105,11 @@ Special rules are integrated into the same generation/legality/application pipel
 
 ---
 
-## 2) Step 2 — Evaluating and scoring each move
+## 2 — Evaluating and scoring each move
 
 WinAmy scores moves using recursive search scores (primary), with static evaluation used at quiescence leaves and additional heuristic scoring for ordering/pruning.
+
+ - Recursive alpha-beta/Negascout scoring (`NegaScout`), quiescence tactical scoring (`Quies`), static position evaluation (`EvaluatePosition`), plus move-ordering heuristics (SEE, killer/history/counter).
 
 ### 2.1 Core classes/structs used
 
@@ -170,7 +174,9 @@ Pre-search eval setup:
 
 ---
 
-## 3) Step 3 — Choosing the best next move
+## 3 — Choosing the best next move
+
+Iterative deepening root loop (`IterateInt`) with aspiration windows, PV updates, and root move resorting; final best move is `mvs[0]` copied to `m_BestMove` and applied in `SearchRoot`.
 
 ### 3.1 Root best-move selection loop
 
@@ -195,16 +201,5 @@ So, the “best move” is the head of the root list after iterative deepening +
 
 Because `DoMove()` toggles `m_nTurn` (`src/dbase.cpp:662-665`), the same pipeline computes “best move for each side” naturally on alternating turns.
 
----
-
-## 4) Summary mapping to the requested 3 steps
-
-1. **Enumerate all possible moves**  
-   Strict legal generation at root (`LegalMoves` + `GenTo/GenFrom/GenEnpas` + legality filter), and phased incremental generation in search (`NextMove`/`NextEvasion`/`NextMoveQ`).
-
-2. **Evaluate and score each move**  
-   Recursive alpha-beta/Negascout scoring (`NegaScout`), quiescence tactical scoring (`Quies`), static position evaluation (`EvaluatePosition`), plus move-ordering heuristics (SEE, killer/history/counter).
-
-3. **Choose best next move**  
-   Iterative deepening root loop (`IterateInt`) with aspiration windows, PV updates, and root move resorting; final best move is `mvs[0]` copied to `m_BestMove` and applied in `SearchRoot`.
+  
 
