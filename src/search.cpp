@@ -586,7 +586,7 @@ static int negascout(CSearchData *sd, int alpha, int beta,
 #endif /* MP  */
 ) {
     CPosition *p = sd->m_pPosition;
-    struct SearchStatus *st;
+    struct SSearchStatus *st;
     int best = -INF;
     CMove bestm = M_NONE;
     int tmp;
@@ -1981,4 +1981,5 @@ void setMaxSearchDepth(int max_search_depth) {
         MaxSearchDepth = max_search_depth;
     }
 }
+
 

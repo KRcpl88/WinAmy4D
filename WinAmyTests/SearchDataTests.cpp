@@ -28,7 +28,7 @@ TEST_CLASS(SearchDataTests) {
         PositionGuard position(CPosition::Initial());
         CSearchData searchData(position.get());
 
-        SearchStatus *initialStatus = searchData.m_pCurrent;
+        SSearchStatus *initialStatus = searchData.m_pCurrent;
         KillerEntry *initialKiller = searchData.m_pKiller;
 
         searchData.EnterNode();
@@ -109,3 +109,4 @@ TEST_CLASS(SearchDataTests) {
 };
 
 } // namespace WinAmyTests
+

@@ -85,7 +85,7 @@ typedef enum {
     QChecks
 } SearchPhase;
 
-struct SearchStatus {
+struct SSearchStatus {
     SearchPhase st_phase;
     CMove st_hashmove;
     CMove st_k1, st_k2, st_kl, st_cm, st_k3;
@@ -104,8 +104,8 @@ class CSearchData {
   public:
     CPosition *m_pPosition;
 
-    struct SearchStatus *m_pCurrent;
-    struct SearchStatus *m_pStatusTable;
+    struct SSearchStatus *m_pCurrent;
+    struct SSearchStatus *m_pStatusTable;
     struct KillerEntry *m_pKiller;
     struct KillerEntry *m_pKillerTable;
 #if MP
@@ -199,3 +199,4 @@ void StopHelpers(void);
 #endif
 
 #endif
+

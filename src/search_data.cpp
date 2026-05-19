@@ -55,8 +55,8 @@ CSearchData::CSearchData(CPosition *p) {
 
     sd->m_pPosition = p;
     sd->m_pStatusTable =
-        (struct SearchStatus *)safe_calloc(MAX_TREE_SIZE,
-                                           sizeof(struct SearchStatus));
+        (struct SSearchStatus *)safe_calloc(MAX_TREE_SIZE,
+                                           sizeof(struct SSearchStatus));
     sd->m_pCurrent = sd->m_pStatusTable;
     sd->m_pKillerTable =
         (struct KillerEntry *)safe_calloc(MAX_TREE_SIZE,
@@ -94,7 +94,7 @@ CSearchData::~CSearchData() {
 
 void CSearchData::EnterNode() {
     CSearchData *sd = this;
-    struct SearchStatus *st;
+    struct SSearchStatus *st;
 
     st = ++(sd->m_pCurrent);
 
@@ -134,7 +134,7 @@ static inline void GrowDataHeap(CSearchData *sd) {
 CMove CSearchData::NextMove() {
     CSearchData *sd = this;
     heap_section_t section = sd->m_hHeap->current_section;
-    struct SearchStatus *st = sd->m_pCurrent;
+    struct SSearchStatus *st = sd->m_pCurrent;
     CPosition *p = sd->m_pPosition;
     CMove move;
 
@@ -426,7 +426,7 @@ CMove CSearchData::NextMove() {
 CMove CSearchData::NextEvasion() {
     CSearchData *sd = this;
     heap_section_t section = sd->m_hHeap->current_section;
-    struct SearchStatus *st = sd->m_pCurrent;
+    struct SSearchStatus *st = sd->m_pCurrent;
     CPosition *p = sd->m_pPosition;
     CMove move;
 
@@ -870,7 +870,7 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
 CMove CSearchData::NextMoveQ(int alpha) {
     CSearchData *sd = this;
     heap_section_t section = sd->m_hHeap->current_section;
-    struct SearchStatus *st = sd->m_pCurrent;
+    struct SSearchStatus *st = sd->m_pCurrent;
     CMove move;
 
     switch (st->st_phase) {
@@ -946,4 +946,5 @@ void CSearchData::PutKiller(CMove m) {
         }
     }
 }
+
 
