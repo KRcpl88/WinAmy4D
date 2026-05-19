@@ -127,11 +127,11 @@ class CSearchData {
     bool m_fMaster; /* true if a master process */
     unsigned long m_ulNodesCount, m_ulQNodesCount, m_ulCheckNodesCount;
 
-    CMove m_mvBestMove;
+    CMove m_BestMove;
     int m_nBestScore;
     uint16_t m_wDepth;
 
-    CMove m_mvAlternateMove;
+    CMove m_AlternateMove;
     int m_nAlternateScore;
 
     uint16_t m_wRootMoves;

@@ -1286,7 +1286,7 @@ static void *IterateInt(void *x) {
             int tmp;
             int next_depth = (sd->m_wDepth - 2) * OnePly;
             CMove move = mvs[sd->m_wMoveNum];
-            bool is_alternate = !is_pv && move == sd->m_mvAlternateMove;
+            bool is_alternate = !is_pv && move == sd->m_AlternateMove;
 
             nodes[sd->m_wMoveNum] = sd->m_ulNodesCount;
 
@@ -1634,7 +1634,7 @@ final:
         ShowHashStatistics();
     }
 
-    sd->m_mvBestMove = mvs[0];
+    sd->m_BestMove = mvs[0];
 
     if (!sd->m_fMaster) {
         CPosition::Free(sd->m_pPosition);
@@ -1772,10 +1772,10 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
 
     sd = new CSearchData(p);
     sd->m_fMaster = true;
-    sd->m_mvAlternateMove = alternate_move;
+    sd->m_AlternateMove = alternate_move;
     IterateInt(sd);
 
-    CMove best_move = sd->m_mvBestMove;
+    CMove best_move = sd->m_BestMove;
     if (score_ptr != NULL) {
         *score_ptr = sd->m_nBestScore;
     }
