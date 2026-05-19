@@ -169,8 +169,8 @@ CMove PBMove, PBActMove;
 int PBHit;
 CMove PBAltMove;
 
-static char BestLine[2048];
-static char ShortBestLine[2048];
+char BestLine[2048];
+char ShortBestLine[2048];
 static char AnalysisLine[4096];
 
 OPTIONAL_ATOMIC unsigned long HTry, HHit, PTry, PHit, STry, SHit;
@@ -280,178 +280,6 @@ static bool IsRecapture(int piece1, int piece2) {
     default:
         return TYPE(piece1) == TYPE(piece2);
     }
-}
-
-/*
- * Decide wether to extend the check due to the following conditions:
- *  - double check
- *  - discovered check
- *  - check with only one legal response
- *
- */
-
-static int CheckExtend(CPosition *p) {
-    int kp = p->m_rgKingSq[p->m_nTurn].BitOffset();
-    CBitBoard att;
-
-    att = p->m_rgAtkFr[kp] & p->m_rgMask[OPP(p->m_nTurn)][0];
-
-    if ((att).CountBits() > 1) {
-
-        /*
-         * double check, the king has to move
-         * count no. of flight squares, if only one, extend deeper
-         *
-         */
-
-        CBitBoard ff;
-
-        int i;
-        int cnt = 0;
-
-        DblExt++;
-
-        ff = KingEPM[kp] & ~p->m_rgMask[p->m_nTurn][0];
-        att &= p->m_SlidingPieces;
-
-        while (att) {
-            i = (att).FindSetBit();
-            att.ClearLowestBit();
-            ff &= ~Ray[i][kp];
-        }
-
-        while (ff) {
-            i = (ff).FindSetBit();
-            ff.ClearLowestBit();
-            if (!(p->m_rgAtkFr[i] & p->m_rgMask[OPP(p->m_nTurn)][0]))
-                cnt++;
-            if (cnt > 1)
-                return ExtendDoubleCheck;
-        }
-    } else {
-        CBitBoard ff;
-        CBitBoard def;
-        CBitBoard tmp;
-
-        int atp = (att).FindSetBit();
-        int cnt = 0;
-        int i;
-        int nd = 0;
-
-        /* discovered check */
-        if (atp != (p->m_pActLog - 1)->gl_Move.GetToCoord().BitOffset()) {
-            DiscExt++;
-            nd = ExtendDiscoveredCheck;
-        }
-
-        ff = KingEPM[kp] & ~p->m_rgMask[p->m_nTurn][0];
-
-        i = (att).FindSetBit();
-        if (p->m_SlidingPieces.TstBit(i))
-            ff &= ~Ray[i][kp];
-
-        /* check for king flight squares */
-        while (ff) {
-            i = (ff).FindSetBit();
-            ff.ClearLowestBit();
-            if (!(p->m_rgAtkFr[i] & p->m_rgMask[OPP(p->m_nTurn)][0]))
-                cnt++;
-            if (cnt > 1)
-                return nd;
-        }
-
-        /* Find all non-pinned defenders */
-        def = p->m_rgMask[p->m_nTurn][0] & ~p->m_rgMask[p->m_nTurn][King];
-
-        tmp = (p->m_rgMask[OPP(p->m_nTurn)][Bishop] | p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
-              BishopEPM[kp];
-        while (tmp) {
-            CBitBoard tmp2;
-            i = (tmp).FindSetBit();
-            tmp.ClearLowestBit();
-            tmp2 = InterPath[i][kp];
-            if (tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & tmp2)) {
-                tmp2 &= p->m_rgMask[p->m_nTurn][0];
-                if ((tmp2).CountBits() == 1) {
-                    def.ClrBit((tmp2).FindSetBit());
-                }
-            }
-        }
-
-        tmp = (p->m_rgMask[OPP(p->m_nTurn)][Rook] | p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
-              RookEPM[kp];
-        while (tmp) {
-            CBitBoard tmp2;
-            i = (tmp).FindSetBit();
-            tmp.ClearLowestBit();
-            tmp2 = InterPath[i][kp];
-            if (tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & tmp2)) {
-                tmp2 &= p->m_rgMask[p->m_nTurn][0];
-                if ((tmp2).CountBits() == 1) {
-                    def.ClrBit((tmp2).FindSetBit());
-                }
-            }
-        }
-
-        /* All non-pinned defenders are in 'def' */
-        tmp = p->m_rgAtkFr[atp] & def;
-
-        cnt += (tmp).CountBits();
-        if (cnt > 1)
-            return nd;
-
-        /* if possible, try an interposition */
-        if (p->m_SlidingPieces.TstBit(atp)) {
-            tmp = InterPath[atp][kp];
-            while (tmp) {
-                CBitBoard tmp2;
-                i = (tmp).FindSetBit();
-                tmp.ClearLowestBit();
-                if ((tmp2 = p->m_rgAtkFr[i] & def)) {
-                    cnt += (tmp2).CountBits();
-                }
-                if (p->m_nTurn == White && (i - 8) > 0 &&
-                    p->m_rgMask[White][Pawn].TstBit(i - 8) && def.TstBit(i - 8))
-                    cnt++;
-                if (p->m_nTurn == Black && (i + 8) < 64 &&
-                    p->m_rgMask[Black][Pawn].TstBit(i + 8) && def.TstBit(i + 8))
-                    cnt++;
-                if (cnt > 1)
-                    return nd;
-            }
-        }
-    }
-
-    /* If we get here, we have only one legal move. */
-
-    SingExt++;
-    return ExtendSingularReply;
-}
-
-/*
- * Compute an optimistic score for a move.
- */
-
-static int ScoreMove(CPosition *p, CMove move) {
-    int score = 0;
-
-    if (move.IsCapture())
-        score += Value[TYPE(p->m_rgPiece[move.GetToCoord().BitOffset()])];
-    if (move.HasPromotion())
-        score += Value[PromoType(move)] - Value[Pawn];
-    else if (TYPE(p->m_rgPiece[move.GetFromCoord().BitOffset()]) == Pawn) {
-        if (p->m_nTurn == White && move.GetToCoord().BitOffset() >= a7) {
-            score += Value[Bishop];
-        }
-        if (p->m_nTurn == Black && move.GetToCoord().BitOffset() <= h2) {
-            score += Value[Bishop];
-        }
-    }
-
-    if (move.IsEnPassant())
-        score += Value[Pawn];
-
-    return score;
 }
 
 /*
@@ -632,7 +460,7 @@ int CSearchData::NegaScout(int alpha, int beta,
 
     incheck = p->InCheck(p->m_nTurn);
     if (incheck && p->m_rgnMaterial[p->m_nTurn] > 0) {
-        extend += CheckExtend(p);
+        extend += p->CheckExtend();
         ChkExt++;
     }
 
@@ -872,7 +700,7 @@ int CSearchData::NegaScout(int alpha, int beta,
 
         if (is_futile) {
             if (next_depth < 0 && !p->IsCheckingMove(move)) {
-                tmp = optimistic + ScoreMove(p, move);
+                tmp = optimistic + p->ScoreMove(move);
                 if (tmp <= alpha) {
                     if (tmp > best) {
                         best = tmp;
@@ -892,7 +720,7 @@ int CSearchData::NegaScout(int alpha, int beta,
 
             else if (next_depth >= 0 && next_depth < OnePly &&
                      !p->IsCheckingMove(move)) {
-                tmp = optimistic + ScoreMove(p, move) + (3 * Value[Pawn]);
+                tmp = optimistic + p->ScoreMove(move) + (3 * Value[Pawn]);
                 if (tmp <= alpha) {
                     if (tmp > best) {
                         best = tmp;
@@ -905,7 +733,7 @@ int CSearchData::NegaScout(int alpha, int beta,
 #if RAZORING
             else if (next_depth >= OnePly && next_depth < 2 * OnePly &&
                      !p->IsCheckingMove(move)) {
-                tmp = optimistic + ScoreMove(p, move) + (6 * Value[Pawn]);
+                tmp = optimistic + p->ScoreMove(move) + (6 * Value[Pawn]);
                 if (tmp <= alpha) {
                     next_depth -= OnePly;
                 }
@@ -1102,94 +930,6 @@ EXIT:
 }
 
 /**
- * Print the SAN of a move prefixed by the move number.
- */
-static char *NumberedSAN(CPosition *p, CMove move, char *buffer,
-                         size_t len) {
-    char san_buffer[16];
-    if (p->m_nTurn == White)
-        snprintf(buffer, len, "%d. %s", 1 + (p->m_wPly + 1) / 2,
-                 p->SAN(move, san_buffer));
-    else
-        snprintf(buffer, len, "%d. .. %s", 1 + p->m_wPly / 2,
-                 p->SAN(move, san_buffer));
-
-    return buffer;
-}
-
-/*
- * Analyze the hashtable to find the principal variation.
- */
-
-static void AnaLoop(CPosition *p, int depth) {
-    CMove move;
-    bool dummy = false;
-    int score;
-
-#if MP
-    if (ProbeHT(p->m_ullHKey, &score, 0, &move, &dummy, 0, 0, NULL) == Useless)
-        return;
-#else
-    if (ProbeHT(p->m_ullHKey, &score, 0, &move, &dummy, 0) == Useless)
-        return;
-#endif
-
-    if (p->Repeated(true) >= 2)
-        return;
-
-    if (p->LegalMove(move)) {
-        int incheck;
-        char buffer[16];
-
-        p->DoMove(move);
-        incheck = p->InCheck(OPP(p->m_nTurn));
-        p->UndoMove(move);
-
-        if (p->m_nTurn == White) {
-            snprintf(buffer, sizeof(buffer), "%d. ", 1 + (p->m_wPly + 1) / 2);
-            strcat(BestLine, buffer);
-        }
-
-        if (incheck) {
-            strcat(BestLine, "<ill>");
-            strcat(ShortBestLine, "<ill>");
-            return;
-        }
-
-        char *san = p->SAN(move, buffer);
-        strcat(BestLine, san);
-        strcat(BestLine, " ");
-        strcat(ShortBestLine, san);
-        strcat(ShortBestLine, " ");
-
-        /* save move to ponder on ... */
-        if (depth == 1)
-            PBMove = move;
-
-        p->DoMove(move);
-        AnaLoop(p, depth + 1);
-        p->UndoMove(move);
-    } else if (move == M_HASHED) {
-        strcat(BestLine, "..");
-        strcat(ShortBestLine, "..");
-    } else if (move == M_NULL) {
-        strcat(BestLine, "<null>");
-        strcat(ShortBestLine, "<null>");
-    }
-}
-
-static void AnalyzeHT(CPosition *p, CMove move) {
-    NumberedSAN(p, move, BestLine, sizeof(BestLine));
-    strcat(BestLine, " ");
-    char san_buffer[16];
-    strcpy(ShortBestLine, p->SAN(move, san_buffer));
-    strcat(ShortBestLine, " ");
-    p->DoMove(move);
-    AnaLoop(p, 1);
-    p->UndoMove(move);
-}
-
-/**
  * Initialize the search variables.
  */
 void CSearchData::InitSearch() {
@@ -1245,7 +985,7 @@ static void ResortMovesList(int cnt, CMove *mvs, unsigned long *nodes) {
  * aspiration window and scout search.
  */
 
-static void *IterateInt(void *x) {
+void *IterateInt(void *x) {
     unsigned long nodes[256];
     int last = 0;
     double elapsed;
@@ -1298,7 +1038,7 @@ static void *IterateInt(void *x) {
                     FormatTime(CurTime - StartTime, time_buffer,
                                sizeof(time_buffer)),
                     sd->m_wMoveNum + 1, sd->m_wRootMoves,
-                    NumberedSAN(p, move, san_buffer, sizeof(san_buffer)));
+                    p->NumberedSAN(move, san_buffer, sizeof(san_buffer)));
             }
 
             p->DoMove(move);
@@ -1338,7 +1078,7 @@ static void *IterateInt(void *x) {
                     char san_buffer[32];
                     SearchOutputFailHighLow(
                         sd->m_wDepth, CurTime - StartTime, false,
-                        NumberedSAN(p, move, san_buffer, sizeof(san_buffer)),
+                        p->NumberedSAN(move, san_buffer, sizeof(san_buffer)),
                         sd->m_ulNodesCount + sd->m_ulQNodesCount);
                 }
 
@@ -1413,7 +1153,7 @@ static void *IterateInt(void *x) {
                     char san_buffer[32];
                     SearchOutputFailHighLow(
                         sd->m_wDepth, CurTime - StartTime, true,
-                        NumberedSAN(p, mvs[0], san_buffer, sizeof(san_buffer)),
+                        p->NumberedSAN(mvs[0], san_buffer, sizeof(san_buffer)),
                         sd->m_ulNodesCount + sd->m_ulQNodesCount);
                 }
 
@@ -1466,7 +1206,7 @@ static void *IterateInt(void *x) {
 
                 if (sd->m_fMaster) {
                     char score_as_text[16];
-                    AnalyzeHT(p, mvs[0]);
+                    p->AnalyzeHT(mvs[0]);
                     pv_valid = true;
 
                     snprintf(AnalysisLine, sizeof(AnalysisLine),
@@ -1669,40 +1409,6 @@ void StopHelpers(void) {
 #endif /* HAVE_LIBPTHREAD */
 }
 
-/*
- * In parallel search start up all helper threads
- */
-
-static void StartHelpers(CPosition *p) {
-#if HAVE_LIBPTHREAD
-    pthread_attr_t attr;
-    int nthread;
-
-    if (tids) {
-        StopHelpers();
-    }
-
-    if (NumberOfCPUs < 2)
-        return;
-
-    tids = (pthread_t *)safe_calloc(NumberOfCPUs - 1, sizeof(pthread_t));
-
-    pthread_attr_init(&attr);
-    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-
-    /*
-     * Start up the helper threads.
-     */
-
-    for (nthread = 0; nthread < (NumberOfCPUs - 1); nthread++) {
-        CSearchData *sd = new CSearchData(CPosition::Clone(p));
-        sd->m_fMaster = false;
-        pthread_create(tids + nthread, &attr, &IterateInt, sd);
-    }
-
-#endif /* HAVE_LIBPTHREAD */
-}
-
 #endif /* MP */
 
 /**
@@ -1766,7 +1472,7 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
     SearchHeader();
 
 #if MP
-    StartHelpers(p);
+    p->StartHelpers();
 #endif /* MP */
 
     sd = new CSearchData(p);
@@ -1809,7 +1515,7 @@ void CPosition::SearchRoot() {
         if (move != M_NONE) {
             char san_buffer[32];
             Print(1, "Book move found: %s\n",
-                  NumberedSAN(p, move, san_buffer, sizeof(san_buffer)));
+                  p->NumberedSAN(move, san_buffer, sizeof(san_buffer)));
             p->m_rgwOutOfBookCnt[p->m_nTurn] = 0;
         } else {
             p->m_rgwOutOfBookCnt[p->m_nTurn] += 1;
