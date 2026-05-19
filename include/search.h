@@ -34,6 +34,7 @@
 
 #include "config.h"
 #include "dbase.h"
+#include "searchdata.h"
 #include <stdint.h>
 
 #define INF 200000 /* max. score */
@@ -68,93 +69,6 @@ extern bool AbortSearch;
 #if MP
 extern int NumberOfCPUs;
 #endif
-
-typedef enum {
-    HashMove,
-    GenerateCaptures,
-    GainingCapture,
-    Killer1,
-    Killer2,
-    CounterMv,
-    Killer3,
-    GenerateRest,
-    LoosingCapture,
-    HistoryMoves,
-    Done,
-    GenerateQChecks,
-    QChecks
-} SearchPhase;
-
-struct SSearchStatus {
-    SearchPhase st_phase;
-    CMove st_hashmove;
-    CMove st_k1, st_k2, st_kl, st_cm, st_k3;
-};
-
-struct SKillerEntry {
-    CMove killer1, killer2;    /* killer moves */
-    uint32_t kcount1, kcount2; /* killer count */
-};
-
-#if MP
-struct HTEntry;
-#endif
-
-class CSearchData {
-  public:
-    CPosition *m_pPosition;
-
-    struct SSearchStatus *m_pCurrent;
-    struct SSearchStatus *m_pStatusTable;
-    struct SKillerEntry *m_pKiller;
-    struct SKillerEntry *m_pKillerTable;
-#if MP
-    struct HTEntry *m_pLocalHashTable;
-    heap_t m_hDeferredHeap;
-#endif
-
-    heap_t m_hHeap;
-    int32_t *m_pnDataHeap;
-    unsigned int m_uDataHeapSize;
-
-    CMove m_rgCounterTab[2][4096];      /* counter moves per side */
-    unsigned int m_rguHistoryTab[2][4096]; /* history moves per side */
-
-    CMove m_rgPvSave[CSCoord::SIZE];
-
-    uint16_t m_wPly;
-
-    bool m_fMaster; /* true if a master process */
-    unsigned long m_ulNodesCount, m_ulQNodesCount, m_ulCheckNodesCount;
-
-    CMove m_BestMove;
-    int m_nBestScore;
-    uint16_t m_wDepth;
-
-    CMove m_AlternateMove;
-    int m_nAlternateScore;
-
-    uint16_t m_wRootMoves;
-    uint16_t m_wMoveNum;
-
-    explicit CSearchData(CPosition *pPosition);
-    ~CSearchData();
-    void EnterNode();
-    void LeaveNode();
-    CMove NextMove();
-    CMove NextEvasion();
-    CMove NextMoveQ(int nAlpha);
-    void PutKiller(CMove mvMove);
-    bool TerminateSearch();
-    void InitSearch();
-    void StoreResult(int nScore, int nAlpha, int nBeta, CMove mvMove, int nDepth, int nThreat);
-    int Quies(int nAlpha, int nBeta, int nDepth);
-#if MP
-    int NegaScout(int nAlpha, int nBeta, int nDepth, int nNodeType, int nExclusiveP);
-#else
-    int NegaScout(int nAlpha, int nBeta, int nDepth, int nNodeType);
-#endif
-};
 
 void setMaxSearchDepth(int);
 
