@@ -81,7 +81,7 @@ void ParseEcoPgn(char *fname) {
                 }
             }
 
-            node = add_node(node, (char *)&(p->hkey), sizeof(p->hkey), name,
+            node = add_node(node, (char *)&(p->m_ullHKey), sizeof(p->m_ullHKey), name,
                             strlen(name) + 1);
         }
 
@@ -139,10 +139,10 @@ bool FindEcoCode(const CPosition *p, char *result) {
     char *res;
     bool found = false;
 
-    while (ply <= p->ply) {
-        hash_t key = p->gameLog[ply].gl_HashKey;
-        if (ply == p->ply) {
-            key = p->hkey;
+    while (ply <= p->m_wPly) {
+        hash_t key = p->m_pGameLog[ply].gl_HashKey;
+        if (ply == p->m_wPly) {
+            key = p->m_ullHKey;
         }
         res = GetEcoCode(key);
         if (res != NULL) {

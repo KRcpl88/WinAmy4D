@@ -52,17 +52,17 @@ static void SwapReRay(CPosition *p, int side, CBitBoard atks[2], int from,
                       int to, CBitBoard *exclude) {
     CBitBoard tmp;
     int i;
-    int pc = TYPE(p->piece[from]);
+    int pc = TYPE(p->m_rgPiece[from]);
 
     atks[side].ClrBit(from);
     exclude->ClrBit(from);
 
     if (pc == Pawn || pc == Bishop || pc == Queen) {
-        tmp = p->atkFr[from] & *exclude & Ray[to][from];
+        tmp = p->m_rgAtkFr[from] & *exclude & Ray[to][from];
         if (tmp) {
             i = (tmp).FindSetBit();
-            if (TYPE(p->piece[i]) == Bishop || TYPE(p->piece[i]) == Queen) {
-                if (p->piece[i] > 0) {
+            if (TYPE(p->m_rgPiece[i]) == Bishop || TYPE(p->m_rgPiece[i]) == Queen) {
+                if (p->m_rgPiece[i] > 0) {
                     atks[White].SetBit(i);
                 } else {
                     atks[Black].SetBit(i);
@@ -72,11 +72,11 @@ static void SwapReRay(CPosition *p, int side, CBitBoard atks[2], int from,
     }
 
     if (pc == Rook || pc == Queen) {
-        tmp = p->atkFr[from] & *exclude & Ray[to][from];
+        tmp = p->m_rgAtkFr[from] & *exclude & Ray[to][from];
         if (tmp) {
             i = (tmp).FindSetBit();
-            if (TYPE(p->piece[i]) == Rook || TYPE(p->piece[i]) == Queen) {
-                if (p->piece[i] > 0) {
+            if (TYPE(p->m_rgPiece[i]) == Rook || TYPE(p->m_rgPiece[i]) == Queen) {
+                if (p->m_rgPiece[i] > 0) {
                     atks[White].SetBit(i);
                 } else {
                     atks[Black].SetBit(i);
@@ -89,7 +89,7 @@ static void SwapReRay(CPosition *p, int side, CBitBoard atks[2], int from,
 int SwapOff(CPosition *p, CMove move) {
     int to = move.GetToCoord().BitOffset();
     int fr = move.GetFromCoord().BitOffset();
-    int side = COLOR(p->piece[fr]);
+    int side = COLOR(p->m_rgPiece[fr]);
     int oside = !side;
     int swaplist[32];
     int swapcnt = 0;
@@ -101,18 +101,18 @@ int SwapOff(CPosition *p, CMove move) {
 
     if (move.HasPromotion()) {
         swapval = SwapValue[PromoType(move)];
-        swaplist[0] = SwapValue[TYPE(p->piece[to])] - SwapValue[Pawn] + swapval;
+        swaplist[0] = SwapValue[TYPE(p->m_rgPiece[to])] - SwapValue[Pawn] + swapval;
     } else {
-        swapval = SwapValue[TYPE(p->piece[fr])];
-        swaplist[0] = SwapValue[TYPE(p->piece[to])];
+        swapval = SwapValue[TYPE(p->m_rgPiece[fr])];
+        swaplist[0] = SwapValue[TYPE(p->m_rgPiece[to])];
     }
 
     swapside = oside;
 
-    atks[White] = p->mask[White][0] & p->atkFr[to];
-    atks[Black] = p->mask[Black][0] & p->atkFr[to];
+    atks[White] = p->m_rgMask[White][0] & p->m_rgAtkFr[to];
+    atks[Black] = p->m_rgMask[Black][0] & p->m_rgAtkFr[to];
 
-    exclude = p->mask[White][0] | p->mask[Black][0];
+    exclude = p->m_rgMask[White][0] | p->m_rgMask[Black][0];
 
     SwapReRay(p, side, atks, fr, to, &exclude);
 
@@ -121,31 +121,31 @@ int SwapOff(CPosition *p, CMove move) {
         CBitBoard tmp;
 
         /* find last valuable attacker */
-        tmp = p->mask[swapside][Pawn] & atks[swapside];
+        tmp = p->m_rgMask[swapside][Pawn] & atks[swapside];
         if (tmp)
             at = (tmp).FindSetBit();
         else {
-            tmp = (p->mask[swapside][Knight] | p->mask[swapside][Bishop]) &
+            tmp = (p->m_rgMask[swapside][Knight] | p->m_rgMask[swapside][Bishop]) &
                   atks[swapside];
             if (tmp)
                 at = (tmp).FindSetBit();
             else {
-                tmp = p->mask[swapside][Rook] & atks[swapside];
+                tmp = p->m_rgMask[swapside][Rook] & atks[swapside];
                 if (tmp)
                     at = (tmp).FindSetBit();
                 else {
-                    tmp = p->mask[swapside][Queen] & atks[swapside];
+                    tmp = p->m_rgMask[swapside][Queen] & atks[swapside];
                     if (tmp)
                         at = (tmp).FindSetBit();
                     else
-                        at = (p->mask[swapside][King]).FindSetBit();
+                        at = (p->m_rgMask[swapside][King]).FindSetBit();
                 }
             }
         }
 
         swapcnt++;
         swaplist[swapcnt] = swaplist[swapcnt - 1] + swapsign * swapval;
-        swapval = SwapValue[TYPE(p->piece[at])];
+        swapval = SwapValue[TYPE(p->m_rgPiece[at])];
         swapsign = -swapsign;
 
         SwapReRay(p, swapside, atks, at, to, &exclude);

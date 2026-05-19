@@ -297,10 +297,10 @@ static bool IsRecapture(int piece1, int piece2) {
  */
 
 static int CheckExtend(CPosition *p) {
-    int kp = p->kingSq[p->turn].BitOffset();
+    int kp = p->m_rgKingSq[p->m_nTurn].BitOffset();
     CBitBoard att;
 
-    att = p->atkFr[kp] & p->mask[OPP(p->turn)][0];
+    att = p->m_rgAtkFr[kp] & p->m_rgMask[OPP(p->m_nTurn)][0];
 
     if ((att).CountBits() > 1) {
 
@@ -317,8 +317,8 @@ static int CheckExtend(CPosition *p) {
 
         DblExt++;
 
-        ff = KingEPM[kp] & ~p->mask[p->turn][0];
-        att &= p->slidingPieces;
+        ff = KingEPM[kp] & ~p->m_rgMask[p->m_nTurn][0];
+        att &= p->m_SlidingPieces;
 
         while (att) {
             i = (att).FindSetBit();
@@ -329,7 +329,7 @@ static int CheckExtend(CPosition *p) {
         while (ff) {
             i = (ff).FindSetBit();
             ff.ClearLowestBit();
-            if (!(p->atkFr[i] & p->mask[OPP(p->turn)][0]))
+            if (!(p->m_rgAtkFr[i] & p->m_rgMask[OPP(p->m_nTurn)][0]))
                 cnt++;
             if (cnt > 1)
                 return ExtendDoubleCheck;
@@ -345,54 +345,54 @@ static int CheckExtend(CPosition *p) {
         int nd = 0;
 
         /* discovered check */
-        if (atp != (p->actLog - 1)->gl_Move.GetToCoord().BitOffset()) {
+        if (atp != (p->m_pActLog - 1)->gl_Move.GetToCoord().BitOffset()) {
             DiscExt++;
             nd = ExtendDiscoveredCheck;
         }
 
-        ff = KingEPM[kp] & ~p->mask[p->turn][0];
+        ff = KingEPM[kp] & ~p->m_rgMask[p->m_nTurn][0];
 
         i = (att).FindSetBit();
-        if (p->slidingPieces.TstBit(i))
+        if (p->m_SlidingPieces.TstBit(i))
             ff &= ~Ray[i][kp];
 
         /* check for king flight squares */
         while (ff) {
             i = (ff).FindSetBit();
             ff.ClearLowestBit();
-            if (!(p->atkFr[i] & p->mask[OPP(p->turn)][0]))
+            if (!(p->m_rgAtkFr[i] & p->m_rgMask[OPP(p->m_nTurn)][0]))
                 cnt++;
             if (cnt > 1)
                 return nd;
         }
 
         /* Find all non-pinned defenders */
-        def = p->mask[p->turn][0] & ~p->mask[p->turn][King];
+        def = p->m_rgMask[p->m_nTurn][0] & ~p->m_rgMask[p->m_nTurn][King];
 
-        tmp = (p->mask[OPP(p->turn)][Bishop] | p->mask[OPP(p->turn)][Queen]) &
+        tmp = (p->m_rgMask[OPP(p->m_nTurn)][Bishop] | p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
               BishopEPM[kp];
         while (tmp) {
             CBitBoard tmp2;
             i = (tmp).FindSetBit();
             tmp.ClearLowestBit();
             tmp2 = InterPath[i][kp];
-            if (tmp2 && !(p->mask[OPP(p->turn)][0] & tmp2)) {
-                tmp2 &= p->mask[p->turn][0];
+            if (tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & tmp2)) {
+                tmp2 &= p->m_rgMask[p->m_nTurn][0];
                 if ((tmp2).CountBits() == 1) {
                     def.ClrBit((tmp2).FindSetBit());
                 }
             }
         }
 
-        tmp = (p->mask[OPP(p->turn)][Rook] | p->mask[OPP(p->turn)][Queen]) &
+        tmp = (p->m_rgMask[OPP(p->m_nTurn)][Rook] | p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
               RookEPM[kp];
         while (tmp) {
             CBitBoard tmp2;
             i = (tmp).FindSetBit();
             tmp.ClearLowestBit();
             tmp2 = InterPath[i][kp];
-            if (tmp2 && !(p->mask[OPP(p->turn)][0] & tmp2)) {
-                tmp2 &= p->mask[p->turn][0];
+            if (tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & tmp2)) {
+                tmp2 &= p->m_rgMask[p->m_nTurn][0];
                 if ((tmp2).CountBits() == 1) {
                     def.ClrBit((tmp2).FindSetBit());
                 }
@@ -400,27 +400,27 @@ static int CheckExtend(CPosition *p) {
         }
 
         /* All non-pinned defenders are in 'def' */
-        tmp = p->atkFr[atp] & def;
+        tmp = p->m_rgAtkFr[atp] & def;
 
         cnt += (tmp).CountBits();
         if (cnt > 1)
             return nd;
 
         /* if possible, try an interposition */
-        if (p->slidingPieces.TstBit(atp)) {
+        if (p->m_SlidingPieces.TstBit(atp)) {
             tmp = InterPath[atp][kp];
             while (tmp) {
                 CBitBoard tmp2;
                 i = (tmp).FindSetBit();
                 tmp.ClearLowestBit();
-                if ((tmp2 = p->atkFr[i] & def)) {
+                if ((tmp2 = p->m_rgAtkFr[i] & def)) {
                     cnt += (tmp2).CountBits();
                 }
-                if (p->turn == White && (i - 8) > 0 &&
-                    p->mask[White][Pawn].TstBit(i - 8) && def.TstBit(i - 8))
+                if (p->m_nTurn == White && (i - 8) > 0 &&
+                    p->m_rgMask[White][Pawn].TstBit(i - 8) && def.TstBit(i - 8))
                     cnt++;
-                if (p->turn == Black && (i + 8) < 64 &&
-                    p->mask[Black][Pawn].TstBit(i + 8) && def.TstBit(i + 8))
+                if (p->m_nTurn == Black && (i + 8) < 64 &&
+                    p->m_rgMask[Black][Pawn].TstBit(i + 8) && def.TstBit(i + 8))
                     cnt++;
                 if (cnt > 1)
                     return nd;
@@ -442,14 +442,14 @@ static int ScoreMove(CPosition *p, CMove move) {
     int score = 0;
 
     if (move.IsCapture())
-        score += Value[TYPE(p->piece[move.GetToCoord().BitOffset()])];
+        score += Value[TYPE(p->m_rgPiece[move.GetToCoord().BitOffset()])];
     if (move.HasPromotion())
         score += Value[PromoType(move)] - Value[Pawn];
-    else if (TYPE(p->piece[move.GetFromCoord().BitOffset()]) == Pawn) {
-        if (p->turn == White && move.GetToCoord().BitOffset() >= a7) {
+    else if (TYPE(p->m_rgPiece[move.GetFromCoord().BitOffset()]) == Pawn) {
+        if (p->m_nTurn == White && move.GetToCoord().BitOffset() >= a7) {
             score += Value[Bishop];
         }
-        if (p->turn == Black && move.GetToCoord().BitOffset() <= h2) {
+        if (p->m_nTurn == Black && move.GetToCoord().BitOffset() <= h2) {
             score += Value[Bishop];
         }
     }
@@ -469,10 +469,10 @@ static void StoreResult(struct SearchData *sd, int score, int alpha, int beta,
     CPosition *p = sd->position;
 
     if (!(move.IsTactical()) && score > alpha) {
-        sd->historyTab[p->turn][move.GetFromToIndex()] += depth * depth;
+        sd->historyTab[p->m_nTurn][move.GetFromToIndex()] += depth * depth;
     }
 
-    StoreHT(p->hkey, score, alpha, beta, move, depth, threat, sd->ply
+    StoreHT(p->m_ullHKey, score, alpha, beta, move, depth, threat, sd->ply
 #if MP
             ,
             sd->localHashTable
@@ -542,7 +542,7 @@ static int quies(struct SearchData *sd, int alpha, int beta, int depth) {
 
     while ((move = NextMoveQ(sd, alpha)) != M_NONE) {
         p->DoMove(move);
-        if (p->InCheck(OPP(p->turn)))
+        if (p->InCheck(OPP(p->m_nTurn)))
             p->UndoMove(move);
         else {
             tmp = -quies(sd, -beta, -talpha, depth - 1);
@@ -633,8 +633,8 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
      * check extension
      */
 
-    incheck = p->InCheck(p->turn);
-    if (incheck && p->material[p->turn] > 0) {
+    incheck = p->InCheck(p->m_nTurn);
+    if (incheck && p->m_rgnMaterial[p->m_nTurn] > 0) {
         extend += CheckExtend(p);
         ChkExt++;
     }
@@ -647,10 +647,10 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
 
     HTry++;
 #if MP
-    switch (ProbeHT(p->hkey, &tmp, depth, &(st->st_hashmove), &threat, sd->ply,
+    switch (ProbeHT(p->m_ullHKey, &tmp, depth, &(st->st_hashmove), &threat, sd->ply,
                     exclusiveP, sd->localHashTable))
 #else
-    switch (ProbeHT(p->hkey, &tmp, depth, &(st->st_hashmove), &threat, sd->ply))
+    switch (ProbeHT(p->m_ullHKey, &tmp, depth, &(st->st_hashmove), &threat, sd->ply))
 #endif /* MP */
     {
     case ExactScore:
@@ -672,7 +672,7 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
         }
         break;
     case Useless:
-        threat = !incheck && MateThreat(p, OPP(p->turn));
+        threat = !incheck && MateThreat(p, OPP(p->m_nTurn));
         break;
 #if MP
     case OnEvaluation:
@@ -747,7 +747,7 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
         if (AbortSearch)
             goto EXIT;
         if (nms >= beta) {
-            if (p->nonPawn[p->turn] >= Value[Queen]) {
+            if (p->m_rgnNonPawn[p->m_nTurn] >= Value[Queen]) {
                 best = nms;
                 goto EXIT;
             } else {
@@ -777,7 +777,7 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
     }
 #endif /* NULLMOVE */
 
-    lmove = (p->actLog - 1)->gl_Move;
+    lmove = (p->m_pActLog - 1)->gl_Move;
     reduce_extensions = (sd->ply > 2 * sd->depth);
     talpha = alpha;
 
@@ -797,7 +797,7 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
 #if FUTILITY
     is_futile = !incheck && !threat && alpha < CMLIMIT && alpha > -CMLIMIT;
     if (is_futile) {
-        if (p->turn == White) {
+        if (p->m_nTurn == White) {
             optimistic = MaterialBalance(p) + MaxPos;
         } else {
             optimistic = -MaterialBalance(p) + MaxPos;
@@ -836,23 +836,23 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
 
         if ((move.IsCapture()) && (lmove.IsCapture()) &&
             move.GetToCoord().BitOffset() == lmove.GetToCoord().BitOffset() &&
-            IsRecapture(p->piece[move.GetToCoord().BitOffset()], (p->actLog - 1)->gl_Piece)) {
+            IsRecapture(p->m_rgPiece[move.GetToCoord().BitOffset()], (p->m_pActLog - 1)->gl_Piece)) {
             RCExt += 1;
-            next_depth += ExtendRecapture[TYPE(p->piece[move.GetToCoord().BitOffset()])];
+            next_depth += ExtendRecapture[TYPE(p->m_rgPiece[move.GetToCoord().BitOffset()])];
         }
 
         /*
          * passed pawn push extension
          */
 
-        if (TYPE(p->piece[move.GetFromCoord().BitOffset()]) == Pawn &&
-            p->nonPawn[OPP(p->turn)] <= Value[Queen]) {
+        if (TYPE(p->m_rgPiece[move.GetFromCoord().BitOffset()]) == Pawn &&
+            p->m_rgnNonPawn[OPP(p->m_nTurn)] <= Value[Queen]) {
             const CSCoord& toCoord = move.GetToCoord();
             const int width = CSCoord::LEVEL_WIDTH[toCoord.m_nLevel];
 
-            if (((p->turn == White && toCoord.m_nRank >= width - 2) ||
-                 (p->turn == Black && toCoord.m_nRank <= 1)) &&
-                p->IsPassed(toCoord, p->turn) && SwapOff(p, move) >= 0) {
+            if (((p->m_nTurn == White && toCoord.m_nRank >= width - 2) ||
+                 (p->m_nTurn == Black && toCoord.m_nRank <= 1)) &&
+                p->IsPassed(toCoord, p->m_nTurn) && SwapOff(p, move) >= 0) {
                 next_depth += ExtendPassedPawn;
                 PPExt += 1;
             }
@@ -920,14 +920,14 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
 #endif /* FUTILITY */
 
         p->DoMove(move);
-        if (p->InCheck(OPP(p->turn))) {
+        if (p->InCheck(OPP(p->m_nTurn))) {
             p->UndoMove(move);
         } else {
             /*
              * Check extension
              */
 
-            if (p->material[p->turn] > 0 && p->InCheck(p->turn)) {
+            if (p->m_rgnMaterial[p->m_nTurn] > 0 && p->InCheck(p->m_nTurn)) {
                 next_depth +=
                     (reduce_extensions) ? ExtendInCheck >> 1 : ExtendInCheck;
             }
@@ -989,7 +989,7 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
                 if (tmp >= beta) {
                     if (!(move.IsTactical())) {
                         PutKiller(sd, move);
-                        sd->counterTab[p->turn][lmove.GetFromToIndex()] = move;
+                        sd->counterTab[p->m_nTurn][lmove.GetFromToIndex()] = move;
                     }
                     StoreResult(sd, tmp, alpha, beta, move, depth, threat);
                     best = tmp;
@@ -1053,7 +1053,7 @@ static int negascout(struct SearchData *sd, int alpha, int beta,
         if (tmp >= beta) {
             if (!(move.IsTactical())) {
                 PutKiller(sd, move);
-                sd->counterTab[p->turn][lmove.GetFromToIndex()] = move;
+                sd->counterTab[p->m_nTurn][lmove.GetFromToIndex()] = move;
             }
             StoreResult(sd, tmp, alpha, beta, move, depth, threat);
             best = tmp;
@@ -1110,11 +1110,11 @@ EXIT:
 static char *NumberedSAN(CPosition *p, CMove move, char *buffer,
                          size_t len) {
     char san_buffer[16];
-    if (p->turn == White)
-        snprintf(buffer, len, "%d. %s", 1 + (p->ply + 1) / 2,
+    if (p->m_nTurn == White)
+        snprintf(buffer, len, "%d. %s", 1 + (p->m_wPly + 1) / 2,
                  p->SAN(move, san_buffer));
     else
-        snprintf(buffer, len, "%d. .. %s", 1 + p->ply / 2,
+        snprintf(buffer, len, "%d. .. %s", 1 + p->m_wPly / 2,
                  p->SAN(move, san_buffer));
 
     return buffer;
@@ -1130,10 +1130,10 @@ static void AnaLoop(CPosition *p, int depth) {
     int score;
 
 #if MP
-    if (ProbeHT(p->hkey, &score, 0, &move, &dummy, 0, 0, NULL) == Useless)
+    if (ProbeHT(p->m_ullHKey, &score, 0, &move, &dummy, 0, 0, NULL) == Useless)
         return;
 #else
-    if (ProbeHT(p->hkey, &score, 0, &move, &dummy, 0) == Useless)
+    if (ProbeHT(p->m_ullHKey, &score, 0, &move, &dummy, 0) == Useless)
         return;
 #endif
 
@@ -1145,11 +1145,11 @@ static void AnaLoop(CPosition *p, int depth) {
         char buffer[16];
 
         p->DoMove(move);
-        incheck = p->InCheck(OPP(p->turn));
+        incheck = p->InCheck(OPP(p->m_nTurn));
         p->UndoMove(move);
 
-        if (p->turn == White) {
-            snprintf(buffer, sizeof(buffer), "%d. ", 1 + (p->ply + 1) / 2);
+        if (p->m_nTurn == White) {
+            snprintf(buffer, sizeof(buffer), "%d. ", 1 + (p->m_wPly + 1) / 2);
             strcat(BestLine, buffer);
         }
 
@@ -1270,7 +1270,7 @@ static void *IterateInt(void *x) {
 
     CMove *mvs = sd->heap->data + sd->heap->current_section->start;
 
-    sd->best_score = p->material[p->turn] - p->material[OPP(p->turn)];
+    sd->best_score = p->m_rgnMaterial[p->m_nTurn] - p->m_rgnMaterial[OPP(p->m_nTurn)];
 
     if (!mvs[0].IsTactical())
         PutKiller(sd, mvs[0]);
@@ -1304,7 +1304,7 @@ static void *IterateInt(void *x) {
             }
 
             p->DoMove(move);
-            if (p->InCheck(p->turn))
+            if (p->InCheck(p->m_nTurn))
                 next_depth += ExtendInCheck;
 
             if (next_depth >= 0) {
@@ -1479,7 +1479,7 @@ static void *IterateInt(void *x) {
 
                     if (PrintOK) {
                         SearchOutput(sd->depth, CurTime - StartTime,
-                                     (p->turn) ? -sd->best_score
+                                     (p->m_nTurn) ? -sd->best_score
                                                : sd->best_score,
                                      BestLine, sd->nodes_cnt + sd->qnodes_cnt);
 
@@ -1507,7 +1507,7 @@ static void *IterateInt(void *x) {
                                        (sd->best_score < -CMLIMIT ||
                                         sd->best_score > CMLIMIT)))) {
             SearchOutput(sd->depth, CurTime - StartTime,
-                         (p->turn) ? -sd->best_score : sd->best_score, BestLine,
+                         (p->m_nTurn) ? -sd->best_score : sd->best_score, BestLine,
                          sd->nodes_cnt + sd->qnodes_cnt);
 
             any_pv_printed = true;
@@ -1591,7 +1591,7 @@ final:
         if (pv_valid && !any_pv_printed) {
             // Make sure there is a PV printed
             SearchOutput(sd->depth, CurTime - StartTime,
-                         (p->turn) ? -sd->best_score : sd->best_score, BestLine,
+                         (p->m_nTurn) ? -sd->best_score : sd->best_score, BestLine,
                          sd->nodes_cnt + sd->qnodes_cnt);
         }
 
@@ -1744,7 +1744,7 @@ CMove Iterate(CPosition *p, int *score_ptr, CMove alternate_move,
 
     if (cnt == 0) {
         free_heap(heap);
-        if (!p->InCheck(p->turn))
+        if (!p->InCheck(p->m_nTurn))
             strcpy(AnalysisLine, "stalemate");
         else
             strcpy(AnalysisLine, "mate");
@@ -1803,16 +1803,16 @@ void SearchRoot(CPosition *p) {
     SearchMode = Searching;
 
     /* Test book first */
-    if (p->outOfBookCnt[p->turn] < 3) {
+    if (p->m_rgwOutOfBookCnt[p->m_nTurn] < 3) {
         move = SelectBook(p);
 
         if (move != M_NONE) {
             char san_buffer[32];
             Print(1, "Book move found: %s\n",
                   NumberedSAN(p, move, san_buffer, sizeof(san_buffer)));
-            p->outOfBookCnt[p->turn] = 0;
+            p->m_rgwOutOfBookCnt[p->m_nTurn] = 0;
         } else {
-            p->outOfBookCnt[p->turn] += 1;
+            p->m_rgwOutOfBookCnt[p->m_nTurn] += 1;
         }
     }
 
@@ -1828,7 +1828,7 @@ void SearchRoot(CPosition *p) {
 
         char san_buffer[16];
         Print(0, REVERSE "%s(%d): %s" NORMAL "\n",
-              p->turn == White ? "White" : "Black", (p->ply / 2) + 1,
+              p->m_nTurn == White ? "White" : "Black", (p->m_wPly / 2) + 1,
               p->SAN(move, san_buffer));
 
         if (XBoardMode)
@@ -1900,12 +1900,12 @@ pb_result_t PermanentBrain(CPosition *p) {
         PBHit = false;
 
         Print(0, "%s(%d): %s (in Permanent Brain)\n",
-              p->turn == White ? "White" : "Black", (p->ply / 2) + 1,
+              p->m_nTurn == White ? "White" : "Black", (p->m_wPly / 2) + 1,
               p->SAN(PBActMove, san_buffer));
 
         q->DoMove(PBActMove);
 
-        if (q->outOfBookCnt[q->turn] < 3) {
+        if (q->m_rgwOutOfBookCnt[q->m_nTurn] < 3) {
             move = SelectBook(q);
             if (move != M_NONE) {
                 PBHit = false;
@@ -1931,14 +1931,14 @@ pb_result_t PermanentBrain(CPosition *p) {
                 (double)(CurTime - WallTimeStart) / (double)ONE_SECOND;
             Print(2, "PB Hit! (elapsed %g secs)\n", elapsed);
 
-            Print(0, "%s(%d): %s\n", p->turn == White ? "White" : "Black",
-                  (p->ply / 2) + 1, p->SAN(PBActMove, san_buffer));
+            Print(0, "%s(%d): %s\n", p->m_nTurn == White ? "White" : "Black",
+                  (p->m_wPly / 2) + 1, p->SAN(PBActMove, san_buffer));
 
             p->DoMove(PBActMove);
             DoTC(p, (int)(elapsed + 0.5));
 
             Print(0, REVERSE "%s(%d): %s" NORMAL "\n",
-                  p->turn == White ? "White" : "Black", (p->ply / 2) + 1,
+                  p->m_nTurn == White ? "White" : "Black", (p->m_wPly / 2) + 1,
                   p->SAN(move, san_buffer));
 
             if (XBoardMode) {

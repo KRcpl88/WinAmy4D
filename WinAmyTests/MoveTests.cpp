@@ -17,10 +17,10 @@ TEST_CLASS(MoveTests) {
         const CMove move = make_move(e2, e4, M_PAWND);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)Pawn, (int)position.get()->piece[e4]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[e2]);
-        Assert::AreEqual((int)Black, (int)position.get()->turn);
-        Assert::AreEqual(1, (int)position.get()->ply);
+        Assert::AreEqual((int)Pawn, (int)position.get()->m_rgPiece[e4]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[e2]);
+        Assert::AreEqual((int)Black, (int)position.get()->m_nTurn);
+        Assert::AreEqual(1, (int)position.get()->m_wPly);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -33,8 +33,8 @@ TEST_CLASS(MoveTests) {
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
         position.get()->DoNull();
-        Assert::AreEqual((int)Black, (int)position.get()->turn);
-        Assert::IsFalse(position.get()->enPassant.IsValid());
+        Assert::AreEqual((int)Black, (int)position.get()->m_nTurn);
+        Assert::IsFalse(position.get()->m_EnPassant.IsValid());
 
         position.get()->UndoNull();
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -46,18 +46,18 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
         for (int i = 0; i < 64; i++) {
-            position.get()->atkTo[i] = 0;
-            position.get()->atkFr[i] = 0;
+            position.get()->m_rgAtkTo[i] = 0;
+            position.get()->m_rgAtkFr[i] = 0;
         }
 
         position.get()->RecalcAttacks();
 
-        CBitBoard occupied = position.get()->mask[White][0] | position.get()->mask[Black][0];
+        CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
         CBitBoard expectedBishopAttacks(bishop_attacks(d5, occupied));
 
-        Assert::IsTrue(position.get()->atkTo[d5] == expectedBishopAttacks);
-        Assert::IsTrue((position.get()->atkFr[e6] & CBitBoard::SetMask(d5)).IsNotEmpty());
-        Assert::IsTrue((position.get()->atkFr[c4] & CBitBoard::SetMask(d5)).IsNotEmpty());
+        Assert::IsTrue(position.get()->m_rgAtkTo[d5] == expectedBishopAttacks);
+        Assert::IsTrue((position.get()->m_rgAtkFr[e6] & CBitBoard::SetMask(d5)).IsNotEmpty());
+        Assert::IsTrue((position.get()->m_rgAtkFr[c4] & CBitBoard::SetMask(d5)).IsNotEmpty());
     }
 
     TEST_METHOD(DoMoveCaptureRemovesCapturedPiece) {
@@ -69,8 +69,8 @@ TEST_CLASS(MoveTests) {
         CMove move = make_move(d4, e6, M_CAPTURE);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)Knight, (int)position.get()->piece[e6]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[d4]);
+        Assert::AreEqual((int)Knight, (int)position.get()->m_rgPiece[e6]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[d4]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -85,9 +85,9 @@ TEST_CLASS(MoveTests) {
         CMove move = make_move(e5, d6, M_ENPASSANT);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)Pawn, (int)position.get()->piece[d6]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[e5]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[d5]);
+        Assert::AreEqual((int)Pawn, (int)position.get()->m_rgPiece[d6]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[e5]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[d5]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -101,10 +101,10 @@ TEST_CLASS(MoveTests) {
         CMove move = make_move(e1, g1, M_SCASTLE);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)King, (int)position.get()->piece[g1]);
-        Assert::AreEqual((int)Rook, (int)position.get()->piece[f1]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[e1]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[h1]);
+        Assert::AreEqual((int)King, (int)position.get()->m_rgPiece[g1]);
+        Assert::AreEqual((int)Rook, (int)position.get()->m_rgPiece[f1]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[e1]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[h1]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -118,10 +118,10 @@ TEST_CLASS(MoveTests) {
         CMove move = make_move(e1, c1, M_LCASTLE);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)King, (int)position.get()->piece[c1]);
-        Assert::AreEqual((int)Rook, (int)position.get()->piece[d1]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[e1]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[a1]);
+        Assert::AreEqual((int)King, (int)position.get()->m_rgPiece[c1]);
+        Assert::AreEqual((int)Rook, (int)position.get()->m_rgPiece[d1]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[e1]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[a1]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -137,8 +137,8 @@ TEST_CLASS(MoveTests) {
             static_cast<int>(static_cast<uint32_t>(Queen) << M_PROMOTION_OFFSET));
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)Queen, (int)position.get()->piece[e8]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[e7]);
+        Assert::AreEqual((int)Queen, (int)position.get()->m_rgPiece[e8]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[e7]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());

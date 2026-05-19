@@ -15,7 +15,7 @@ TEST_CLASS(AttackTests) {
         char epd[] = "4k3/8/8/8/4P3/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
         CBitBoard expected = CBitBoard::SetMask(d5) | CBitBoard::SetMask(f5);
-        Assert::IsTrue(position.get()->atkTo[e4] == expected);
+        Assert::IsTrue(position.get()->m_rgAtkTo[e4] == expected);
     }
 
     TEST_METHOD(AtkSetPawnBlackAttacksCorrectSquares) {
@@ -23,7 +23,7 @@ TEST_CLASS(AttackTests) {
         char epd[] = "4k3/8/8/4p3/8/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
         CBitBoard expected = CBitBoard::SetMask(d4) | CBitBoard::SetMask(f4);
-        Assert::IsTrue(position.get()->atkTo[e5] == expected);
+        Assert::IsTrue(position.get()->m_rgAtkTo[e5] == expected);
     }
 
     TEST_METHOD(AtkSetKnightAttacksAllEightSquares) {
@@ -34,7 +34,7 @@ TEST_CLASS(AttackTests) {
                              CBitBoard::SetMask(b3) | CBitBoard::SetMask(f3) |
                              CBitBoard::SetMask(b5) | CBitBoard::SetMask(f5) |
                              CBitBoard::SetMask(c6) | CBitBoard::SetMask(e6);
-        Assert::IsTrue(position.get()->atkTo[d4] == expected);
+        Assert::IsTrue(position.get()->m_rgAtkTo[d4] == expected);
     }
 
     TEST_METHOD(AtkSetKingAttacksAllEightSquares) {
@@ -45,35 +45,35 @@ TEST_CLASS(AttackTests) {
                              CBitBoard::SetMask(f3) | CBitBoard::SetMask(d4) |
                              CBitBoard::SetMask(f4) | CBitBoard::SetMask(d5) |
                              CBitBoard::SetMask(e5) | CBitBoard::SetMask(f5);
-        Assert::IsTrue(position.get()->atkTo[e4] == expected);
+        Assert::IsTrue(position.get()->m_rgAtkTo[e4] == expected);
     }
 
     TEST_METHOD(AtkSetRookAttacksStopAtBlockers) {
         // Rook on d4 with blockers
         char epd[] = "4k3/8/8/8/1P1R1p2/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
-        BitBoardBits occupied = (position.get()->mask[White][0] | position.get()->mask[Black][0]).GetBits();
+        BitBoardBits occupied = (position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0]).GetBits();
         CBitBoard expected(ReferenceRookAttacks(d4, occupied));
-        Assert::IsTrue(position.get()->atkTo[d4] == expected);
+        Assert::IsTrue(position.get()->m_rgAtkTo[d4] == expected);
     }
 
     TEST_METHOD(AtkSetBishopAttacksStopAtBlockers) {
         // Bishop on d4 with a blocker on f6
         char epd[] = "4k3/8/5p2/8/3B4/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
-        BitBoardBits occupied = (position.get()->mask[White][0] | position.get()->mask[Black][0]).GetBits();
+        BitBoardBits occupied = (position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0]).GetBits();
         CBitBoard expected(ReferenceBishopAttacks(d4, occupied));
-        Assert::IsTrue(position.get()->atkTo[d4] == expected);
+        Assert::IsTrue(position.get()->m_rgAtkTo[d4] == expected);
     }
 
     TEST_METHOD(AtkSetQueenCombinesRookAndBishopAttacks) {
         // Queen on d4
         char epd[] = "4k3/8/8/8/3Q4/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
-        BitBoardBits occupied = (position.get()->mask[White][0] | position.get()->mask[Black][0]).GetBits();
+        BitBoardBits occupied = (position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0]).GetBits();
         CBitBoard expected(ReferenceRookAttacks(d4, occupied) |
                            ReferenceBishopAttacks(d4, occupied));
-        Assert::IsTrue(position.get()->atkTo[d4] == expected);
+        Assert::IsTrue(position.get()->m_rgAtkTo[d4] == expected);
     }
 
     TEST_METHOD(AtkFrReflectsAtkTo) {
@@ -81,11 +81,11 @@ TEST_CLASS(AttackTests) {
         char epd[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
         for (int sq = 0; sq < 64; sq++) {
-            BitBoardBits atkTo = position.get()->atkTo[sq].GetBits();
+            BitBoardBits atkTo = position.get()->m_rgAtkTo[sq].GetBits();
             while (atkTo) {
                 int target = CBitBoard(atkTo).FindSetBit();
                 atkTo &= atkTo - 1;
-                Assert::IsTrue((position.get()->atkFr[target] & CBitBoard::SetMask(sq)) != 0,
+                Assert::IsTrue((position.get()->m_rgAtkFr[target] & CBitBoard::SetMask(sq)) != 0,
                     L"atkFr must reflect atkTo");
             }
         }
@@ -95,27 +95,27 @@ TEST_CLASS(AttackTests) {
         // After moving a knight, its old square should have no attacks
         char epd[] = "4k3/8/8/8/3N4/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
-        Assert::IsTrue(position.get()->atkTo[d4] != 0);
+        Assert::IsTrue(position.get()->m_rgAtkTo[d4] != 0);
 
         CMove move = make_move(d4, e6, 0);
         position.get()->DoMove(move);
 
         // d4 is now empty, so atkTo[d4] should be 0
-        Assert::IsTrue(position.get()->atkTo[d4] == CBitBoard(0));
+        Assert::IsTrue(position.get()->m_rgAtkTo[d4] == CBitBoard(0));
         // e6 should have knight attacks
-        Assert::IsTrue(position.get()->atkTo[e6].IsNotEmpty());
+        Assert::IsTrue(position.get()->m_rgAtkTo[e6].IsNotEmpty());
     }
 
     TEST_METHOD(AtkClrViaUndoMoveRestoresAttacks) {
         char epd[] = "4k3/8/8/8/3N4/8/8/4K3 w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
-        CBitBoard originalAtkTo(position.get()->atkTo[d4]);
+        CBitBoard originalAtkTo(position.get()->m_rgAtkTo[d4]);
 
         CMove move = make_move(d4, e6, 0);
         position.get()->DoMove(move);
         position.get()->UndoMove(move);
 
-        Assert::IsTrue(position.get()->atkTo[d4] == originalAtkTo);
+        Assert::IsTrue(position.get()->m_rgAtkTo[d4] == originalAtkTo);
     }
 
     TEST_METHOD(RecalcAttacksMatchesIncrementalAttacks) {
@@ -127,16 +127,16 @@ TEST_CLASS(AttackTests) {
 
         // Clear and recalculate
         for (int i = 0; i < 64; i++) {
-            recalced.get()->atkTo[i] = 0;
-            recalced.get()->atkFr[i] = 0;
+            recalced.get()->m_rgAtkTo[i] = 0;
+            recalced.get()->m_rgAtkFr[i] = 0;
         }
         recalced.get()->RecalcAttacks();
 
         for (int i = 0; i < 64; i++) {
-            Assert::IsTrue(position.get()->atkTo[i] ==
-                           CBitBoard(recalced.get()->atkTo[i]));
-            Assert::IsTrue(position.get()->atkFr[i] ==
-                           CBitBoard(recalced.get()->atkFr[i]));
+            Assert::IsTrue(position.get()->m_rgAtkTo[i] ==
+                           CBitBoard(recalced.get()->m_rgAtkTo[i]));
+            Assert::IsTrue(position.get()->m_rgAtkFr[i] ==
+                           CBitBoard(recalced.get()->m_rgAtkFr[i]));
         }
     }
 
@@ -149,10 +149,10 @@ TEST_CLASS(AttackTests) {
         position.get()->DoMove(move);
 
         // Knight now on e6, no piece on d4
-        Assert::AreEqual((int)Knight, (int)position.get()->piece[e6]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->piece[d4]);
-        Assert::IsTrue(position.get()->atkTo[d4] == CBitBoard(0));
-        Assert::IsTrue(position.get()->atkTo[e6].IsNotEmpty());
+        Assert::AreEqual((int)Knight, (int)position.get()->m_rgPiece[e6]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[d4]);
+        Assert::IsTrue(position.get()->m_rgAtkTo[d4] == CBitBoard(0));
+        Assert::IsTrue(position.get()->m_rgAtkTo[e6].IsNotEmpty());
     }
 
     TEST_METHOD(PawnAndKnightAttackTablesMatchExpectedSquares) {

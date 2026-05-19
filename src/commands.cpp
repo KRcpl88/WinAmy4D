@@ -437,8 +437,8 @@ void Edit(char *args) {
     CPosition *p = CurrentPosition;
 
     for (i = 0; i < 64; i++)
-        p->piece[i] = Neutral;
-    p->mask[White][0] = p->mask[Black][0] = 0;
+        p->m_rgPiece[i] = Neutral;
+    p->m_rgMask[White][0] = p->m_rgMask[Black][0] = 0;
 
     while (editing) {
         int sq;
@@ -456,47 +456,47 @@ void Edit(char *args) {
             side = OPP(side);
             break;
         case 'P':
-            p->piece[sq] = PIECEID(Pawn, side);
-            p->mask[side][0].SetBit(sq);
+            p->m_rgPiece[sq] = PIECEID(Pawn, side);
+            p->m_rgMask[side][0].SetBit(sq);
             break;
         case 'N':
-            p->piece[sq] = PIECEID(Knight, side);
-            p->mask[side][0].SetBit(sq);
+            p->m_rgPiece[sq] = PIECEID(Knight, side);
+            p->m_rgMask[side][0].SetBit(sq);
             break;
         case 'B':
-            p->piece[sq] = PIECEID(Bishop, side);
-            p->mask[side][0].SetBit(sq);
+            p->m_rgPiece[sq] = PIECEID(Bishop, side);
+            p->m_rgMask[side][0].SetBit(sq);
             break;
         case 'R':
-            p->piece[sq] = PIECEID(Rook, side);
-            p->mask[side][0].SetBit(sq);
+            p->m_rgPiece[sq] = PIECEID(Rook, side);
+            p->m_rgMask[side][0].SetBit(sq);
             break;
         case 'Q':
-            p->piece[sq] = PIECEID(Queen, side);
-            p->mask[side][0].SetBit(sq);
+            p->m_rgPiece[sq] = PIECEID(Queen, side);
+            p->m_rgMask[side][0].SetBit(sq);
             break;
         case 'K':
-            p->piece[sq] = PIECEID(King, side);
-            p->mask[side][0].SetBit(sq);
+            p->m_rgPiece[sq] = PIECEID(King, side);
+            p->m_rgMask[side][0].SetBit(sq);
             break;
         }
     }
 
-    p->castle = 0;
-    p->enPassant = InvalidSquareCoord();
+    p->m_bCastle = 0;
+    p->m_EnPassant = InvalidSquareCoord();
 
     p->RecalcAttacks();
-    if (p->piece[e1] == King) {
-        if (p->piece[h1] == Rook)
-            p->castle |= CastleMask[White][0];
-        if (p->piece[a1] == Rook)
-            p->castle |= CastleMask[White][1];
+    if (p->m_rgPiece[e1] == King) {
+        if (p->m_rgPiece[h1] == Rook)
+            p->m_bCastle |= CastleMask[White][0];
+        if (p->m_rgPiece[a1] == Rook)
+            p->m_bCastle |= CastleMask[White][1];
     }
-    if (p->piece[e8] == -King) {
-        if (p->piece[h8] == -Rook)
-            p->castle |= CastleMask[Black][0];
-        if (p->piece[a8] == -Rook)
-            p->castle |= CastleMask[Black][1];
+    if (p->m_rgPiece[e8] == -King) {
+        if (p->m_rgPiece[h8] == -Rook)
+            p->m_bCastle |= CastleMask[Black][0];
+        if (p->m_rgPiece[a8] == -Rook)
+            p->m_bCastle |= CastleMask[Black][1];
     }
     p->RecalcAttacks();
     p->ShowPosition();
@@ -504,8 +504,8 @@ void Edit(char *args) {
 
 static void Undo(char *args) {
     (void)args;
-    if (CurrentPosition->ply > 0) {
-        CurrentPosition->UndoMove((CurrentPosition->actLog - 1)->gl_Move);
+    if (CurrentPosition->m_wPly > 0) {
+        CurrentPosition->UndoMove((CurrentPosition->m_pActLog - 1)->gl_Move);
     }
 }
 
@@ -563,10 +563,10 @@ static void RunAnnotate(char *fname, int side) {
                 if (themove != M_NONE) {
                     char san_buffer[16];
                     p->ShowPosition();
-                    Print(0, "%s(%d): ", p->turn == White ? "White" : "Black",
-                          (p->ply / 2) + 1);
+                    Print(0, "%s(%d): ", p->m_nTurn == White ? "White" : "Black",
+                          (p->m_wPly / 2) + 1);
                     Print(0, "%s\n", p->SAN(themove, san_buffer));
-                    if (side == -1 || (side == p->turn)) {
+                    if (side == -1 || (side == p->m_nTurn)) {
                         Iterate(p, NULL, M_NONE, NULL);
                     }
                     p->DoMove(themove);
@@ -718,7 +718,7 @@ static BitBoardBits SearchFully(CPosition *p, BitBoardBits cnt, int depth,
             continue;
 
         p->DoMove(move);
-        if (!p->InCheck(OPP(p->turn))) {
+        if (!p->InCheck(OPP(p->m_nTurn))) {
             cnt = SearchFully(p, cnt, depth - 1, heap);
         }
         p->UndoMove(move);

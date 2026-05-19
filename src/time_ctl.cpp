@@ -69,19 +69,19 @@ static struct TimeControl globalTimeControl = {
 };
 
 void DoTC(CPosition *p, int mtime) {
-    Time[p->turn] += -mtime + Increment;
+    Time[p->m_nTurn] += -mtime + Increment;
 
-    if (Moves[p->turn] > 0) {
-        Moves[p->turn] -= 1;
-        if (Moves[p->turn] <= 0) {
+    if (Moves[p->m_nTurn] > 0) {
+        Moves[p->m_nTurn] -= 1;
+        if (Moves[p->m_nTurn] <= 0) {
             if (TwoTimeControls) {
                 Print(0, "Switching to second time control.\n");
                 TMoves = TMoves2;
                 TTime = TTime2;
                 TwoTimeControls = false;
             }
-            Moves[p->turn] = TMoves;
-            Time[p->turn] += TTime;
+            Moves[p->m_nTurn] = TMoves;
+            Time[p->m_nTurn] += TTime;
         }
     }
 }
@@ -89,20 +89,20 @@ void DoTC(CPosition *p, int mtime) {
 void CalcTime(CPosition *p, float *soft, float *hard) {
     char time_as_text[16];
     if (TMoves >= 0) {
-        if (Moves[p->turn] > 0) {
+        if (Moves[p->m_nTurn] > 0) {
             /*  int limit = (13*TTime/TMoves)/8 + (3*Increment)/4;  */
             float limit = (1.625f * TTime / TMoves) + (0.85f * Increment);
 
-            Print(1, "TC: %d moves in %s\n", Moves[p->turn],
-                  FormatTime((unsigned int)(Time[p->turn]) * ONE_SECOND,
+            Print(1, "TC: %d moves in %s\n", Moves[p->m_nTurn],
+                  FormatTime((unsigned int)(Time[p->m_nTurn]) * ONE_SECOND,
                              time_as_text, sizeof(time_as_text)));
-            /*  *soft = (7*Time[p->turn]/Moves[p->turn])/8 + (3*Increment)/4; */
+            /*  *soft = (7*Time[p->m_nTurn]/Moves[p->m_nTurn])/8 + (3*Increment)/4; */
             *soft =
-                (0.875f * Time[p->turn] / Moves[p->turn]) + (0.75f * Increment);
+                (0.875f * Time[p->m_nTurn] / Moves[p->m_nTurn]) + (0.75f * Increment);
             if (*soft > limit)
                 *soft = limit;
 
-            if (TwoTimeControls && Moves[p->turn] <= 5) {
+            if (TwoTimeControls && Moves[p->m_nTurn] <= 5) {
                 int moves = TMoves2;
                 int soft2;
                 if (moves == 0)
@@ -115,23 +115,23 @@ void CalcTime(CPosition *p, float *soft, float *hard) {
             *hard = 4.0f * (*soft);
         } else {
             /*  expect additional game length of 60 moves beyond current move */
-            /*  use equations from section above with fixed Moves[p->turn] of 60
+            /*  use equations from section above with fixed Moves[p->m_nTurn] of 60
              */
             /*  rearrange equation to eliminate floating point division  */
             /*  1.625 / 60 = 0.0271  */
-            float limit = 0.0271f * ((float)Time[p->turn] + 60 * Increment);
+            float limit = 0.0271f * ((float)Time[p->m_nTurn] + 60 * Increment);
 
             Print(1, "TC: all moves in %s\n",
-                  FormatTime((unsigned int)(Time[p->turn]) * ONE_SECOND,
+                  FormatTime((unsigned int)(Time[p->m_nTurn]) * ONE_SECOND,
                              time_as_text, sizeof(time_as_text)));
             /*  0.875 / 60.0 = 0.0146  */
-            *soft = 0.0146f * (float)Time[p->turn] + (0.85f * Increment);
+            *soft = 0.0146f * (float)Time[p->m_nTurn] + (0.85f * Increment);
             if (*soft > limit)
                 *soft = limit;
             *hard = 4.0f * (*soft);
         }
-        if (*hard > Time[p->turn])
-            *hard = 0.5f * (float)Time[p->turn];
+        if (*hard > Time[p->m_nTurn])
+            *hard = 0.5f * (float)Time[p->m_nTurn];
         if (*soft > *hard)
             *soft = 0.67f * (*hard);
 
