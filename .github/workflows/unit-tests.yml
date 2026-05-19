@@ -1,0 +1,61 @@
+name: Build and Run Unit Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+      with:
+        vs-version: '[17.0,18.0)'
+        msbuild-architecture: x64
+
+    - name: Generate config.h for Windows build
+      shell: pwsh
+      run: |
+        @'
+        #pragma once
+        #define HAVE___BUILTIN_POPCOUNTLL 0
+        #define HAVE___BUILTIN_CTZLL 0
+        #define HAVE_FFSLL 0
+        #define HAVE_LIBPTHREAD 0
+        #define HAVE_STDATOMIC_H 0
+        #define HAVE_SYS_TIME_H 0
+        #define HAVE_UNISTD_H 0
+        #define HAVE_GETTIMEOFDAY 0
+        #define HAVE_SELECT 0
+        #define HAVE_GETHOSTNAME 0
+        #define HAVE_SETBUF 1
+        '@ | Set-Content -Path .\Include\config.h -Encoding Ascii
+
+    - name: Build test project (Debug x64)
+      run: msbuild WinAmy.sln /p:Configuration=Debug /p:Platform=x64 /m /t:WinAmyTests:Rebuild
+
+    - name: Run unit tests
+      shell: pwsh
+      run: |
+        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        $vsInstallPath = & $vswhere -latest -products * -property installationPath
+        $vsTestConsole = @(
+          (Join-Path $vsInstallPath 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe')
+          (Join-Path $vsInstallPath 'Common7\IDE\Extensions\TestPlatform\vstest.console.exe')
+        ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+        if (-not $vsTestConsole) {
+          throw "Unable to locate vstest.console.exe under Visual Studio installation: $vsInstallPath"
+        }
+        & $vsTestConsole x64\Debug\WinAmyTests.dll /Platform:x64
