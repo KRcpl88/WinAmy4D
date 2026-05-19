@@ -400,8 +400,8 @@ static int EvaluatePawns(const CPosition *p,
          * check if isolated or backward
          */
 
-        if (!(p->mask[White][Pawn] & IsoMask[sqCoord.File])) {
-            score += IsolatedPawn[sqCoord.File];
+        if (!(p->mask[White][Pawn] & IsoMask[sqCoord.m_nFile])) {
+            score += IsolatedPawn[sqCoord.m_nFile];
 #ifdef DEBUG
             if (DebugWhat & DebugPawnStructure)
                 Print(2, "isolated pawn on %c%c\n", SQUARE(sq));
@@ -423,7 +423,7 @@ static int EvaluatePawns(const CPosition *p,
             }
         }
 
-        if (sqCoord.File < (CSCoord::LEVEL_WIDTH[sqCoord.Level] - 1) &&
+        if (sqCoord.m_nFile < (CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel] - 1) &&
             p->mask[White][Pawn].TstBit(sq + 1)) {
             score += PawnDuo;
         }
@@ -458,8 +458,8 @@ static int EvaluatePawns(const CPosition *p,
          * check if isolated or backward
          */
 
-        if (!(p->mask[Black][Pawn] & IsoMask[sqCoord.File])) {
-            score -= IsolatedPawn[sqCoord.File];
+        if (!(p->mask[Black][Pawn] & IsoMask[sqCoord.m_nFile])) {
+            score -= IsolatedPawn[sqCoord.m_nFile];
 #ifdef DEBUG
             if (DebugWhat & DebugPawnStructure)
                 Print(2, "isolated pawn on %c%c\n", SQUARE(sq));
@@ -481,7 +481,7 @@ static int EvaluatePawns(const CPosition *p,
             }
         }
 
-        if (sqCoord.File < (CSCoord::LEVEL_WIDTH[sqCoord.Level] - 1) &&
+        if (sqCoord.m_nFile < (CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel] - 1) &&
             p->mask[Black][Pawn].TstBit(sq + 1)) {
             score -= PawnDuo;
         }
@@ -729,9 +729,9 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 #endif
         int sq = (pcs).FindSetBit();
         const CSCoord sqCoord(sq);
-        const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.Level];
-        int rank = sqCoord.Rank;
-        int file = sqCoord.File;
+        const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel];
+        int rank = sqCoord.m_nRank;
+        int file = sqCoord.m_nFile;
 
         pcs.ClearLowestBit();
 
@@ -774,7 +774,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             while (tmp2) {
                 int sq2 = (tmp2).FindSetBit();
                 tmp2.ClearLowestBit();
-                int rank2 = CSCoord(sq2).Rank;
+                int rank2 = CSCoord(sq2).m_nRank;
                 max_rank = MAX(rank2, max_rank);
             }
             score += ScaleDown[wphase] * PassedPawnConnected[max_rank] / 16;
@@ -857,9 +857,9 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 #endif
         int sq = (pcs).FindSetBit();
         const CSCoord sqCoord(sq);
-        const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.Level];
-        int rank = (levelWidth - 1) - sqCoord.Rank;
-        int file = sqCoord.File;
+        const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel];
+        int rank = (levelWidth - 1) - sqCoord.m_nRank;
+        int file = sqCoord.m_nFile;
 
         pcs.ClearLowestBit(); //(pcs, sq);
 
@@ -902,7 +902,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             while (tmp2) {
                 int sq2 = (tmp2).FindSetBit();
                 tmp2.ClearLowestBit();
-                int rank2 = (levelWidth - 1) - CSCoord(sq2).Rank;
+                int rank2 = (levelWidth - 1) - CSCoord(sq2).m_nRank;
                 max_rank = MAX(rank2, max_rank);
             }
             score -= ScaleDown[bphase] * PassedPawnConnected[max_rank] / 16;
@@ -997,7 +997,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             while (wrunner) {
                 int sq = (wrunner).FindSetBit();
                 const CSCoord sqCoord(sq);
-                int dist = (CSCoord::LEVEL_WIDTH[sqCoord.Level] - 1) - sqCoord.Rank;
+                int dist = (CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel] - 1) - sqCoord.m_nRank;
                 wrunner.ClearLowestBit();
 
                 if (dist < wdist) {
@@ -1007,7 +1007,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 
             while (brunner) {
                 int sq = (brunner).FindSetBit();
-                int dist = CSCoord(sq).Rank;
+                int dist = CSCoord(sq).m_nRank;
                 brunner.ClearLowestBit();
 
                 if (dist < bdist) {
@@ -1090,7 +1090,7 @@ static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
      * white king safety
      */
 
-    if (p->kingSq[White].File >= 4) {
+    if (p->kingSq[White].m_nFile >= 4) {
 
         /* king side */
 
@@ -1133,7 +1133,7 @@ static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
      * black king safety
      */
 
-    if (p->kingSq[Black].File >= 4) {
+    if (p->kingSq[Black].m_nFile >= 4) {
 
         /* king side */
 
@@ -1594,7 +1594,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
 
         sq = (pcs).FindSetBit();
         pcs.ClearLowestBit();
-        file = CSCoord(sq).File;
+        file = CSCoord(sq).m_nFile;
 
         score += (ScaleUp[wphase] * RookPos[sq]) >> 4;
 
@@ -1618,7 +1618,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
             score += RookConnected;
         }
 
-        if (CSCoord(sq).Rank == 6 && p->kingSq[Black].Rank == 7) {
+        if (CSCoord(sq).m_nRank == 6 && p->kingSq[Black].m_nRank == 7) {
             score += RookOn7thRank;
         }
     }
@@ -1632,7 +1632,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         int file;
         sq = (pcs).FindSetBit();
         pcs.ClearLowestBit();
-        file = CSCoord(sq).File;
+        file = CSCoord(sq).m_nFile;
 
         score -= (ScaleUp[bphase] * RookPos[CSCoord(sq).ReflectRank().BitOffset()]) >> 4;
 
@@ -1656,7 +1656,7 @@ static int EvaluatePositionForWhite(const CPosition *p) {
             score -= RookConnected;
         }
 
-        if (CSCoord(sq).Rank == 1 && p->kingSq[White].Rank == 0) {
+        if (CSCoord(sq).m_nRank == 1 && p->kingSq[White].m_nRank == 0) {
             score -= RookOn7thRank;
         }
     }
@@ -1790,8 +1790,8 @@ void InitEvaluation(const CPosition *p) {
 
     int npmat = (p->nonPawn[White] + p->nonPawn[Black]) / Value[Pawn];
 
-    int wkfile = p->kingSq[White].File;
-    int bkfile = p->kingSq[Black].File;
+    int wkfile = p->kingSq[White].m_nFile;
+    int bkfile = p->kingSq[Black].m_nFile;
     int pawnstorm = 0;
 
     if (wkfile < 3 && bkfile > 4) {
@@ -1806,15 +1806,15 @@ void InitEvaluation(const CPosition *p) {
 
     for (sq = a2; sq <= h7; sq++) {
         const CSCoord sqCoord(sq);
-        const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.Level];
-        int wrank = sqCoord.Rank - 1;
-        int brank = (levelWidth - 2) - sqCoord.Rank;
-        int wfile = sqCoord.File;
-        int bfile = sqCoord.File;
+        const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel];
+        int wrank = sqCoord.m_nRank - 1;
+        int brank = (levelWidth - 2) - sqCoord.m_nRank;
+        int wfile = sqCoord.m_nFile;
+        int bfile = sqCoord.m_nFile;
 
-        if (p->kingSq[White].File < 4)
+        if (p->kingSq[White].m_nFile < 4)
             wfile = 7 - wfile;
-        if (p->kingSq[Black].File < 4)
+        if (p->kingSq[Black].m_nFile < 4)
             bfile = 7 - bfile;
 
         if (p->nonPawn[Black] < eg_threshold) {
@@ -1888,15 +1888,15 @@ void InitEvaluation(const CPosition *p) {
 }
 
 static bool is_edge(CSCoord coord) {
-    const int width = CSCoord::LEVEL_WIDTH[coord.Level];
-    return (coord.File == 0 || coord.File == (width - 1) || coord.Rank == 0 ||
-            coord.Rank == (width - 1));
+    const int width = CSCoord::LEVEL_WIDTH[coord.m_nLevel];
+    return (coord.m_nFile == 0 || coord.m_nFile == (width - 1) || coord.m_nRank == 0 ||
+            coord.m_nRank == (width - 1));
 }
 
 static void create_mirrored_piece_square_table(int16_t *src, int16_t *dest) {
     for (int src_idx = 0; src_idx < CSCoord::SIZE; src_idx++) {
         const CSCoord source(src_idx);
-        const CSCoord mirrored(0, 7 - source.File, source.Rank);
+        const CSCoord mirrored(0, 7 - source.m_nFile, source.m_nRank);
         dest[static_cast<int>(mirrored)] = src[static_cast<int>(source)];
     }
 }

@@ -40,7 +40,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SQUARE(x) 'a' + CSCoord(x).File, '1' + CSCoord(x).Rank
+#define SQUARE(x) 'a' + CSCoord(x).m_nFile, '1' + CSCoord(x).m_nRank
 
 #define OPP(x) (1 ^ (x))
 
@@ -87,7 +87,7 @@ typedef enum { White = 0, Black = 1 } Color;
 
 static inline CSCoord InvalidSquareCoord(void) {
     CSCoord coord;
-    coord.Level = -1;
+    coord.m_nLevel = -1;
     return coord;
 }
 

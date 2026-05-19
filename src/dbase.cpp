@@ -333,12 +333,12 @@ static void DoCastle(CPosition *p, CMove move) {
     const CSCoord& toCoord = move.GetToCoord();
     int fromOffset = fromCoord.BitOffset();
     int toOffset = toCoord.BitOffset();
-    const CSCoord oldRookCoord(fromCoord.Level,
-                               move.IsShortCastle() ? fromCoord.File + 3 : fromCoord.File - 4,
-                               fromCoord.Rank);
-    const CSCoord newRookCoord(fromCoord.Level,
-                               move.IsShortCastle() ? fromCoord.File + 1 : fromCoord.File - 1,
-                               fromCoord.Rank);
+    const CSCoord oldRookCoord(fromCoord.m_nLevel,
+                               move.IsShortCastle() ? fromCoord.m_nFile + 3 : fromCoord.m_nFile - 4,
+                               fromCoord.m_nRank);
+    const CSCoord newRookCoord(fromCoord.m_nLevel,
+                               move.IsShortCastle() ? fromCoord.m_nFile + 1 : fromCoord.m_nFile - 1,
+                               fromCoord.m_nRank);
     int oldRookOffset = oldRookCoord.BitOffset();
     int newRookOffset = newRookCoord.BitOffset();
 
@@ -398,12 +398,12 @@ static void UndoCastle(CPosition *p, CMove move) {
     const CSCoord& toCoord = move.GetToCoord();
     int fromOffset = fromCoord.BitOffset();
     int toOffset = toCoord.BitOffset();
-    const CSCoord oldRookCoord(fromCoord.Level,
-                               move.IsShortCastle() ? fromCoord.File + 3 : fromCoord.File - 4,
-                               fromCoord.Rank);
-    const CSCoord newRookCoord(fromCoord.Level,
-                               move.IsShortCastle() ? fromCoord.File + 1 : fromCoord.File - 1,
-                               fromCoord.Rank);
+    const CSCoord oldRookCoord(fromCoord.m_nLevel,
+                               move.IsShortCastle() ? fromCoord.m_nFile + 3 : fromCoord.m_nFile - 4,
+                               fromCoord.m_nRank);
+    const CSCoord newRookCoord(fromCoord.m_nLevel,
+                               move.IsShortCastle() ? fromCoord.m_nFile + 1 : fromCoord.m_nFile - 1,
+                               fromCoord.m_nRank);
     int oldRookOffset = oldRookCoord.BitOffset();
     int newRookOffset = newRookCoord.BitOffset();
 
@@ -535,8 +535,8 @@ void CPosition::DoMove(CMove move) {
             }
         } else if (move.IsEnPassant()) {
             const CSCoord capturedPawnCoord(
-                toCoord.Level, toCoord.File,
-                p->turn == White ? toCoord.Rank - 1 : toCoord.Rank + 1);
+                toCoord.m_nLevel, toCoord.m_nFile,
+                p->turn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
             int capturedPawnOffset = capturedPawnCoord.BitOffset();
 
             /* piece looses its attacks */
@@ -618,8 +618,8 @@ void CPosition::DoMove(CMove move) {
 
     p->enPassant = InvalidSquareCoord();
     if (move.IsPawnDoublePush()) {
-        const CSCoord passantCoord(toCoord.Level, toCoord.File,
-                                   p->turn == White ? toCoord.Rank - 1 : toCoord.Rank + 1);
+        const CSCoord passantCoord(toCoord.m_nLevel, toCoord.m_nFile,
+                                   p->turn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
         int passantOffset = passantCoord.BitOffset();
         if (p->atkFr[passantOffset] & p->mask[OPP(p->turn)][Pawn]) {
             p->enPassant = passantCoord;
@@ -733,8 +733,8 @@ void CPosition::UndoMove(CMove move) {
             p->material_signature[OPP(p->turn)] |= SIGNATURE_BIT(sp);
         } else if (move.IsEnPassant()) {
             const CSCoord capturedPawnCoord(
-                toCoord.Level, toCoord.File,
-                p->turn == White ? toCoord.Rank - 1 : toCoord.Rank + 1);
+                toCoord.m_nLevel, toCoord.m_nFile,
+                p->turn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
             int capturedPawnOffset = capturedPawnCoord.BitOffset();
 
             /* piece looses its attacks */
@@ -1016,10 +1016,10 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
             }
         }
     } else {
-        const int width = CSCoord::LEVEL_WIDTH[squareCoord.Level];
+        const int width = CSCoord::LEVEL_WIDTH[squareCoord.m_nLevel];
         const int direction = (p->turn == White) ? 1 : -1;
-        CSCoord sqCoord(squareCoord.Level, squareCoord.File,
-                        squareCoord.Rank + direction);
+        CSCoord sqCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
+                        squareCoord.m_nRank + direction);
         int sq = sqCoord.BitOffset();
 
         if (p->piece[sq] == Neutral) {
@@ -1032,9 +1032,9 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
                 append_to_heap(heap, make_move(squareCoord, sqCoord, 0));
 
                 const int homeRank = (p->turn == White) ? 1 : (width - 2);
-                if (squareCoord.Rank == homeRank) {
-                    CSCoord dblCoord(squareCoord.Level, squareCoord.File,
-                                     squareCoord.Rank + 2 * direction);
+                if (squareCoord.m_nRank == homeRank) {
+                    CSCoord dblCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
+                                     squareCoord.m_nRank + 2 * direction);
                     sq = dblCoord.BitOffset();
                     if (p->piece[sq] == Neutral) {
                         append_to_heap(heap, make_move(squareCoord, dblCoord, M_PAWND));
@@ -1055,8 +1055,8 @@ bool CPosition::MayCastle(CMove move) {
     const CSCoord kingHome((p->turn == White) ? e1 : e8);
     /* Sometimes there might be a legal castling move, but for the
        wrong p->turn, probably from the Countermove table */
-    if (fromCoord.Level != kingHome.Level || fromCoord.File != kingHome.File ||
-        fromCoord.Rank != kingHome.Rank)
+    if (fromCoord.m_nLevel != kingHome.m_nLevel || fromCoord.m_nFile != kingHome.m_nFile ||
+        fromCoord.m_nRank != kingHome.m_nRank)
         return false;
 
     if (p->InCheck(p->turn))
@@ -1123,8 +1123,8 @@ bool CPosition::LegalMove(CMove move) {
      * be a promotion.
      */
     if (TYPE(p->piece[fr]) == Pawn && !move.HasPromotion()) {
-        const int levelWidth = CSCoord::LEVEL_WIDTH[toCoord.Level];
-        if (toCoord.Rank == 0 || toCoord.Rank == (levelWidth - 1))
+        const int levelWidth = CSCoord::LEVEL_WIDTH[toCoord.m_nLevel];
+        if (toCoord.m_nRank == 0 || toCoord.m_nRank == (levelWidth - 1))
             return false;
     }
 
@@ -1168,27 +1168,27 @@ bool CPosition::LegalMove(CMove move) {
             return true;
         } else {
             /* use NextPos array to check if legal move */
-            const int levelWidth = CSCoord::LEVEL_WIDTH[frCoord.Level];
+            const int levelWidth = CSCoord::LEVEL_WIDTH[frCoord.m_nLevel];
             const int rankStep = (p->turn == White ? 1 : -1);
-            int ttRank = frCoord.Rank + rankStep;
+            int ttRank = frCoord.m_nRank + rankStep;
             if (ttRank < 0 || ttRank >= levelWidth)
                 return false;
-            int tt = CSCoord(frCoord.Level, frCoord.File, ttRank).BitOffset();
+            int tt = CSCoord(frCoord.m_nLevel, frCoord.m_nFile, ttRank).BitOffset();
             if (move.IsPawnDoublePush()) {
                 if (p->piece[tt] != Neutral)
                     return false;
                 ttRank += rankStep;
                 if (ttRank < 0 || ttRank >= levelWidth)
                     return false;
-                tt = CSCoord(frCoord.Level, frCoord.File, ttRank).BitOffset();
+                tt = CSCoord(frCoord.m_nLevel, frCoord.m_nFile, ttRank).BitOffset();
             }
             if (tt != to)
                 return false;
 
-            if (p->turn == White && toCoord.Rank == (levelWidth - 1) &&
+            if (p->turn == White && toCoord.m_nRank == (levelWidth - 1) &&
                 !move.HasPromotion())
                 return false;
-            if (p->turn == Black && toCoord.Rank == 0 && !move.HasPromotion())
+            if (p->turn == Black && toCoord.m_nRank == 0 && !move.HasPromotion())
                 return false;
 
             return true;
@@ -1242,9 +1242,9 @@ bool CPosition::IsCheckingMove(CMove move) {
     case Pawn:
         {
             const CSCoord kingCoord(kp);
-            int fileDelta = kingCoord.File - toCoord.File;
-            int rankDelta = kingCoord.Rank - toCoord.Rank;
-            if (kingCoord.Level == toCoord.Level) {
+            int fileDelta = kingCoord.m_nFile - toCoord.m_nFile;
+            int rankDelta = kingCoord.m_nRank - toCoord.m_nRank;
+            if (kingCoord.m_nLevel == toCoord.m_nLevel) {
                 if (p->turn == White && rankDelta == 1 &&
                     (fileDelta == -1 || fileDelta == 1))
                     return true;
@@ -1481,11 +1481,11 @@ char *CPosition::SAN(CMove move, char *buffer) {
 
     if (tp == Pawn) {
         if (move.IsCapture() || move.IsEnPassant()) {
-            *(x++) = 'a' + frCoord.File;
+            *(x++) = 'a' + frCoord.m_nFile;
             *(x++) = 'x';
         }
-        *(x++) = 'a' + toCoord.File;
-        *(x++) = '1' + toCoord.Rank;
+        *(x++) = 'a' + toCoord.m_nFile;
+        *(x++) = '1' + toCoord.m_nRank;
 
         if (move.HasPromotion()) {
             *(x++) = '=';
@@ -1532,9 +1532,9 @@ char *CPosition::SAN(CMove move, char *buffer) {
                     continue;
 
                 aamb = true;
-                if (CSCoord(i).File == frCoord.File)
+                if (CSCoord(i).m_nFile == frCoord.m_nFile)
                     famb = true;
-                if (CSCoord(i).Rank == frCoord.Rank)
+                if (CSCoord(i).m_nRank == frCoord.m_nRank)
                     ramb = true;
             }
         }
@@ -1542,13 +1542,13 @@ char *CPosition::SAN(CMove move, char *buffer) {
         *(x++) = PieceName[tp];
         if (aamb) {
             if (!famb)
-                *(x++) = 'a' + frCoord.File;
+                *(x++) = 'a' + frCoord.m_nFile;
             else {
                 if (!ramb)
-                    *(x++) = '1' + frCoord.Rank;
+                    *(x++) = '1' + frCoord.m_nRank;
                 else {
-                    *(x++) = 'a' + frCoord.File;
-                    *(x++) = '1' + frCoord.Rank;
+                    *(x++) = 'a' + frCoord.m_nFile;
+                    *(x++) = '1' + frCoord.m_nRank;
                 }
             }
         }
@@ -1556,8 +1556,8 @@ char *CPosition::SAN(CMove move, char *buffer) {
         if (move.IsCapture() || move.IsEnPassant())
             *(x++) = 'x';
 
-        *(x++) = 'a' + toCoord.File;
-        *(x++) = '1' + toCoord.Rank;
+        *(x++) = 'a' + toCoord.m_nFile;
+        *(x++) = '1' + toCoord.m_nRank;
     }
 
     p->DoMove(move);
@@ -1584,13 +1584,13 @@ char *ICS_SAN(CMove move) {
     const CSCoord toCoord = move.GetToCoord();
     const CSCoord frCoord = move.GetFromCoord();
 
-    *(x++) = 'a' + frCoord.File;
-    *(x++) = '1' + frCoord.Rank;
+    *(x++) = 'a' + frCoord.m_nFile;
+    *(x++) = '1' + frCoord.m_nRank;
     if (move.IsCapture() || move.IsEnPassant()) {
         *(x++) = 'x';
     }
-    *(x++) = 'a' + toCoord.File;
-    *(x++) = '1' + toCoord.Rank;
+    *(x++) = 'a' + toCoord.m_nFile;
+    *(x++) = '1' + toCoord.m_nRank;
     if (move.HasPromotion()) {
         *(x++) = PieceName[PromoType(move)];
     }
@@ -1789,8 +1789,8 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
             int fr = frCoord.BitOffset();
 
             if (TYPE(p->piece[fr]) == Pawn &&
-                (move.IsCapture() || move.IsEnPassant()) && frCoord.File == ffl &&
-                toCoord.File == tfl && TryMove(p, move))
+                (move.IsCapture() || move.IsEnPassant()) && frCoord.m_nFile == ffl &&
+                toCoord.m_nFile == tfl && TryMove(p, move))
                 return move;
         }
         return M_NONE;
@@ -1872,11 +1872,11 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
 
         if (TYPE(p->piece[fr]) != tp)
             continue;
-        if (toCoord.File != tfl || toCoord.Rank != trk)
+        if (toCoord.m_nFile != tfl || toCoord.m_nRank != trk)
             continue;
-        if (ffl != -1 && frCoord.File != ffl)
+        if (ffl != -1 && frCoord.m_nFile != ffl)
             continue;
-        if (frk != -1 && frCoord.Rank != frk)
+        if (frk != -1 && frCoord.m_nRank != frk)
             continue;
         if (pro && (PromoType(move) != pro))
             continue;
@@ -1942,7 +1942,7 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
             int fr = frCoord.BitOffset();
 
             if (pmap[fr] == Pawn && (mvs[i].IsCapture() || mvs[i].IsEnPassant()) &&
-                frCoord.File == ffl && toCoord.File == tfl)
+                frCoord.m_nFile == ffl && toCoord.m_nFile == tfl)
                 return mvs[i];
         }
         return M_NONE;
@@ -2022,11 +2022,11 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
 
         if (TYPE(pmap[fr]) != tp)
             continue;
-        if (toCoord.File != tfl || toCoord.Rank != trk)
+        if (toCoord.m_nFile != tfl || toCoord.m_nRank != trk)
             continue;
-        if (ffl != -1 && frCoord.File != ffl)
+        if (ffl != -1 && frCoord.m_nFile != ffl)
             continue;
-        if (frk != -1 && frCoord.Rank != frk)
+        if (frk != -1 && frCoord.m_nRank != frk)
             continue;
         if (pro && (PromoType(mvs[i]) != pro))
             continue;
@@ -2583,8 +2583,8 @@ char *CPosition::MakeEPD() {
     *(x++) = ' ';
 
     if (p->enPassant.IsValid()) {
-        *(x++) = 'a' + p->enPassant.File;
-        *(x++) = '1' + p->enPassant.Rank;
+        *(x++) = 'a' + p->enPassant.m_nFile;
+        *(x++) = '1' + p->enPassant.m_nRank;
     } else
         *(x++) = '-';
     *(x++) = '\0';

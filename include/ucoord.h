@@ -4,7 +4,7 @@
 
 class CUCoord {
 public:
-    int data[3]{};
+    int m_rgnData[3]{};
 
     CUCoord() = default;
     CUCoord(int x, int y, int z);

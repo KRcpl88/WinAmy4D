@@ -6,10 +6,10 @@ namespace WinAmyTests {
 uint64_t ReferenceRookAttacks(int sq, uint64_t occupied) {
     uint64_t attacks = 0;
     const CSCoord sourceSquare(sq);
-    const int level = sourceSquare.Level;
+    const int level = sourceSquare.m_nLevel;
     const int width = CSCoord::LEVEL_WIDTH[level];
-    const int file = sourceSquare.File;
-    const int rank = sourceSquare.Rank;
+    const int file = sourceSquare.m_nFile;
+    const int rank = sourceSquare.m_nRank;
 
     for (int r = rank + 1; r < width; r++) {
         const int target = static_cast<int>(CSCoord(level, file, r));
@@ -45,10 +45,10 @@ uint64_t ReferenceRookAttacks(int sq, uint64_t occupied) {
 uint64_t ReferenceBishopAttacks(int sq, uint64_t occupied) {
     uint64_t attacks = 0;
     const CSCoord sourceSquare(sq);
-    const int level = sourceSquare.Level;
+    const int level = sourceSquare.m_nLevel;
     const int width = CSCoord::LEVEL_WIDTH[level];
-    const int file = sourceSquare.File;
-    const int rank = sourceSquare.Rank;
+    const int file = sourceSquare.m_nFile;
+    const int rank = sourceSquare.m_nRank;
 
     for (int f = file + 1, r = rank + 1; f < width && r < width; f++, r++) {
         const int target = static_cast<int>(CSCoord(level, f, r));

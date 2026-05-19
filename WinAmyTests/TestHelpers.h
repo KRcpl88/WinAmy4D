@@ -18,12 +18,12 @@ namespace WinAmyTests {
 
 class PositionGuard {
   public:
-    explicit PositionGuard(CPosition *position) : p(position) {}
-    ~PositionGuard() { CPosition::Free(p); }
-    CPosition *get() const { return p; }
+    explicit PositionGuard(CPosition *position) : m_pPosition(position) {}
+    ~PositionGuard() { CPosition::Free(m_pPosition); }
+    CPosition *get() const { return m_pPosition; }
 
   private:
-    CPosition *p;
+    CPosition *m_pPosition;
 };
 
 uint64_t ReferenceRookAttacks(int sq, uint64_t occupied);

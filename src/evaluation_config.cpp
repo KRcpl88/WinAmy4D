@@ -225,11 +225,11 @@ void SaveEvaluationConfig(char *file_name) {
 static void print_piece_square_table(FILE *fout, int16_t *piece_square_table) {
     for (int offset = 0; offset < CSCoord::SIZE; offset++) {
         const CSCoord square(offset);
-        if (square.File == 0) {
+        if (square.m_nFile == 0) {
             fprintf(fout, "    ");
         }
         fprintf(fout, "%5d, ", (int)piece_square_table[static_cast<int>(square)]);
-        if (square.File == 7) {
+        if (square.m_nFile == 7) {
             fprintf(fout, "\n");
         }
     }

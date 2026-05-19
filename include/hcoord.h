@@ -8,9 +8,9 @@ public:
     static const int Relu16[15];
     static const int NegRelu16[15];
 
-    int Level{0};
-    int Rank{0};
-    int File{0};
+    int m_nLevel{0};
+    int m_nRank{0};
+    int m_nFile{0};
 
     CHCoord() = default;
     CHCoord(int level, int file, int rank);

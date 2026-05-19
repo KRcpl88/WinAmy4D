@@ -12,36 +12,36 @@ TEST_CLASS(SCoordTests) {
   public:
     TEST_METHOD(DefaultConstructorInitializesToZero) {
         CSCoord coord;
-        Assert::AreEqual(0, coord.Level);
-        Assert::AreEqual(0, coord.File);
-        Assert::AreEqual(0, coord.Rank);
+        Assert::AreEqual(0, coord.m_nLevel);
+        Assert::AreEqual(0, coord.m_nFile);
+        Assert::AreEqual(0, coord.m_nRank);
     }
 
     TEST_METHOD(ThreeArgConstructorSetsFields) {
         CSCoord coord(0, 3, 5);
-        Assert::AreEqual(0, coord.Level);
-        Assert::AreEqual(3, coord.File);
-        Assert::AreEqual(5, coord.Rank);
+        Assert::AreEqual(0, coord.m_nLevel);
+        Assert::AreEqual(3, coord.m_nFile);
+        Assert::AreEqual(5, coord.m_nRank);
     }
 
     TEST_METHOD(OffsetConstructorDecomposesCorrectly) {
         // Offset 0 -> level 0, rank 0, file 0
         CSCoord c0(0);
-        Assert::AreEqual(0, c0.Level);
-        Assert::AreEqual(0, c0.File);
-        Assert::AreEqual(0, c0.Rank);
+        Assert::AreEqual(0, c0.m_nLevel);
+        Assert::AreEqual(0, c0.m_nFile);
+        Assert::AreEqual(0, c0.m_nRank);
 
         // Offset 9 -> level 0, rank 1, file 1 (9 = 1*8 + 1)
         CSCoord c9(9);
-        Assert::AreEqual(0, c9.Level);
-        Assert::AreEqual(1, c9.File);
-        Assert::AreEqual(1, c9.Rank);
+        Assert::AreEqual(0, c9.m_nLevel);
+        Assert::AreEqual(1, c9.m_nFile);
+        Assert::AreEqual(1, c9.m_nRank);
 
         // Offset 63 -> level 0, rank 7, file 7
         CSCoord c63(63);
-        Assert::AreEqual(0, c63.Level);
-        Assert::AreEqual(7, c63.File);
-        Assert::AreEqual(7, c63.Rank);
+        Assert::AreEqual(0, c63.m_nLevel);
+        Assert::AreEqual(7, c63.m_nFile);
+        Assert::AreEqual(7, c63.m_nRank);
     }
 
     TEST_METHOD(BitOffsetRoundTrips) {
@@ -68,9 +68,9 @@ TEST_CLASS(SCoordTests) {
     TEST_METHOD(OffsetConstructorProvidesExpectedRankAndFileAcrossBoard) {
         for (int offset = 0; offset < CSCoord::SIZE; offset++) {
             CSCoord square(offset);
-            const int levelOffset = offset - CSCoord::LEVEL_OFFSET[square.Level];
-            Assert::AreEqual(levelOffset / CSCoord::LEVEL_WIDTH[square.Level], square.Rank);
-            Assert::AreEqual(levelOffset % CSCoord::LEVEL_WIDTH[square.Level], square.File);
+            const int levelOffset = offset - CSCoord::LEVEL_OFFSET[square.m_nLevel];
+            Assert::AreEqual(levelOffset / CSCoord::LEVEL_WIDTH[square.m_nLevel], square.m_nRank);
+            Assert::AreEqual(levelOffset % CSCoord::LEVEL_WIDTH[square.m_nLevel], square.m_nFile);
         }
     }
 
@@ -120,18 +120,18 @@ TEST_CLASS(SCoordTests) {
         // level=0, rank=4, file=3
         const scoord_bitfield_t bitfield = static_cast<scoord_bitfield_t>((0 << 8) | (4 << 4) | 3);
         CSCoord coord(bitfield);
-        Assert::AreEqual(0, coord.Level);
-        Assert::AreEqual(3, coord.File);
-        Assert::AreEqual(4, coord.Rank);
+        Assert::AreEqual(0, coord.m_nLevel);
+        Assert::AreEqual(3, coord.m_nFile);
+        Assert::AreEqual(4, coord.m_nRank);
     }
 
     TEST_METHOD(GetBitFieldRoundTripsWithBitfieldConstructor) {
         CSCoord original(0, 6, 7);
         const scoord_bitfield_t bitfield = original.GetBitField();
         CSCoord roundTrip(bitfield);
-        Assert::AreEqual(original.Level, roundTrip.Level);
-        Assert::AreEqual(original.File, roundTrip.File);
-        Assert::AreEqual(original.Rank, roundTrip.Rank);
+        Assert::AreEqual(original.m_nLevel, roundTrip.m_nLevel);
+        Assert::AreEqual(original.m_nFile, roundTrip.m_nFile);
+        Assert::AreEqual(original.m_nRank, roundTrip.m_nRank);
     }
 };
 
@@ -166,9 +166,9 @@ TEST_CLASS(UCoordTests) {
             CSCoord sc(offset);
             CUCoord uc(sc);
             CSCoord back = static_cast<CSCoord>(uc);
-            Assert::AreEqual(sc.Level, back.Level);
-            Assert::AreEqual(sc.File, back.File);
-            Assert::AreEqual(sc.Rank, back.Rank);
+            Assert::AreEqual(sc.m_nLevel, back.m_nLevel);
+            Assert::AreEqual(sc.m_nFile, back.m_nFile);
+            Assert::AreEqual(sc.m_nRank, back.m_nRank);
         }
     }
 
@@ -213,16 +213,16 @@ TEST_CLASS(HCoordTests) {
   public:
     TEST_METHOD(DefaultConstructorInitializesToZero) {
         CHCoord coord;
-        Assert::AreEqual(0, coord.Level);
-        Assert::AreEqual(0, coord.File);
-        Assert::AreEqual(0, coord.Rank);
+        Assert::AreEqual(0, coord.m_nLevel);
+        Assert::AreEqual(0, coord.m_nFile);
+        Assert::AreEqual(0, coord.m_nRank);
     }
 
     TEST_METHOD(ThreeArgConstructorSetsFields) {
         CHCoord coord(2, 3, 4);
-        Assert::AreEqual(2, coord.Level);
-        Assert::AreEqual(3, coord.File);
-        Assert::AreEqual(4, coord.Rank);
+        Assert::AreEqual(2, coord.m_nLevel);
+        Assert::AreEqual(3, coord.m_nFile);
+        Assert::AreEqual(4, coord.m_nRank);
     }
 
     TEST_METHOD(ConstructFromSCoordWorks) {
@@ -230,9 +230,9 @@ TEST_CLASS(HCoordTests) {
         CHCoord hc(sc);
         // Verify round-trip through CSCoord conversion
         CSCoord back = static_cast<CSCoord>(hc);
-        Assert::AreEqual(sc.Level, back.Level);
-        Assert::AreEqual(sc.File, back.File);
-        Assert::AreEqual(sc.Rank, back.Rank);
+        Assert::AreEqual(sc.m_nLevel, back.m_nLevel);
+        Assert::AreEqual(sc.m_nFile, back.m_nFile);
+        Assert::AreEqual(sc.m_nRank, back.m_nRank);
     }
 
     TEST_METHOD(SCoordRoundTripForAllSquares) {
@@ -240,9 +240,9 @@ TEST_CLASS(HCoordTests) {
             CSCoord sc(offset);
             CHCoord hc(sc);
             CSCoord back = static_cast<CSCoord>(hc);
-            Assert::AreEqual(sc.Level, back.Level);
-            Assert::AreEqual(sc.File, back.File);
-            Assert::AreEqual(sc.Rank, back.Rank);
+            Assert::AreEqual(sc.m_nLevel, back.m_nLevel);
+            Assert::AreEqual(sc.m_nFile, back.m_nFile);
+            Assert::AreEqual(sc.m_nRank, back.m_nRank);
         }
     }
 
@@ -271,9 +271,9 @@ TEST_CLASS(HCoordTests) {
             // If no valid HCoords exist in the standard 8x8 mapping,
             // verify the CSCoord round-trip works instead
             CSCoord back = static_cast<CSCoord>(hc);
-            Assert::AreEqual(sc.Level, back.Level);
-            Assert::AreEqual(sc.File, back.File);
-            Assert::AreEqual(sc.Rank, back.Rank);
+            Assert::AreEqual(sc.m_nLevel, back.m_nLevel);
+            Assert::AreEqual(sc.m_nFile, back.m_nFile);
+            Assert::AreEqual(sc.m_nRank, back.m_nRank);
         }
     }
 };

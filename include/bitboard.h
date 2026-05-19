@@ -41,14 +41,14 @@ typedef uint64_t BitBoardBits;
 
 class CBitBoard {
   public:
-    CBitBoard() : m_bits(0) {}
-    CBitBoard(BitBoardBits bits) : m_bits(bits) {}
+    CBitBoard() : m_ullBits(0) {}
+    CBitBoard(BitBoardBits bits) : m_ullBits(bits) {}
 
     // Bit manipulation methods
-    void SetBit(int i) { m_bits |= (1ULL << i); }
-    void ClrBit(int i) { m_bits &= ~(1ULL << i); }
-    bool TstBit(int i) const { return (m_bits & (1ULL << i)) != 0; }
-    void ClearLowestBit() { m_bits &= m_bits - 1; }
+    void SetBit(int i) { m_ullBits |= (1ULL << i); }
+    void ClrBit(int i) { m_ullBits &= ~(1ULL << i); }
+    bool TstBit(int i) const { return (m_ullBits & (1ULL << i)) != 0; }
+    void ClearLowestBit() { m_ullBits &= m_ullBits - 1; }
 
     // Static mask constructors
     static CBitBoard SetMask(int i) { return CBitBoard(1ULL << i); }
@@ -57,9 +57,9 @@ class CBitBoard {
     // Counting and scanning
     int CountBits() const {
 #if HAVE___BUILTIN_POPCOUNTLL
-        return __builtin_popcountll(m_bits);
+        return __builtin_popcountll(m_ullBits);
 #else
-        BitBoardBits x = m_bits;
+        BitBoardBits x = m_ullBits;
         x = x - ((x >> 1) & 0x5555555555555555ULL);
         x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
         return (int)((((x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FULL) *
@@ -70,7 +70,7 @@ class CBitBoard {
 
     int FindSetBit() const {
 #if HAVE___BUILTIN_CTZLL
-        return __builtin_ctzll(m_bits);
+        return __builtin_ctzll(m_ullBits);
 #else
         // DeBruijn sequence method
         static const int index64[64] = {
@@ -79,78 +79,78 @@ class CBitBoard {
             46, 55, 26, 59, 40, 36, 15, 53, 34, 51, 20, 43, 31, 22, 10, 45,
             25, 39, 14, 33, 19, 30, 9,  24, 13, 18, 8,  12, 7,  6,  5,  63};
         const BitBoardBits debruijn64 = 0x03f79d71b4cb0a89ULL;
-        return index64[((m_bits ^ (m_bits - 1)) * debruijn64) >> 58];
+        return index64[((m_ullBits ^ (m_ullBits - 1)) * debruijn64) >> 58];
 #endif
     }
 
     // State queries
-    bool IsEmpty() const { return m_bits == 0; }
-    bool IsNotEmpty() const { return m_bits != 0; }
-    explicit operator bool() const { return m_bits != 0; }
+    bool IsEmpty() const { return m_ullBits == 0; }
+    bool IsNotEmpty() const { return m_ullBits != 0; }
+    explicit operator bool() const { return m_ullBits != 0; }
 
     // Raw bits access
-    BitBoardBits GetBits() const { return m_bits; }
+    BitBoardBits GetBits() const { return m_ullBits; }
 
     // Bitwise operators
     friend bool operator==(const CBitBoard &lhs, const CBitBoard &rhs) {
-        return lhs.m_bits == rhs.m_bits;
+        return lhs.m_ullBits == rhs.m_ullBits;
     }
     friend bool operator!=(const CBitBoard &lhs, const CBitBoard &rhs) {
-        return lhs.m_bits != rhs.m_bits;
+        return lhs.m_ullBits != rhs.m_ullBits;
     }
     friend CBitBoard operator&(const CBitBoard &lhs, const CBitBoard &rhs) {
-        return CBitBoard(lhs.m_bits & rhs.m_bits);
+        return CBitBoard(lhs.m_ullBits & rhs.m_ullBits);
     }
     friend CBitBoard operator|(const CBitBoard &lhs, const CBitBoard &rhs) {
-        return CBitBoard(lhs.m_bits | rhs.m_bits);
+        return CBitBoard(lhs.m_ullBits | rhs.m_ullBits);
     }
     friend CBitBoard operator^(const CBitBoard &lhs, const CBitBoard &rhs) {
-        return CBitBoard(lhs.m_bits ^ rhs.m_bits);
+        return CBitBoard(lhs.m_ullBits ^ rhs.m_ullBits);
     }
     friend CBitBoard operator~(const CBitBoard &bb) {
-        return CBitBoard(~bb.m_bits);
+        return CBitBoard(~bb.m_ullBits);
     }
 
     // Shift operators
     friend CBitBoard operator<<(const CBitBoard &bb, int shift) {
-        return CBitBoard(bb.m_bits << shift);
+        return CBitBoard(bb.m_ullBits << shift);
     }
     friend CBitBoard operator>>(const CBitBoard &bb, int shift) {
-        return CBitBoard(bb.m_bits >> shift);
+        return CBitBoard(bb.m_ullBits >> shift);
     }
 
     // Compound assignment operators
     CBitBoard &operator|=(const CBitBoard &rhs) {
-        m_bits |= rhs.m_bits;
+        m_ullBits |= rhs.m_ullBits;
         return *this;
     }
     CBitBoard &operator&=(const CBitBoard &rhs) {
-        m_bits &= rhs.m_bits;
+        m_ullBits &= rhs.m_ullBits;
         return *this;
     }
     CBitBoard &operator^=(const CBitBoard &rhs) {
-        m_bits ^= rhs.m_bits;
+        m_ullBits ^= rhs.m_ullBits;
         return *this;
     }
     CBitBoard &operator<<=(int shift) {
-        m_bits <<= shift;
+        m_ullBits <<= shift;
         return *this;
     }
     CBitBoard &operator>>=(int shift) {
-        m_bits >>= shift;
+        m_ullBits >>= shift;
         return *this;
     }
 
     // Arithmetic (needed for magic bitboard multiplication)
     friend CBitBoard operator*(const CBitBoard &lhs, const CBitBoard &rhs) {
-        return CBitBoard(lhs.m_bits * rhs.m_bits);
+        return CBitBoard(lhs.m_ullBits * rhs.m_ullBits);
     }
 
     // Comparison with zero (for if(bitboard) patterns)
-    friend bool operator!(const CBitBoard &bb) { return bb.m_bits == 0; }
+    friend bool operator!(const CBitBoard &bb) { return bb.m_ullBits == 0; }
 
   private:
-    BitBoardBits m_bits;
+    BitBoardBits m_ullBits;
 };
 
 #endif /* BITBOARD_H */
