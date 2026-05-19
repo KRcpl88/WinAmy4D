@@ -70,13 +70,16 @@ The original C implementation of Amy chess used a 64 bit int bitboard as a bit r
 
 
 
+
+# Struct renaming
+
 1. Rename all structs to begin with S and use PascalCase, for example SGameLog
 2. Rename all class member variables to begin with m_, use  hungarian notation, and PascalCase.   For example int m_nRank.   The correct hungarian notation for a member which is a class or struct  is just an empty notation, for example CSCoord m_From or CSCoord From.  Other common hungarian notations are c for a count of elements, cb for a count of bytes, f for a boolean or flag, bf for a bit field, and rg for an array.   p is a pointer.   p or rg are followed by the type of array or pointer for exampl pn is a pointer to an  int and rgn is an array of ints.  Also w is a word and dw is a double word, usually 16 and 32 bit unsigned ints respectivly.   ul is an insigned long integer and ull is an unsigned long long or 64 bit integer.
 3. Rename all local variables with correct hungarian notation
 
 
 
-
+# CSearchData
 
 1. Please convert SearchData into a class CSearchData.  Rename next.h and next.cpp search.h and search.cpp
 2. Make all functions in next.h which take a SearchData struct as the first parameter member functions of CSearchData
@@ -91,7 +94,7 @@ The original C implementation of Amy chess used a 64 bit int bitboard as a bit r
 move all non class global or static functions in search.cpp which take a CPosition as a first parameter into the CPosition class and move their implementation with the associated function header comments into the position.cpp file with the rest of the CPosition class implementation
 
 
-#algorithm
+# algorithm
 
 The process of computing an optimal chess move fir each side in WinAmy consists of 3 steps
 
@@ -102,6 +105,13 @@ The process of computing an optimal chess move fir each side in WinAmy consists 
 Create a detailed design document of each of these 3 steps, including which classes and structs are used, which functions are called in which order, and how they work in the code.
 
 Create a report in md format and commit it to the repo
+
+# 64
+
+There are many arrays in the code that are declared using a fixed size of 64 elements.  In almost every case, this is assuming the board size is 8x8 or 64 squares.  Please update this to use CSCoord::SIZE
+
+1. In many places, such as KnightEPM[64] and KingEPM[64], evaluate each case to determine if the size is based on a standard 8x8 64 square chess board size, or if it is 64 for some other reason.  In each case where the array size is 64 because of the 64 square chess board size, instead use CSCoord::SIZE
+2. In every other place in the code where the literal constant value  64 is used, evaluate if this is because the standard 64 square chess board is 64 squares, or for some other reason.   If it is refering to the number of squares on a standard chess board, instead use CSCoord::SIZE
 
 
 
