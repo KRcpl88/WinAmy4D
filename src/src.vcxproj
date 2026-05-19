@@ -176,7 +176,7 @@
     <ClCompile Include="movedata.cpp" />
     <ClCompile Include="move.cpp" />
     <ClCompile Include="mytb.cpp" />
-    <ClCompile Include="next.cpp" />
+    <ClCompile Include="search_data.cpp" />
     <ClCompile Include="pgn.cpp" />
     <ClCompile Include="probe.cpp" />
     <ClCompile Include="tbindex.cpp" />
@@ -201,3 +201,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+

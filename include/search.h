@@ -69,6 +69,124 @@ extern bool AbortSearch;
 extern int NumberOfCPUs;
 #endif
 
+typedef enum {
+    HashMove,
+    GenerateCaptures,
+    GainingCapture,
+    Killer1,
+    Killer2,
+    CounterMv,
+    Killer3,
+    GenerateRest,
+    LoosingCapture,
+    HistoryMoves,
+    Done,
+    GenerateQChecks,
+    QChecks
+} SearchPhase;
+
+struct SearchStatus {
+    SearchPhase st_phase;
+    CMove st_hashmove;
+    CMove st_k1, st_k2, st_kl, st_cm, st_k3;
+};
+
+struct KillerEntry {
+    CMove killer1, killer2;    /* killer moves */
+    uint32_t kcount1, kcount2; /* killer count */
+};
+
+#if MP
+struct HTEntry;
+#endif
+
+class CSearchData {
+  public:
+    CPosition *m_pPosition;
+
+    struct SearchStatus *m_pCurrent;
+    struct SearchStatus *m_pStatusTable;
+    struct KillerEntry *m_pKiller;
+    struct KillerEntry *m_pKillerTable;
+#if MP
+    struct HTEntry *m_pLocalHashTable;
+    heap_t m_hDeferredHeap;
+#endif
+
+    heap_t m_hHeap;
+    int32_t *m_pnDataHeap;
+    unsigned int m_uDataHeapSize;
+
+    CMove m_rgCounterTab[2][4096];      /* counter moves per side */
+    unsigned int m_rguHistoryTab[2][4096]; /* history moves per side */
+
+    CMove m_rgPvSave[64];
+
+    uint16_t m_wPly;
+
+    bool m_fMaster; /* true if a master process */
+    unsigned long m_ulNodesCount, m_ulQNodesCount, m_ulCheckNodesCount;
+
+    CMove m_mvBestMove;
+    int m_nBestScore;
+    uint16_t m_wDepth;
+
+    CMove m_mvAlternateMove;
+    int m_nAlternateScore;
+
+    uint16_t m_wRootMoves;
+    uint16_t m_wMoveNum;
+
+    /**
+     * Description: Creates and initializes per-search state for move ordering and node bookkeeping.
+     * Inputs: pPosition - position used by this search context.
+     * Outputs: Initializes all members and allocates internal heaps/tables.
+     */
+    explicit CSearchData(CPosition *pPosition);
+    /**
+     * Description: Releases all heap/table resources owned by this search context.
+     * Inputs: None.
+     * Outputs: Frees all dynamically allocated members.
+     */
+    ~CSearchData();
+    /**
+     * Description: Enters one search ply and initializes phase state for move generation at that ply.
+     * Inputs: None.
+     * Outputs: Increments ply state and pushes heap sections.
+     */
+    void EnterNode();
+    /**
+     * Description: Leaves one search ply and restores parent search state.
+     * Inputs: None.
+     * Outputs: Pops heap sections and decrements ply state.
+     */
+    void LeaveNode();
+    /**
+     * Description: Produces the next legal move from the normal move generator in ordering sequence.
+     * Inputs: None.
+     * Outputs: Returns next move or M_NONE when exhausted.
+     */
+    CMove NextMove();
+    /**
+     * Description: Produces the next legal move from the in-check evasion generator in ordering sequence.
+     * Inputs: None.
+     * Outputs: Returns next evasion move or M_NONE when exhausted.
+     */
+    CMove NextEvasion();
+    /**
+     * Description: Produces the next tactical move for quiescence search.
+     * Inputs: nAlpha - current alpha bound used for pruning tactical generation.
+     * Outputs: Returns next quiescence move or M_NONE when exhausted.
+     */
+    CMove NextMoveQ(int nAlpha);
+    /**
+     * Description: Updates killer move tables for the current ply using a newly found cutoff move.
+     * Inputs: mvMove - candidate killer move.
+     * Outputs: Updates killer entries and usage counters.
+     */
+    void PutKiller(CMove mvMove);
+};
+
 CMove Iterate(CPosition *, int *, CMove, int *);
 void SearchRoot(CPosition *);
 void AnalysisMode(CPosition *);

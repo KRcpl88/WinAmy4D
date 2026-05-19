@@ -173,6 +173,7 @@ class CPosition {
     // Display
     void ShowPosition();
     void ShowMoves();
+    void TestNextGenerators();
 
     // Static factory methods
     static CPosition *CreateFromEPD(const char *epd);

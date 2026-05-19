@@ -49,7 +49,6 @@
 #include "filter.h"
 #include "heap.h"
 #include "inline.h"
-#include "next.h"
 #include "pgn.h"
 #include "search.h"
 #include "state_machine.h"
@@ -824,7 +823,7 @@ static void SelfPlay(char *args) {
 
 static void TestNext(char *args) {
     (void)args;
-    TestNextGenerators(CurrentPosition);
+    CurrentPosition->TestNextGenerators();
 }
 
 static void Conf(char *args) {
