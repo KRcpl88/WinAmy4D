@@ -49,7 +49,7 @@ private:
     bool HasFlag(std::uint32_t mask) const;
     void SetFlag(std::uint32_t mask, bool value);
 
-    CSCoord m_from{};
-    CSCoord m_to{};
-    std::uint32_t m_bits{0};
+    CSCoord m_From{};
+    CSCoord m_To{};
+    std::uint32_t m_dwBits{0};
 };

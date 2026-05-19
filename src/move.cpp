@@ -1,21 +1,21 @@
 #include "move.h"
 
 CMove::CMove(const CSCoord& from, const CSCoord& to, std::uint32_t flags)
-    : m_from(from), m_to(to),
-      m_bits(static_cast<std::uint32_t>(from.GetBitField()) |
-             (static_cast<std::uint32_t>(to.GetBitField()) << 16) | flags) {
+    : m_From(from), m_To(to),
+      m_dwBits(static_cast<std::uint32_t>(from.GetBitField()) |
+              (static_cast<std::uint32_t>(to.GetBitField()) << 16) | flags) {
 }
 
 const CSCoord& CMove::GetFromCoord() const {
-    return m_from;
+    return m_From;
 }
 
 const CSCoord& CMove::GetToCoord() const {
-    return m_to;
+    return m_To;
 }
 
 int CMove::GetFromToIndex() const {
-    return m_from.BitOffset() + (m_to.BitOffset() << 6);
+    return m_From.BitOffset() + (m_To.BitOffset() << 6);
 }
 
 bool CMove::IsCapture() const {
@@ -47,7 +47,7 @@ bool CMove::HasPromotion() const {
 }
 
 int CMove::GetPromotionType() const {
-    return static_cast<int>((m_bits & PROMOTION_MASK) >> PROMOTION_OFFSET);
+    return static_cast<int>((m_dwBits & PROMOTION_MASK) >> PROMOTION_OFFSET);
 }
 
 bool CMove::IsTactical() const {
@@ -75,17 +75,17 @@ void CMove::SetEnPassant(bool value) {
 }
 
 void CMove::SetPromotionType(int promotionType) {
-    m_bits &= ~PROMOTION_MASK;
-    m_bits |= (static_cast<std::uint32_t>(promotionType) << PROMOTION_OFFSET) &
+    m_dwBits &= ~PROMOTION_MASK;
+    m_dwBits |= (static_cast<std::uint32_t>(promotionType) << PROMOTION_OFFSET) &
               PROMOTION_MASK;
 }
 
 void CMove::ClearPromotion() {
-    m_bits &= ~PROMOTION_MASK;
+    m_dwBits &= ~PROMOTION_MASK;
 }
 
 bool CMove::operator==(const CMove& other) const {
-    return m_bits == other.m_bits;
+    return m_dwBits == other.m_dwBits;
 }
 
 bool CMove::operator!=(const CMove& other) const {
@@ -93,13 +93,13 @@ bool CMove::operator!=(const CMove& other) const {
 }
 
 bool CMove::HasFlag(std::uint32_t mask) const {
-    return (m_bits & mask) != 0;
+    return (m_dwBits & mask) != 0;
 }
 
 void CMove::SetFlag(std::uint32_t mask, bool value) {
     if (value) {
-        m_bits |= mask;
+        m_dwBits |= mask;
     } else {
-        m_bits &= ~mask;
+        m_dwBits &= ~mask;
     }
 }
