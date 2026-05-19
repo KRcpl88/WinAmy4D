@@ -115,9 +115,19 @@ There are many arrays in the code that are declared using a fixed size of 64 ele
 
 
 
+# FindSetBitCoord
+1. Add a new CBitBoard member function FindSetBitCoord which will call FindSetBit and return a CSCoord for that bit offset.
+2. Search the code and any place we are either calling FindSetBit or using the int cast operator to convert a CSCoord to a bit offset, and then convert the bit offset to a CSCoord, use the FindSetBitCoord member function to directly return a CSCoord instead of a bit offset.
 
 
 
+
+
+# future cleanup:
+CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
+Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
+Rename all structs to begine with S, for example SGameLog instead of GameLog.
+Add CBitBoard FindSetBitCoord which returns CSCoord
 
 
 
