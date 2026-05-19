@@ -364,11 +364,11 @@ void InitMiscMasks(void) {
 
         KingSquareW[i] = KingSquareB[i] = 0;
         for (j = 0; j < CSCoord::SIZE; j++) {
-            CSCoord jCoord(j);
-            if (KingDist(wtargetCoord, jCoord) <= wdist) {
+            CSCoord coord(j);
+            if (KingDist(wtargetCoord, coord) <= wdist) {
                 KingSquareW[i].SetBit(j);
             }
-            if (KingDist(btargetCoord, jCoord) <= bdist) {
+            if (KingDist(btargetCoord, coord) <= bdist) {
                 KingSquareB[i].SetBit(j);
             }
         }
