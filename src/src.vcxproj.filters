@@ -71,7 +71,7 @@
     <ClCompile Include="mytb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="next.cpp">
+    <ClCompile Include="search_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pgn.cpp">
@@ -126,3 +126,4 @@
     </None>
   </ItemGroup>
 </Project>
+

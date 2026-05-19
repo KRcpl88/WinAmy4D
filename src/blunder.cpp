@@ -150,8 +150,8 @@ void BlunderCheck(char *file_name) {
                 int search_evaluation;
                 int alternate_evaluation;
 
-                CMove optimal_move = Iterate(p, &search_evaluation, best_move,
-                                              &alternate_evaluation);
+                CMove optimal_move = p->Iterate(&search_evaluation, best_move,
+                                                &alternate_evaluation);
                 int score_diff = search_evaluation - alternate_evaluation;
 
                 if (optimal_move != best_move && score_diff >= 1500) {

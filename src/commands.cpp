@@ -49,7 +49,6 @@
 #include "filter.h"
 #include "heap.h"
 #include "inline.h"
-#include "next.h"
 #include "pgn.h"
 #include "search.h"
 #include "state_machine.h"
@@ -267,7 +266,7 @@ static void Test(char *fname) {
 
         /* TestSwap(); */
 
-        move = Iterate(p, NULL, M_NONE, NULL);
+        move = p->Iterate(NULL, M_NONE, NULL);
         for (j = 0; goodmove[j] != M_NONE; j++)
             if (move == goodmove[j])
                 correct = true;
@@ -567,7 +566,7 @@ static void RunAnnotate(char *fname, int side) {
                           (p->m_wPly / 2) + 1);
                     Print(0, "%s\n", p->SAN(themove, san_buffer));
                     if (side == -1 || (side == p->m_nTurn)) {
-                        Iterate(p, NULL, M_NONE, NULL);
+                        p->Iterate(NULL, M_NONE, NULL);
                     }
                     p->DoMove(themove);
                 }
@@ -824,7 +823,7 @@ static void SelfPlay(char *args) {
 
 static void TestNext(char *args) {
     (void)args;
-    TestNextGenerators(CurrentPosition);
+    CurrentPosition->TestNextGenerators();
 }
 
 static void Conf(char *args) {

@@ -34,6 +34,7 @@
 
 #include "config.h"
 #include "dbase.h"
+#include "searchdata.h"
 #include <stdint.h>
 
 #define INF 200000 /* max. score */
@@ -69,11 +70,6 @@ extern bool AbortSearch;
 extern int NumberOfCPUs;
 #endif
 
-CMove Iterate(CPosition *, int *, CMove, int *);
-void SearchRoot(CPosition *);
-void AnalysisMode(CPosition *);
-pb_result_t PermanentBrain(CPosition *);
-int QuiescenceSearch(CPosition *);
 void setMaxSearchDepth(int);
 
 #if MP

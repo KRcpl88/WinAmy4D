@@ -159,6 +159,7 @@
     <ClCompile Include="MoveTests.cpp" />
     <ClCompile Include="PositionTests.cpp" />
     <ClCompile Include="CoordTests.cpp" />
+    <ClCompile Include="SearchDataTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectCapability Include="TestContainer" />

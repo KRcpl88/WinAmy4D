@@ -94,7 +94,7 @@ void StateMachine(void) {
             break;
         case STATE_CALCULATING:
             ComputerSide = CurrentPosition->m_nTurn;
-            SearchRoot(CurrentPosition);
+            CurrentPosition->SearchRoot();
             if (EasyMode || ForceMode) {
                 State = STATE_WAITING;
             } else if (!SelfPlayMode) {
@@ -102,7 +102,7 @@ void StateMachine(void) {
             }
             break;
         case STATE_PONDERING:
-            switch (PermanentBrain(CurrentPosition)) {
+            switch (CurrentPosition->PermanentBrain()) {
             case PB_NO_PB_MOVE:
                 State = STATE_WAITING;
                 break;
@@ -119,7 +119,7 @@ void StateMachine(void) {
             }
             break;
         case STATE_ANALYZING:
-            AnalysisMode(CurrentPosition);
+            CurrentPosition->AnalysisMode();
             break;
         case STATE_END:
             break;

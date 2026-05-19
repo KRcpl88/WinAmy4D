@@ -35,105 +35,132 @@
 
 #include "amy.h"
 
-#include "next.h"
+#include "search.h"
 #include "dbase.h"
 #include "evaluation.h"
 #include "heap.h"
 #include "init.h"
 #include "inline.h"
 #include "safe_malloc.h"
-#include "search.h"
 #include "swap.h"
 #include "utils.h"
+#include <string.h>
 #if MP
 #include "hashtable.h"
 #endif
 
-struct SearchData *CreateSearchData(CPosition *p) {
-    struct SearchData *sd =
-        (struct SearchData *)safe_calloc(1, sizeof(struct SearchData));
+/**
+ * Description: Creates and initializes per-search state for move ordering and node bookkeeping.
+ * Inputs: pPosition - position used by this search context.
+ * Outputs: Initializes all members and allocates internal heaps/tables.
+ */
+CSearchData::CSearchData(CPosition *p) {
+    CSearchData *sd = this;
+    memset(sd, 0, sizeof(*sd));
 
-    sd->position = p;
-    sd->statusTable =
-        (struct SearchStatus *)safe_calloc(MAX_TREE_SIZE,
-                                           sizeof(struct SearchStatus));
-    sd->current = sd->statusTable;
-    sd->killerTable =
-        (struct KillerEntry *)safe_calloc(MAX_TREE_SIZE,
-                                          sizeof(struct KillerEntry));
-    sd->killer = sd->killerTable;
+    sd->m_pPosition = p;
+    sd->m_pStatusTable =
+        (struct SSearchStatus *)safe_calloc(MAX_TREE_SIZE,
+                                           sizeof(struct SSearchStatus));
+    sd->m_pCurrent = sd->m_pStatusTable;
+    sd->m_pKillerTable =
+        (struct SKillerEntry *)safe_calloc(MAX_TREE_SIZE,
+                                          sizeof(struct SKillerEntry));
+    sd->m_pKiller = sd->m_pKillerTable;
 
-    sd->heap = allocate_heap();
+    sd->m_hHeap = allocate_heap();
 
-    sd->data_heap = NULL;
-    sd->data_heap_size = 0;
+    sd->m_pnDataHeap = NULL;
+    sd->m_uDataHeapSize = 0;
 
 #if MP
-    sd->localHashTable =
+    sd->m_pLocalHashTable =
         (struct HTEntry *)safe_calloc(sizeof(struct HTEntry), L_HT_Size);
-    sd->deferred_heap = allocate_heap();
+    sd->m_hDeferredHeap = allocate_heap();
 #endif
 
-    sd->ply = 0;
+    sd->m_wPly = 0;
 
-    return sd;
 }
 
-void FreeSearchData(struct SearchData *sd) {
-    free(sd->statusTable);
-    free(sd->killerTable);
-    free(sd->data_heap);
-    free_heap(sd->heap);
+/**
+ * Description: Releases all heap/table resources owned by this search context.
+ * Inputs: None.
+ * Outputs: Frees all dynamically allocated members.
+ */
+CSearchData::~CSearchData() {
+    CSearchData *sd = this;
+    free(sd->m_pStatusTable);
+    free(sd->m_pKillerTable);
+    free(sd->m_pnDataHeap);
+    free_heap(sd->m_hHeap);
 
 #if MP
-    free(sd->localHashTable);
-    free_heap(sd->deferred_heap);
+    free(sd->m_pLocalHashTable);
+    free_heap(sd->m_hDeferredHeap);
 #endif
 
-    free(sd);
 }
 
-void EnterNode(struct SearchData *sd) {
-    struct SearchStatus *st;
+/**
+ * Description: Enters one search ply and initializes phase state for move generation at that ply.
+ * Inputs: None.
+ * Outputs: Increments ply state and pushes heap sections.
+ */
+void CSearchData::EnterNode() {
+    CSearchData *sd = this;
+    struct SSearchStatus *st;
 
-    st = ++(sd->current);
+    st = ++(sd->m_pCurrent);
 
     st->st_phase = HashMove;
-    sd->ply++;
-    sd->killer++;
+    sd->m_wPly++;
+    sd->m_pKiller++;
 
-    push_section(sd->heap);
+    push_section(sd->m_hHeap);
 #if MP
-    push_section(sd->deferred_heap);
+    push_section(sd->m_hDeferredHeap);
 #endif
 }
 
-void LeaveNode(struct SearchData *sd) {
-    pop_section(sd->heap);
-    sd->current--;
-    sd->killer--;
-    sd->ply--;
+/**
+ * Description: Leaves one search ply and restores parent search state.
+ * Inputs: None.
+ * Outputs: Pops heap sections and decrements ply state.
+ */
+void CSearchData::LeaveNode() {
+    CSearchData *sd = this;
+    pop_section(sd->m_hHeap);
+    sd->m_pCurrent--;
+    sd->m_pKiller--;
+    sd->m_wPly--;
 #if MP
-    pop_section(sd->deferred_heap);
+    pop_section(sd->m_hDeferredHeap);
 #endif
 }
 
-static inline void grow_data_heap(struct SearchData *sd) {
-    if (sd->heap->current_section->end > sd->data_heap_size) {
-        sd->data_heap_size = sd->heap->current_section->end + 256;
-        sd->data_heap = (int32_t *)realloc(
-            sd->data_heap, sd->data_heap_size * sizeof(int32_t));
-        if (sd->data_heap == NULL) {
+static inline void GrowDataHeap(CSearchData *sd) {
+    if (sd->m_hHeap->current_section->end > sd->m_uDataHeapSize) {
+        sd->m_uDataHeapSize = sd->m_hHeap->current_section->end + 256;
+        sd->m_pnDataHeap = (int32_t *)realloc(
+            sd->m_pnDataHeap, sd->m_uDataHeapSize * sizeof(int32_t));
+        if (sd->m_pnDataHeap == NULL) {
             perror("Cannot grow data_heap");
             exit(1);
         }
     }
 }
 
-CMove NextMove(struct SearchData *sd) {
-    heap_section_t section = sd->heap->current_section;
-    struct SearchStatus *st = sd->current;
-    CPosition *p = sd->position;
+/**
+ * Description: Produces the next legal move from the normal move generator in ordering sequence.
+ * Inputs: None.
+ * Outputs: Returns next move or M_NONE when exhausted.
+ */
+CMove CSearchData::NextMove() {
+    CSearchData *sd = this;
+    heap_section_t section = sd->m_hHeap->current_section;
+    struct SSearchStatus *st = sd->m_pCurrent;
+    CPosition *p = sd->m_pPosition;
     CMove move;
 
     switch (st->st_phase) {
@@ -161,7 +188,7 @@ CMove NextMove(struct SearchData *sd) {
             int to = (targets).FindSetBit();
             targets.ClearLowestBit();
 
-            p->GenTo(CSCoord(to), sd->heap);
+            p->GenTo(CSCoord(to), sd->m_hHeap);
         }
 
         CBitBoard promoting_pawns =
@@ -170,20 +197,20 @@ CMove NextMove(struct SearchData *sd) {
             int from = (promoting_pawns).FindSetBit();
             promoting_pawns.ClearLowestBit();
 
-            p->GenFrom(CSCoord(from), sd->heap);
+            p->GenFrom(CSCoord(from), sd->m_hHeap);
         }
 
-        grow_data_heap(sd);
+        GrowDataHeap(sd);
         for (unsigned int j = section->start; j < section->end; j++) {
-            sd->data_heap[j] = SwapOff(p, sd->heap->data[j]);
+            sd->m_pnDataHeap[j] = SwapOff(p, sd->m_hHeap->data[j]);
         }
 
         unsigned int last_end = section->end;
-        p->GenEnpas(sd->heap);
-        grow_data_heap(sd);
+        p->GenEnpas(sd->m_hHeap);
+        GrowDataHeap(sd);
 
         for (unsigned int j = last_end; j < section->end; j++) {
-            sd->data_heap[j] = 0;
+            sd->m_pnDataHeap[j] = 0;
         }
 
         st->st_phase = GainingCapture;
@@ -195,20 +222,20 @@ CMove NextMove(struct SearchData *sd) {
 #endif
         while (section->end > section->start) {
             unsigned int besti = section->start;
-            int best = sd->data_heap[besti];
+            int best = sd->m_pnDataHeap[besti];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                if (sd->data_heap[i] > best) {
-                    best = sd->data_heap[i];
+                if (sd->m_pnDataHeap[i] > best) {
+                    best = sd->m_pnDataHeap[i];
                     besti = i;
                 }
             }
             if (best >= 0) {
-                move = sd->heap->data[besti];
+                move = sd->m_hHeap->data[besti];
                 section->end--;
 
-                sd->heap->data[besti] = sd->heap->data[section->end];
-                sd->data_heap[besti] = sd->data_heap[section->end];
+                sd->m_hHeap->data[besti] = sd->m_hHeap->data[section->end];
+                sd->m_pnDataHeap[besti] = sd->m_pnDataHeap[section->end];
 
                 if (move == st->st_hashmove)
                     continue;
@@ -219,7 +246,7 @@ CMove NextMove(struct SearchData *sd) {
         }
     /* fall through */
     case Killer1: {
-        move = sd->killer->killer1;
+        move = sd->m_pKiller->killer1;
 #ifdef VERBOSE
         Print(9, "Killer1\n");
 #endif
@@ -233,7 +260,7 @@ CMove NextMove(struct SearchData *sd) {
     }
     /* fall through */
     case Killer2: {
-        move = sd->killer->killer2;
+        move = sd->m_pKiller->killer2;
 #ifdef VERBOSE
         Print(9, "Killer2\n");
 #endif
@@ -254,7 +281,7 @@ CMove NextMove(struct SearchData *sd) {
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->counterTab[p->m_nTurn][lmove.GetFromToIndex()];
+            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromToIndex()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {
@@ -271,12 +298,12 @@ CMove NextMove(struct SearchData *sd) {
         Print(9, "Killer3\n");
 #endif
         st->st_k3 = M_NONE;
-        if (sd->ply >= 2) {
-            move = (sd->killer - 2)->killer1;
+        if (sd->m_wPly >= 2) {
+            move = (sd->m_pKiller - 2)->killer1;
 
             if (move == st->st_hashmove || move == st->st_k1 ||
                 move == st->st_k2 || move == st->st_cm || !p->LegalMove(move))
-                move = (sd->killer - 2)->killer2;
+                move = (sd->m_pKiller - 2)->killer2;
 
             if (move != st->st_hashmove && move != st->st_k1 &&
                 move != st->st_k2 && move != st->st_cm && p->LegalMove(move)) {
@@ -294,20 +321,20 @@ CMove NextMove(struct SearchData *sd) {
 #endif
         while (section->end > section->start) {
             unsigned int besti = section->start;
-            int best = sd->data_heap[besti];
+            int best = sd->m_pnDataHeap[besti];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                if (sd->data_heap[i] > best) {
-                    best = sd->data_heap[i];
+                if (sd->m_pnDataHeap[i] > best) {
+                    best = sd->m_pnDataHeap[i];
                     besti = i;
                 }
             }
 
-            move = sd->heap->data[besti];
+            move = sd->m_hHeap->data[besti];
             section->end--;
 
-            sd->heap->data[besti] = sd->heap->data[section->end];
-            sd->data_heap[besti] = sd->data_heap[section->end];
+            sd->m_hHeap->data[besti] = sd->m_hHeap->data[section->end];
+            sd->m_pnDataHeap[besti] = sd->m_pnDataHeap[section->end];
 
             st->st_phase = LoosingCapture;
 
@@ -325,12 +352,12 @@ CMove NextMove(struct SearchData *sd) {
         const CBitBoard empty = ~(p->m_rgMask[White][0] | p->m_rgMask[Black][0]);
 
         if (p->m_bCastle & CastleMask[p->m_nTurn][0]) {
-            append_to_heap(sd->heap,
+            append_to_heap(sd->m_hHeap,
                            make_move(p->m_nTurn == White ? e1 : e8,
                                      p->m_nTurn == White ? g1 : g8, M_SCASTLE));
         }
         if (p->m_bCastle & CastleMask[p->m_nTurn][1]) {
-            append_to_heap(sd->heap,
+            append_to_heap(sd->m_hHeap,
                            make_move(p->m_nTurn == White ? e1 : e8,
                                      p->m_nTurn == White ? c1 : c8, M_LCASTLE));
         }
@@ -344,7 +371,7 @@ CMove NextMove(struct SearchData *sd) {
             while (attacks) {
                 int to = (attacks).FindSetBit();
                 attacks.ClearLowestBit();
-                append_to_heap(sd->heap, make_move(from, to, 0));
+                append_to_heap(sd->m_hHeap, make_move(from, to, 0));
             }
         }
 
@@ -362,7 +389,7 @@ CMove NextMove(struct SearchData *sd) {
             tmp2.ClearLowestBit();
 
             int fr = (p->m_nTurn == White) ? to - 8 : to + 8;
-            append_to_heap(sd->heap, make_move(fr, to, 0));
+            append_to_heap(sd->m_hHeap, make_move(fr, to, 0));
         }
 
         tmp &= ThirdRank[p->m_nTurn];
@@ -379,7 +406,7 @@ CMove NextMove(struct SearchData *sd) {
             tmp.ClearLowestBit();
 
             int fr = (p->m_nTurn == White) ? to - 16 : to + 16;
-            append_to_heap(sd->heap, make_move(fr, to, M_PAWND));
+            append_to_heap(sd->m_hHeap, make_move(fr, to, M_PAWND));
         }
 
         st->st_phase = HistoryMoves;
@@ -392,20 +419,20 @@ CMove NextMove(struct SearchData *sd) {
         while (section->end > section->start) {
             int besti = section->start;
             int best =
-                sd->historyTab[p->m_nTurn][sd->heap->data[besti].GetFromToIndex()];
+                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromToIndex()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                int hval = sd->historyTab[p->m_nTurn]
-                                        [sd->heap->data[i].GetFromToIndex()];
+                int hval = sd->m_rguHistoryTab[p->m_nTurn]
+                                        [sd->m_hHeap->data[i].GetFromToIndex()];
                 if (hval > best) {
                     best = hval;
                     besti = i;
                 }
             }
-            move = sd->heap->data[besti];
+            move = sd->m_hHeap->data[besti];
 
             section->end--;
-            sd->heap->data[besti] = sd->heap->data[section->end];
+            sd->m_hHeap->data[besti] = sd->m_hHeap->data[section->end];
 
             if (move == st->st_hashmove || move == st->st_k1 ||
                 move == st->st_k2 || move == st->st_k3 || move == st->st_cm)
@@ -421,10 +448,16 @@ CMove NextMove(struct SearchData *sd) {
     return M_NONE;
 }
 
-CMove NextEvasion(struct SearchData *sd) {
-    heap_section_t section = sd->heap->current_section;
-    struct SearchStatus *st = sd->current;
-    CPosition *p = sd->position;
+/**
+ * Description: Produces the next legal move from the in-check evasion generator in ordering sequence.
+ * Inputs: None.
+ * Outputs: Returns next evasion move or M_NONE when exhausted.
+ */
+CMove CSearchData::NextEvasion() {
+    CSearchData *sd = this;
+    heap_section_t section = sd->m_hHeap->current_section;
+    struct SSearchStatus *st = sd->m_pCurrent;
+    CPosition *p = sd->m_pPosition;
     CMove move;
 
     switch (st->st_phase) {
@@ -458,40 +491,40 @@ CMove NextEvasion(struct SearchData *sd) {
         while (targets) {
             int to = (targets).FindSetBit();
             targets.ClearLowestBit();
-            p->GenTo(CSCoord(to), sd->heap);
+            p->GenTo(CSCoord(to), sd->m_hHeap);
         }
 
-        grow_data_heap(sd);
+        GrowDataHeap(sd);
         for (unsigned int j = section->start; j < section->end; j++) {
-            sd->data_heap[j] = SwapOff(p, sd->heap->data[j]);
+            sd->m_pnDataHeap[j] = SwapOff(p, sd->m_hHeap->data[j]);
         }
 
         unsigned int last_end = section->end;
-        p->GenEnpas(sd->heap);
-        grow_data_heap(sd);
+        p->GenEnpas(sd->m_hHeap);
+        GrowDataHeap(sd);
 
         for (unsigned int j = last_end; j < section->end; j++) {
-            sd->data_heap[j] = 0;
+            sd->m_pnDataHeap[j] = 0;
         }
     }
         /* fall through */
     case GainingCapture:
         while (section->end > section->start) {
             unsigned int besti = section->start;
-            int best = sd->data_heap[besti];
+            int best = sd->m_pnDataHeap[besti];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                if (sd->data_heap[i] > best) {
-                    best = sd->data_heap[i];
+                if (sd->m_pnDataHeap[i] > best) {
+                    best = sd->m_pnDataHeap[i];
                     besti = i;
                 }
             }
             if (best >= 0) {
-                move = sd->heap->data[besti];
+                move = sd->m_hHeap->data[besti];
                 section->end--;
 
-                sd->heap->data[besti] = sd->heap->data[section->end];
-                sd->data_heap[besti] = sd->data_heap[section->end];
+                sd->m_hHeap->data[besti] = sd->m_hHeap->data[section->end];
+                sd->m_pnDataHeap[besti] = sd->m_pnDataHeap[section->end];
 
                 st->st_phase = GainingCapture;
 
@@ -504,7 +537,7 @@ CMove NextEvasion(struct SearchData *sd) {
         }
         /* fall through */
     case Killer1: {
-        move = sd->killer->killer1;
+        move = sd->m_pKiller->killer1;
 #ifdef VERBOSE
         Print(9, "Killer1\n");
 #endif
@@ -518,7 +551,7 @@ CMove NextEvasion(struct SearchData *sd) {
     }
         /* fall through */
     case Killer2: {
-        move = sd->killer->killer2;
+        move = sd->m_pKiller->killer2;
 #ifdef VERBOSE
         Print(9, "Killer2\n");
 #endif
@@ -539,7 +572,7 @@ CMove NextEvasion(struct SearchData *sd) {
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->counterTab[p->m_nTurn][lmove.GetFromToIndex()];
+            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromToIndex()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {
@@ -556,12 +589,12 @@ CMove NextEvasion(struct SearchData *sd) {
         Print(9, "Killer3\n");
 #endif
         st->st_k3 = M_NONE;
-        if (sd->ply >= 2) {
-            move = (sd->killer - 2)->killer1;
+        if (sd->m_wPly >= 2) {
+            move = (sd->m_pKiller - 2)->killer1;
 
             if (move == st->st_hashmove || move == st->st_k1 ||
                 move == st->st_k2 || move == st->st_cm || !p->LegalMove(move))
-                move = (sd->killer - 2)->killer2;
+                move = (sd->m_pKiller - 2)->killer2;
 
             if (move != st->st_hashmove && move != st->st_k1 &&
                 move != st->st_k2 && move != st->st_cm && p->LegalMove(move)) {
@@ -578,19 +611,19 @@ CMove NextEvasion(struct SearchData *sd) {
 #endif
         while (section->end > section->start) {
             unsigned int besti = section->start;
-            int best = sd->data_heap[besti];
+            int best = sd->m_pnDataHeap[besti];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                if (sd->data_heap[i] > best) {
-                    best = sd->data_heap[i];
+                if (sd->m_pnDataHeap[i] > best) {
+                    best = sd->m_pnDataHeap[i];
                     besti = i;
                 }
             }
-            move = sd->heap->data[besti];
+            move = sd->m_hHeap->data[besti];
 
             section->end--;
-            sd->heap->data[besti] = sd->heap->data[section->end];
-            sd->data_heap[besti] = sd->data_heap[section->end];
+            sd->m_hHeap->data[besti] = sd->m_hHeap->data[section->end];
+            sd->m_pnDataHeap[besti] = sd->m_pnDataHeap[section->end];
 
             st->st_phase = LoosingCapture;
 
@@ -616,7 +649,7 @@ CMove NextEvasion(struct SearchData *sd) {
             int to = (king_flight_squares).FindSetBit();
             king_flight_squares.ClearLowestBit();
             if (!(p->m_rgAtkFr[to] & p->m_rgMask[OPP(p->m_nTurn)][0]))
-                append_to_heap(sd->heap, make_move(kp, to, 0));
+                append_to_heap(sd->m_hHeap, make_move(kp, to, 0));
         }
 
         CBitBoard sliding_attackers =
@@ -643,7 +676,7 @@ CMove NextEvasion(struct SearchData *sd) {
             while (blocking) {
                 int to = (blocking).FindSetBit();
                 blocking.ClearLowestBit();
-                append_to_heap(sd->heap, make_move(from, to, 0));
+                append_to_heap(sd->m_hHeap, make_move(from, to, 0));
             }
         }
 
@@ -662,12 +695,12 @@ CMove NextEvasion(struct SearchData *sd) {
             int fr = (p->m_nTurn == White) ? to - 8 : to + 8;
 
             if (is_promo_square(CSCoord(to))) {
-                append_to_heap(sd->heap, make_promotion(fr, to, Queen, 0));
-                append_to_heap(sd->heap, make_promotion(fr, to, Knight, 0));
-                append_to_heap(sd->heap, make_promotion(fr, to, Rook, 0));
-                append_to_heap(sd->heap, make_promotion(fr, to, Bishop, 0));
+                append_to_heap(sd->m_hHeap, make_promotion(fr, to, Queen, 0));
+                append_to_heap(sd->m_hHeap, make_promotion(fr, to, Knight, 0));
+                append_to_heap(sd->m_hHeap, make_promotion(fr, to, Rook, 0));
+                append_to_heap(sd->m_hHeap, make_promotion(fr, to, Bishop, 0));
             } else
-                append_to_heap(sd->heap, make_move(fr, to, 0));
+                append_to_heap(sd->m_hHeap, make_move(fr, to, 0));
         }
 
         pawns &= ThirdRank[p->m_nTurn];
@@ -683,7 +716,7 @@ CMove NextEvasion(struct SearchData *sd) {
             int to = (pawns).FindSetBit();
             pawns.ClearLowestBit();
             int fr = (p->m_nTurn == White) ? to - 16 : to + 16;
-            append_to_heap(sd->heap, make_move(fr, to, M_PAWND));
+            append_to_heap(sd->m_hHeap, make_move(fr, to, M_PAWND));
         }
 
         st->st_phase = HistoryMoves;
@@ -697,20 +730,20 @@ CMove NextEvasion(struct SearchData *sd) {
         while (section->end > section->start) {
             unsigned int besti = section->start;
             int best =
-                sd->historyTab[p->m_nTurn][sd->heap->data[besti].GetFromToIndex()];
+                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromToIndex()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                int hval = sd->historyTab[p->m_nTurn]
-                                        [sd->heap->data[i].GetFromToIndex()];
+                int hval = sd->m_rguHistoryTab[p->m_nTurn]
+                                        [sd->m_hHeap->data[i].GetFromToIndex()];
                 if (hval > best) {
                     best = hval;
                     besti = i;
                 }
             }
-            move = sd->heap->data[besti];
+            move = sd->m_hHeap->data[besti];
 
             section->end--;
-            sd->heap->data[besti] = sd->heap->data[section->end];
+            sd->m_hHeap->data[besti] = sd->m_hHeap->data[section->end];
 
             if (move == st->st_hashmove || move == st->st_k1 ||
                 move == st->st_k2 || move == st->st_k3 || move == st->st_cm)
@@ -725,9 +758,9 @@ CMove NextEvasion(struct SearchData *sd) {
     return M_NONE;
 }
 
-static void GenerateQCaptures(struct SearchData *sd, int alpha) {
-    heap_section_t section = sd->heap->current_section;
-    CPosition *p = sd->position;
+static void GenerateQCaptures(CSearchData *sd, int alpha) {
+    heap_section_t section = sd->m_hHeap->current_section;
+    CPosition *p = sd->m_pPosition;
     CBitBoard pwn7th;
     CBitBoard att, def;
     int score;
@@ -752,9 +785,9 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
             CMove move = make_promotion(i, next, Queen, 0);
             int sw;
             if ((sw = SwapOff(p, move)) >= 0) {
-                append_to_heap(sd->heap, move);
-                grow_data_heap(sd);
-                sd->data_heap[section->end - 1] = sw;
+                append_to_heap(sd->m_hHeap, move);
+                GrowDataHeap(sd);
+                sd->m_pnDataHeap[section->end - 1] = sw;
             }
         }
 
@@ -765,9 +798,9 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
             tmp.ClearLowestBit();
             CMove move = make_promotion(i, j, Queen, M_CAPTURE);
             if ((sw = SwapOff(p, move)) >= 0) {
-                append_to_heap(sd->heap, move);
-                grow_data_heap(sd);
-                sd->data_heap[section->end - 1] = sw;
+                append_to_heap(sd->m_hHeap, move);
+                GrowDataHeap(sd);
+                sd->m_pnDataHeap[section->end - 1] = sw;
             }
         }
     }
@@ -793,9 +826,9 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
             CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
-                append_to_heap(sd->heap, move);
-                grow_data_heap(sd);
-                sd->data_heap[section->end - 1] = sw;
+                append_to_heap(sd->m_hHeap, move);
+                GrowDataHeap(sd);
+                sd->m_pnDataHeap[section->end - 1] = sw;
             }
         }
     }
@@ -814,9 +847,9 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
             CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
-                append_to_heap(sd->heap, move);
-                grow_data_heap(sd);
-                sd->data_heap[section->end - 1] = sw;
+                append_to_heap(sd->m_hHeap, move);
+                GrowDataHeap(sd);
+                sd->m_pnDataHeap[section->end - 1] = sw;
             }
         }
     }
@@ -835,9 +868,9 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
             CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
-                append_to_heap(sd->heap, move);
-                grow_data_heap(sd);
-                sd->data_heap[section->end - 1] = sw;
+                append_to_heap(sd->m_hHeap, move);
+                GrowDataHeap(sd);
+                sd->m_pnDataHeap[section->end - 1] = sw;
             }
         }
     }
@@ -856,17 +889,23 @@ static void GenerateQCaptures(struct SearchData *sd, int alpha) {
             CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
-                append_to_heap(sd->heap, move);
-                grow_data_heap(sd);
-                sd->data_heap[section->end - 1] = sw;
+                append_to_heap(sd->m_hHeap, move);
+                GrowDataHeap(sd);
+                sd->m_pnDataHeap[section->end - 1] = sw;
             }
         }
     }
 }
 
-CMove NextMoveQ(struct SearchData *sd, int alpha) {
-    heap_section_t section = sd->heap->current_section;
-    struct SearchStatus *st = sd->current;
+/**
+ * Description: Produces the next tactical move for quiescence search.
+ * Inputs: nAlpha - current alpha bound used for pruning tactical generation.
+ * Outputs: Returns next quiescence move or M_NONE when exhausted.
+ */
+CMove CSearchData::NextMoveQ(int alpha) {
+    CSearchData *sd = this;
+    heap_section_t section = sd->m_hHeap->current_section;
+    struct SSearchStatus *st = sd->m_pCurrent;
     CMove move;
 
     switch (st->st_phase) {
@@ -885,19 +924,19 @@ CMove NextMoveQ(struct SearchData *sd, int alpha) {
 #endif
         while (section->end > section->start) {
             unsigned int besti = section->start;
-            int best = sd->data_heap[besti];
+            int best = sd->m_pnDataHeap[besti];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
-                if (sd->data_heap[i] > best) {
-                    best = sd->data_heap[i];
+                if (sd->m_pnDataHeap[i] > best) {
+                    best = sd->m_pnDataHeap[i];
                     besti = i;
                 }
             }
 
-            move = sd->heap->data[besti];
+            move = sd->m_hHeap->data[besti];
             section->end--;
-            sd->heap->data[besti] = sd->heap->data[section->end];
-            sd->data_heap[besti] = sd->data_heap[section->end];
+            sd->m_hHeap->data[besti] = sd->m_hHeap->data[section->end];
+            sd->m_pnDataHeap[besti] = sd->m_pnDataHeap[section->end];
 
             return move;
         }
@@ -912,8 +951,14 @@ CMove NextMoveQ(struct SearchData *sd, int alpha) {
  * Enter move in Killertable
  */
 
-void PutKiller(struct SearchData *sd, CMove m) {
-    struct KillerEntry *k = sd->killer;
+/**
+ * Description: Updates killer move tables for the current ply using a newly found cutoff move.
+ * Inputs: mvMove - candidate killer move.
+ * Outputs: Updates killer entries and usage counters.
+ */
+void CSearchData::PutKiller(CMove m) {
+    CSearchData *sd = this;
+    struct SKillerEntry *k = sd->m_pKiller;
 
     if (m == k->killer1) {
         k->kcount1 += 1;
@@ -942,39 +987,3 @@ void PutKiller(struct SearchData *sd, CMove m) {
     }
 }
 
-static void test_next_move(struct SearchData *sd,
-                           CMove (*func)(struct SearchData *)) {
-    bool comma = false;
-    EnterNode(sd);
-
-    while (true) {
-        CMove move = func(sd);
-        if (move == M_NONE)
-            break;
-
-        if (sd->position->LegalMove(move)) {
-            if (comma) {
-                Print(0, ", ");
-            }
-            char san_buffer[16];
-            Print(0, "%s", sd->position->SAN(move, san_buffer));
-            comma = true;
-        }
-    }
-    LeaveNode(sd);
-    Print(0, "\n");
-}
-
-CMove next_move_q_fixed_alpha(struct SearchData *sd) {
-    return NextMoveQ(sd, -500000);
-}
-
-void TestNextGenerators(CPosition *p) {
-    struct SearchData *sd = CreateSearchData(p);
-    Print(0, "NextMove:\n");
-    test_next_move(sd, &NextMove);
-    Print(0, "\nNextEvasion:\n");
-    test_next_move(sd, &NextEvasion);
-    Print(0, "\nNextMoveQ:\n");
-    test_next_move(sd, &next_move_q_fixed_alpha);
-}

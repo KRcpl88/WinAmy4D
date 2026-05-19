@@ -9,6 +9,7 @@
 #include "inline.h"
 #include "magic.h"
 #include "movedata.h"
+#include "search.h"
 
 #include <cstdint>
 

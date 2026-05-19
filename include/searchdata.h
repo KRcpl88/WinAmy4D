@@ -29,13 +29,11 @@
 
 */
 
-#ifndef NEXT_H
-#define NEXT_H
+#ifndef SEARCHDATA_H
+#define SEARCHDATA_H
 
-#include "config.h"
-#include "heap.h"
-#include "types.h"
-#include <stdbool.h>
+#include "dbase.h"
+#include <stdint.h>
 
 typedef enum {
     HashMove,
@@ -53,64 +51,75 @@ typedef enum {
     QChecks
 } SearchPhase;
 
-struct SearchStatus {
+struct SSearchStatus {
     SearchPhase st_phase;
     CMove st_hashmove;
     CMove st_k1, st_k2, st_kl, st_cm, st_k3;
 };
 
-struct KillerEntry {
-    CMove killer1, killer2;   /* killer moves */
+struct SKillerEntry {
+    CMove killer1, killer2;    /* killer moves */
     uint32_t kcount1, kcount2; /* killer count */
 };
 
-class CPosition;
-
-struct SearchData {
-    CPosition *position;
-
-    struct SearchStatus *current;
-    struct SearchStatus *statusTable;
-    struct KillerEntry *killer;
-    struct KillerEntry *killerTable;
 #if MP
-    struct HTEntry *localHashTable;
-    heap_t deferred_heap;
+struct HTEntry;
 #endif
 
-    heap_t heap;
-    int32_t *data_heap;
-    unsigned int data_heap_size;
+class CSearchData {
+  public:
+    CPosition *m_pPosition;
 
-    CMove counterTab[2][4096]; /* counter moves per side */
-    unsigned int historyTab[2][4096]; /* history moves per side */
+    struct SSearchStatus *m_pCurrent;
+    struct SSearchStatus *m_pStatusTable;
+    struct SKillerEntry *m_pKiller;
+    struct SKillerEntry *m_pKillerTable;
+#if MP
+    struct HTEntry *m_pLocalHashTable;
+    heap_t m_hDeferredHeap;
+#endif
 
-    CMove pv_save[64];
+    heap_t m_hHeap;
+    int32_t *m_pnDataHeap;
+    unsigned int m_uDataHeapSize;
 
-    uint16_t ply;
+    CMove m_rgCounterTab[2][4096];      /* counter moves per side */
+    unsigned int m_rguHistoryTab[2][4096]; /* history moves per side */
 
-    bool master; /* true if a master process */
-    unsigned long nodes_cnt, qnodes_cnt, check_nodes_cnt;
+    CMove m_rgPvSave[CSCoord::SIZE];
 
-    CMove best_move;
-    int best_score;
-    uint16_t depth;
+    uint16_t m_wPly;
 
-    CMove alternate_move;
-    int alternate_score;
+    bool m_fMaster; /* true if a master process */
+    unsigned long m_ulNodesCount, m_ulQNodesCount, m_ulCheckNodesCount;
 
-    uint16_t nrootmoves;
-    uint16_t movenum;
+    CMove m_BestMove;
+    int m_nBestScore;
+    uint16_t m_wDepth;
+
+    CMove m_AlternateMove;
+    int m_nAlternateScore;
+
+    uint16_t m_wRootMoves;
+    uint16_t m_wMoveNum;
+
+    explicit CSearchData(CPosition *pPosition);
+    ~CSearchData();
+    void EnterNode();
+    void LeaveNode();
+    CMove NextMove();
+    CMove NextEvasion();
+    CMove NextMoveQ(int nAlpha);
+    void PutKiller(CMove mvMove);
+    bool TerminateSearch();
+    void InitSearch();
+    void StoreResult(int nScore, int nAlpha, int nBeta, CMove mvMove, int nDepth, int nThreat);
+    int Quies(int nAlpha, int nBeta, int nDepth);
+#if MP
+    int NegaScout(int nAlpha, int nBeta, int nDepth, int nNodeType, int nExclusiveP);
+#else
+    int NegaScout(int nAlpha, int nBeta, int nDepth, int nNodeType);
+#endif
 };
-
-struct SearchData *CreateSearchData(CPosition *);
-void FreeSearchData(struct SearchData *);
-void EnterNode(struct SearchData *);
-void LeaveNode(struct SearchData *);
-CMove NextMove(struct SearchData *);
-CMove NextEvasion(struct SearchData *);
-CMove NextMoveQ(struct SearchData *, int);
-void PutKiller(struct SearchData *, CMove);
-void TestNextGenerators(CPosition *);
 
 #endif

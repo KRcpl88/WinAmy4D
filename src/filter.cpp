@@ -93,7 +93,7 @@ void FilterQuiescentPositions(char *file_name) {
 
             if (!p->GameEnd()) {
                 const int static_evaluation = EvaluatePosition(p);
-                const int dynamic_evaluation = QuiescenceSearch(p);
+                const int dynamic_evaluation = p->QuiescenceSearch();
 
                 const int diff = ABS(static_evaluation - dynamic_evaluation);
 
@@ -104,7 +104,7 @@ void FilterQuiescentPositions(char *file_name) {
                     last_position_was_quiet = false;
                 } else {
                     int search_evaluation;
-                    Iterate(p, &search_evaluation, M_NONE, NULL);
+                    p->Iterate(&search_evaluation, M_NONE, NULL);
 
                     const int search_diff =
                         ABS(static_evaluation - search_evaluation);

@@ -46,6 +46,7 @@
 #include "recog.h"
 #include "safe_malloc.h"
 #include "scoord.h"
+#include "search.h"
 #include "swap.h"
 #include "types.h"
 #include "utils.h"
@@ -2299,6 +2300,63 @@ void CPosition::ShowMoves() {
     }
 
     free_heap(heap);
+}
+
+static void TestSearchGenerator(CSearchData &sd,
+                                CMove (CSearchData::*generator)()) {
+    bool comma = false;
+    sd.EnterNode();
+
+    while (true) {
+        CMove move = (sd.*generator)();
+        if (move == M_NONE) {
+            break;
+        }
+
+        if (sd.m_pPosition->LegalMove(move)) {
+            if (comma) {
+                Print(0, ", ");
+            }
+            char san_buffer[16];
+            Print(0, "%s", sd.m_pPosition->SAN(move, san_buffer));
+            comma = true;
+        }
+    }
+
+    sd.LeaveNode();
+    Print(0, "\n");
+}
+
+static CMove NextMoveQFixedAlpha(CSearchData &sd) {
+    return sd.NextMoveQ(-500000);
+}
+
+void CPosition::TestNextGenerators() {
+    CSearchData sd(this);
+    Print(0, "NextMove:\n");
+    TestSearchGenerator(sd, &CSearchData::NextMove);
+    Print(0, "\nNextEvasion:\n");
+    TestSearchGenerator(sd, &CSearchData::NextEvasion);
+    Print(0, "\nNextMoveQ:\n");
+
+    bool comma = false;
+    sd.EnterNode();
+    while (true) {
+        CMove move = NextMoveQFixedAlpha(sd);
+        if (move == M_NONE) {
+            break;
+        }
+        if (sd.m_pPosition->LegalMove(move)) {
+            if (comma) {
+                Print(0, ", ");
+            }
+            char san_buffer[16];
+            Print(0, "%s", sd.m_pPosition->SAN(move, san_buffer));
+            comma = true;
+        }
+    }
+    sd.LeaveNode();
+    Print(0, "\n");
 }
 
 /*
