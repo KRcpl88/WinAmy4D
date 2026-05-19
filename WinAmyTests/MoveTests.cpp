@@ -144,6 +144,94 @@ TEST_CLASS(MoveTests) {
         AssertPositionsEqual(position.get(), snapshot.get());
     }
 
+    TEST_METHOD(CMoveFlagQueriesReflectConstructorFlags) {
+        const CMove move = make_promotion(
+            e2, e4, Queen, M_CAPTURE | M_PAWND | M_ENPASSANT | M_SCASTLE | M_LCASTLE);
+
+        Assert::IsTrue(move.IsCapture());
+        Assert::IsTrue(move.IsPawnDoublePush());
+        Assert::IsTrue(move.IsEnPassant());
+        Assert::IsTrue(move.IsShortCastle());
+        Assert::IsTrue(move.IsLongCastle());
+        Assert::IsTrue(move.IsCastle());
+        Assert::IsTrue(move.HasPromotion());
+        Assert::AreEqual((int)Queen, move.GetPromotionType());
+        Assert::IsTrue(move.IsTactical());
+    }
+
+    TEST_METHOD(CMoveMutatorsSetAndClearFlags) {
+        CMove move = make_move(a2, a3, 0);
+
+        Assert::IsFalse(move.IsCapture());
+        Assert::IsFalse(move.IsShortCastle());
+        Assert::IsFalse(move.IsLongCastle());
+        Assert::IsFalse(move.IsCastle());
+        Assert::IsFalse(move.IsPawnDoublePush());
+        Assert::IsFalse(move.IsEnPassant());
+        Assert::IsFalse(move.IsTactical());
+
+        move.SetCapture();
+        move.SetShortCastle();
+        move.SetLongCastle();
+        move.SetPawnDoublePush();
+        move.SetEnPassant();
+        Assert::IsTrue(move.IsCapture());
+        Assert::IsTrue(move.IsShortCastle());
+        Assert::IsTrue(move.IsLongCastle());
+        Assert::IsTrue(move.IsCastle());
+        Assert::IsTrue(move.IsPawnDoublePush());
+        Assert::IsTrue(move.IsEnPassant());
+        Assert::IsTrue(move.IsTactical());
+
+        move.SetCapture(false);
+        move.SetShortCastle(false);
+        move.SetLongCastle(false);
+        move.SetPawnDoublePush(false);
+        move.SetEnPassant(false);
+        Assert::IsFalse(move.IsCapture());
+        Assert::IsFalse(move.IsShortCastle());
+        Assert::IsFalse(move.IsLongCastle());
+        Assert::IsFalse(move.IsCastle());
+        Assert::IsFalse(move.IsPawnDoublePush());
+        Assert::IsFalse(move.IsEnPassant());
+        Assert::IsFalse(move.IsTactical());
+    }
+
+    TEST_METHOD(CMovePromotionMutatorsControlPromotionFlags) {
+        CMove move = make_move(h7, h8, 0);
+        Assert::IsFalse(move.HasPromotion());
+        Assert::AreEqual(0, move.GetPromotionType());
+        Assert::IsFalse(move.IsTactical());
+
+        move.SetPromotionType(Rook);
+        Assert::IsTrue(move.HasPromotion());
+        Assert::AreEqual((int)Rook, move.GetPromotionType());
+        Assert::IsTrue(move.IsTactical());
+
+        move.ClearPromotion();
+        Assert::IsFalse(move.HasPromotion());
+        Assert::AreEqual(0, move.GetPromotionType());
+        Assert::IsFalse(move.IsTactical());
+    }
+
+    TEST_METHOD(CMoveEqualityAndInequalityCompareMoveBits) {
+        const CMove moveA = make_move(b1, c3, M_CAPTURE);
+        const CMove moveB = make_move(b1, c3, M_CAPTURE);
+        const CMove moveDifferentFlags = make_move(b1, c3, 0);
+        const CMove moveDifferentTo = make_move(b1, a3, M_CAPTURE);
+
+        Assert::IsTrue(moveA == moveB);
+        Assert::IsFalse(moveA != moveB);
+        Assert::IsTrue(moveA != moveDifferentFlags);
+        Assert::IsTrue(moveA != moveDifferentTo);
+    }
+
+    TEST_METHOD(CMoveFromToIndexMatchesSquareEncoding) {
+        const CMove move = make_move(CSCoord(c2), CSCoord(g7), 0);
+        const int expected = c2 + (g7 << 6);
+        Assert::AreEqual(expected, move.GetFromToIndex());
+    }
+
     TEST_METHOD(MFromAndMToDecodeFromScooordBitfields) {
         const CSCoord fromSquare(0, 4, 1); // e2
         const CSCoord toSquare(0, 4, 3);   // e4
