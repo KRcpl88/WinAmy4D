@@ -142,7 +142,7 @@ static int EGTBDepth = 0;
 
 static int NodesPerCheck;
 
-static OPTIONAL_ATOMIC unsigned long TotalNodes;
+OPTIONAL_ATOMIC unsigned long TotalNodes;
 
 #if MP
 int NumberOfCPUs;
@@ -162,7 +162,7 @@ enum {
 
 enum { PVNode = 0, AllNode = 1, CutNode = 2, CutNodeNoNull = 3 };
 
-static int SearchMode = Searching;
+int SearchMode = Searching;
 
 /* Permanent Brain Variables */
 CMove PBMove, PBActMove;
@@ -171,7 +171,7 @@ CMove PBAltMove;
 
 char BestLine[2048];
 char ShortBestLine[2048];
-static char AnalysisLine[4096];
+char AnalysisLine[4096];
 
 OPTIONAL_ATOMIC unsigned long HTry, HHit, PTry, PHit, STry, SHit;
 
@@ -1410,278 +1410,6 @@ void StopHelpers(void) {
 }
 
 #endif /* MP */
-
-/**
- * The basic root iteration procedure.
- *
- * Parameters:
- *  p: the position to search
- *  score_ptr: pointer to return the root score in
- *  alternate_move: an alternate move to search
- *  alternate_score_ptr: a pointer to return the alternate score in
- */
-CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
-                         int *alternate_score_ptr) {
-    CPosition *p = this;
-    float soft, hard;
-    int cnt;
-    CSearchData *sd;
-
-    FHTime = 0;
-
-    StartTime = GetTime();
-    CurTime = StartTime;
-    WallTimeStart = StartTime;
-
-    CalcTime(p, &soft, &hard);
-
-    heap_t heap = allocate_heap();
-    cnt = p->LegalMoves(heap);
-
-    AbortSearch = false;
-    NeedTime = false;
-
-    TotalNodes = 0;
-
-    /*
-     * Check if we need to start searching at all
-     */
-
-    if (cnt == 0) {
-        free_heap(heap);
-        if (!p->InCheck(p->m_nTurn))
-            strcpy(AnalysisLine, "stalemate");
-        else
-            strcpy(AnalysisLine, "mate");
-        return M_NONE;
-    } else if (cnt == 1 && SearchMode != Analyzing) {
-        CMove only_move = heap->data[heap->current_section->start];
-        free_heap(heap);
-        strcpy(AnalysisLine, "forced move");
-        return only_move;
-    }
-
-    free_heap(heap);
-
-    SoftLimit = StartTime + (int)(soft * ONE_SECOND);
-    SoftLimit2 = StartTime + (int)(85 * soft);
-    HardLimit = StartTime + (int)(hard * ONE_SECOND);
-
-    InitEvaluation(p);
-    AgeHashTable();
-    SearchHeader();
-
-#if MP
-    p->StartHelpers();
-#endif /* MP */
-
-    sd = new CSearchData(p);
-    sd->m_fMaster = true;
-    sd->m_AlternateMove = alternate_move;
-    IterateInt(sd);
-
-    CMove best_move = sd->m_BestMove;
-    if (score_ptr != NULL) {
-        *score_ptr = sd->m_nBestScore;
-    }
-
-    if (alternate_move != M_NONE && alternate_score_ptr != NULL) {
-        *alternate_score_ptr = sd->m_nAlternateScore;
-    }
-
-    delete sd;
-
-#if MP
-    StopHelpers();
-#endif /* MP */
-
-    return best_move;
-}
-
-/**
- * Search the root node.
- */
-void CPosition::SearchRoot() {
-    CPosition *p = this;
-    CMove move = M_NONE;
-    CPosition *q;
-
-    SearchMode = Searching;
-
-    /* Test book first */
-    if (p->m_rgwOutOfBookCnt[p->m_nTurn] < 3) {
-        move = SelectBook(p);
-
-        if (move != M_NONE) {
-            char san_buffer[32];
-            Print(1, "Book move found: %s\n",
-                  p->NumberedSAN(move, san_buffer, sizeof(san_buffer)));
-            p->m_rgwOutOfBookCnt[p->m_nTurn] = 0;
-        } else {
-            p->m_rgwOutOfBookCnt[p->m_nTurn] += 1;
-        }
-    }
-
-    if (move == M_NONE) {
-        q = CPosition::Clone(p);
-        move = q->Iterate(NULL, M_NONE, NULL);
-        CPosition::Free(q);
-    }
-
-    if (move != M_NONE) {
-        double elapsed = (double)(CurTime - StartTime) / (double)ONE_SECOND;
-        DoTC(p, (int)(elapsed + 0.5));
-
-        char san_buffer[16];
-        Print(0, REVERSE "%s(%d): %s" NORMAL "\n",
-              p->m_nTurn == White ? "White" : "Black", (p->m_wPly / 2) + 1,
-              p->SAN(move, san_buffer));
-
-        if (XBoardMode)
-            PrintNoLog(0, "move %s\n", ICS_SAN(move));
-
-        p->DoMove(move);
-    }
-}
-
-/**
- * Do a quiescence search only. Returns the score.
- */
-int CPosition::QuiescenceSearch() {
-    CPosition *p = this;
-    CSearchData *sd;
-
-    InitEvaluation(p);
-    MaxDepth = MAX_TREE_SIZE - 1;
-
-    sd = new CSearchData(p);
-    sd->m_fMaster = true;
-    sd->InitSearch();
-
-    int score = sd->Quies(-INF, INF, 0);
-    delete sd;
-
-    return score;
-}
-
-/**
- * Implements the permanent brain.
- */
-int CPosition::PermanentBrain() {
-    CPosition *p = this;
-    if (!p->LegalMove(PBMove)) {
-        CPosition *q;
-
-        q = CPosition::Clone(p);
-        SearchMode = Puzzling;
-        PBAltMove = M_NONE;
-
-        Print(2, "Puzzling over a move to ponder on...\n");
-        PBMove = q->Iterate(NULL, M_NONE, NULL);
-        CPosition::Free(q);
-
-        if (SearchMode == Interrupted) {
-            return PB_NO_PB_MOVE;
-        }
-
-        if (PBAltMove != M_NONE) {
-            p->DoMove(PBAltMove);
-            return PB_NO_PB_HIT;
-        }
-
-        if (!p->LegalMove(PBMove)) {
-            Print(0, "No PB move.\n");
-            return PB_NO_PB_MOVE;
-        }
-    }
-
-    if (p->LegalMove(PBMove)) {
-        CMove move = M_NONE;
-        CPosition *q;
-        bool inbook = false;
-        char san_buffer[16];
-
-        q = CPosition::Clone(p);
-
-        PBActMove = PBMove;
-        PBAltMove = M_NONE;
-        PBHit = false;
-
-        Print(0, "%s(%d): %s (in Permanent Brain)\n",
-              p->m_nTurn == White ? "White" : "Black", (p->m_wPly / 2) + 1,
-              p->SAN(PBActMove, san_buffer));
-
-        q->DoMove(PBActMove);
-
-        if (q->m_rgwOutOfBookCnt[q->m_nTurn] < 3) {
-            move = SelectBook(q);
-            if (move != M_NONE) {
-                PBHit = false;
-                PBAltMove = M_NONE;
-                inbook = true;
-            }
-        }
-
-        SearchMode = Pondering;
-
-        if (!inbook) {
-            move = q->Iterate(NULL, M_NONE, NULL);
-        }
-
-        CPosition::Free(q);
-
-        if (SearchMode == Interrupted) {
-            return PB_NO_PB_MOVE;
-        }
-
-        if (PBHit) {
-            double elapsed =
-                (double)(CurTime - WallTimeStart) / (double)ONE_SECOND;
-            Print(2, "PB Hit! (elapsed %g secs)\n", elapsed);
-
-            Print(0, "%s(%d): %s\n", p->m_nTurn == White ? "White" : "Black",
-                  (p->m_wPly / 2) + 1, p->SAN(PBActMove, san_buffer));
-
-            p->DoMove(PBActMove);
-            DoTC(p, (int)(elapsed + 0.5));
-
-            Print(0, REVERSE "%s(%d): %s" NORMAL "\n",
-                  p->m_nTurn == White ? "White" : "Black", (p->m_wPly / 2) + 1,
-                  p->SAN(move, san_buffer));
-
-            if (XBoardMode) {
-                PrintNoLog(0, "move %s\n", ICS_SAN(move));
-            }
-
-            p->DoMove(move);
-
-            return PB_HIT;
-        } else if (!PBHit && PBAltMove != M_NONE) {
-            Print(2, "PB not Hit! Alternate move is %s\n",
-                  p->SAN(PBAltMove, san_buffer));
-
-            p->DoMove(PBAltMove);
-
-            return PB_NO_PB_HIT;
-        }
-    }
-
-    return PB_NO_PB_MOVE;
-}
-
-/**
- * Analysis mode for xboard.
- */
-void CPosition::AnalysisMode() {
-    CPosition *p = this;
-    CPosition *q;
-
-    SearchMode = Analyzing;
-
-    q = CPosition::Clone(p);
-    q->Iterate(NULL, M_NONE, NULL);
-    CPosition::Free(q);
-}
 
 /**
  * Set the maximum depth for the root search.
