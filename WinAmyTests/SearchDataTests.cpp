@@ -29,7 +29,7 @@ TEST_CLASS(SearchDataTests) {
         CSearchData searchData(position.get());
 
         SSearchStatus *initialStatus = searchData.m_pCurrent;
-        KillerEntry *initialKiller = searchData.m_pKiller;
+        SKillerEntry *initialKiller = searchData.m_pKiller;
 
         searchData.EnterNode();
         Assert::AreEqual(1, (int)searchData.m_wPly);
@@ -109,4 +109,3 @@ TEST_CLASS(SearchDataTests) {
 };
 
 } // namespace WinAmyTests
-

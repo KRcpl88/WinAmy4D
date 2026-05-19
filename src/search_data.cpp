@@ -59,8 +59,8 @@ CSearchData::CSearchData(CPosition *p) {
                                            sizeof(struct SSearchStatus));
     sd->m_pCurrent = sd->m_pStatusTable;
     sd->m_pKillerTable =
-        (struct KillerEntry *)safe_calloc(MAX_TREE_SIZE,
-                                          sizeof(struct KillerEntry));
+        (struct SKillerEntry *)safe_calloc(MAX_TREE_SIZE,
+                                          sizeof(struct SKillerEntry));
     sd->m_pKiller = sd->m_pKillerTable;
 
     sd->m_hHeap = allocate_heap();
@@ -918,7 +918,7 @@ CMove CSearchData::NextMoveQ(int alpha) {
 
 void CSearchData::PutKiller(CMove m) {
     CSearchData *sd = this;
-    struct KillerEntry *k = sd->m_pKiller;
+    struct SKillerEntry *k = sd->m_pKiller;
 
     if (m == k->killer1) {
         k->kcount1 += 1;
@@ -946,5 +946,4 @@ void CSearchData::PutKiller(CMove m) {
         }
     }
 }
-
 

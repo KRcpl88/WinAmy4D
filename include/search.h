@@ -91,7 +91,7 @@ struct SSearchStatus {
     CMove st_k1, st_k2, st_kl, st_cm, st_k3;
 };
 
-struct KillerEntry {
+struct SKillerEntry {
     CMove killer1, killer2;    /* killer moves */
     uint32_t kcount1, kcount2; /* killer count */
 };
@@ -106,8 +106,8 @@ class CSearchData {
 
     struct SSearchStatus *m_pCurrent;
     struct SSearchStatus *m_pStatusTable;
-    struct KillerEntry *m_pKiller;
-    struct KillerEntry *m_pKillerTable;
+    struct SKillerEntry *m_pKiller;
+    struct SKillerEntry *m_pKillerTable;
 #if MP
     struct HTEntry *m_pLocalHashTable;
     heap_t m_hDeferredHeap;
@@ -199,4 +199,3 @@ void StopHelpers(void);
 #endif
 
 #endif
-
