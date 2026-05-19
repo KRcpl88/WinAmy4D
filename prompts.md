@@ -78,6 +78,18 @@ The original C implementation of Amy chess used a 64 bit int bitboard as a bit r
 
 
 
+1. Please convert SearchData into a class CSearchData.  Rename next.h and next.cpp search.h and search.cpp
+2. Make all functions in next.h which take a SearchData struct as the first parameter member functions of CSearchData
+3. Move the implementation of TestNextGenerators into the CPosition cpp file and make it a member function of CPosition.
+4. Create unit tests for all CSearchData member functions.
+5. rename elements of the SearchData struct using m_ , add hungarian notation to the member function names, and convert them to PascalCase
+6. rename member variables with underscores  like best_score using PascalCase and hungarian m_nBestScore
+7. Add a descriptive comment to each member function with a list of the inputs and outputs, what each one does, and an overall description of what the function does
+
+
+
+
+
 
 
 
