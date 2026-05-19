@@ -47,4 +47,15 @@ jobs:
       run: msbuild WinAmy.sln /p:Configuration=Debug /p:Platform=x64 /m /t:WinAmyTests:Rebuild
 
     - name: Run unit tests
-      run: vstest.console.exe x64\Debug\WinAmyTests.dll /Platform:x64
+      shell: pwsh
+      run: |
+        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        $vsInstallPath = & $vswhere -latest -products * -property installationPath
+        $vsTestConsole = @(
+          (Join-Path $vsInstallPath 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe')
+          (Join-Path $vsInstallPath 'Common7\IDE\Extensions\TestPlatform\vstest.console.exe')
+        ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+        if (-not $vsTestConsole) {
+          throw "Unable to locate vstest.console.exe under Visual Studio installation: $vsInstallPath"
+        }
+        & $vsTestConsole x64\Debug\WinAmyTests.dll /Platform:x64
