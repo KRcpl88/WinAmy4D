@@ -175,6 +175,13 @@ class CPosition {
     void ShowMoves();
     void TestNextGenerators();
 
+    // Search entry points
+    CMove Iterate(int *score_ptr, CMove alternate_move, int *alternate_score_ptr);
+    void SearchRoot();
+    void AnalysisMode();
+    int PermanentBrain();
+    int QuiescenceSearch();
+
     // Static factory methods
     static CPosition *CreateFromEPD(const char *epd);
     static CPosition *Initial();

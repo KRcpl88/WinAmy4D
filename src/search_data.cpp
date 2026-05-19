@@ -49,6 +49,11 @@
 #include "hashtable.h"
 #endif
 
+/**
+ * Description: Creates and initializes per-search state for move ordering and node bookkeeping.
+ * Inputs: pPosition - position used by this search context.
+ * Outputs: Initializes all members and allocates internal heaps/tables.
+ */
 CSearchData::CSearchData(CPosition *p) {
     CSearchData *sd = this;
     memset(sd, 0, sizeof(*sd));
@@ -78,6 +83,11 @@ CSearchData::CSearchData(CPosition *p) {
 
 }
 
+/**
+ * Description: Releases all heap/table resources owned by this search context.
+ * Inputs: None.
+ * Outputs: Frees all dynamically allocated members.
+ */
 CSearchData::~CSearchData() {
     CSearchData *sd = this;
     free(sd->m_pStatusTable);
@@ -92,6 +102,11 @@ CSearchData::~CSearchData() {
 
 }
 
+/**
+ * Description: Enters one search ply and initializes phase state for move generation at that ply.
+ * Inputs: None.
+ * Outputs: Increments ply state and pushes heap sections.
+ */
 void CSearchData::EnterNode() {
     CSearchData *sd = this;
     struct SSearchStatus *st;
@@ -108,6 +123,11 @@ void CSearchData::EnterNode() {
 #endif
 }
 
+/**
+ * Description: Leaves one search ply and restores parent search state.
+ * Inputs: None.
+ * Outputs: Pops heap sections and decrements ply state.
+ */
 void CSearchData::LeaveNode() {
     CSearchData *sd = this;
     pop_section(sd->m_hHeap);
@@ -131,6 +151,11 @@ static inline void GrowDataHeap(CSearchData *sd) {
     }
 }
 
+/**
+ * Description: Produces the next legal move from the normal move generator in ordering sequence.
+ * Inputs: None.
+ * Outputs: Returns next move or M_NONE when exhausted.
+ */
 CMove CSearchData::NextMove() {
     CSearchData *sd = this;
     heap_section_t section = sd->m_hHeap->current_section;
@@ -423,6 +448,11 @@ CMove CSearchData::NextMove() {
     return M_NONE;
 }
 
+/**
+ * Description: Produces the next legal move from the in-check evasion generator in ordering sequence.
+ * Inputs: None.
+ * Outputs: Returns next evasion move or M_NONE when exhausted.
+ */
 CMove CSearchData::NextEvasion() {
     CSearchData *sd = this;
     heap_section_t section = sd->m_hHeap->current_section;
@@ -867,6 +897,11 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
     }
 }
 
+/**
+ * Description: Produces the next tactical move for quiescence search.
+ * Inputs: nAlpha - current alpha bound used for pruning tactical generation.
+ * Outputs: Returns next quiescence move or M_NONE when exhausted.
+ */
 CMove CSearchData::NextMoveQ(int alpha) {
     CSearchData *sd = this;
     heap_section_t section = sd->m_hHeap->current_section;
@@ -916,6 +951,11 @@ CMove CSearchData::NextMoveQ(int alpha) {
  * Enter move in Killertable
  */
 
+/**
+ * Description: Updates killer move tables for the current ply using a newly found cutoff move.
+ * Inputs: mvMove - candidate killer move.
+ * Outputs: Updates killer entries and usage counters.
+ */
 void CSearchData::PutKiller(CMove m) {
     CSearchData *sd = this;
     struct SKillerEntry *k = sd->m_pKiller;

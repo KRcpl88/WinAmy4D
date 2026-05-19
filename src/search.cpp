@@ -1715,8 +1715,9 @@ static void StartHelpers(CPosition *p) {
  *  alternate_move: an alternate move to search
  *  alternate_score_ptr: a pointer to return the alternate score in
  */
-CMove Iterate(CPosition *p, int *score_ptr, CMove alternate_move,
-              int *alternate_score_ptr) {
+CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
+                         int *alternate_score_ptr) {
+    CPosition *p = this;
     float soft, hard;
     int cnt;
     CSearchData *sd;
@@ -1795,7 +1796,8 @@ CMove Iterate(CPosition *p, int *score_ptr, CMove alternate_move,
 /**
  * Search the root node.
  */
-void SearchRoot(CPosition *p) {
+void CPosition::SearchRoot() {
+    CPosition *p = this;
     CMove move = M_NONE;
     CPosition *q;
 
@@ -1817,7 +1819,7 @@ void SearchRoot(CPosition *p) {
 
     if (move == M_NONE) {
         q = CPosition::Clone(p);
-        move = Iterate(q, NULL, M_NONE, NULL);
+        move = q->Iterate(NULL, M_NONE, NULL);
         CPosition::Free(q);
     }
 
@@ -1840,7 +1842,8 @@ void SearchRoot(CPosition *p) {
 /**
  * Do a quiescence search only. Returns the score.
  */
-int QuiescenceSearch(CPosition *p) {
+int CPosition::QuiescenceSearch() {
+    CPosition *p = this;
     CSearchData *sd;
 
     InitEvaluation(p);
@@ -1859,7 +1862,8 @@ int QuiescenceSearch(CPosition *p) {
 /**
  * Implements the permanent brain.
  */
-pb_result_t PermanentBrain(CPosition *p) {
+int CPosition::PermanentBrain() {
+    CPosition *p = this;
     if (!p->LegalMove(PBMove)) {
         CPosition *q;
 
@@ -1868,7 +1872,7 @@ pb_result_t PermanentBrain(CPosition *p) {
         PBAltMove = M_NONE;
 
         Print(2, "Puzzling over a move to ponder on...\n");
-        PBMove = Iterate(q, NULL, M_NONE, NULL);
+        PBMove = q->Iterate(NULL, M_NONE, NULL);
         CPosition::Free(q);
 
         if (SearchMode == Interrupted) {
@@ -1916,7 +1920,7 @@ pb_result_t PermanentBrain(CPosition *p) {
         SearchMode = Pondering;
 
         if (!inbook) {
-            move = Iterate(q, NULL, M_NONE, NULL);
+            move = q->Iterate(NULL, M_NONE, NULL);
         }
 
         CPosition::Free(q);
@@ -1963,13 +1967,14 @@ pb_result_t PermanentBrain(CPosition *p) {
 /**
  * Analysis mode for xboard.
  */
-void AnalysisMode(CPosition *p) {
+void CPosition::AnalysisMode() {
+    CPosition *p = this;
     CPosition *q;
 
     SearchMode = Analyzing;
 
     q = CPosition::Clone(p);
-    Iterate(q, NULL, M_NONE, NULL);
+    q->Iterate(NULL, M_NONE, NULL);
     CPosition::Free(q);
 }
 

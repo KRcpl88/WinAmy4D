@@ -120,7 +120,7 @@ class CSearchData {
     CMove m_rgCounterTab[2][4096];      /* counter moves per side */
     unsigned int m_rguHistoryTab[2][4096]; /* history moves per side */
 
-    CMove m_rgPvSave[64];
+    CMove m_rgPvSave[CSCoord::SIZE];
 
     uint16_t m_wPly;
 
@@ -137,61 +137,16 @@ class CSearchData {
     uint16_t m_wRootMoves;
     uint16_t m_wMoveNum;
 
-    /**
-     * Description: Creates and initializes per-search state for move ordering and node bookkeeping.
-     * Inputs: pPosition - position used by this search context.
-     * Outputs: Initializes all members and allocates internal heaps/tables.
-     */
     explicit CSearchData(CPosition *pPosition);
-    /**
-     * Description: Releases all heap/table resources owned by this search context.
-     * Inputs: None.
-     * Outputs: Frees all dynamically allocated members.
-     */
     ~CSearchData();
-    /**
-     * Description: Enters one search ply and initializes phase state for move generation at that ply.
-     * Inputs: None.
-     * Outputs: Increments ply state and pushes heap sections.
-     */
     void EnterNode();
-    /**
-     * Description: Leaves one search ply and restores parent search state.
-     * Inputs: None.
-     * Outputs: Pops heap sections and decrements ply state.
-     */
     void LeaveNode();
-    /**
-     * Description: Produces the next legal move from the normal move generator in ordering sequence.
-     * Inputs: None.
-     * Outputs: Returns next move or M_NONE when exhausted.
-     */
     CMove NextMove();
-    /**
-     * Description: Produces the next legal move from the in-check evasion generator in ordering sequence.
-     * Inputs: None.
-     * Outputs: Returns next evasion move or M_NONE when exhausted.
-     */
     CMove NextEvasion();
-    /**
-     * Description: Produces the next tactical move for quiescence search.
-     * Inputs: nAlpha - current alpha bound used for pruning tactical generation.
-     * Outputs: Returns next quiescence move or M_NONE when exhausted.
-     */
     CMove NextMoveQ(int nAlpha);
-    /**
-     * Description: Updates killer move tables for the current ply using a newly found cutoff move.
-     * Inputs: mvMove - candidate killer move.
-     * Outputs: Updates killer entries and usage counters.
-     */
     void PutKiller(CMove mvMove);
 };
 
-CMove Iterate(CPosition *, int *, CMove, int *);
-void SearchRoot(CPosition *);
-void AnalysisMode(CPosition *);
-pb_result_t PermanentBrain(CPosition *);
-int QuiescenceSearch(CPosition *);
 void setMaxSearchDepth(int);
 
 #if MP
