@@ -121,6 +121,9 @@ WinAmy scores moves using recursive search scores (primary), with static evaluat
 - `CPosition`: mutable position searched via `DoMove`/`UndoMove`.
 - `PawnFacts` (`include/evaluation.h:38`) and evaluation hash tables used by `EvaluatePosition`.
 
+**What is a “killer move”?**  
+In this engine, a killer move is a **non-tactical move** (not a capture/promotion/check tactic) that previously caused a **beta cutoff** at the same search ply. It is stored in `SKillerEntry` (`killer1`/`killer2` + hit counters in `include/searchdata.h:60-63`) via `CSearchData::PutKiller` (`src/search_data.cpp:959-988`) and then tried early in later siblings during `Killer1`/`Killer2`/`Killer3` phases (`src/search_data.cpp:248-299`, `539-590`) to speed up pruning.
+
 ### 2.2 Recursive scoring in full search (`NegaScout`)
 
 `CSearchData::NegaScout()` (`src/search.cpp:578`) computes move scores by:
