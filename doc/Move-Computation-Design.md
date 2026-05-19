@@ -86,6 +86,25 @@ Inside `NegaScout()`, moves are not generated all at once; they are produced inc
 
 These are built on precomputed attack maps in `CPosition` (`m_rgAtkTo`, `m_rgAtkFr`) and piece masks (`m_rgMask`).
 
+### 1.5 Where piece-move rules are actually computed (review follow-up)
+
+Direct answers to the review questions:
+
+1. **`GenTo` and `GenFrom` are methods of class `CPosition`.**  
+   They are declared in `include/dbase.h` and implemented as `void CPosition::GenTo(...)` / `void CPosition::GenFrom(...)` in `src/dbase.cpp:950` and `src/dbase.cpp:988`.
+
+2. **Piece geometry (how each piece moves) is computed in attack tables + magic attack functions, then consumed by move generators.**
+   - **Knight/King move geometry:** precomputed lookup tables `KnightEPM[64]` and `KingEPM[64]` in `src/movedata.cpp:44` and `:111`.
+   - **Sliding piece geometry (bishop/rook/queen rays):** built in `InitAll()` setup (`src/init.cpp:235-279`) into `BishopEPM`, `RookEPM`, `QueenEPM`, `InterPath`, and `Ray`.
+   - **Sliding piece legal attack squares with blockers:** computed by magic-bitboard helpers `bishop_attacks` / `rook_attacks` in `include/magic.h:59-74` (tables initialized in `src/magic.cpp`).
+   - **Per-piece attack selection at runtime:** `AtkSet(...)` switch in `src/dbase.cpp:185-221` chooses `PawnEPM`, `KnightEPM`, `KingEPM`, or magic sliding attacks.
+   - **Move list generation from those attacks:** `GenTo`/`GenFrom`/`LegalMoves` in `src/dbase.cpp`.
+
+3. **Special move logic locations:**
+   - **Promotion:** generation in `GenTo`/`GenFrom` using `make_promotion(...)` and `is_promo_square(...)` (`src/dbase.cpp:958-963`, `1027-1031`, `include/inline.h:120-138`); application in `DoMove`/`UndoMove` via `PromoType(...)` (`src/dbase.cpp:577-589`, `698-713`).
+   - **Castling:** candidate generation in `GenFrom` and search `GenerateRest` (`src/dbase.cpp:1006-1017`, `src/search_data.cpp:354-363`), legality in `MayCastle` (`src/dbase.cpp:1053-1099`), board update in `DoCastle`/`UndoCastle` called from `DoMove`/`UndoMove` (`src/dbase.cpp:332-448`, `469-472`, `682-684`).
+   - **En passant:** candidate generation in `GenEnpas` (`src/dbase.cpp:969-982`), legality checks in `LegalMove` (`src/dbase.cpp:1177-1234`), application/rollback in `DoMove`/`UndoMove` (`src/dbase.cpp:537-572`, `735-762`), and EP-target setup after pawn double push (`src/dbase.cpp:620-628`).
+
 ---
 
 ## 2) Step 2 — Evaluating and scoring each move
