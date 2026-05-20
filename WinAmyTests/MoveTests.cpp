@@ -53,7 +53,7 @@ TEST_CLASS(MoveTests) {
         position.get()->RecalcAttacks();
 
         CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
-        CBitBoard expectedBishopAttacks(bishop_attacks(d5, occupied));
+        CBitBoard expectedBishopAttacks = ComputeSlidingAttacks(CSCoord(d5), Bishop, occupied);
 
         Assert::IsTrue(position.get()->m_rgAtkTo[d5] == expectedBishopAttacks);
         Assert::IsTrue((position.get()->m_rgAtkFr[e6] & CBitBoard::SetMask(d5)).IsNotEmpty());

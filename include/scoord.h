@@ -4,6 +4,8 @@
 
 typedef std::uint16_t scoord_bitfield_t;
 
+class CUCoord;  // forward declaration
+
 class CSCoord {
 public:
     static const int LEVEL_SIZE[1];
@@ -32,6 +34,8 @@ public:
     static bool IsValid(int level, int file, int rank);
     static bool IsValid(int offset);
 
+    CSCoord Step(CUCoord Direction) const;
+    
     int BitOffset() const;
     scoord_bitfield_t GetBitField() const;
 

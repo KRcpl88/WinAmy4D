@@ -1,4 +1,5 @@
 #include "scoord.h"
+#include "ucoord.h"
 
 #include <stdexcept>
 
@@ -75,6 +76,12 @@ int CSCoord::BitOffset() const {
 scoord_bitfield_t CSCoord::GetBitField() const {
     Validate();
     return static_cast<scoord_bitfield_t>((m_nLevel << 8) | (m_nRank << 4) | m_nFile);
+}
+
+// step in the given direction, returning an invalid coordinate if the result is out of bounds
+CSCoord CSCoord::Step(CUCoord Direction) const
+{
+    return (CSCoord)(CUCoord(*this) + Direction);
 }
 
 bool CSCoord::IsValid(int offset) {

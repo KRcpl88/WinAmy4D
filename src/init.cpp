@@ -35,7 +35,6 @@
 
 #include "dbase.h"
 #include "inline.h"
-#include "magic.h"
 #include "scoord.h"
 #include "utils.h"
 
@@ -394,6 +393,5 @@ void InitAll(void) {
     InitPawnMasks();
     InitGeometry();
     InitMiscMasks();
-    InitMagic();
 }
 

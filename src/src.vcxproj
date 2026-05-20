@@ -171,7 +171,7 @@
     <ClCompile Include="heap.cpp" />
     <ClCompile Include="init.cpp" />
     <ClCompile Include="learn.cpp" />
-    <ClCompile Include="magic.cpp" />
+
     <ClCompile Include="mates.cpp" />
     <ClCompile Include="movedata.cpp" />
     <ClCompile Include="move.cpp" />

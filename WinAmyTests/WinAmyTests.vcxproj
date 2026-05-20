@@ -156,6 +156,7 @@
     <ClCompile Include="TestHelpers.cpp" />
     <ClCompile Include="BitboardTests.cpp" />
     <ClCompile Include="AttackTests.cpp" />
+    <ClCompile Include="AttackDeltaTests.cpp" />
     <ClCompile Include="MoveTests.cpp" />
     <ClCompile Include="PositionTests.cpp" />
     <ClCompile Include="CoordTests.cpp" />

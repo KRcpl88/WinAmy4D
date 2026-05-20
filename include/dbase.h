@@ -37,6 +37,7 @@
 #include "heap.h"
 #include "scoord.h"
 #include "types.h"
+#include "ucoord.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -165,6 +166,14 @@ class CPosition {
     bool CheckDraw() const;
     bool IsPassed(const CSCoord& sq, int color) const;
 
+    // Attack map maintenance
+    void AtkSet(int piece, int side, const CSCoord& sq);
+    void AtkClr(const CSCoord& sq);
+    void GainAttack(const CSCoord& from, const CSCoord& to);
+    void LooseAttack(const CSCoord& from, const CSCoord& to);
+    void GainAttacks(const CSCoord& to);
+    void LooseAttacks(const CSCoord& to);
+
     // Notation
     char *SAN(CMove move, char *buffer);
     CMove ParseSAN(const char *san);
@@ -206,6 +215,16 @@ extern CMove goodmove[MAX_EPD_MOVES];
 extern CMove badmove[MAX_EPD_MOVES];
 extern char PieceName[];
 extern const int8_t CastleMask[2][2];
+
+// Attack delta table for piece movement directions
+static const int ATTACK_DELTA_MAX = 24;
+extern const CUCoord ATTACK_DELTA[BPawn + 1][ATTACK_DELTA_MAX + 1];
+extern const int ATTACK_DELTA_COUNT[BPawn + 1];
+
+// Runtime attack computation using ATTACK_DELTA ray-walk
+CBitBoard ComputeSlidingAttacks(const CSCoord &sq, int pieceType,
+                                const CBitBoard &occupied);
+CBitBoard ComputeLeapAttacks(const CSCoord &sq, int pieceType);
 
 // Free functions that don't operate on a position
 char *ICS_SAN(CMove move);

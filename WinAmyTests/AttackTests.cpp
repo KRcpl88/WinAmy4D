@@ -168,38 +168,43 @@ TEST_CLASS(AttackTests) {
         Assert::IsTrue(CBitBoard(KnightEPM[g1]) == knightExpected);
     }
 
-    TEST_METHOD(RookAndBishopMagicAttacksMatchNaiveAttacks) {
-        BitBoardBits occupied = (CBitBoard::SetMask(d4) | CBitBoard::SetMask(d6) | CBitBoard::SetMask(f4) |
+    TEST_METHOD(RookAndBishopAttacksMatchNaiveAttacks) {
+        CBitBoard occupiedBB = CBitBoard::SetMask(d4) | CBitBoard::SetMask(d6) | CBitBoard::SetMask(f4) |
                                 CBitBoard::SetMask(d2) | CBitBoard::SetMask(b4) | CBitBoard::SetMask(f6) |
-                                CBitBoard::SetMask(b6) | CBitBoard::SetMask(f2) | CBitBoard::SetMask(b2)).GetBits();
+                                CBitBoard::SetMask(b6) | CBitBoard::SetMask(f2) | CBitBoard::SetMask(b2);
+        BitBoardBits occupied = occupiedBB.GetBits();
 
         Assert::IsTrue(CBitBoard(ReferenceRookAttacks(d4, occupied)) ==
-                       CBitBoard(rook_attacks(d4, occupied)));
+                       ComputeSlidingAttacks(CSCoord(d4), Rook, occupiedBB));
 
         Assert::IsTrue(CBitBoard(ReferenceBishopAttacks(d4, occupied)) ==
-                       CBitBoard(bishop_attacks(d4, occupied)));
+                       ComputeSlidingAttacks(CSCoord(d4), Bishop, occupiedBB));
     }
 
-    TEST_METHOD(RookMagicAttacksOnEdgeSquares) {
+    TEST_METHOD(RookAttacksOnEdgeSquares) {
         // Rook on a1 with no blockers besides edges
-        BitBoardBits occupied = (CBitBoard::SetMask(a1)).GetBits();
+        CBitBoard occupiedBB = CBitBoard::SetMask(a1);
+        BitBoardBits occupied = occupiedBB.GetBits();
         Assert::IsTrue(CBitBoard(ReferenceRookAttacks(a1, occupied)) ==
-                       CBitBoard(rook_attacks(a1, occupied)));
+                       ComputeSlidingAttacks(CSCoord(a1), Rook, occupiedBB));
 
         // Rook on h8
-        occupied = CBitBoard::SetMask(h8).GetBits();
+        occupiedBB = CBitBoard::SetMask(h8);
+        occupied = occupiedBB.GetBits();
         Assert::IsTrue(CBitBoard(ReferenceRookAttacks(h8, occupied)) ==
-                       CBitBoard(rook_attacks(h8, occupied)));
+                       ComputeSlidingAttacks(CSCoord(h8), Rook, occupiedBB));
     }
 
-    TEST_METHOD(BishopMagicAttacksOnCornerSquares) {
-        BitBoardBits occupied = (CBitBoard::SetMask(a1)).GetBits();
+    TEST_METHOD(BishopAttacksOnCornerSquares) {
+        CBitBoard occupiedBB = CBitBoard::SetMask(a1);
+        BitBoardBits occupied = occupiedBB.GetBits();
         Assert::IsTrue(CBitBoard(ReferenceBishopAttacks(a1, occupied)) ==
-                       CBitBoard(bishop_attacks(a1, occupied)));
+                       ComputeSlidingAttacks(CSCoord(a1), Bishop, occupiedBB));
 
-        occupied = CBitBoard::SetMask(h8).GetBits();
+        occupiedBB = CBitBoard::SetMask(h8);
+        occupied = occupiedBB.GetBits();
         Assert::IsTrue(CBitBoard(ReferenceBishopAttacks(h8, occupied)) ==
-                       CBitBoard(bishop_attacks(h8, occupied)));
+                       ComputeSlidingAttacks(CSCoord(h8), Bishop, occupiedBB));
     }
 };
 
