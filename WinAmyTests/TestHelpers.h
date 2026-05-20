@@ -7,7 +7,6 @@
 #include "hashtable.h"
 #include "init.h"
 #include "inline.h"
-#include "magic.h"
 #include "movedata.h"
 #include "search.h"
 

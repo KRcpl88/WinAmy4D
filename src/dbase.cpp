@@ -41,7 +41,6 @@
 #include "heap.h"
 #include "init.h"
 #include "inline.h"
-#include "magic.h"
 #include "mates.h"
 #include "recog.h"
 #include "safe_malloc.h"

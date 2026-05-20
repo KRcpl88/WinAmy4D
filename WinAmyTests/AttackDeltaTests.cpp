@@ -542,47 +542,49 @@ TEST_CLASS(AttackDeltaTests) {
         }
     }
 
-    TEST_METHOD(ComputeSlidingAttacksMatchesMagicWithBlockers) {
-        // Use the initial position's occupancy to compare
+    TEST_METHOD(ComputeSlidingAttacksMatchesReferenceWithBlockers) {
+        // Use the initial position's occupancy to compare against reference
         char epd[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
         CPosition *pos = CPosition::CreateFromEPD(epd);
         PositionGuard guard(pos);
 
         CBitBoard occupied = pos->m_rgMask[0][0] | pos->m_rgMask[1][0];
+        BitBoardBits occupiedBits = occupied.GetBits();
 
         for (int offset = 0; offset < CSCoord::SIZE; offset++) {
             CSCoord sq(offset);
             CBitBoard rookNew = ComputeSlidingAttacks(sq, Rook, occupied);
-            CBitBoard rookOld = rook_attacks(offset, occupied);
-            Assert::IsTrue(rookNew == rookOld,
-                L"Rook ComputeSlidingAttacks must match rook_attacks with blockers");
+            CBitBoard rookRef = CBitBoard(ReferenceRookAttacks(offset, occupiedBits));
+            Assert::IsTrue(rookNew == rookRef,
+                L"Rook ComputeSlidingAttacks must match reference with blockers");
 
             CBitBoard bishopNew = ComputeSlidingAttacks(sq, Bishop, occupied);
-            CBitBoard bishopOld = bishop_attacks(offset, occupied);
-            Assert::IsTrue(bishopNew == bishopOld,
-                L"Bishop ComputeSlidingAttacks must match bishop_attacks with blockers");
+            CBitBoard bishopRef = CBitBoard(ReferenceBishopAttacks(offset, occupiedBits));
+            Assert::IsTrue(bishopNew == bishopRef,
+                L"Bishop ComputeSlidingAttacks must match reference with blockers");
         }
     }
 
-    TEST_METHOD(ComputeSlidingAttacksMatchesMagicMidgamePosition) {
+    TEST_METHOD(ComputeSlidingAttacksMatchesReferenceMidgamePosition) {
         // A complex midgame position with many blockers
         char epd[] = "r1bq1rk1/pp2ppbp/2np1np1/2p5/4P3/2NP1NP1/PPP2PBP/R1BQ1RK1 w - -";
         CPosition *pos = CPosition::CreateFromEPD(epd);
         PositionGuard guard(pos);
 
         CBitBoard occupied = pos->m_rgMask[0][0] | pos->m_rgMask[1][0];
+        BitBoardBits occupiedBits = occupied.GetBits();
 
         for (int offset = 0; offset < CSCoord::SIZE; offset++) {
             CSCoord sq(offset);
             CBitBoard rookNew = ComputeSlidingAttacks(sq, Rook, occupied);
-            CBitBoard rookOld = rook_attacks(offset, occupied);
-            Assert::IsTrue(rookNew == rookOld,
-                L"Rook attacks must match in midgame position");
+            CBitBoard rookRef = CBitBoard(ReferenceRookAttacks(offset, occupiedBits));
+            Assert::IsTrue(rookNew == rookRef,
+                L"Rook attacks must match reference in midgame position");
 
             CBitBoard bishopNew = ComputeSlidingAttacks(sq, Bishop, occupied);
-            CBitBoard bishopOld = bishop_attacks(offset, occupied);
-            Assert::IsTrue(bishopNew == bishopOld,
-                L"Bishop attacks must match in midgame position");
+            CBitBoard bishopRef = CBitBoard(ReferenceBishopAttacks(offset, occupiedBits));
+            Assert::IsTrue(bishopNew == bishopRef,
+                L"Bishop attacks must match reference in midgame position");
         }
     }
 };
