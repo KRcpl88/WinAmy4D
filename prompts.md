@@ -123,12 +123,20 @@ There are many arrays in the code that are declared using a fixed size of 64 ele
 
 
 
+
+# Deprecating magics.cpp
+
+Using the reccomendations provided in "Implementation path for WinAmy4D" in section 1.5 of C:\git\WinAmy4D\doc\Move-Computation-Design.md, update the design of the Piece-move geometry to use CSCoord::Step using the ATTACK_DELTA for each piece in dbase.cpp.  Also use the unit tests in AttackDeltaTests.cpp as a guideline for how to compute moves using the CSCoord::Step function.  Once these changes have been made, the magic tables will no longer be needed or used and the magic tables, blocker masks, and magic constants can then be removed entirely.  Please be sure to add enough unit tests so that they can be removed safely and we can verify the game logic and move computation still works correctly and the game engine can still play correctly.
+
+
+
+
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
 Rename all structs to begine with S, for example SGameLog instead of GameLog.
 Add CBitBoard FindSetBitCoord which returns CSCoord
-
-
-
 

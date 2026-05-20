@@ -159,6 +159,41 @@ const CUCoord ATTACK_DELTA[BPawn + 1][ATTACK_DELTA_MAX + 1] = {
  */
 const int ATTACK_DELTA_COUNT[BPawn + 1] = {0, 4, 24, 6, 12, 18, 18, 4};
 
+/*
+ * Compute attacks for a sliding piece (Bishop, Rook, Queen) using ray-walk.
+ * Walks each direction in ATTACK_DELTA until hitting a blocker or board edge.
+ */
+CBitBoard ComputeSlidingAttacks(const CSCoord &sq, int pieceType,
+                                const CBitBoard &occupied) {
+    CBitBoard attacks;
+    for (int d = 0; d < ATTACK_DELTA_COUNT[pieceType]; d++) {
+        CUCoord dir = ATTACK_DELTA[pieceType][d];
+        CSCoord current = sq.Step(dir);
+        while (current.IsValid()) {
+            attacks.SetBit(current.BitOffset());
+            if (occupied.TstBit(current.BitOffset()))
+                break;
+            current = current.Step(dir);
+        }
+    }
+    return attacks;
+}
+
+/*
+ * Compute attacks for a leaping piece (Pawn, Knight, King) using single step.
+ * Steps once in each direction in ATTACK_DELTA.
+ */
+CBitBoard ComputeLeapAttacks(const CSCoord &sq, int pieceType) {
+    CBitBoard attacks;
+    for (int d = 0; d < ATTACK_DELTA_COUNT[pieceType]; d++) {
+        CUCoord dir = ATTACK_DELTA[pieceType][d];
+        CSCoord target = sq.Step(dir);
+        if (target.IsValid()) {
+            attacks.SetBit(target.BitOffset());
+        }
+    }
+    return attacks;
+}
 
 
 /* local prototypes
@@ -254,26 +289,26 @@ static void DebugEngine(CPosition *p) {
 void CPosition::AtkSet(int type, int color, const CSCoord& squareCoord) {
     int square = squareCoord.BitOffset();
     CBitBoard attacks;
+    const CBitBoard occupied = m_rgMask[0][0] | m_rgMask[1][0];
 
     switch (type) {
     case Pawn:
-        attacks = PawnEPM[color][square];
+        attacks = ComputeLeapAttacks(squareCoord, color == White ? Pawn : BPawn);
         break;
     case Knight:
-        attacks = KnightEPM[square];
+        attacks = ComputeLeapAttacks(squareCoord, Knight);
         break;
     case Bishop:
-        attacks = bishop_attacks(square, m_rgMask[0][0] | m_rgMask[1][0]);
+        attacks = ComputeSlidingAttacks(squareCoord, Bishop, occupied);
         break;
     case Rook:
-        attacks = rook_attacks(square, m_rgMask[0][0] | m_rgMask[1][0]);
+        attacks = ComputeSlidingAttacks(squareCoord, Rook, occupied);
         break;
     case Queen:
-        attacks = bishop_attacks(square, m_rgMask[0][0] | m_rgMask[1][0]) |
-                  rook_attacks(square, m_rgMask[0][0] | m_rgMask[1][0]);
+        attacks = ComputeSlidingAttacks(squareCoord, Queen, occupied);
         break;
     case King:
-        attacks = KingEPM[square];
+        attacks = ComputeLeapAttacks(squareCoord, King);
         break;
     default:
         printf("AtkSet(%d, %d, %d)\n", type, color, square);

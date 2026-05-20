@@ -221,6 +221,11 @@ static const int ATTACK_DELTA_MAX = 24;
 extern const CUCoord ATTACK_DELTA[BPawn + 1][ATTACK_DELTA_MAX + 1];
 extern const int ATTACK_DELTA_COUNT[BPawn + 1];
 
+// Runtime attack computation using ATTACK_DELTA ray-walk
+CBitBoard ComputeSlidingAttacks(const CSCoord &sq, int pieceType,
+                                const CBitBoard &occupied);
+CBitBoard ComputeLeapAttacks(const CSCoord &sq, int pieceType);
+
 // Free functions that don't operate on a position
 char *ICS_SAN(CMove move);
 void GenRest(CMove *moves);

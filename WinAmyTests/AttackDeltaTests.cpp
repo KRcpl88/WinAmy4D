@@ -377,6 +377,214 @@ TEST_CLASS(AttackDeltaTests) {
             }
         }
     }
+
+    // ---------------------------------------------------------------
+    // ComputeSlidingAttacks with blockers
+    // ---------------------------------------------------------------
+
+    TEST_METHOD(RookBlockedByPieceOnSameFile) {
+        // Rook on d1 (file=3, rank=0), blocker on d4 (file=3, rank=3)
+        CSCoord d1(0, 3, 0);
+        CSCoord d4(0, 3, 3);
+        CBitBoard occupied;
+        occupied.SetBit(d1.BitOffset());
+        occupied.SetBit(d4.BitOffset());
+
+        CBitBoard attacks = ComputeSlidingAttacks(d1, Rook, occupied);
+
+        // Should include d2, d3, d4 (blocker) but not d5-d8
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 3, 1).BitOffset()));  // d2
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 3, 2).BitOffset()));  // d3
+        Assert::IsTrue(attacks.TstBit(d4.BitOffset()));                 // d4 (blocker included)
+        Assert::IsFalse(attacks.TstBit(CSCoord(0, 3, 4).BitOffset())); // d5 blocked
+        Assert::IsFalse(attacks.TstBit(CSCoord(0, 3, 5).BitOffset())); // d6 blocked
+
+        // Horizontal rays should still reach board edges
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 0, 0).BitOffset()));  // a1
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 7, 0).BitOffset()));  // h1
+    }
+
+    TEST_METHOD(BishopBlockedByPieceOnDiagonal) {
+        // Bishop on c1 (file=2, rank=0), blocker on e3 (file=4, rank=2)
+        CSCoord c1(0, 2, 0);
+        CSCoord e3(0, 4, 2);
+        CBitBoard occupied;
+        occupied.SetBit(c1.BitOffset());
+        occupied.SetBit(e3.BitOffset());
+
+        CBitBoard attacks = ComputeSlidingAttacks(c1, Bishop, occupied);
+
+        // NE diagonal: d2, e3 (blocker) but not f4, g5, h6
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 3, 1).BitOffset()));  // d2
+        Assert::IsTrue(attacks.TstBit(e3.BitOffset()));                 // e3
+        Assert::IsFalse(attacks.TstBit(CSCoord(0, 5, 3).BitOffset())); // f4 blocked
+
+        // NW diagonal: b2, a3
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 1, 1).BitOffset()));  // b2
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 0, 2).BitOffset()));  // a3
+    }
+
+    TEST_METHOD(QueenBlockedMultipleDirections) {
+        // Queen on d4, blockers on d6, f4, b4, b6
+        CSCoord d4(0, 3, 3);
+        CBitBoard occupied;
+        occupied.SetBit(d4.BitOffset());
+        occupied.SetBit(CSCoord(0, 3, 5).BitOffset()); // d6
+        occupied.SetBit(CSCoord(0, 5, 3).BitOffset()); // f4
+        occupied.SetBit(CSCoord(0, 1, 3).BitOffset()); // b4
+        occupied.SetBit(CSCoord(0, 1, 5).BitOffset()); // b6
+
+        CBitBoard attacks = ComputeSlidingAttacks(d4, Queen, occupied);
+
+        // North: d5, d6 (blocked), not d7, d8
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 3, 4).BitOffset()));  // d5
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 3, 5).BitOffset()));  // d6
+        Assert::IsFalse(attacks.TstBit(CSCoord(0, 3, 6).BitOffset())); // d7
+
+        // East: e4, f4 (blocked), not g4, h4
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 4, 3).BitOffset()));  // e4
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 5, 3).BitOffset()));  // f4
+        Assert::IsFalse(attacks.TstBit(CSCoord(0, 6, 3).BitOffset())); // g4
+
+        // NW diagonal: c5, b6 (blocked), not a7
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 2, 4).BitOffset()));  // c5
+        Assert::IsTrue(attacks.TstBit(CSCoord(0, 1, 5).BitOffset()));  // b6
+        Assert::IsFalse(attacks.TstBit(CSCoord(0, 0, 6).BitOffset())); // a7
+    }
+
+    TEST_METHOD(ComputeSlidingAttacksEmptyBoardMatchesUnblockedRays) {
+        // With no blockers, ComputeSlidingAttacks should equal TraceSlidingRays
+        CSCoord e4(0, 4, 3);
+        CBitBoard empty;
+
+        CBitBoard rookAtk = ComputeSlidingAttacks(e4, Rook, empty);
+        CBitBoard rookRays = TraceSlidingRays(e4, Rook);
+        Assert::IsTrue(rookAtk == rookRays);
+
+        CBitBoard bishopAtk = ComputeSlidingAttacks(e4, Bishop, empty);
+        CBitBoard bishopRays = TraceSlidingRays(e4, Bishop);
+        Assert::IsTrue(bishopAtk == bishopRays);
+    }
+
+    // ---------------------------------------------------------------
+    // ComputeLeapAttacks matches EPM tables
+    // ---------------------------------------------------------------
+
+    TEST_METHOD(ComputeLeapAttacksKnightMatchesEPM) {
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(offset);
+            CBitBoard computed = ComputeLeapAttacks(sq, Knight);
+            Assert::IsTrue(computed == KnightEPM[offset],
+                L"Knight ComputeLeapAttacks must match KnightEPM");
+        }
+    }
+
+    TEST_METHOD(ComputeLeapAttacksKingMatchesEPM) {
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(offset);
+            CBitBoard computed = ComputeLeapAttacks(sq, King);
+            Assert::IsTrue(computed == KingEPM[offset],
+                L"King ComputeLeapAttacks must match KingEPM");
+        }
+    }
+
+    TEST_METHOD(ComputeLeapAttacksWhitePawnMatchesEPM) {
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(offset);
+            CBitBoard computed = ComputeLeapAttacks(sq, Pawn);
+            Assert::IsTrue(computed == PawnEPM[White][offset],
+                L"White Pawn ComputeLeapAttacks must match PawnEPM[White]");
+        }
+    }
+
+    TEST_METHOD(ComputeLeapAttacksBlackPawnMatchesEPM) {
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(offset);
+            CBitBoard computed = ComputeLeapAttacks(sq, BPawn);
+            Assert::IsTrue(computed == PawnEPM[Black][offset],
+                L"Black Pawn ComputeLeapAttacks must match PawnEPM[Black]");
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // ComputeSlidingAttacks matches old magic tables
+    // ---------------------------------------------------------------
+
+    TEST_METHOD(ComputeSlidingAttacksRookMatchesMagicForAllSquares) {
+        // Verify that for every square on the empty board,
+        // ComputeSlidingAttacks produces the same result as RookEPM
+        CBitBoard empty;
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(offset);
+            CBitBoard computed = ComputeSlidingAttacks(sq, Rook, empty);
+            Assert::IsTrue(computed == RookEPM[offset],
+                L"Rook on empty board must match RookEPM");
+        }
+    }
+
+    TEST_METHOD(ComputeSlidingAttacksBishopMatchesMagicForAllSquares) {
+        CBitBoard empty;
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(offset);
+            CBitBoard computed = ComputeSlidingAttacks(sq, Bishop, empty);
+            Assert::IsTrue(computed == BishopEPM[offset],
+                L"Bishop on empty board must match BishopEPM");
+        }
+    }
+
+    TEST_METHOD(ComputeSlidingAttacksQueenMatchesMagicForAllSquares) {
+        CBitBoard empty;
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(offset);
+            CBitBoard computed = ComputeSlidingAttacks(sq, Queen, empty);
+            Assert::IsTrue(computed == QueenEPM[offset],
+                L"Queen on empty board must match QueenEPM");
+        }
+    }
+
+    TEST_METHOD(ComputeSlidingAttacksMatchesMagicWithBlockers) {
+        // Use the initial position's occupancy to compare
+        char epd[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
+        CPosition *pos = CPosition::CreateFromEPD(epd);
+        PositionGuard guard(pos);
+
+        CBitBoard occupied = pos->m_rgMask[0][0] | pos->m_rgMask[1][0];
+
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(offset);
+            CBitBoard rookNew = ComputeSlidingAttacks(sq, Rook, occupied);
+            CBitBoard rookOld = rook_attacks(offset, occupied);
+            Assert::IsTrue(rookNew == rookOld,
+                L"Rook ComputeSlidingAttacks must match rook_attacks with blockers");
+
+            CBitBoard bishopNew = ComputeSlidingAttacks(sq, Bishop, occupied);
+            CBitBoard bishopOld = bishop_attacks(offset, occupied);
+            Assert::IsTrue(bishopNew == bishopOld,
+                L"Bishop ComputeSlidingAttacks must match bishop_attacks with blockers");
+        }
+    }
+
+    TEST_METHOD(ComputeSlidingAttacksMatchesMagicMidgamePosition) {
+        // A complex midgame position with many blockers
+        char epd[] = "r1bq1rk1/pp2ppbp/2np1np1/2p5/4P3/2NP1NP1/PPP2PBP/R1BQ1RK1 w - -";
+        CPosition *pos = CPosition::CreateFromEPD(epd);
+        PositionGuard guard(pos);
+
+        CBitBoard occupied = pos->m_rgMask[0][0] | pos->m_rgMask[1][0];
+
+        for (int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(offset);
+            CBitBoard rookNew = ComputeSlidingAttacks(sq, Rook, occupied);
+            CBitBoard rookOld = rook_attacks(offset, occupied);
+            Assert::IsTrue(rookNew == rookOld,
+                L"Rook attacks must match in midgame position");
+
+            CBitBoard bishopNew = ComputeSlidingAttacks(sq, Bishop, occupied);
+            CBitBoard bishopOld = bishop_attacks(offset, occupied);
+            Assert::IsTrue(bishopNew == bishopOld,
+                L"Bishop attacks must match in midgame position");
+        }
+    }
 };
 
 } // namespace WinAmyTests
