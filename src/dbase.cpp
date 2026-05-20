@@ -46,10 +46,12 @@
 #include "recog.h"
 #include "safe_malloc.h"
 #include "scoord.h"
+#include "ucoord.h"
 #include "search.h"
 #include "swap.h"
 #include "types.h"
 #include "utils.h"
+#include "ucoord.h"
 
 #define INITIAL_GAME_LOG_SIZE 40 /* Initial size of game history */
 
@@ -87,6 +89,64 @@ const int8_t CastleMask[2][2] = {
     {0x01, 0x02}, /* White can castle king/queenp->m_nTurn */
     {0x04, 0x08}  /* dito for black */
 };
+
+
+// ---------------------------------------------------------------------------
+// Attack deltas  (3-D board, UCoord(dx, dy, dz))
+// index 0 unused; indices 1-7 match piece-type constants; index 7 = BLACK_PAWN
+// ---------------------------------------------------------------------------
+static const int ATTACK_DELTA_MAX = 24;
+const CUCoord ATTACK_DELTA[BPawn + 1][ATTACK_DELTA_MAX + 1] = {
+    // [0] – unused (sentinel-terminated)
+    { CUCoord() },
+    // [1] WHITE_PAWN – attacks forward (rank+) on the same level and diagonally to adjacent levels
+    { CUCoord(2,0,0), CUCoord(0,2,0), CUCoord(0,0,2), CUCoord(0,0,-2), CUCoord() },
+    // [2] KNIGHT
+    {
+        CUCoord( 0, 1, 3), CUCoord(-1, 0, 3), CUCoord( 0,-1, 3), CUCoord( 1, 0, 3),
+        CUCoord( 0, 3, 1), CUCoord(-3, 0, 1), CUCoord( 0,-3, 1), CUCoord( 3, 0, 1),
+        CUCoord( 3, 1, 0), CUCoord( 3,-1, 0), CUCoord( 1,-3, 0), CUCoord(-1,-3, 0),
+        CUCoord(-3, 1, 0), CUCoord(-3,-1, 0), CUCoord( 1, 3, 0), CUCoord(-1, 3, 0),
+        CUCoord( 0, 1,-3), CUCoord(-1, 0,-3), CUCoord( 0,-1,-3), CUCoord( 1, 0,-3),
+        CUCoord( 0, 3,-1), CUCoord(-3, 0,-1), CUCoord( 0,-3,-1), CUCoord( 3, 0,-1),
+        CUCoord()
+    },
+    // [3] BISHOP  (diagonal axes in 3-D – pairs of axes)
+    {
+        CUCoord( 0, 0, 2), CUCoord( 2, 0, 0), CUCoord( 0,-2, 0),
+        CUCoord(-2, 0, 0), CUCoord( 0, 2, 0), CUCoord( 0, 0,-2),
+        CUCoord()
+    },
+    // [4] ROOK  (axis-aligned directions)
+    {
+        CUCoord( 0, 1, 1), CUCoord(-1, 0, 1), CUCoord( 0,-1, 1), CUCoord( 1, 0, 1),
+        CUCoord( 1, 1, 0), CUCoord( 1,-1, 0), CUCoord(-1,-1, 0), CUCoord(-1, 1, 0),
+        CUCoord( 0, 1,-1), CUCoord(-1, 0,-1), CUCoord( 0,-1,-1), CUCoord( 1, 0,-1),
+        CUCoord()
+    },
+    // [5] QUEEN  = BISHOP dirs + ROOK dirs
+    {
+        CUCoord( 0, 0, 2), CUCoord( 2, 0, 0), CUCoord( 0,-2, 0),
+        CUCoord(-2, 0, 0), CUCoord( 0, 2, 0), CUCoord( 0, 0,-2),
+        CUCoord( 0, 1, 1), CUCoord(-1, 0, 1), CUCoord( 0,-1, 1), CUCoord( 1, 0, 1),
+        CUCoord( 1, 1, 0), CUCoord( 1,-1, 0), CUCoord(-1,-1, 0), CUCoord(-1, 1, 0),
+        CUCoord( 0, 1,-1), CUCoord(-1, 0,-1), CUCoord( 0,-1,-1), CUCoord( 1, 0,-1),
+        CUCoord()
+    },
+    // [6] KING  (one step in every queen direction)
+    {
+        CUCoord( 0, 0, 2), CUCoord( 2, 0, 0), CUCoord( 0,-2, 0),
+        CUCoord(-2, 0, 0), CUCoord( 0, 2, 0), CUCoord( 0, 0,-2),
+        CUCoord( 0, 1, 1), CUCoord(-1, 0, 1), CUCoord( 0,-1, 1), CUCoord( 1, 0, 1),
+        CUCoord( 1, 1, 0), CUCoord( 1,-1, 0), CUCoord(-1,-1, 0), CUCoord(-1, 1, 0),
+        CUCoord( 0, 1,-1), CUCoord(-1, 0,-1), CUCoord( 0,-1,-1), CUCoord( 1, 0,-1),
+        CUCoord()
+    },
+    // [7] BLACK_PAWN – attacks backward (rank-) on the same level and diagonally
+    { CUCoord(0,-2,0), CUCoord(-2,0,0), CUCoord(0,0,2), CUCoord(0,0,-2), CUCoord() }
+};
+
+
 
 /* local prototypes
  */
