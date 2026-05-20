@@ -165,6 +165,14 @@ class CPosition {
     bool CheckDraw() const;
     bool IsPassed(const CSCoord& sq, int color) const;
 
+    // Attack map maintenance
+    void AtkSet(int piece, int side, const CSCoord& sq);
+    void AtkClr(const CSCoord& sq);
+    void GainAttack(const CSCoord& from, const CSCoord& to);
+    void LooseAttack(const CSCoord& from, const CSCoord& to);
+    void GainAttacks(const CSCoord& to);
+    void LooseAttacks(const CSCoord& to);
+
     // Notation
     char *SAN(CMove move, char *buffer);
     CMove ParseSAN(const char *san);
