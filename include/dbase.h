@@ -37,6 +37,7 @@
 #include "heap.h"
 #include "scoord.h"
 #include "types.h"
+#include "ucoord.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -214,6 +215,11 @@ extern CMove goodmove[MAX_EPD_MOVES];
 extern CMove badmove[MAX_EPD_MOVES];
 extern char PieceName[];
 extern const int8_t CastleMask[2][2];
+
+// Attack delta table for piece movement directions
+static const int ATTACK_DELTA_MAX = 24;
+extern const CUCoord ATTACK_DELTA[BPawn + 1][ATTACK_DELTA_MAX + 1];
+extern const int ATTACK_DELTA_COUNT[BPawn + 1];
 
 // Free functions that don't operate on a position
 char *ICS_SAN(CMove move);

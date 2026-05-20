@@ -94,13 +94,27 @@ const int8_t CastleMask[2][2] = {
 // ---------------------------------------------------------------------------
 // Attack deltas  (3-D board, UCoord(dx, dy, dz))
 // index 0 unused; indices 1-7 match piece-type constants; index 7 = BLACK_PAWN
+//
+// The deltas are ordered in a way that allows them to be used in a single loop 
+// for move generation. Use ATTACK_DELTA_COUNT to determine the number of deltas 
+// for each piece type. 
+//
+// Use CSCoord::Step() to apply a delta to a CSCoord, which will return an 
+// invalid coordinate if the result is out of bounds.  For sliding pieces, apply
+// CSCoord::Step() until it returns an invalid coordinate, indicating it has gone
+// off the edge of the board, to generate moves along the ray in that direction.
+//
+// Although these deltas are meant for a 3D game, they work equally well for 2D, 
+// because the CSCoord::Step() will return an invalid CSCoord when the delta moves
+// off the edge of the board, so the only valid deltas for a 2D game will be the 
+// valid CSCoords.  These moves will be identical to normal 2D play.
 // ---------------------------------------------------------------------------
-static const int ATTACK_DELTA_MAX = 24;
+
 const CUCoord ATTACK_DELTA[BPawn + 1][ATTACK_DELTA_MAX + 1] = {
     // [0] – unused (sentinel-terminated)
     { CUCoord() },
     // [1] WHITE_PAWN – attacks forward (rank+) on the same level and diagonally to adjacent levels
-    { CUCoord(2,0,0), CUCoord(0,2,0), CUCoord(0,0,2), CUCoord(0,0,-2), CUCoord() },
+    { CUCoord(2,0,0), CUCoord(0,2,0), CUCoord(0,0,2), CUCoord(0,0,-2) },
     // [2] KNIGHT
     {
         CUCoord( 0, 1, 3), CUCoord(-1, 0, 3), CUCoord( 0,-1, 3), CUCoord( 1, 0, 3),
@@ -108,21 +122,18 @@ const CUCoord ATTACK_DELTA[BPawn + 1][ATTACK_DELTA_MAX + 1] = {
         CUCoord( 3, 1, 0), CUCoord( 3,-1, 0), CUCoord( 1,-3, 0), CUCoord(-1,-3, 0),
         CUCoord(-3, 1, 0), CUCoord(-3,-1, 0), CUCoord( 1, 3, 0), CUCoord(-1, 3, 0),
         CUCoord( 0, 1,-3), CUCoord(-1, 0,-3), CUCoord( 0,-1,-3), CUCoord( 1, 0,-3),
-        CUCoord( 0, 3,-1), CUCoord(-3, 0,-1), CUCoord( 0,-3,-1), CUCoord( 3, 0,-1),
-        CUCoord()
+        CUCoord( 0, 3,-1), CUCoord(-3, 0,-1), CUCoord( 0,-3,-1), CUCoord( 3, 0,-1)
     },
     // [3] BISHOP  (diagonal axes in 3-D – pairs of axes)
     {
         CUCoord( 0, 0, 2), CUCoord( 2, 0, 0), CUCoord( 0,-2, 0),
-        CUCoord(-2, 0, 0), CUCoord( 0, 2, 0), CUCoord( 0, 0,-2),
-        CUCoord()
+        CUCoord(-2, 0, 0), CUCoord( 0, 2, 0), CUCoord( 0, 0,-2)
     },
     // [4] ROOK  (axis-aligned directions)
     {
         CUCoord( 0, 1, 1), CUCoord(-1, 0, 1), CUCoord( 0,-1, 1), CUCoord( 1, 0, 1),
         CUCoord( 1, 1, 0), CUCoord( 1,-1, 0), CUCoord(-1,-1, 0), CUCoord(-1, 1, 0),
-        CUCoord( 0, 1,-1), CUCoord(-1, 0,-1), CUCoord( 0,-1,-1), CUCoord( 1, 0,-1),
-        CUCoord()
+        CUCoord( 0, 1,-1), CUCoord(-1, 0,-1), CUCoord( 0,-1,-1), CUCoord( 1, 0,-1)
     },
     // [5] QUEEN  = BISHOP dirs + ROOK dirs
     {
@@ -130,8 +141,7 @@ const CUCoord ATTACK_DELTA[BPawn + 1][ATTACK_DELTA_MAX + 1] = {
         CUCoord(-2, 0, 0), CUCoord( 0, 2, 0), CUCoord( 0, 0,-2),
         CUCoord( 0, 1, 1), CUCoord(-1, 0, 1), CUCoord( 0,-1, 1), CUCoord( 1, 0, 1),
         CUCoord( 1, 1, 0), CUCoord( 1,-1, 0), CUCoord(-1,-1, 0), CUCoord(-1, 1, 0),
-        CUCoord( 0, 1,-1), CUCoord(-1, 0,-1), CUCoord( 0,-1,-1), CUCoord( 1, 0,-1),
-        CUCoord()
+        CUCoord( 0, 1,-1), CUCoord(-1, 0,-1), CUCoord( 0,-1,-1), CUCoord( 1, 0,-1)
     },
     // [6] KING  (one step in every queen direction)
     {
@@ -139,12 +149,15 @@ const CUCoord ATTACK_DELTA[BPawn + 1][ATTACK_DELTA_MAX + 1] = {
         CUCoord(-2, 0, 0), CUCoord( 0, 2, 0), CUCoord( 0, 0,-2),
         CUCoord( 0, 1, 1), CUCoord(-1, 0, 1), CUCoord( 0,-1, 1), CUCoord( 1, 0, 1),
         CUCoord( 1, 1, 0), CUCoord( 1,-1, 0), CUCoord(-1,-1, 0), CUCoord(-1, 1, 0),
-        CUCoord( 0, 1,-1), CUCoord(-1, 0,-1), CUCoord( 0,-1,-1), CUCoord( 1, 0,-1),
-        CUCoord()
+        CUCoord( 0, 1,-1), CUCoord(-1, 0,-1), CUCoord( 0,-1,-1), CUCoord( 1, 0,-1)
     },
     // [7] BLACK_PAWN – attacks backward (rank-) on the same level and diagonally
-    { CUCoord(0,-2,0), CUCoord(-2,0,0), CUCoord(0,0,2), CUCoord(0,0,-2), CUCoord() }
+    { CUCoord(0,-2,0), CUCoord(-2,0,0), CUCoord(0,0,2), CUCoord(0,0,-2) }
 };
+
+/* Number of attack deltas for each piece type (excluding the sentinel)
+ */
+const int ATTACK_DELTA_COUNT[BPawn + 1] = {0, 4, 24, 6, 12, 18, 18, 4};
 
 
 
