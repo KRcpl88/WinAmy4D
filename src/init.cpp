@@ -66,11 +66,13 @@ void InitMasks(void) {
     int i;
 
     ShiftUpMask = ShiftDownMask = ShiftLeftMask = ShiftRightMask = -1;
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
         ShiftUpMask &= CBitBoard::ClrMask(i);
-        ShiftDownMask &= CBitBoard::ClrMask(56 + i);
-        ShiftRightMask &= CBitBoard::ClrMask(8 * i + 7);
-        ShiftLeftMask &= CBitBoard::ClrMask(8 * i);
+        ShiftDownMask &=
+            CBitBoard::ClrMask(CSCoord::SIZE - CSCoord::MAX_LEVEL_WIDTH + i);
+        ShiftRightMask &= CBitBoard::ClrMask(CSCoord::MAX_LEVEL_WIDTH * i +
+                                             (CSCoord::MAX_LEVEL_WIDTH - 1));
+        ShiftLeftMask &= CBitBoard::ClrMask(CSCoord::MAX_LEVEL_WIDTH * i);
     }
 }
 
@@ -225,8 +227,9 @@ void InitGeometry(void) {
         for (j = 0; j < 10; j++) {
             int x = i - 1;
             int y = j - 1;
-            if (x >= 0 && y >= 0 && x < 8 && y < 8) {
-                trto[i + 10 * j] = x + 8 * y;
+            if (x >= 0 && y >= 0 && x < CSCoord::MAX_LEVEL_WIDTH &&
+                y < CSCoord::MAX_LEVEL_WIDTH) {
+                trto[i + 10 * j] = x + CSCoord::MAX_LEVEL_WIDTH * y;
             }
         }
     }
@@ -317,25 +320,25 @@ void InitMiscMasks(void) {
         }
     }
 
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
         LeftOf[i] = RightOf[i] = FarLeftOf[i] = FarRightOf[i] = 0;
         for (j = i - 1; j >= 0; j--)
             LeftOf[i] |= FileMask[j];
         for (j = i - 2; j >= 0; j--)
             FarLeftOf[i] |= FileMask[j];
-        for (j = i + 1; j < 8; j++)
+        for (j = i + 1; j < CSCoord::MAX_LEVEL_WIDTH; j++)
             RightOf[i] |= FileMask[j];
-        for (j = i + 2; j < 8; j++)
+        for (j = i + 2; j < CSCoord::MAX_LEVEL_WIDTH; j++)
             FarRightOf[i] |= FileMask[j];
     }
 
     EdgeMask = 0;
 
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
         EdgeMask.SetBit(a1 + i);
         EdgeMask.SetBit(a8 + i);
-        EdgeMask.SetBit(a1 + 8 * i);
-        EdgeMask.SetBit(h1 + 8 * i);
+        EdgeMask.SetBit(a1 + CSCoord::MAX_LEVEL_WIDTH * i);
+        EdgeMask.SetBit(h1 + CSCoord::MAX_LEVEL_WIDTH * i);
     }
 
     WhiteSquaresMask = BlackSquaresMask = 0;

@@ -277,7 +277,7 @@ static void set_piece_square_table(struct YamlNode *node, const char *name,
         for (unsigned int i = 0; i < array_result.elements_read; i++) {
             target_table[i] = (int16_t)piece_square_table[i];
             Print(9, "%5d, ", piece_square_table[i]);
-            if (i % 8 == 7) {
+            if (i % CSCoord::MAX_LEVEL_WIDTH == (CSCoord::MAX_LEVEL_WIDTH - 1)) {
                 Print(9, "\n");
             }
         }

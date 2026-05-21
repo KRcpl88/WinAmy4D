@@ -516,7 +516,8 @@ static int EvaluatePawns(const CPosition *p,
 
     if (tmp_w != tmp_b) {
         tmp_w = tmp_b = 0;
-        for (file = 4; file < 8; file++) {
+        for (file = CSCoord::MAX_LEVEL_WIDTH / 2; file < CSCoord::MAX_LEVEL_WIDTH;
+             file++) {
             if (p->m_rgMask[White][Pawn] & FileMask[file])
                 tmp_w++;
             if (p->m_rgMask[Black][Pawn] & FileMask[file])
@@ -818,7 +819,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         }
 
         /* Check if 'distant' passed pawn */
-        if (file < 4 && !(allpawns & LeftOf[file]) &&
+        if (file < (CSCoord::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
             (allpawns & RightOf[file]) &&
             !(p->m_rgMask[Black][Pawn] & LeftOf[file + 2])) {
 #ifdef DEBUG
@@ -830,7 +831,8 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             wdistant = MAX(wdistant, rank);
         }
 
-        if (file > 3 && !(allpawns & RightOf[file]) &&
+        if (file > ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
+            !(allpawns & RightOf[file]) &&
             (allpawns & LeftOf[file]) &&
             !(p->m_rgMask[Black][Pawn] & RightOf[file - 2])) {
 #ifdef DEBUG
@@ -946,7 +948,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         }
 
         /* Check if 'distant' passed pawn */
-        if (file < 4 && !(allpawns & LeftOf[file]) &&
+        if (file < (CSCoord::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
             (allpawns & RightOf[file]) &&
             !(p->m_rgMask[White][Pawn] & LeftOf[file + 2])) {
 #ifdef DEBUG
@@ -958,7 +960,8 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             bdistant = MAX(bdistant, rank);
         }
 
-        if (file > 3 && !(allpawns & RightOf[file]) &&
+        if (file > ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
+            !(allpawns & RightOf[file]) &&
             (allpawns & LeftOf[file]) &&
             !(p->m_rgMask[White][Pawn] & RightOf[file - 2])) {
 #ifdef DEBUG
@@ -1794,9 +1797,11 @@ void InitEvaluation(const CPosition *p) {
     int bkfile = p->m_rgKingSq[Black].m_nFile;
     int pawnstorm = 0;
 
-    if (wkfile < 3 && bkfile > 4) {
+    if (wkfile < ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
+        bkfile > (CSCoord::MAX_LEVEL_WIDTH / 2)) {
         pawnstorm = 1;
-    } else if (wkfile > 4 && bkfile < 3) {
+    } else if (wkfile > (CSCoord::MAX_LEVEL_WIDTH / 2) &&
+               bkfile < ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1)) {
         pawnstorm = 2;
     }
 
@@ -1812,10 +1817,10 @@ void InitEvaluation(const CPosition *p) {
         int wfile = sqCoord.m_nFile;
         int bfile = sqCoord.m_nFile;
 
-        if (p->m_rgKingSq[White].m_nFile < 4)
-            wfile = 7 - wfile;
-        if (p->m_rgKingSq[Black].m_nFile < 4)
-            bfile = 7 - bfile;
+        if (p->m_rgKingSq[White].m_nFile < (CSCoord::MAX_LEVEL_WIDTH / 2))
+            wfile = (CSCoord::MAX_LEVEL_WIDTH - 1) - wfile;
+        if (p->m_rgKingSq[Black].m_nFile < (CSCoord::MAX_LEVEL_WIDTH / 2))
+            bfile = (CSCoord::MAX_LEVEL_WIDTH - 1) - bfile;
 
         if (p->m_rgnNonPawn[Black] < eg_threshold) {
             WPawnPos[sq] = (int16_t)(PawnAdvanceEndgame[wfile] * wrank);
@@ -1823,9 +1828,10 @@ void InitEvaluation(const CPosition *p) {
             WPawnPos[sq] = (int16_t)(PawnAdvanceOpening[wfile] * wrank);
         } else {
             WPawnPos[sq] = (int16_t)(PawnAdvanceMiddlegame[wfile] * wrank);
-            if (pawnstorm == 1 && wfile > 4) {
+            if (pawnstorm == 1 && wfile > (CSCoord::MAX_LEVEL_WIDTH / 2)) {
                 WPawnPos[sq] += PawnStorm * wrank;
-            } else if (pawnstorm == 2 && wfile < 3) {
+            } else if (pawnstorm == 2 &&
+                       wfile < ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1)) {
                 WPawnPos[sq] += PawnStorm * wrank;
             }
         }
@@ -1836,9 +1842,10 @@ void InitEvaluation(const CPosition *p) {
             BPawnPos[sq] = (int16_t)(PawnAdvanceOpening[bfile] * brank);
         } else {
             BPawnPos[sq] = (int16_t)(PawnAdvanceMiddlegame[bfile] * brank);
-            if (pawnstorm == 1 && bfile < 3) {
+            if (pawnstorm == 1 &&
+                bfile < ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1)) {
                 BPawnPos[sq] += PawnStorm * brank;
-            } else if (pawnstorm == 2 && bfile > 4) {
+            } else if (pawnstorm == 2 && bfile > (CSCoord::MAX_LEVEL_WIDTH / 2)) {
                 BPawnPos[sq] += PawnStorm * brank;
             }
         }
