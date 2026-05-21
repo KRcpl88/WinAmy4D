@@ -64,20 +64,21 @@ CBitBoard ConnectedMask[CSCoord::SIZE];
 
 void InitMasks(void) {
     int i;
+    const int maxLevelWidth = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
+    const int size = static_cast<int>(CSCoord::SIZE);
 
     ShiftUpMask = ShiftDownMask = ShiftLeftMask = ShiftRightMask = -1;
-    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
+    for (i = 0; i < maxLevelWidth; i++) {
         ShiftUpMask &= CBitBoard::ClrMask(i);
-        ShiftDownMask &=
-            CBitBoard::ClrMask(CSCoord::SIZE - CSCoord::MAX_LEVEL_WIDTH + i);
-        ShiftRightMask &= CBitBoard::ClrMask(CSCoord::MAX_LEVEL_WIDTH * i +
-                                             (CSCoord::MAX_LEVEL_WIDTH - 1));
-        ShiftLeftMask &= CBitBoard::ClrMask(CSCoord::MAX_LEVEL_WIDTH * i);
+        ShiftDownMask &= CBitBoard::ClrMask(size - maxLevelWidth + i);
+        ShiftRightMask &= CBitBoard::ClrMask(maxLevelWidth * i + (maxLevelWidth - 1));
+        ShiftLeftMask &= CBitBoard::ClrMask(maxLevelWidth * i);
     }
 }
 
 void PrintBitBoard(CBitBoard x) {
-    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+    const int numLevels = static_cast<int>(CSCoord::NUM_LEVELS);
+    for (int level = 0; level < numLevels; level++) {
         const int width = CSCoord::LEVEL_WIDTH[level];
         for (int rank = width - 1; rank >= 0; rank--) {
             for (int file = 0; file < width; file++) {
@@ -94,13 +95,16 @@ void PrintBitBoard(CBitBoard x) {
 
 void InitPawnMasks(void) {
     int i, j;
+    const int maxLevelWidth = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
+    const int numLevels = static_cast<int>(CSCoord::NUM_LEVELS);
+    const int size = static_cast<int>(CSCoord::SIZE);
 
-    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
+    for (i = 0; i < maxLevelWidth; i++) {
         FileMask[i] = 0;
         IsoMask[i] = 0;
     }
 
-    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+    for (int level = 0; level < numLevels; level++) {
         const int width = CSCoord::LEVEL_WIDTH[level];
         for (i = 0; i < width; i++) {
             for (j = 0; j < width; j++) {
@@ -116,9 +120,9 @@ void InitPawnMasks(void) {
 #endif
         }
     }
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (i = 0; i < size; i++) {
         ForwardRayW[i] = ForwardRayB[i] = 0;
-        for (j = i + 8; j < CSCoord::SIZE; j += 8) {
+        for (j = i + 8; j < size; j += 8) {
             ForwardRayW[i] |= CBitBoard::SetMask(j);
         }
         for (j = i - 8; j >= 0; j -= 8) {
@@ -129,7 +133,7 @@ void InitPawnMasks(void) {
         PrintBitBoard(ForwardRayB[i]);
 #endif
     }
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (i = 0; i < size; i++) {
         const CSCoord coord(i);
         const int width = CSCoord::LEVEL_WIDTH[coord.m_nLevel];
         PassedMaskW[i] = ForwardRayW[i];
@@ -159,7 +163,7 @@ void InitPawnMasks(void) {
         */
     }
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (i = 0; i < size; i++) {
         int sq;
 
         WPawnBackwardMask[i] = BPawnBackwardMask[i] = 0;
@@ -168,22 +172,24 @@ void InitPawnMasks(void) {
             if (sqCoord.m_nFile > 0) {
                 WPawnBackwardMask[i] |= CBitBoard::SetMask(sq - 1);
             }
-            if (sqCoord.m_nFile < (CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel] - 1)) {
+            if (sqCoord.m_nFile <
+                (static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)]) - 1)) {
                 WPawnBackwardMask[i] |= CBitBoard::SetMask(sq + 1);
             }
         }
-        for (sq = i; sq < CSCoord::SIZE; sq += 8) {
+        for (sq = i; sq < size; sq += 8) {
             const CSCoord sqCoord(sq);
             if (sqCoord.m_nFile > 0) {
                 BPawnBackwardMask[i] |= CBitBoard::SetMask(sq - 1);
             }
-            if (sqCoord.m_nFile < (CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel] - 1)) {
+            if (sqCoord.m_nFile <
+                (static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)]) - 1)) {
                 BPawnBackwardMask[i] |= CBitBoard::SetMask(sq + 1);
             }
         }
     }
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (i = 0; i < size; i++) {
         const CSCoord iCoord(i);
         const int width = CSCoord::LEVEL_WIDTH[iCoord.m_nLevel];
         ConnectedMask[i] = 0;
@@ -213,6 +219,8 @@ void InitGeometry(void) {
     int edge[100];
     int trto[100];
     int i, j, k, l;
+    const int maxLevelWidth = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
+    const int size = static_cast<int>(CSCoord::SIZE);
     int dirs[] = {1, -1, 10, -10, 9, -9, 11, -11};
     int dirb[] = {9, -9, 11, -11};
     int dirr[] = {1, -1, 10, -10};
@@ -227,15 +235,14 @@ void InitGeometry(void) {
         for (j = 0; j < 10; j++) {
             int x = i - 1;
             int y = j - 1;
-            if (x >= 0 && y >= 0 && x < CSCoord::MAX_LEVEL_WIDTH &&
-                y < CSCoord::MAX_LEVEL_WIDTH) {
-                trto[i + 10 * j] = x + CSCoord::MAX_LEVEL_WIDTH * y;
+            if (x >= 0 && y >= 0 && x < maxLevelWidth && y < maxLevelWidth) {
+                trto[i + 10 * j] = x + maxLevelWidth * y;
             }
         }
     }
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
-        for (j = 0; j < CSCoord::SIZE; j++) {
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < size; j++) {
             InterPath[i][j] = 0;
             Ray[i][j] = 0;
         }
@@ -282,16 +289,19 @@ void InitGeometry(void) {
 
 void InitMiscMasks(void) {
     int i, j;
+    const int maxLevelWidth = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
+    const int numLevels = static_cast<int>(CSCoord::NUM_LEVELS);
+    const int size = static_cast<int>(CSCoord::SIZE);
 
     SeventhRank[White] = SeventhRank[Black] = 0;
     EighthRank[White] = EighthRank[Black] = 0;
     ThirdRank[White] = ThirdRank[Black] = 0;
 
-    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
+    for (i = 0; i < maxLevelWidth; i++) {
         RankMask[i] = 0;
     }
 
-    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+    for (int level = 0; level < numLevels; level++) {
         const int width = CSCoord::LEVEL_WIDTH[level];
         for (i = 0; i < width; i++) {
             for (j = 0; j < width; j++) {
@@ -320,29 +330,29 @@ void InitMiscMasks(void) {
         }
     }
 
-    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
+    for (i = 0; i < maxLevelWidth; i++) {
         LeftOf[i] = RightOf[i] = FarLeftOf[i] = FarRightOf[i] = 0;
         for (j = i - 1; j >= 0; j--)
             LeftOf[i] |= FileMask[j];
         for (j = i - 2; j >= 0; j--)
             FarLeftOf[i] |= FileMask[j];
-        for (j = i + 1; j < CSCoord::MAX_LEVEL_WIDTH; j++)
+        for (j = i + 1; j < maxLevelWidth; j++)
             RightOf[i] |= FileMask[j];
-        for (j = i + 2; j < CSCoord::MAX_LEVEL_WIDTH; j++)
+        for (j = i + 2; j < maxLevelWidth; j++)
             FarRightOf[i] |= FileMask[j];
     }
 
     EdgeMask = 0;
 
-    for (i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
+    for (i = 0; i < maxLevelWidth; i++) {
         EdgeMask.SetBit(a1 + i);
         EdgeMask.SetBit(a8 + i);
-        EdgeMask.SetBit(a1 + CSCoord::MAX_LEVEL_WIDTH * i);
-        EdgeMask.SetBit(h1 + CSCoord::MAX_LEVEL_WIDTH * i);
+        EdgeMask.SetBit(a1 + maxLevelWidth * i);
+        EdgeMask.SetBit(h1 + maxLevelWidth * i);
     }
 
     WhiteSquaresMask = BlackSquaresMask = 0;
-    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+    for (int level = 0; level < numLevels; level++) {
         const int width = CSCoord::LEVEL_WIDTH[level];
         for (i = 0; i < width; i++) {
             for (j = 0; j < width; j++) {
@@ -356,7 +366,7 @@ void InitMiscMasks(void) {
         }
     }
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (i = 0; i < size; i++) {
         const CSCoord coord(i);
         const int width = CSCoord::LEVEL_WIDTH[coord.m_nLevel];
         int bdist = coord.m_nRank;
@@ -365,7 +375,7 @@ void InitMiscMasks(void) {
         CSCoord btargetCoord(coord.m_nLevel, coord.m_nFile, 0);
 
         KingSquareW[i] = KingSquareB[i] = 0;
-        for (j = 0; j < CSCoord::SIZE; j++) {
+        for (j = 0; j < size; j++) {
             CSCoord coord(j);
             if (KingDist(wtargetCoord, coord) <= wdist) {
                 KingSquareW[i].SetBit(j);

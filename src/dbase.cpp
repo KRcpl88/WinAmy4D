@@ -226,7 +226,7 @@ static void DebugEngine(CPosition *p) {
     int i, color;
     CBitBoard temp;
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (i = 0; i < static_cast<int>(CSCoord::SIZE); i++) {
         temp = p->m_rgAtkTo[i];
         while (temp) {
             int sq = (temp).FindSetBit();
@@ -962,7 +962,7 @@ void CPosition::RecalcAttacks() {
     int i;
     CBitBoard tmp;
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (i = 0; i < static_cast<int>(CSCoord::SIZE); i++) {
         p->m_rgAtkTo[i] = p->m_rgAtkFr[i] = 0;
     }
 
@@ -2297,13 +2297,14 @@ int CPosition::LegalMoves(heap_t heap) {
 
 void CPosition::ShowPosition() {
     CPosition *p = this;
-    for (int level = CSCoord::NUM_LEVELS - 1; level >= 0; level--) {
+    const int numLevels = static_cast<int>(CSCoord::NUM_LEVELS);
+    for (int level = numLevels - 1; level >= 0; level--) {
         const int width = CSCoord::LEVEL_WIDTH[level];
 
-        if (level < CSCoord::NUM_LEVELS - 1) {
+        if (level < (numLevels - 1)) {
             Print(0, "\n");
         }
-        if (CSCoord::NUM_LEVELS > 1) {
+        if (numLevels > 1) {
             Print(0, "      Level %d\n", level + 1);
         }
 
@@ -2514,7 +2515,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
     strcpy(line, epd_input);
     x = line;
 
-    for (i = 0; i < CSCoord::SIZE; i++)
+    for (i = 0; i < static_cast<int>(CSCoord::SIZE); i++)
         p->m_rgPiece[i] = Neutral;
     p->m_rgMask[White][0] = p->m_rgMask[Black][0] = 0;
 
@@ -2535,7 +2536,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl += 1;
             break;
         case 'P':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = Pawn;
                 p->m_rgMask[White][0].SetBit(sq);
@@ -2543,7 +2544,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'N':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = Knight;
                 p->m_rgMask[White][0].SetBit(sq);
@@ -2551,7 +2552,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'B':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = Bishop;
                 p->m_rgMask[White][0].SetBit(sq);
@@ -2559,7 +2560,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'R':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = Rook;
                 p->m_rgMask[White][0].SetBit(sq);
@@ -2567,7 +2568,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'Q':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = Queen;
                 p->m_rgMask[White][0].SetBit(sq);
@@ -2575,7 +2576,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'K':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = King;
                 p->m_rgMask[White][0].SetBit(sq);
@@ -2583,7 +2584,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'p':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = -Pawn;
                 p->m_rgMask[Black][0].SetBit(sq);
@@ -2591,7 +2592,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'n':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = -Knight;
                 p->m_rgMask[Black][0].SetBit(sq);
@@ -2599,7 +2600,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'b':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = -Bishop;
                 p->m_rgMask[Black][0].SetBit(sq);
@@ -2607,7 +2608,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'r':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = -Rook;
                 p->m_rgMask[Black][0].SetBit(sq);
@@ -2615,7 +2616,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'q':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = -Queen;
                 p->m_rgMask[Black][0].SetBit(sq);
@@ -2623,7 +2624,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl++;
             break;
         case 'k':
-            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
                 const int sq = static_cast<int>(CSCoord(level, fl, rk));
                 p->m_rgPiece[sq] = -King;
                 p->m_rgMask[Black][0].SetBit(sq);
@@ -2637,8 +2638,8 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
         case '|':
             fl = 0;
             level++;
-            if (level < CSCoord::NUM_LEVELS) {
-                rk = CSCoord::LEVEL_WIDTH[level] - 1;
+            if (level < static_cast<int>(CSCoord::NUM_LEVELS)) {
+                rk = static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)]) - 1;
             } else {
                 rk = -1;
             }
@@ -2768,7 +2769,8 @@ char *CPosition::MakeEPD() {
 
     char *x = epdbuffer;
 
-    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+    const int numLevels = static_cast<int>(CSCoord::NUM_LEVELS);
+    for (int level = 0; level < numLevels; level++) {
         const int width = CSCoord::LEVEL_WIDTH[level];
         for (int i = width - 1; i >= 0; i--) {
             uint8_t cnt = 0;
@@ -2788,7 +2790,7 @@ char *CPosition::MakeEPD() {
                         *(x++) = bname[TYPE(p->m_rgPiece[square])];
                 }
             }
-            if ((level == CSCoord::NUM_LEVELS - 1) && (i == 0))
+            if ((level == (numLevels - 1)) && (i == 0))
                 *(x++) = ' ';
             else if (i == 0)
                 *(x++) = '|';

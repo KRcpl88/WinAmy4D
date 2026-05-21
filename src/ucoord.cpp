@@ -13,8 +13,9 @@ CUCoord::CUCoord(const CSCoord& scoord) {
     scoord.Validate();
 
     setZ(scoord.m_nLevel);
-    const int levelOffset = CSCoord::MAX_LEVEL_WIDTH - CSCoord::LEVEL_WIDTH[scoord.m_nLevel];
-    const int fileOffset = CSCoord::LEVEL_WIDTH[scoord.m_nLevel] - 1;
+    const unsigned int levelIndex = static_cast<unsigned int>(scoord.m_nLevel);
+    const int levelOffset = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH - CSCoord::LEVEL_WIDTH[levelIndex]);
+    const int fileOffset = static_cast<int>(CSCoord::LEVEL_WIDTH[levelIndex]) - 1;
     setX(levelOffset + scoord.m_nFile + scoord.m_nRank);
     setY(levelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
 }
@@ -49,11 +50,13 @@ CUCoord::operator CSCoord() const {
 
     int levelOffset;
     int fileOffset;
-    if ((scoord.m_nLevel >= 0) && (scoord.m_nLevel < CSCoord::NUM_LEVELS)) {
-        levelOffset = CSCoord::MAX_LEVEL_WIDTH - CSCoord::LEVEL_WIDTH[scoord.m_nLevel];
-        fileOffset = CSCoord::LEVEL_WIDTH[scoord.m_nLevel] - 1;
+    if ((scoord.m_nLevel >= 0) &&
+        (static_cast<unsigned int>(scoord.m_nLevel) < CSCoord::NUM_LEVELS)) {
+        const unsigned int levelIndex = static_cast<unsigned int>(scoord.m_nLevel);
+        levelOffset = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH - CSCoord::LEVEL_WIDTH[levelIndex]);
+        fileOffset = static_cast<int>(CSCoord::LEVEL_WIDTH[levelIndex]) - 1;
     } else {
-        levelOffset = CSCoord::MAX_LEVEL_WIDTH;
+        levelOffset = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
         fileOffset = 0;
     }
 

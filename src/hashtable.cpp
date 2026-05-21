@@ -648,13 +648,13 @@ void HashInit(void) {
 
     for (i = 0; i < 2; i++) {
         for (j = 0; j < 8; j++) {
-            for (k = 0; k < CSCoord::SIZE; k++) {
+            for (k = 0; k < static_cast<int>(CSCoord::SIZE); k++) {
                 HashKeys[i][j][k] = Random64();
             }
         }
     }
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (i = 0; i < static_cast<int>(CSCoord::SIZE); i++) {
         HashKeysEP[i] = Random64();
     }
 

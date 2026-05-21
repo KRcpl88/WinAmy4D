@@ -320,8 +320,8 @@ void InitMoves(void) {
         }
     }
 
-    for (sq = 0; sq < CSCoord::SIZE; sq++) {
-        for (sq2 = 0; sq2 < CSCoord::SIZE; sq2++) {
+    for (sq = 0; sq < static_cast<int>(CSCoord::SIZE); sq++) {
+        for (sq2 = 0; sq2 < static_cast<int>(CSCoord::SIZE); sq2++) {
             NextSQ[sq][sq2] = -1;
         }
     }
