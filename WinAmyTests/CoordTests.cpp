@@ -46,7 +46,7 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(BitOffsetRoundTrips) {
-        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+        for (unsigned int offset = 0; offset < CBitBoard::SIZE; offset++) {
             CSCoord coord(static_cast<std::uint16_t>(offset));
             Assert::AreEqual<std::uint16_t>(static_cast<std::uint16_t>(offset), coord.BitOffset());
         }
@@ -54,8 +54,8 @@ TEST_CLASS(SCoordTests) {
 
     TEST_METHOD(EnumeratingRankFileWithCSCoordMatchesBitOffsetOrder) {
         int expectedOffset = 0;
-        for (unsigned int level = 0; level < CSCoord::NUM_LEVELS; level++) {
-            const unsigned int width = CSCoord::LEVEL_WIDTH[level];
+        for (unsigned int level = 0; level < CBitBoard::NUM_LEVELS; level++) {
+            const unsigned int width = CBitBoard::LEVEL_WIDTH[level];
             for (unsigned int rank = 0; rank < width; rank++) {
                 for (unsigned int file = 0; file < width; file++) {
                     CSCoord square(static_cast<int>(level), static_cast<int>(file), static_cast<int>(rank));
@@ -64,14 +64,14 @@ TEST_CLASS(SCoordTests) {
                 }
             }
         }
-        Assert::AreEqual(static_cast<int>(CSCoord::SIZE), expectedOffset);
+        Assert::AreEqual(static_cast<int>(CBitBoard::SIZE), expectedOffset);
     }
 
     TEST_METHOD(OffsetConstructorProvidesExpectedRankAndFileAcrossBoard) {
-        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+        for (unsigned int offset = 0; offset < CBitBoard::SIZE; offset++) {
             CSCoord square(static_cast<std::uint16_t>(offset));
-            const unsigned int levelOffset = offset - CSCoord::LEVEL_OFFSET[square.m_nLevel];
-            const unsigned int width = CSCoord::LEVEL_WIDTH[square.m_nLevel];
+            const unsigned int levelOffset = offset - CBitBoard::LEVEL_OFFSET[square.m_nLevel];
+            const unsigned int width = CBitBoard::LEVEL_WIDTH[square.m_nLevel];
             Assert::AreEqual<std::uint16_t>(static_cast<std::uint16_t>(levelOffset / width), square.m_nRank);
             Assert::AreEqual<std::uint16_t>(static_cast<std::uint16_t>(levelOffset % width), square.m_nFile);
         }
@@ -91,28 +91,28 @@ TEST_CLASS(SCoordTests) {
     TEST_METHOD(IsValidReturnsFalseForInvalidCoords) {
         Assert::IsFalse(CSCoord::IsValid(0, -1, 0));
         Assert::IsFalse(CSCoord::IsValid(0, 0, -1));
-        Assert::IsFalse(CSCoord::IsValid(0, CSCoord::LEVEL_WIDTH[0], 0));
-        Assert::IsFalse(CSCoord::IsValid(0, 0, CSCoord::LEVEL_WIDTH[0]));
+        Assert::IsFalse(CSCoord::IsValid(0, CBitBoard::LEVEL_WIDTH[0], 0));
+        Assert::IsFalse(CSCoord::IsValid(0, 0, CBitBoard::LEVEL_WIDTH[0]));
         Assert::IsFalse(CSCoord::IsValid(1, 0, 0));  // level 1 doesn't exist
         Assert::IsFalse(CSCoord::IsValid((std::numeric_limits<std::uint16_t>::max)(), 0, 0));
     }
 
     TEST_METHOD(IsValidOffsetReturnsTrueForValidRange) {
         Assert::IsTrue(CSCoord::IsValid(0));
-        Assert::IsTrue(CSCoord::IsValid(static_cast<int>(CSCoord::SIZE - 1)));
+        Assert::IsTrue(CSCoord::IsValid(static_cast<int>(CBitBoard::SIZE - 1)));
     }
 
     TEST_METHOD(IsValidOffsetReturnsFalseForInvalidRange) {
         Assert::IsFalse(CSCoord::IsValid((std::numeric_limits<std::uint16_t>::max)()));
-        Assert::IsFalse(CSCoord::IsValid(static_cast<int>(CSCoord::SIZE)));
+        Assert::IsFalse(CSCoord::IsValid(static_cast<int>(CBitBoard::SIZE)));
     }
 
     TEST_METHOD(InvalidConstructorThrows) {
         Assert::ExpectException<std::out_of_range>([]() {
-            CSCoord coord(0, CSCoord::LEVEL_WIDTH[0], 0);
+            CSCoord coord(0, CBitBoard::LEVEL_WIDTH[0], 0);
         });
         Assert::ExpectException<std::out_of_range>([]() {
-            CSCoord coord(static_cast<int>(CSCoord::SIZE));
+            CSCoord coord(static_cast<int>(CBitBoard::SIZE));
         });
         Assert::ExpectException<std::out_of_range>([]() {
             CSCoord coord((std::numeric_limits<std::uint16_t>::max)());

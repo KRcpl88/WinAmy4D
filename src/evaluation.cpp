@@ -119,8 +119,8 @@ int16_t DistantPassedPawn[] = {500, 300, 300, 300, 200, 200, 150, 150, 150,
                                0,   0,   0,   0,   0,   0,   0,   0,   0,
                                0,   0,   0,   0,   0,   0,   0,   0};
 
-static int16_t WPawnPos[CSCoord::SIZE];
-static int16_t BPawnPos[CSCoord::SIZE];
+static int16_t WPawnPos[CBitBoard::SIZE];
+static int16_t BPawnPos[CBitBoard::SIZE];
 
 /**
  * Knight scoring parameters
@@ -131,7 +131,7 @@ int KnightBlocksCPawn = -100;
 int KnightEdgePenalty = -130;
 
 // clang-format off
-int16_t KnightPos[CSCoord::SIZE] = {
+int16_t KnightPos[CBitBoard::SIZE] = {
      -30,  -30,  -30,  -30,  -30,  -30,  -30,  -30,
      -30,  -30,   60,   60,   60,   60,  -30,  -30,
      -30,   60,  130,  130,  130,  130,   60,  -30,
@@ -142,7 +142,7 @@ int16_t KnightPos[CSCoord::SIZE] = {
        0,    0,    0,    0,    0,    0,    0,    0
 };
 
-int16_t KnightOutpost[CSCoord::SIZE] = {
+int16_t KnightOutpost[CBitBoard::SIZE] = {
     0, 0,  0,   0,   0,  0, 0, 0,
     0, 0,  0,   0,   0,  0, 0, 0,
     0, 0,  0,   0,   0,  0, 0, 0,
@@ -168,7 +168,7 @@ int BishopKingProximity = 7;
 int BishopTrapped = -1500;
 
 // clang-format off
-int16_t BishopPos[CSCoord::SIZE] = {
+int16_t BishopPos[CBitBoard::SIZE] = {
      60,  60,  60,  60,  60,  60,  60,  60,
      60, 250,  60,  60,  60,  60, 250,  60,
      60, 160, 160, 160, 160, 160, 160,  60,
@@ -197,7 +197,7 @@ int RookBehindPasser = 12; /* will be scaled by phase */
 int RookOn7thRank = 300;
 
 // clang-format off
-int16_t RookPos[CSCoord::SIZE] = {
+int16_t RookPos[CBitBoard::SIZE] = {
       0,  90, 130, 220, 220, 130,  90,   0,
       0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,
@@ -216,7 +216,7 @@ int16_t RookPos[CSCoord::SIZE] = {
 int QueenKingProximity = 8;
 
 // clang-format off
-int16_t QueenPos[CSCoord::SIZE] = {
+int16_t QueenPos[CBitBoard::SIZE] = {
     0, 0,  0,  0,  0,  0,  0,  0,
     0, 30, 30, 30, 30, 30, 30, 0,
     0, 30, 60, 60, 60, 60, 30, 0,
@@ -227,7 +227,7 @@ int16_t QueenPos[CSCoord::SIZE] = {
     0, 0,  0,  0,  0,  0,  0,  0
 };
 
-int16_t QueenPosDevelopment[CSCoord::SIZE] = {
+int16_t QueenPosDevelopment[CBitBoard::SIZE] = {
     -200, -200,  0,  0,  0, 0, -200, -200,
     -200, -200, 30, 30, 30, 0, -200, -200,
     -200, -200,  0,  0,  0, 0, -200, -200,
@@ -248,7 +248,7 @@ int KingInCenter = -100;
 int KingSafetyScale = 1024;
 
 // clang-format off
-int16_t KingPosMiddlegame[CSCoord::SIZE] = {
+int16_t KingPosMiddlegame[CBitBoard::SIZE] = {
     -100, 0,    -200, -300, -300, -200,    0, -100,
     -100, -100, -200, -300, -300, -200, -100, -100,
     -300, -300, -300, -300, -300, -300, -300, -300,
@@ -258,7 +258,7 @@ int16_t KingPosMiddlegame[CSCoord::SIZE] = {
     -700, -700, -700, -700, -700, -700, -700, -700,
     -800, -800, -800, -800, -800, -800, -800, -800};
 
-int16_t KingPosEndgame[CSCoord::SIZE] = {
+int16_t KingPosEndgame[CBitBoard::SIZE] = {
     -300, -300, -300, -300, -300, -300, -300, -300,
     -300, -200, -100, -100, -100, -100, -200, -300,
     -300, -100,    0,  100,  100,    0, -100, -300,
@@ -268,7 +268,7 @@ int16_t KingPosEndgame[CSCoord::SIZE] = {
     -300, -100, -100, -100, -100, -100, -100, -300,
     -300, -300, -300, -300, -300, -300, -300, -300};
 
-int16_t KingPosEndgameQueenSide[CSCoord::SIZE] = {
+int16_t KingPosEndgameQueenSide[CBitBoard::SIZE] = {
     -300, -300, -300, -300, -300, -400, -500, -600,
     -100, -100, -100, -100, -100, -200, -300, -600,
        0,  100,  100,    0, -100, -200, -300, -600,
@@ -280,7 +280,7 @@ int16_t KingPosEndgameQueenSide[CSCoord::SIZE] = {
 // clang-format on
 
 // Calculated by mirroring KingPosEndgameQueenSide
-static int16_t KingPosEndgameKingSide[CSCoord::SIZE];
+static int16_t KingPosEndgameKingSide[CBitBoard::SIZE];
 
 int16_t ScaleHalfOpenFilesMine[] = {0, 4, 7, 9, 11};
 
@@ -424,7 +424,7 @@ static int EvaluatePawns(const CPosition *p,
         }
 
         const uint16_t levelWidth =
-            static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel]);
+            static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
         const uint16_t file = sqCoord.m_nFile;
         if (file < (levelWidth - 1) &&
             p->m_rgMask[White][Pawn].TstBit(sq + 1)) {
@@ -485,7 +485,7 @@ static int EvaluatePawns(const CPosition *p,
         }
 
         const unsigned int levelWidth =
-            CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)];
+            CBitBoard::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)];
         const unsigned int file = static_cast<unsigned int>(sqCoord.m_nFile);
         if (file < (levelWidth - 1) &&
             p->m_rgMask[Black][Pawn].TstBit(sq + 1)) {
@@ -522,8 +522,8 @@ static int EvaluatePawns(const CPosition *p,
 
     if (tmp_w != tmp_b) {
         tmp_w = tmp_b = 0;
-        for (unsigned int fileIndex = CSCoord::MAX_LEVEL_WIDTH / 2;
-             fileIndex < CSCoord::MAX_LEVEL_WIDTH;
+        for (unsigned int fileIndex = CBitBoard::MAX_LEVEL_WIDTH / 2;
+             fileIndex < CBitBoard::MAX_LEVEL_WIDTH;
              fileIndex++) {
             if (p->m_rgMask[White][Pawn] & FileMask[fileIndex])
                 tmp_w++;
@@ -738,7 +738,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         CSCoord sqCoord = (pcs).FindSetBitCoord();
         const uint16_t sq = sqCoord.BitOffset();
         const uint16_t levelWidth =
-            static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel]);
+            static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
         int rank = sqCoord.m_nRank;
         const uint16_t file = sqCoord.m_nFile;
 
@@ -827,7 +827,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         }
 
         /* Check if 'distant' passed pawn */
-        if (file < (CSCoord::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
+        if (file < (CBitBoard::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
             (allpawns & RightOf[file]) &&
             !(p->m_rgMask[Black][Pawn] & LeftOf[file + 2])) {
 #ifdef DEBUG
@@ -839,7 +839,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             wdistant = MAX(wdistant, rank);
         }
 
-        if (file > ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
+        if (file > ((CBitBoard::MAX_LEVEL_WIDTH / 2) - 1) &&
             !(allpawns & RightOf[file]) &&
             (allpawns & LeftOf[file]) &&
             !(p->m_rgMask[Black][Pawn] & RightOf[file - 2])) {
@@ -868,7 +868,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         CSCoord sqCoord = (pcs).FindSetBitCoord();
         const uint16_t sq = sqCoord.BitOffset();
         const uint16_t levelWidth =
-            static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel]);
+            static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
         int rank = (levelWidth - 1) - sqCoord.m_nRank;
         const uint16_t file = sqCoord.m_nFile;
 
@@ -957,7 +957,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         }
 
         /* Check if 'distant' passed pawn */
-        if (file < (CSCoord::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
+        if (file < (CBitBoard::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
             (allpawns & RightOf[file]) &&
             !(p->m_rgMask[White][Pawn] & LeftOf[file + 2])) {
 #ifdef DEBUG
@@ -969,7 +969,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             bdistant = MAX(bdistant, rank);
         }
 
-        if (file > ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
+        if (file > ((CBitBoard::MAX_LEVEL_WIDTH / 2) - 1) &&
             !(allpawns & RightOf[file]) &&
             (allpawns & LeftOf[file]) &&
             !(p->m_rgMask[White][Pawn] & RightOf[file - 2])) {
@@ -1009,7 +1009,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             while (wrunner) {
                 CSCoord sqCoord = (wrunner).FindSetBitCoord();
                 int dist = static_cast<int>(
-                               CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)]) -
+                               CBitBoard::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)]) -
                            1 - sqCoord.m_nRank;
                 wrunner.ClearLowestBit();
 
@@ -1806,7 +1806,7 @@ void InitEvaluation(const CPosition *p) {
 
     const unsigned int wkfile = static_cast<unsigned int>(p->m_rgKingSq[White].m_nFile);
     const unsigned int bkfile = static_cast<unsigned int>(p->m_rgKingSq[Black].m_nFile);
-    const unsigned int halfBoardWidth = CSCoord::MAX_LEVEL_WIDTH / 2;
+    const unsigned int halfBoardWidth = CBitBoard::MAX_LEVEL_WIDTH / 2;
     int pawnstorm = 0;
 
     if (wkfile < (halfBoardWidth - 1) && bkfile > halfBoardWidth) {
@@ -1822,16 +1822,16 @@ void InitEvaluation(const CPosition *p) {
     for (sq = a2; sq <= h7; sq++) {
         const CSCoord sqCoord(sq);
         const uint16_t levelWidth =
-            static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel]);
+            static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
         int wrank = sqCoord.m_nRank - 1;
         int brank = (levelWidth - 2) - sqCoord.m_nRank;
         unsigned int wfile = static_cast<unsigned int>(sqCoord.m_nFile);
         unsigned int bfile = static_cast<unsigned int>(sqCoord.m_nFile);
 
         if (wkfile < halfBoardWidth)
-            wfile = (CSCoord::MAX_LEVEL_WIDTH - 1) - wfile;
+            wfile = (CBitBoard::MAX_LEVEL_WIDTH - 1) - wfile;
         if (bkfile < halfBoardWidth)
-            bfile = (CSCoord::MAX_LEVEL_WIDTH - 1) - bfile;
+            bfile = (CBitBoard::MAX_LEVEL_WIDTH - 1) - bfile;
 
         if (p->m_rgnNonPawn[Black] < eg_threshold) {
             WPawnPos[sq] = (int16_t)(PawnAdvanceEndgame[wfile] * wrank);
@@ -1904,13 +1904,13 @@ void InitEvaluation(const CPosition *p) {
 }
 
 static bool is_edge(CSCoord coord) {
-    const uint16_t width = static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[coord.m_nLevel]);
+    const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[coord.m_nLevel]);
     return (coord.m_nFile == 0 || coord.m_nFile == (width - 1) || coord.m_nRank == 0 ||
             coord.m_nRank == (width - 1));
 }
 
 static void create_mirrored_piece_square_table(int16_t *src, int16_t *dest) {
-    for (unsigned int src_idx = 0; src_idx < CSCoord::SIZE; src_idx++) {
+    for (unsigned int src_idx = 0; src_idx < CBitBoard::SIZE; src_idx++) {
         const CSCoord source(static_cast<int>(src_idx));
         const CSCoord mirrored(0, 7 - source.m_nFile, source.m_nRank);
         dest[static_cast<int>(mirrored)] = src[static_cast<int>(source)];

@@ -38,11 +38,11 @@
 
 static signed char conv[128];
 
-signed char NextSQ[CSCoord::SIZE][CSCoord::SIZE];
+signed char NextSQ[CBitBoard::SIZE][CBitBoard::SIZE];
 
 static int QueenDirs[] = {16, 1, -16, -1, 15, 17, -15, -17};
 
-extern const CBitBoard KnightEPM[CSCoord::SIZE] = {
+extern const CBitBoard KnightEPM[CBitBoard::SIZE] = {
     0x20400ULL,
     0x50800ULL,
     0xa1100ULL,
@@ -109,7 +109,7 @@ extern const CBitBoard KnightEPM[CSCoord::SIZE] = {
     0x20400000000000ULL,
 };
 
-extern const CBitBoard KingEPM[CSCoord::SIZE] = {
+extern const CBitBoard KingEPM[CBitBoard::SIZE] = {
     0x302ULL,
     0x705ULL,
     0xe0aULL,
@@ -176,7 +176,7 @@ extern const CBitBoard KingEPM[CSCoord::SIZE] = {
     0x40c0000000000000ULL,
 };
 
-extern const CBitBoard PawnEPM[2][CSCoord::SIZE] = {{0x200ULL,
+extern const CBitBoard PawnEPM[2][CBitBoard::SIZE] = {{0x200ULL,
                                   0x500ULL,
                                   0xa00ULL,
                                   0x1400ULL,
@@ -320,8 +320,8 @@ void InitMoves(void) {
         }
     }
 
-    for (unsigned int sqIndex = 0; sqIndex < CSCoord::SIZE; sqIndex++) {
-        for (unsigned int sq2Index = 0; sq2Index < CSCoord::SIZE; sq2Index++) {
+    for (unsigned int sqIndex = 0; sqIndex < CBitBoard::SIZE; sqIndex++) {
+        for (unsigned int sq2Index = 0; sq2Index < CBitBoard::SIZE; sq2Index++) {
             NextSQ[sqIndex][sq2Index] = -1;
         }
     }

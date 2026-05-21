@@ -42,6 +42,16 @@ typedef uint64_t BitBoardBits;
 
 class CBitBoard {
   public:
+    static constexpr unsigned int NUM_LEVELS = 1U;
+    static constexpr unsigned int MAX_LEVEL_WIDTH = 8U;
+    static constexpr unsigned int SIZE = 64U;
+    static constexpr unsigned int ULONG_SIZE_BITS =
+        static_cast<unsigned int>(sizeof(std::uint64_t) * 8U);
+    static constexpr unsigned int SIZE_LONG = 1U;
+    static constexpr unsigned int LEVEL_SIZE[1] = {SIZE};
+    static constexpr unsigned int LEVEL_WIDTH[1] = {MAX_LEVEL_WIDTH};
+    static constexpr unsigned int LEVEL_OFFSET[1] = {0U};
+
     CBitBoard() : m_ullBits(0) {}
     CBitBoard(BitBoardBits bits) : m_ullBits(bits) {}
 

@@ -223,7 +223,7 @@ void SaveEvaluationConfig(char *file_name) {
  * Writes a piece-square table to file fout.
  */
 static void print_piece_square_table(FILE *fout, int16_t *piece_square_table) {
-    for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+    for (unsigned int offset = 0; offset < CBitBoard::SIZE; offset++) {
         const CSCoord square(static_cast<int>(offset));
         if (square.m_nFile == 0) {
             fprintf(fout, "    ");
@@ -263,21 +263,21 @@ static void set_parameter(struct YamlNode *node, const char *name, int *paramete
 
 static void set_piece_square_table(struct YamlNode *node, const char *name,
                                    int16_t *target_table) {
-    int piece_square_table[CSCoord::SIZE];
+    int piece_square_table[CBitBoard::SIZE];
 
     struct IntArrayLookupResult array_result =
-        get_as_int_array(node, name, piece_square_table, CSCoord::SIZE);
+        get_as_int_array(node, name, piece_square_table, CBitBoard::SIZE);
 
     if (array_result.result_code == OK) {
-        if (array_result.elements_read != static_cast<int>(CSCoord::SIZE)) {
+        if (array_result.elements_read != static_cast<int>(CBitBoard::SIZE)) {
             Print(0, "Warning: expected %d entries for %s, got %d!\n",
-                  static_cast<int>(CSCoord::SIZE), name, array_result.elements_read);
+                  static_cast<int>(CBitBoard::SIZE), name, array_result.elements_read);
         }
         Print(9, "%s:\n", name);
         for (unsigned int i = 0; i < array_result.elements_read; i++) {
             target_table[i] = (int16_t)piece_square_table[i];
             Print(9, "%5d, ", piece_square_table[i]);
-            if (i % CSCoord::MAX_LEVEL_WIDTH == (CSCoord::MAX_LEVEL_WIDTH - 1)) {
+            if (i % CBitBoard::MAX_LEVEL_WIDTH == (CBitBoard::MAX_LEVEL_WIDTH - 1)) {
                 Print(9, "\n");
             }
         }

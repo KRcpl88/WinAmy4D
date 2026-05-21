@@ -673,7 +673,7 @@ int CSearchData::NegaScout(int alpha, int beta,
         if (TYPE(p->m_rgPiece[move.GetFromCoord().BitOffset()]) == Pawn &&
             p->m_rgnNonPawn[OPP(p->m_nTurn)] <= Value[Queen]) {
             const CSCoord& toCoord = move.GetToCoord();
-            const int width = CSCoord::LEVEL_WIDTH[toCoord.m_nLevel];
+            const int width = CBitBoard::LEVEL_WIDTH[toCoord.m_nLevel];
 
             if (((p->m_nTurn == White && toCoord.m_nRank >= width - 2) ||
                  (p->m_nTurn == Black && toCoord.m_nRank <= 1)) &&

@@ -75,8 +75,8 @@ extern int16_t DistantPassedPawn[];
 extern int KnightKingProximity;
 extern int KnightBlocksCPawn;
 extern int KnightEdgePenalty;
-extern int16_t KnightPos[CSCoord::SIZE];
-extern int16_t KnightOutpost[CSCoord::SIZE];
+extern int16_t KnightPos[CBitBoard::SIZE];
+extern int16_t KnightOutpost[CBitBoard::SIZE];
 
 /**
  * Bishop scoring parameters
@@ -85,7 +85,7 @@ extern int16_t BishopPair[];
 extern int BishopMobility;
 extern int BishopKingProximity;
 extern int BishopTrapped;
-extern int16_t BishopPos[CSCoord::SIZE];
+extern int16_t BishopPos[CBitBoard::SIZE];
 
 /**
  * Rook scoring parameters
@@ -97,14 +97,14 @@ extern int RookKingProximity;
 extern int RookConnected;
 extern int RookBehindPasser;
 extern int RookOn7thRank;
-extern int16_t RookPos[CSCoord::SIZE];
+extern int16_t RookPos[CBitBoard::SIZE];
 
 /**
  * Queen scoring parameters
  */
 extern int QueenKingProximity;
-extern int16_t QueenPos[CSCoord::SIZE];
-extern int16_t QueenPosDevelopment[CSCoord::SIZE];
+extern int16_t QueenPos[CBitBoard::SIZE];
+extern int16_t QueenPosDevelopment[CBitBoard::SIZE];
 
 /**
  * King scoring parameters
@@ -112,9 +112,9 @@ extern int16_t QueenPosDevelopment[CSCoord::SIZE];
 extern int KingBlocksRook;
 extern int KingInCenter;
 extern int KingSafetyScale;
-extern int16_t KingPosMiddlegame[CSCoord::SIZE];
-extern int16_t KingPosEndgame[CSCoord::SIZE];
-extern int16_t KingPosEndgameQueenSide[CSCoord::SIZE];
+extern int16_t KingPosMiddlegame[CBitBoard::SIZE];
+extern int16_t KingPosEndgame[CBitBoard::SIZE];
+extern int16_t KingPosEndgameQueenSide[CBitBoard::SIZE];
 extern int16_t ScaleHalfOpenFilesMine[];
 extern int16_t ScaleHalfOpenFilesYours[];
 extern int16_t ScaleOpenFiles[];

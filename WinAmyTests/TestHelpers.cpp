@@ -7,7 +7,7 @@ uint64_t ReferenceRookAttacks(int sq, uint64_t occupied) {
     uint64_t attacks = 0;
     const CSCoord sourceSquare(sq);
     const int level = sourceSquare.m_nLevel;
-    const int width = CSCoord::LEVEL_WIDTH[level];
+    const int width = CBitBoard::LEVEL_WIDTH[level];
     const int file = sourceSquare.m_nFile;
     const int rank = sourceSquare.m_nRank;
 
@@ -46,7 +46,7 @@ uint64_t ReferenceBishopAttacks(int sq, uint64_t occupied) {
     uint64_t attacks = 0;
     const CSCoord sourceSquare(sq);
     const int level = sourceSquare.m_nLevel;
-    const int width = CSCoord::LEVEL_WIDTH[level];
+    const int width = CBitBoard::LEVEL_WIDTH[level];
     const int file = sourceSquare.m_nFile;
     const int rank = sourceSquare.m_nRank;
 

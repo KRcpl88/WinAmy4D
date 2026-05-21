@@ -74,8 +74,8 @@ struct STEntry {
     int st_Score;
 };
 
-extern hash_t HashKeys[2][8][CSCoord::SIZE];
-extern hash_t HashKeysEP[CSCoord::SIZE];
+extern hash_t HashKeys[2][8][CBitBoard::SIZE];
+extern hash_t HashKeysEP[CBitBoard::SIZE];
 extern hash_t HashKeysCastle[16];
 extern hash_t STMKey;
 

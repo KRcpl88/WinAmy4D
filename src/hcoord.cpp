@@ -30,7 +30,7 @@ bool CHCoord::IsValid() const {
 }
 
 bool CHCoord::IsValid(int level, int file, int rank) {
-    const int maxLevelWidth = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
+    const int maxLevelWidth = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH);
     if ((level < 0) || (level >= maxLevelWidth)) {
         return false;
     }
@@ -53,12 +53,12 @@ bool CHCoord::IsValid(int level, int file, int rank) {
 }
 
 int CHCoord::RankWidth(int level, int rank) {
-    return static_cast<int>(CSCoord::MAX_LEVEL_WIDTH) - Relu16[7 + rank - level] -
+    return static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH) - Relu16[7 + rank - level] -
            NegRelu16[7 + rank - level];
 }
 
 bool CHCoord::IsValid(int offset) {
-    return (offset >= 0) && (static_cast<unsigned int>(offset) < CSCoord::SIZE);
+    return (offset >= 0) && (static_cast<unsigned int>(offset) < CBitBoard::SIZE);
 }
 
 CHCoord::operator int() const {

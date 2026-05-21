@@ -52,8 +52,8 @@
 
 #define PT_INVALID 0xffff
 
-hash_t HashKeys[2][8][CSCoord::SIZE];
-hash_t HashKeysEP[CSCoord::SIZE];
+hash_t HashKeys[2][8][CBitBoard::SIZE];
+hash_t HashKeysEP[CBitBoard::SIZE];
 hash_t HashKeysCastle[16];
 hash_t STMKey;
 
@@ -648,13 +648,13 @@ void HashInit(void) {
 
     for (i = 0; i < 2; i++) {
         for (j = 0; j < 8; j++) {
-            for (k = 0; k < CSCoord::SIZE; k++) {
+            for (k = 0; k < CBitBoard::SIZE; k++) {
                 HashKeys[i][j][k] = Random64();
             }
         }
     }
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (i = 0; i < CBitBoard::SIZE; i++) {
         HashKeysEP[i] = Random64();
     }
 

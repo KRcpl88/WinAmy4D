@@ -16,8 +16,8 @@ CUCoord::CUCoord(const CSCoord& scoord) {
 
     setZ(scoord.m_nLevel);
     const unsigned int levelIndex = static_cast<unsigned int>(scoord.m_nLevel);
-    const int levelOffset = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH - CSCoord::LEVEL_WIDTH[levelIndex]);
-    const int fileOffset = static_cast<int>(CSCoord::LEVEL_WIDTH[levelIndex]) - 1;
+    const int levelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH - CBitBoard::LEVEL_WIDTH[levelIndex]);
+    const int fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[levelIndex]) - 1;
     setX(levelOffset + scoord.m_nFile + scoord.m_nRank);
     setY(levelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
 }
@@ -53,14 +53,14 @@ CUCoord::operator CSCoord() const {
 
     int levelOffset;
     int fileOffset;
-    if ((level >= 0) && (static_cast<unsigned int>(level) < CSCoord::NUM_LEVELS)) {
+    if ((level >= 0) && (static_cast<unsigned int>(level) < CBitBoard::NUM_LEVELS)) {
         scoord.m_nLevel = static_cast<std::uint16_t>(level);
         const unsigned int levelIndex = static_cast<unsigned int>(level);
-        levelOffset = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH - CSCoord::LEVEL_WIDTH[levelIndex]);
-        fileOffset = static_cast<int>(CSCoord::LEVEL_WIDTH[levelIndex]) - 1;
+        levelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH - CBitBoard::LEVEL_WIDTH[levelIndex]);
+        fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[levelIndex]) - 1;
     } else {
         scoord.m_nLevel = invalidCoord;
-        levelOffset = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
+        levelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH);
         fileOffset = 0;
     }
 

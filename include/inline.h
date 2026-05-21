@@ -96,7 +96,7 @@ static inline int FileDist(CSCoord sq1, CSCoord sq2) {
  * Calculate the distance of 'sq' to any edge on the chessboard
  */
 static inline int EdgeDist(CSCoord sq) {
-    const uint16_t width = static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sq.m_nLevel]);
+    const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
     int filedist = MIN(sq.m_nFile, (width - 1) - sq.m_nFile);
     int rankdist = MIN(sq.m_nRank, (width - 1) - sq.m_nRank);
 
@@ -133,7 +133,7 @@ static inline CMove make_promotion(int from, int to, int type, int flags) {
  * Returns if the square is a promotion square.
  */
 static inline bool is_promo_square(CSCoord sq) {
-    const uint16_t width = static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sq.m_nLevel]);
+    const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
     return sq.m_nRank == 0 || sq.m_nRank == (width - 1);
 }
 
