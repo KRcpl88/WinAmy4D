@@ -46,9 +46,9 @@ class CBitBoard {
     CBitBoard(BitBoardBits bits) : m_ullBits(bits) {}
 
     // Bit manipulation methods
-    void SetBit(int i) { m_ullBits |= (1ULL << i); }
-    void ClrBit(int i) { m_ullBits &= ~(1ULL << i); }
-    bool TstBit(int i) const { return (m_ullBits & (1ULL << i)) != 0; }
+    void SetBit(uint16_t i) { m_ullBits |= (1ULL << i); }
+    void ClrBit(uint16_t i) { m_ullBits &= ~(1ULL << i); }
+    bool TstBit(uint16_t i) const { return (m_ullBits & (1ULL << i)) != 0; }
     void ClearLowestBit() { m_ullBits &= m_ullBits - 1; }
 
     // Static mask constructors
@@ -69,9 +69,9 @@ class CBitBoard {
 #endif
     }
 
-    int FindSetBit() const {
+    uint16_t FindSetBit() const {
 #if HAVE___BUILTIN_CTZLL
-        return __builtin_ctzll(m_ullBits);
+        return static_cast<uint16_t>(__builtin_ctzll(m_ullBits));
 #else
         // DeBruijn sequence method
         static const int index64[64] = {
@@ -80,7 +80,8 @@ class CBitBoard {
             46, 55, 26, 59, 40, 36, 15, 53, 34, 51, 20, 43, 31, 22, 10, 45,
             25, 39, 14, 33, 19, 30, 9,  24, 13, 18, 8,  12, 7,  6,  5,  63};
         const BitBoardBits debruijn64 = 0x03f79d71b4cb0a89ULL;
-        return index64[((m_ullBits ^ (m_ullBits - 1)) * debruijn64) >> 58];
+        return static_cast<uint16_t>(
+            index64[((m_ullBits ^ (m_ullBits - 1)) * debruijn64) >> 58]);
 #endif
     }
 

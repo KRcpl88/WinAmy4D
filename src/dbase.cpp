@@ -222,15 +222,15 @@ static void Panic(CPosition *p) {
 
 #ifdef DEBUG
 static void DebugEngine(CPosition *p) {
-    int kingSq = p->m_rgKingSq[White].BitOffset();
+    unsigned int kingSq = p->m_rgKingSq[White].BitOffset();
     int color;
     CBitBoard temp;
 
     for (unsigned int i = 0; i < CSCoord::SIZE; i++) {
-        const int square = static_cast<int>(i);
+        const unsigned int square = i;
         temp = p->m_rgAtkTo[i];
         while (temp) {
-            int sq = (temp).FindSetBit();
+            const uint16_t sq = temp.FindSetBit();
             temp.ClearLowestBit();
             if (!p->m_rgAtkFr[sq].TstBit(square)) {
                 Print(0, "AtkFr or AtkTo is bad on %c%c or %c%c\n", SQUARE(square),
@@ -246,7 +246,7 @@ static void DebugEngine(CPosition *p) {
         for (i = Pawn; i <= King; i++) {
             temp = p->m_rgMask[color][i];
             while (temp) {
-                int sq = (temp).FindSetBit();
+                const uint16_t sq = temp.FindSetBit();
                 temp.ClearLowestBit();
                 int pc = (1 - 2 * color) * i;
                 if (p->m_rgPiece[sq] != pc) {
@@ -287,7 +287,7 @@ static void DebugEngine(CPosition *p) {
  */
 
 void CPosition::AtkSet(int type, int color, const CSCoord& squareCoord) {
-    int square = squareCoord.BitOffset();
+    const unsigned int square = squareCoord.BitOffset();
     CBitBoard attacks;
     const CBitBoard occupied = m_rgMask[0][0] | m_rgMask[1][0];
 
@@ -318,19 +318,19 @@ void CPosition::AtkSet(int type, int color, const CSCoord& squareCoord) {
 
     m_rgAtkTo[square] = attacks;
     while (attacks) {
-        int i = (attacks).FindSetBit();
+        const uint16_t i = attacks.FindSetBit();
         attacks.ClearLowestBit();
         m_rgAtkFr[i].SetBit(square);
     }
 }
 
 void CPosition::AtkClr(const CSCoord& squareCoord) {
-    int square = squareCoord.BitOffset();
+    const unsigned int square = squareCoord.BitOffset();
     CBitBoard tmp = m_rgAtkTo[square];
     m_rgAtkTo[square] = 0;
 
     while (tmp) {
-        int i = (tmp).FindSetBit();
+        const uint16_t i = tmp.FindSetBit();
         tmp.ClearLowestBit();
         m_rgAtkFr[i].ClrBit(square);
     }
@@ -1051,7 +1051,7 @@ void CPosition::RecalcAttacks() {
  */
 void CPosition::GenTo(const CSCoord& squareCoord, heap_t heap) {
     CPosition *p = this;
-    int square = squareCoord.BitOffset();
+    const unsigned int square = squareCoord.BitOffset();
     CBitBoard tmp = p->m_rgAtkFr[square] & p->m_rgMask[p->m_nTurn][0];
 
     while (tmp) {
@@ -1090,7 +1090,7 @@ void CPosition::GenEnpas(heap_t heap) {
 
 void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
     CPosition *p = this;
-    int square = squareCoord.BitOffset();
+    const unsigned int square = squareCoord.BitOffset();
     if (TYPE(p->m_rgPiece[square]) != Pawn) {
         CBitBoard tmp;
 
@@ -3013,4 +3013,3 @@ void CPosition::Free(CPosition *p) {
         free(p);
     }
 }
-

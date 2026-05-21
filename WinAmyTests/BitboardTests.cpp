@@ -9,7 +9,7 @@ TEST_CLASS(BitboardTests) {
             CBitBoard mask = CBitBoard::SetMask(i);
             Assert::IsTrue(mask.TstBit(i));
             Assert::AreEqual(1, mask.CountBits());
-            Assert::AreEqual(i, mask.FindSetBit());
+            Assert::AreEqual(i, static_cast<int>(mask.FindSetBit()));
         }
     }
 
@@ -20,9 +20,9 @@ TEST_CLASS(BitboardTests) {
             Assert::AreEqual(63, mask.CountBits());
             // FindSetBit should return the lowest set bit, which is 0 unless i==0
             if (i == 0)
-                Assert::AreEqual(1, mask.FindSetBit());
+                Assert::AreEqual(1, static_cast<int>(mask.FindSetBit()));
             else
-                Assert::AreEqual(0, mask.FindSetBit());
+                Assert::AreEqual(0, static_cast<int>(mask.FindSetBit()));
         }
     }
 
@@ -33,19 +33,19 @@ TEST_CLASS(BitboardTests) {
         Assert::IsTrue(!b.TstBit(1));
         Assert::IsTrue(!b.TstBit(63));
         Assert::AreEqual(1, b.CountBits());
-        Assert::AreEqual(0, b.FindSetBit());
+        Assert::AreEqual(0, static_cast<int>(b.FindSetBit()));
 
         b.SetBit(63);
         Assert::IsTrue(b.TstBit(0));
         Assert::IsTrue(b.TstBit(63));
         Assert::IsTrue(!b.TstBit(32));
         Assert::AreEqual(2, b.CountBits());
-        Assert::AreEqual(0, b.FindSetBit()); // lowest is still bit 0
+        Assert::AreEqual(0, static_cast<int>(b.FindSetBit())); // lowest is still bit 0
 
         b.SetBit(32);
         Assert::IsTrue(b.TstBit(32));
         Assert::AreEqual(3, b.CountBits());
-        Assert::AreEqual(0, b.FindSetBit());
+        Assert::AreEqual(0, static_cast<int>(b.FindSetBit()));
 
         b.SetBit(0); // setting already-set bit is idempotent
         Assert::IsTrue(b.TstBit(0));
@@ -63,17 +63,17 @@ TEST_CLASS(BitboardTests) {
         Assert::IsTrue(b.TstBit(1));
         Assert::IsTrue(b.TstBit(63));
         Assert::AreEqual(63, b.CountBits());
-        Assert::AreEqual(1, b.FindSetBit()); // lowest is now bit 1
+        Assert::AreEqual(1, static_cast<int>(b.FindSetBit())); // lowest is now bit 1
 
         b.ClrBit(63);
         Assert::IsTrue(!b.TstBit(63));
         Assert::IsTrue(b.TstBit(32));
         Assert::AreEqual(62, b.CountBits());
-        Assert::AreEqual(1, b.FindSetBit()); // lowest still bit 1
+        Assert::AreEqual(1, static_cast<int>(b.FindSetBit())); // lowest still bit 1
 
         b.ClrBit(1);
         Assert::AreEqual(61, b.CountBits());
-        Assert::AreEqual(2, b.FindSetBit()); // lowest is now bit 2
+        Assert::AreEqual(2, static_cast<int>(b.FindSetBit())); // lowest is now bit 2
 
         b.ClrBit(0); // clearing already-clear bit is idempotent
         Assert::IsTrue(!b.TstBit(0));
@@ -91,7 +91,7 @@ TEST_CLASS(BitboardTests) {
         Assert::IsTrue(!b.TstBit(d4));
         Assert::IsTrue(!b.TstBit(b2));
         Assert::AreEqual(3, b.CountBits());
-        Assert::AreEqual((int)a1, b.FindSetBit()); // a1 is the lowest square
+        Assert::AreEqual((int)a1, static_cast<int>(b.FindSetBit())); // a1 is the lowest square
     }
 
     TEST_METHOD(FindSetBitReturnsLeastSignificantSetBit) {
@@ -100,30 +100,30 @@ TEST_CLASS(BitboardTests) {
         b.SetBit(3);
         b.SetBit(5);
         b.SetBit(7);
-        Assert::AreEqual(3, b.FindSetBit());
+        Assert::AreEqual(3, static_cast<int>(b.FindSetBit()));
 
         CBitBoard b2 = 0;
         b2.SetBit(0);
-        Assert::AreEqual(0, b2.FindSetBit());
+        Assert::AreEqual(0, static_cast<int>(b2.FindSetBit()));
 
         CBitBoard b3 = 0;
         b3.SetBit(63);
-        Assert::AreEqual(63, b3.FindSetBit());
+        Assert::AreEqual(63, static_cast<int>(b3.FindSetBit()));
 
         CBitBoard b4 = 0;
         b4.SetBit(5);
-        Assert::AreEqual(5, b4.FindSetBit());
+        Assert::AreEqual(5, static_cast<int>(b4.FindSetBit()));
 
         // All bits set ΓÇö lowest is 0
         CBitBoard b5 = 0;
         for (int i = 0; i < 64; i++)
             b5.SetBit(i);
-        Assert::AreEqual(0, b5.FindSetBit());
+        Assert::AreEqual(0, static_cast<int>(b5.FindSetBit()));
     }
 
     TEST_METHOD(FindSetBitForEachSquare) {
         for (int i = 0; i < 64; i++) {
-            Assert::AreEqual(i, CBitBoard::SetMask(i).FindSetBit());
+            Assert::AreEqual(i, static_cast<int>(CBitBoard::SetMask(i).FindSetBit()));
         }
     }
 
@@ -135,13 +135,13 @@ TEST_CLASS(BitboardTests) {
         b.SetBit(33);
         b.SetBit(58);
 
-        Assert::AreEqual(4, b.FindSetBit());
+        Assert::AreEqual(4, static_cast<int>(b.FindSetBit()));
         b.ClrBit(4);
-        Assert::AreEqual(17, b.FindSetBit());
+        Assert::AreEqual(17, static_cast<int>(b.FindSetBit()));
         b.ClrBit(17);
-        Assert::AreEqual(33, b.FindSetBit());
+        Assert::AreEqual(33, static_cast<int>(b.FindSetBit()));
         b.ClrBit(33);
-        Assert::AreEqual(58, b.FindSetBit());
+        Assert::AreEqual(58, static_cast<int>(b.FindSetBit()));
     }
 
     TEST_METHOD(FindSetBitWithAdjacentBits) {
@@ -150,7 +150,7 @@ TEST_CLASS(BitboardTests) {
             CBitBoard b = 0;
             b.SetBit(i);
             b.SetBit(i + 1);
-            Assert::AreEqual(i, b.FindSetBit());
+            Assert::AreEqual(i, static_cast<int>(b.FindSetBit()));
         }
     }
 
@@ -209,7 +209,7 @@ TEST_CLASS(BitboardTests) {
         for (int i = 0; i < 64; i++) {
             b.SetBit(i);
             Assert::AreEqual(i + 1, b.CountBits());
-            Assert::AreEqual(0, b.FindSetBit()); // lowest bit is always 0
+            Assert::AreEqual(0, static_cast<int>(b.FindSetBit())); // lowest bit is always 0
         }
     }
 
