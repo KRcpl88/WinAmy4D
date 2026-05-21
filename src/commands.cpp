@@ -430,7 +430,7 @@ static void MoveNow(char *args) {
 void Edit(char *args) {
     (void)args;
     bool editing = true;
-    int i;
+    unsigned int i;
     int side = White;
     char buffer[16];
     CPosition *p = CurrentPosition;

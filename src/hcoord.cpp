@@ -30,20 +30,21 @@ bool CHCoord::IsValid() const {
 }
 
 bool CHCoord::IsValid(int level, int file, int rank) {
-    if ((level < 0) || (level >= CSCoord::MAX_LEVEL_WIDTH)) {
+    const int maxLevelWidth = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
+    if ((level < 0) || (level >= maxLevelWidth)) {
         return false;
     }
 
-    if ((rank < 0) || (rank >= CSCoord::MAX_LEVEL_WIDTH)) {
+    if ((rank < 0) || (rank >= maxLevelWidth)) {
         return false;
     }
 
     if (rank < level) {
-        if ((file < (CSCoord::MAX_LEVEL_WIDTH - RankWidth(level, rank))) || (file >= CSCoord::MAX_LEVEL_WIDTH)) {
+        if ((file < (maxLevelWidth - RankWidth(level, rank))) || (file >= maxLevelWidth)) {
             return false;
         }
     } else {
-        if ((file < 0) || (file >= (CSCoord::MAX_LEVEL_WIDTH - RankWidth(level, rank)))) {
+        if ((file < 0) || (file >= (maxLevelWidth - RankWidth(level, rank)))) {
             return false;
         }
     }
@@ -52,11 +53,12 @@ bool CHCoord::IsValid(int level, int file, int rank) {
 }
 
 int CHCoord::RankWidth(int level, int rank) {
-    return CSCoord::MAX_LEVEL_WIDTH - Relu16[7 + rank - level] - NegRelu16[7 + rank - level];
+    return static_cast<int>(CSCoord::MAX_LEVEL_WIDTH) - Relu16[7 + rank - level] -
+           NegRelu16[7 + rank - level];
 }
 
 bool CHCoord::IsValid(int offset) {
-    return (offset < CSCoord::SIZE) && (offset >= 0);
+    return (offset >= 0) && (static_cast<unsigned int>(offset) < CSCoord::SIZE);
 }
 
 CHCoord::operator int() const {

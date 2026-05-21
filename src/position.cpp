@@ -222,7 +222,7 @@ int CPosition::CheckExtend() {
                 if (p->m_nTurn == White && (i - 8) > 0 &&
                     p->m_rgMask[White][Pawn].TstBit(i - 8) && def.TstBit(i - 8))
                     cnt++;
-                if (p->m_nTurn == Black && (i + 8) < CSCoord::SIZE &&
+                if (p->m_nTurn == Black && (i + 8) < static_cast<int>(CSCoord::SIZE) &&
                     p->m_rgMask[Black][Pawn].TstBit(i + 8) && def.TstBit(i + 8))
                     cnt++;
                 if (cnt > 1)

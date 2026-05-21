@@ -642,7 +642,7 @@ void GuessHTSizes(char *size) {
 }
 
 void HashInit(void) {
-    int i, j, k;
+    unsigned int i, j, k;
 
     InitRandom(0);
 

@@ -320,9 +320,9 @@ void InitMoves(void) {
         }
     }
 
-    for (sq = 0; sq < CSCoord::SIZE; sq++) {
-        for (sq2 = 0; sq2 < CSCoord::SIZE; sq2++) {
-            NextSQ[sq][sq2] = -1;
+    for (unsigned int sqIndex = 0; sqIndex < CSCoord::SIZE; sqIndex++) {
+        for (unsigned int sq2Index = 0; sq2Index < CSCoord::SIZE; sq2Index++) {
+            NextSQ[sqIndex][sq2Index] = -1;
         }
     }
 

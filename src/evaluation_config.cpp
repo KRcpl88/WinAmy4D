@@ -223,8 +223,8 @@ void SaveEvaluationConfig(char *file_name) {
  * Writes a piece-square table to file fout.
  */
 static void print_piece_square_table(FILE *fout, int16_t *piece_square_table) {
-    for (int offset = 0; offset < CSCoord::SIZE; offset++) {
-        const CSCoord square(offset);
+    for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+        const CSCoord square(static_cast<int>(offset));
         if (square.m_nFile == 0) {
             fprintf(fout, "    ");
         }
@@ -269,9 +269,9 @@ static void set_piece_square_table(struct YamlNode *node, const char *name,
         get_as_int_array(node, name, piece_square_table, CSCoord::SIZE);
 
     if (array_result.result_code == OK) {
-        if (array_result.elements_read != CSCoord::SIZE) {
+        if (array_result.elements_read != static_cast<int>(CSCoord::SIZE)) {
             Print(0, "Warning: expected %d entries for %s, got %d!\n",
-                  CSCoord::SIZE, name, array_result.elements_read);
+                  static_cast<int>(CSCoord::SIZE), name, array_result.elements_read);
         }
         Print(9, "%s:\n", name);
         for (unsigned int i = 0; i < array_result.elements_read; i++) {

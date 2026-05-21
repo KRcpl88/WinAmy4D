@@ -62,7 +62,7 @@ bool CPosition::InCheck(int side) const {
 }
 
 bool CPosition::IsPassed(const CSCoord& sqCoord, int side) const {
-    int sq = sqCoord.BitOffset();
+    const uint16_t sq = sqCoord.BitOffset();
     if (side == White)
         return !(m_rgMask[Black][Pawn] & PassedMaskW[sq]);
     else
@@ -222,17 +222,18 @@ static void Panic(CPosition *p) {
 
 #ifdef DEBUG
 static void DebugEngine(CPosition *p) {
-    int kingSq = p->m_rgKingSq[White].BitOffset();
-    int i, color;
+    unsigned int kingSq = p->m_rgKingSq[White].BitOffset();
+    int color;
     CBitBoard temp;
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
+    for (unsigned int i = 0; i < CSCoord::SIZE; i++) {
+        const unsigned int square = i;
         temp = p->m_rgAtkTo[i];
         while (temp) {
-            int sq = (temp).FindSetBit();
+            const uint16_t sq = temp.FindSetBit();
             temp.ClearLowestBit();
-            if (!p->m_rgAtkFr[sq].TstBit(i)) {
-                Print(0, "AtkFr or AtkTo is bad on %c%c or %c%c\n", SQUARE(i),
+            if (!p->m_rgAtkFr[sq].TstBit(square)) {
+                Print(0, "AtkFr or AtkTo is bad on %c%c or %c%c\n", SQUARE(square),
                       SQUARE(sq));
                 ShowMoveList(p);
                 p->ShowPosition();
@@ -245,7 +246,7 @@ static void DebugEngine(CPosition *p) {
         for (i = Pawn; i <= King; i++) {
             temp = p->m_rgMask[color][i];
             while (temp) {
-                int sq = (temp).FindSetBit();
+                const uint16_t sq = temp.FindSetBit();
                 temp.ClearLowestBit();
                 int pc = (1 - 2 * color) * i;
                 if (p->m_rgPiece[sq] != pc) {
@@ -286,7 +287,7 @@ static void DebugEngine(CPosition *p) {
  */
 
 void CPosition::AtkSet(int type, int color, const CSCoord& squareCoord) {
-    int square = squareCoord.BitOffset();
+    const unsigned int square = squareCoord.BitOffset();
     CBitBoard attacks;
     const CBitBoard occupied = m_rgMask[0][0] | m_rgMask[1][0];
 
@@ -317,19 +318,19 @@ void CPosition::AtkSet(int type, int color, const CSCoord& squareCoord) {
 
     m_rgAtkTo[square] = attacks;
     while (attacks) {
-        int i = (attacks).FindSetBit();
+        const uint16_t i = attacks.FindSetBit();
         attacks.ClearLowestBit();
         m_rgAtkFr[i].SetBit(square);
     }
 }
 
 void CPosition::AtkClr(const CSCoord& squareCoord) {
-    int square = squareCoord.BitOffset();
+    const unsigned int square = squareCoord.BitOffset();
     CBitBoard tmp = m_rgAtkTo[square];
     m_rgAtkTo[square] = 0;
 
     while (tmp) {
-        int i = (tmp).FindSetBit();
+        const uint16_t i = tmp.FindSetBit();
         tmp.ClearLowestBit();
         m_rgAtkFr[i].ClrBit(square);
     }
@@ -342,8 +343,8 @@ void CPosition::AtkClr(const CSCoord& squareCoord) {
 
 void CPosition::GainAttack(const CSCoord& fromCoord,
                        const CSCoord& toCoord) {
-    int from = fromCoord.BitOffset();
-    int to = toCoord.BitOffset();
+    const uint16_t from = fromCoord.BitOffset();
+    const uint16_t to = toCoord.BitOffset();
     signed char *nsq = NextSQ[from];
     int sq = to;
     const CBitBoard all = m_rgMask[0][0] | m_rgMask[1][0];
@@ -353,10 +354,11 @@ void CPosition::GainAttack(const CSCoord& fromCoord,
         if (sq < 0)
             break;
 
-        m_rgAtkTo[from].SetBit(sq);
-        m_rgAtkFr[sq].SetBit(from);
+        const uint16_t attackSquare = static_cast<uint16_t>(sq);
+        m_rgAtkTo[from].SetBit(attackSquare);
+        m_rgAtkFr[attackSquare].SetBit(from);
 
-        if (all.TstBit(sq))
+        if (all.TstBit(attackSquare))
             break;
     }
 }
@@ -368,8 +370,8 @@ void CPosition::GainAttack(const CSCoord& fromCoord,
 
 void CPosition::LooseAttack(const CSCoord& fromCoord,
                         const CSCoord& toCoord) {
-    int from = fromCoord.BitOffset();
-    int to = toCoord.BitOffset();
+    const uint16_t from = fromCoord.BitOffset();
+    const uint16_t to = toCoord.BitOffset();
     signed char *nsq = NextSQ[from];
     int sq = to;
     const CBitBoard all = m_rgMask[0][0] | m_rgMask[1][0];
@@ -379,10 +381,11 @@ void CPosition::LooseAttack(const CSCoord& fromCoord,
         if (sq < 0)
             break;
 
-        m_rgAtkTo[from].ClrBit(sq);
-        m_rgAtkFr[sq].ClrBit(from);
+        const uint16_t attackSquare = static_cast<uint16_t>(sq);
+        m_rgAtkTo[from].ClrBit(attackSquare);
+        m_rgAtkFr[attackSquare].ClrBit(from);
 
-        if (all.TstBit(sq))
+        if (all.TstBit(attackSquare))
             break;
     }
 }
@@ -393,7 +396,7 @@ void CPosition::LooseAttack(const CSCoord& fromCoord,
  */
 
 void CPosition::GainAttacks(const CSCoord& toCoord) {
-    int to = toCoord.BitOffset();
+    const uint16_t to = toCoord.BitOffset();
     CBitBoard tmp = m_rgAtkFr[to] & m_SlidingPieces;
 
     while (tmp) {
@@ -409,7 +412,7 @@ void CPosition::GainAttacks(const CSCoord& toCoord) {
  */
 
 void CPosition::LooseAttacks(const CSCoord& toCoord) {
-    int to = toCoord.BitOffset();
+    const uint16_t to = toCoord.BitOffset();
     CBitBoard tmp = m_rgAtkFr[to] & m_SlidingPieces;
 
     while (tmp) {
@@ -433,16 +436,16 @@ static inline bool is_sliding(int tp) { return tp >= Bishop && tp <= Queen; }
 static void DoCastle(CPosition *p, CMove move) {
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int fromOffset = fromCoord.BitOffset();
-    int toOffset = toCoord.BitOffset();
+    const uint16_t fromOffset = fromCoord.BitOffset();
+    const uint16_t toOffset = toCoord.BitOffset();
     const CSCoord oldRookCoord(fromCoord.m_nLevel,
                                move.IsShortCastle() ? fromCoord.m_nFile + 3 : fromCoord.m_nFile - 4,
                                fromCoord.m_nRank);
     const CSCoord newRookCoord(fromCoord.m_nLevel,
                                move.IsShortCastle() ? fromCoord.m_nFile + 1 : fromCoord.m_nFile - 1,
                                fromCoord.m_nRank);
-    int oldRookOffset = oldRookCoord.BitOffset();
-    int newRookOffset = newRookCoord.BitOffset();
+    const uint16_t oldRookOffset = oldRookCoord.BitOffset();
+    const uint16_t newRookOffset = newRookCoord.BitOffset();
 
     /* king looses its attacks */
     p->AtkClr(fromCoord);
@@ -498,16 +501,16 @@ static void DoCastle(CPosition *p, CMove move) {
 static void UndoCastle(CPosition *p, CMove move) {
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int fromOffset = fromCoord.BitOffset();
-    int toOffset = toCoord.BitOffset();
+    const uint16_t fromOffset = fromCoord.BitOffset();
+    const uint16_t toOffset = toCoord.BitOffset();
     const CSCoord oldRookCoord(fromCoord.m_nLevel,
                                move.IsShortCastle() ? fromCoord.m_nFile + 3 : fromCoord.m_nFile - 4,
                                fromCoord.m_nRank);
     const CSCoord newRookCoord(fromCoord.m_nLevel,
                                move.IsShortCastle() ? fromCoord.m_nFile + 1 : fromCoord.m_nFile - 1,
                                fromCoord.m_nRank);
-    int oldRookOffset = oldRookCoord.BitOffset();
-    int newRookOffset = newRookCoord.BitOffset();
+    const uint16_t oldRookOffset = oldRookCoord.BitOffset();
+    const uint16_t newRookOffset = newRookCoord.BitOffset();
 
     /* king looses its attacks */
     p->AtkClr(toCoord);
@@ -557,8 +560,8 @@ void CPosition::DoMove(CMove move) {
     CPosition *p = this;
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int fromOffset = fromCoord.BitOffset();
-    int toOffset = toCoord.BitOffset();
+    const uint16_t fromOffset = fromCoord.BitOffset();
+    const uint16_t toOffset = toCoord.BitOffset();
     int8_t tp = TYPE(p->m_rgPiece[fromOffset]);
 
     /* save EnPassant and Castling */
@@ -639,7 +642,7 @@ void CPosition::DoMove(CMove move) {
             const CSCoord capturedPawnCoord(
                 toCoord.m_nLevel, toCoord.m_nFile,
                 p->m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
-            int capturedPawnOffset = capturedPawnCoord.BitOffset();
+            const uint16_t capturedPawnOffset = capturedPawnCoord.BitOffset();
 
             /* piece looses its attacks */
             p->AtkClr(capturedPawnCoord);
@@ -722,7 +725,7 @@ void CPosition::DoMove(CMove move) {
     if (move.IsPawnDoublePush()) {
         const CSCoord passantCoord(toCoord.m_nLevel, toCoord.m_nFile,
                                    p->m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
-        int passantOffset = passantCoord.BitOffset();
+        const uint16_t passantOffset = passantCoord.BitOffset();
         if (p->m_rgAtkFr[passantOffset] & p->m_rgMask[OPP(p->m_nTurn)][Pawn]) {
             p->m_EnPassant = passantCoord;
         }
@@ -769,8 +772,8 @@ void CPosition::UndoMove(CMove move) {
     CPosition *p = this;
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int fromOffset = fromCoord.BitOffset();
-    int toOffset = toCoord.BitOffset();
+    const uint16_t fromOffset = fromCoord.BitOffset();
+    const uint16_t toOffset = toCoord.BitOffset();
     int8_t tp = TYPE(p->m_rgPiece[toOffset]);
 
     /* Swap p->turns */
@@ -837,7 +840,7 @@ void CPosition::UndoMove(CMove move) {
             const CSCoord capturedPawnCoord(
                 toCoord.m_nLevel, toCoord.m_nFile,
                 p->m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
-            int capturedPawnOffset = capturedPawnCoord.BitOffset();
+            const uint16_t capturedPawnOffset = capturedPawnCoord.BitOffset();
 
             /* piece looses its attacks */
             p->AtkSet(Pawn, OPP(p->m_nTurn), capturedPawnCoord);
@@ -962,8 +965,8 @@ void CPosition::RecalcAttacks() {
     int i;
     CBitBoard tmp;
 
-    for (i = 0; i < CSCoord::SIZE; i++) {
-        p->m_rgAtkTo[i] = p->m_rgAtkFr[i] = 0;
+    for (unsigned int square = 0; square < CSCoord::SIZE; square++) {
+        p->m_rgAtkTo[square] = p->m_rgAtkFr[square] = 0;
     }
 
     for (i = Pawn; i <= King; i++) {
@@ -1050,7 +1053,7 @@ void CPosition::RecalcAttacks() {
  */
 void CPosition::GenTo(const CSCoord& squareCoord, heap_t heap) {
     CPosition *p = this;
-    int square = squareCoord.BitOffset();
+    const unsigned int square = squareCoord.BitOffset();
     CBitBoard tmp = p->m_rgAtkFr[square] & p->m_rgMask[p->m_nTurn][0];
 
     while (tmp) {
@@ -1089,7 +1092,7 @@ void CPosition::GenEnpas(heap_t heap) {
 
 void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
     CPosition *p = this;
-    int square = squareCoord.BitOffset();
+    const unsigned int square = squareCoord.BitOffset();
     if (TYPE(p->m_rgPiece[square]) != Pawn) {
         CBitBoard tmp;
 
@@ -1119,11 +1122,11 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
             }
         }
     } else {
-        const int width = CSCoord::LEVEL_WIDTH[squareCoord.m_nLevel];
+        const uint16_t width = static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[squareCoord.m_nLevel]);
         const int direction = (p->m_nTurn == White) ? 1 : -1;
         CSCoord sqCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
                         squareCoord.m_nRank + direction);
-        int sq = sqCoord.BitOffset();
+        uint16_t sq = sqCoord.BitOffset();
 
         if (p->m_rgPiece[sq] == Neutral) {
             if (is_promo_square(sqCoord)) {
@@ -1134,7 +1137,8 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
             } else {
                 append_to_heap(heap, make_move(squareCoord, sqCoord, 0));
 
-                const int homeRank = (p->m_nTurn == White) ? 1 : (width - 2);
+                const uint16_t homeRank =
+                    static_cast<uint16_t>((p->m_nTurn == White) ? 1 : (width - 2));
                 if (squareCoord.m_nRank == homeRank) {
                     CSCoord dblCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
                                      squareCoord.m_nRank + 2 * direction);
@@ -1208,8 +1212,8 @@ bool CPosition::LegalMove(CMove move) {
     CPosition *p = this;
     const CSCoord& frCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int fr = frCoord.BitOffset();
-    int to = toCoord.BitOffset();
+    const uint16_t fr = frCoord.BitOffset();
+    const uint16_t to = toCoord.BitOffset();
 
     if (move == M_NONE || move == M_NULL)
         return false;
@@ -1226,7 +1230,7 @@ bool CPosition::LegalMove(CMove move) {
      * be a promotion.
      */
     if (TYPE(p->m_rgPiece[fr]) == Pawn && !move.HasPromotion()) {
-        const int levelWidth = CSCoord::LEVEL_WIDTH[toCoord.m_nLevel];
+        const uint16_t levelWidth = static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[toCoord.m_nLevel]);
         if (toCoord.m_nRank == 0 || toCoord.m_nRank == (levelWidth - 1))
             return false;
     }
@@ -1271,19 +1275,24 @@ bool CPosition::LegalMove(CMove move) {
             return true;
         } else {
             /* use NextPos array to check if legal move */
-            const int levelWidth = CSCoord::LEVEL_WIDTH[frCoord.m_nLevel];
+            const uint16_t levelWidth =
+                static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[frCoord.m_nLevel]);
             const int rankStep = (p->m_nTurn == White ? 1 : -1);
             int ttRank = frCoord.m_nRank + rankStep;
             if (ttRank < 0 || ttRank >= levelWidth)
                 return false;
-            int tt = CSCoord(frCoord.m_nLevel, frCoord.m_nFile, ttRank).BitOffset();
+            uint16_t tt = CSCoord(frCoord.m_nLevel, frCoord.m_nFile,
+                                  static_cast<uint16_t>(ttRank))
+                              .BitOffset();
             if (move.IsPawnDoublePush()) {
                 if (p->m_rgPiece[tt] != Neutral)
                     return false;
                 ttRank += rankStep;
                 if (ttRank < 0 || ttRank >= levelWidth)
                     return false;
-                tt = CSCoord(frCoord.m_nLevel, frCoord.m_nFile, ttRank).BitOffset();
+                tt = CSCoord(frCoord.m_nLevel, frCoord.m_nFile,
+                             static_cast<uint16_t>(ttRank))
+                         .BitOffset();
             }
             if (tt != to)
                 return false;
@@ -1308,10 +1317,10 @@ bool CPosition::IsCheckingMove(CMove move) {
     CPosition *p = this;
     const CSCoord& frCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
-    int fr = frCoord.BitOffset();
-    int to = toCoord.BitOffset();
+    const uint16_t fr = frCoord.BitOffset();
+    const uint16_t to = toCoord.BitOffset();
     int tp = TYPE(p->m_rgPiece[fr]);
-    int kp = p->m_rgMask[OPP(p->m_nTurn)][King].FindSetBit();
+    const uint16_t kp = p->m_rgMask[OPP(p->m_nTurn)][King].FindSetBit();
     CBitBoard tmp;
 
     /* Is it a direct check ? */
@@ -1578,8 +1587,8 @@ char *CPosition::SAN(CMove move, char *buffer) {
 
     const CSCoord& toCoord = move.GetToCoord();
     const CSCoord& frCoord = move.GetFromCoord();
-    int to = toCoord.BitOffset();
-    int fr = frCoord.BitOffset();
+    const uint16_t to = toCoord.BitOffset();
+    const uint16_t fr = frCoord.BitOffset();
     int8_t tp = TYPE(p->m_rgPiece[fr]);
 
     if (tp == Pawn) {
@@ -1994,7 +2003,7 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
         move = heap->data[i];
         const CSCoord& frCoord = move.GetFromCoord();
         const CSCoord& toCoord = move.GetToCoord();
-        int fr = frCoord.BitOffset();
+        const uint16_t fr = frCoord.BitOffset();
 
         if (TYPE(p->m_rgPiece[fr]) != tp)
             continue;
@@ -2146,7 +2155,7 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
     for (i = 0; i < cnt; i++) {
         const CSCoord& frCoord = mvs[i].GetFromCoord();
         const CSCoord& toCoord = mvs[i].GetToCoord();
-        int fr = frCoord.BitOffset();
+        const uint16_t fr = frCoord.BitOffset();
 
         if (TYPE(pmap[fr]) != tp)
             continue;
@@ -2297,13 +2306,14 @@ int CPosition::LegalMoves(heap_t heap) {
 
 void CPosition::ShowPosition() {
     CPosition *p = this;
-    for (int level = CSCoord::NUM_LEVELS - 1; level >= 0; level--) {
+    const int numLevels = static_cast<int>(CSCoord::NUM_LEVELS);
+    for (int level = numLevels - 1; level >= 0; level--) {
         const int width = CSCoord::LEVEL_WIDTH[level];
 
-        if (level < CSCoord::NUM_LEVELS - 1) {
+        if (level < (numLevels - 1)) {
             Print(0, "\n");
         }
-        if (CSCoord::NUM_LEVELS > 1) {
+        if (numLevels > 1) {
             Print(0, "      Level %d\n", level + 1);
         }
 
@@ -2498,8 +2508,9 @@ CMove badmove[MAX_EPD_MOVES];
  * Read a position from an EPD string.
  */
 static void ReadEPD(CPosition *p, const char *epd_input) {
-    int level = 0;
-    int rk = CSCoord::LEVEL_WIDTH[0] - 1, fl = 0;
+    unsigned int level = 0;
+    int rk = static_cast<int>(CSCoord::LEVEL_WIDTH[0]) - 1;
+    unsigned int fl = 0;
     int i;
     char *ops[MAX_EPD_OPS];
     char *line;
@@ -2514,8 +2525,8 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
     strcpy(line, epd_input);
     x = line;
 
-    for (i = 0; i < CSCoord::SIZE; i++)
-        p->m_rgPiece[i] = Neutral;
+    for (unsigned int square = 0; square < CSCoord::SIZE; square++)
+        p->m_rgPiece[square] = Neutral;
     p->m_rgMask[White][0] = p->m_rgMask[Black][0] = 0;
 
     /* scan piece placement across all levels; levels are separated by '|' */
@@ -2536,7 +2547,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'P':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Pawn;
                 p->m_rgMask[White][0].SetBit(sq);
             }
@@ -2544,7 +2555,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'N':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Knight;
                 p->m_rgMask[White][0].SetBit(sq);
             }
@@ -2552,7 +2563,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'B':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Bishop;
                 p->m_rgMask[White][0].SetBit(sq);
             }
@@ -2560,7 +2571,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'R':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Rook;
                 p->m_rgMask[White][0].SetBit(sq);
             }
@@ -2568,7 +2579,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'Q':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Queen;
                 p->m_rgMask[White][0].SetBit(sq);
             }
@@ -2576,7 +2587,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'K':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = King;
                 p->m_rgMask[White][0].SetBit(sq);
             }
@@ -2584,7 +2595,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'p':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Pawn;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
@@ -2592,7 +2603,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'n':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Knight;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
@@ -2600,7 +2611,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'b':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Bishop;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
@@ -2608,7 +2619,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'r':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Rook;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
@@ -2616,7 +2627,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'q':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Queen;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
@@ -2624,7 +2635,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             break;
         case 'k':
             if (fl < CSCoord::LEVEL_WIDTH[level]) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -King;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
@@ -2638,7 +2649,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl = 0;
             level++;
             if (level < CSCoord::NUM_LEVELS) {
-                rk = CSCoord::LEVEL_WIDTH[level] - 1;
+                rk = static_cast<int>(CSCoord::LEVEL_WIDTH[level]) - 1;
             } else {
                 rk = -1;
             }
@@ -2768,15 +2779,16 @@ char *CPosition::MakeEPD() {
 
     char *x = epdbuffer;
 
-    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
-        const int width = CSCoord::LEVEL_WIDTH[level];
-        for (int i = width - 1; i >= 0; i--) {
+    for (unsigned int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+        const unsigned int width = CSCoord::LEVEL_WIDTH[level];
+        for (int i = static_cast<int>(width) - 1; i >= 0; i--) {
             uint8_t cnt = 0;
-            for (int j = 0; j < width; j++) {
-                const int square = static_cast<int>(CSCoord(level, j, i));
+            for (unsigned int j = 0; j < width; j++) {
+                const int square =
+                    static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(j), i));
                 if (p->m_rgPiece[square] == Neutral) {
                     cnt++;
-                    if (j == width - 1)
+                    if (j == (width - 1))
                         *(x++) = '0' + cnt;
                 } else {
                     if (cnt)
@@ -2788,7 +2800,7 @@ char *CPosition::MakeEPD() {
                         *(x++) = bname[TYPE(p->m_rgPiece[square])];
                 }
             }
-            if ((level == CSCoord::NUM_LEVELS - 1) && (i == 0))
+            if ((level == (CSCoord::NUM_LEVELS - 1)) && (i == 0))
                 *(x++) = ' ';
             else if (i == 0)
                 *(x++) = '|';
@@ -2947,7 +2959,7 @@ bool CPosition::CheckDraw() const {
  */
 
 bool IsPassed(const CPosition *p, const CSCoord& sqCoord, int side) {
-    int sq = sqCoord.BitOffset();
+    const uint16_t sq = sqCoord.BitOffset();
     if (side == White)
         return !(p->m_rgMask[Black][Pawn] & PassedMaskW[sq]);
     else
@@ -3009,4 +3021,3 @@ void CPosition::Free(CPosition *p) {
         free(p);
     }
 }
-
