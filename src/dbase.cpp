@@ -2297,10 +2297,10 @@ int CPosition::LegalMoves(heap_t heap) {
 
 void CPosition::ShowPosition() {
     CPosition *p = this;
-    for (int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+    for (int level = CSCoord::NUM_LEVELS - 1; level >= 0; level--) {
         const int width = CSCoord::LEVEL_WIDTH[level];
 
-        if (level > 0) {
+        if (level < CSCoord::NUM_LEVELS - 1) {
             Print(0, "\n");
         }
         if (CSCoord::NUM_LEVELS > 1) {
