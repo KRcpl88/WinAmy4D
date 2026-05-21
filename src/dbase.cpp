@@ -1587,6 +1587,7 @@ char *CPosition::SAN(CMove move, char *buffer) {
             *(x++) = 'a' + frCoord.m_nFile;
             *(x++) = 'x';
         }
+        *(x++) = 'a' + toCoord.m_nLevel;
         *(x++) = 'a' + toCoord.m_nFile;
         *(x++) = '1' + toCoord.m_nRank;
 
@@ -1658,6 +1659,7 @@ char *CPosition::SAN(CMove move, char *buffer) {
         if (move.IsCapture() || move.IsEnPassant())
             *(x++) = 'x';
 
+        *(x++) = 'a' + toCoord.m_nLevel;
         *(x++) = 'a' + toCoord.m_nFile;
         *(x++) = '1' + toCoord.m_nRank;
     }
@@ -1686,11 +1688,13 @@ char *ICS_SAN(CMove move) {
     const CSCoord toCoord = move.GetToCoord();
     const CSCoord frCoord = move.GetFromCoord();
 
+    *(x++) = 'a' + frCoord.m_nLevel;
     *(x++) = 'a' + frCoord.m_nFile;
     *(x++) = '1' + frCoord.m_nRank;
     if (move.IsCapture() || move.IsEnPassant()) {
         *(x++) = 'x';
     }
+    *(x++) = 'a' + toCoord.m_nLevel;
     *(x++) = 'a' + toCoord.m_nFile;
     *(x++) = '1' + toCoord.m_nRank;
     if (move.HasPromotion()) {
@@ -1721,14 +1725,25 @@ CMove parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
             return move;
     }
 
-    if (strlen(san) < 4) {
+    if (strlen(san) < 6) {
         return M_NONE;
     }
 
     (void)p->LegalMoves(heap);
 
-    int fr = *san - 'a' + 8 * (*(san + 1) - '1');
-    int to = *(san + 2) - 'a' + 8 * (*(san + 3) - '1');
+    int fr_level = *(san + 0) - 'a';
+    int fr_file  = *(san + 1) - 'a';
+    int fr_rank  = *(san + 2) - '1';
+    int to_level = *(san + 3) - 'a';
+    int to_file  = *(san + 4) - 'a';
+    int to_rank  = *(san + 5) - '1';
+
+    if (!CSCoord::IsValid(fr_level, fr_file, fr_rank) ||
+        !CSCoord::IsValid(to_level, to_file, to_rank))
+        return M_NONE;
+
+    int fr = CSCoord(fr_level, fr_file, fr_rank).BitOffset();
+    int to = CSCoord(to_level, to_file, to_rank).BitOffset();
 
     int mask = fr + (to << 6);
 
@@ -1736,8 +1751,8 @@ CMove parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
          i < heap->current_section->end; i++) {
         CMove move = heap->data[i];
         if (move.GetFromToIndex() == mask) {
-            if (move.HasPromotion() && strlen(san) >= 5) {
-                char p = *(san + 4);
+            if (move.HasPromotion() && strlen(san) >= 7) {
+                char p = *(san + 6);
                 move.ClearPromotion();
 
                 if (p == 'q' || p == 'Q') {
@@ -1799,15 +1814,26 @@ CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
         return M_NONE;
     }
 
-    fr = *san - 'a' + 8 * (*(san + 1) - '1');
-    to = *(san + 2) - 'a' + 8 * (*(san + 3) - '1');
+    int fr_level = *(san + 0) - 'a';
+    int fr_file  = *(san + 1) - 'a';
+    int fr_rank  = *(san + 2) - '1';
+    int to_level = *(san + 3) - 'a';
+    int to_file  = *(san + 4) - 'a';
+    int to_rank  = *(san + 5) - '1';
+
+    if (!CSCoord::IsValid(fr_level, fr_file, fr_rank) ||
+        !CSCoord::IsValid(to_level, to_file, to_rank))
+        return M_NONE;
+
+    fr = CSCoord(fr_level, fr_file, fr_rank).BitOffset();
+    to = CSCoord(to_level, to_file, to_rank).BitOffset();
 
     mask = fr + (to << 6);
 
     for (i = 0; i < cnt; i++) {
         if (mvs[i].GetFromToIndex() == mask) {
             if (mvs[i].HasPromotion()) {
-                char p = *(san + 4);
+                char p = *(san + 6);
                 CMove move = mvs[i];
                 move.ClearPromotion();
 
@@ -1848,7 +1874,7 @@ static bool TryMove(CPosition *p, CMove move) {
  */
 static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
     int tp = Neutral;
-    int frk = -1, ffl = -1, trk = -1, tfl = -1;
+    int frk = -1, ffl = -1, tll = -1, trk = -1, tfl = -1;
     int pro = 0;
     unsigned int i;
     CMove move;
@@ -1877,89 +1903,87 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
 
     p->PLegalMoves(heap);
 
-    /* special handling of pawn captures a la 'cd' */
-    if (strlen(san) == 2 && *san >= 'a' && *san <= 'h' && *(san + 1) >= 'a' &&
-        *(san + 1) <= 'h') {
-        ffl = *san - 'a';
-        tfl = *(san + 1) - 'a';
+    /* Find the end of the meaningful SAN string (strip trailing +/# check
+     * indicators) */
+    const char *end = san + strlen(san);
+    while (end > san && (*(end - 1) == '+' || *(end - 1) == '#'))
+        end--;
 
-        for (i = heap->current_section->start; i < heap->current_section->end;
-             i++) {
-            move = heap->data[i];
-            const CSCoord& frCoord = move.GetFromCoord();
-            const CSCoord& toCoord = move.GetToCoord();
-            int fr = frCoord.BitOffset();
-
-            if (TYPE(p->m_rgPiece[fr]) == Pawn &&
-                (move.IsCapture() || move.IsEnPassant()) && frCoord.m_nFile == ffl &&
-                toCoord.m_nFile == tfl && TryMove(p, move))
-                return move;
+    /* Handle promotion suffix =X */
+    const char *eq = NULL;
+    for (const char *q = san; q < end; q++) {
+        if (*q == '=') {
+            eq = q;
+            break;
         }
-        return M_NONE;
+    }
+    if (eq != NULL) {
+        if (eq + 1 >= end)
+            return M_NONE;
+        char pc = *(eq + 1);
+        if (pc == 'Q')
+            pro = Queen;
+        else if (pc == 'R')
+            pro = Rook;
+        else if (pc == 'B')
+            pro = Bishop;
+        else if (pc == 'N')
+            pro = Knight;
+        else
+            return M_NONE;
+        end = eq;
     }
 
-    /* Next examine the string */
-    for (; *san; san++) {
-        switch (*san) {
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case 'f':
-        case 'g':
-        case 'h': {
-            ffl = tfl;
-            tfl = *san - 'a';
-            break;
+    /* Destination square: last 3 meaningful chars =
+     *   level letter (a-o) + file letter (a-h) + rank digit (1-8) */
+    if (end - san < 3)
+        return M_NONE;
+
+    char rank_ch  = *(end - 1);
+    char file_ch  = *(end - 2);
+    char level_ch = *(end - 3);
+
+    if (rank_ch < '1' || rank_ch > '8')
+        return M_NONE;
+    if (file_ch < 'a' || file_ch > 'h')
+        return M_NONE;
+    if (level_ch < 'a' || level_ch > 'o')
+        return M_NONE;
+
+    trk = rank_ch  - '1';
+    tfl = file_ch  - 'a';
+    tll = level_ch - 'a';
+
+    if (!CSCoord::IsValid(tll, tfl, trk))
+        return M_NONE;
+
+    /* Process prefix (everything before the destination 3-char square) */
+    const char *prefix     = san;
+    const char *prefix_end = end - 3;
+
+    /* Optional piece letter at the start of the prefix */
+    if (prefix < prefix_end) {
+        switch (*prefix) {
+        case 'N': tp = Knight; prefix++; break;
+        case 'B': tp = Bishop; prefix++; break;
+        case 'R': tp = Rook;   prefix++; break;
+        case 'Q': tp = Queen;  prefix++; break;
+        case 'K': tp = King;   prefix++; break;
+        default:  break;
         }
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8': {
-            frk = trk;
-            trk = *san - '1';
-            break;
-        }
-        case 'N':
-            tp = Knight;
-            break;
-        case 'B':
-            tp = Bishop;
-            break;
-        case 'R':
-            tp = Rook;
-            break;
-        case 'Q':
-            tp = Queen;
-            break;
-        case 'K':
-            tp = King;
-            break;
-        case '=':
-            san++;
-            if (*san == 'Q')
-                pro = Queen;
-            else if (*san == 'R')
-                pro = Rook;
-            else if (*san == 'B')
-                pro = Bishop;
-            else if (*san == 'N')
-                pro = Knight;
-            else
-                return M_NONE;
-            break;
-        case 'x':
-        case '+':
-        case '#':
-            break;
-        default:
+    }
+
+    /* Remaining prefix: optional from-file (a-h) and/or from-rank (1-8),
+     * and optional capture indicator 'x' */
+    for (const char *q = prefix; q < prefix_end; q++) {
+        if (*q == 'x' || *q == '+' || *q == '#')
+            continue;
+        if (*q >= 'a' && *q <= 'h')
+            ffl = *q - 'a';
+        else if (*q >= '1' && *q <= '8')
+            frk = *q - '1';
+        else
             return M_NONE;
-        }
     }
 
     if (tp == Neutral)
@@ -1974,7 +1998,8 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
 
         if (TYPE(p->m_rgPiece[fr]) != tp)
             continue;
-        if (toCoord.m_nFile != tfl || toCoord.m_nRank != trk)
+        if (toCoord.m_nLevel != tll || toCoord.m_nFile != tfl ||
+            toCoord.m_nRank != trk)
             continue;
         if (ffl != -1 && frCoord.m_nFile != ffl)
             continue;
@@ -2005,7 +2030,7 @@ CMove CPosition::ParseSAN(const char *san) {
 
 CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
     int tp = Neutral;
-    int frk = -1, ffl = -1, trk = -1, tfl = -1;
+    int frk = -1, ffl = -1, tll = -1, trk = -1, tfl = -1;
     int pro = 0;
     CMove move;
     int i;
@@ -2032,86 +2057,87 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
         return M_NONE;
     }
 
-    /* special handling of pawn captures a la 'cd' */
-    if (strlen(san) == 2 && *san >= 'a' && *san <= 'h' && *(san + 1) >= 'a' &&
-        *(san + 1) <= 'h') {
-        ffl = *san - 'a';
-        tfl = *(san + 1) - 'a';
+    /* Find the end of the meaningful SAN string (strip trailing +/# check
+     * indicators) */
+    const char *end = san + strlen(san);
+    while (end > san && (*(end - 1) == '+' || *(end - 1) == '#'))
+        end--;
 
-        for (i = 0; i < cnt; i++) {
-            const CSCoord& frCoord = mvs[i].GetFromCoord();
-            const CSCoord& toCoord = mvs[i].GetToCoord();
-            int fr = frCoord.BitOffset();
-
-            if (pmap[fr] == Pawn && (mvs[i].IsCapture() || mvs[i].IsEnPassant()) &&
-                frCoord.m_nFile == ffl && toCoord.m_nFile == tfl)
-                return mvs[i];
+    /* Handle promotion suffix =X */
+    const char *eq = NULL;
+    for (const char *q = san; q < end; q++) {
+        if (*q == '=') {
+            eq = q;
+            break;
         }
-        return M_NONE;
+    }
+    if (eq != NULL) {
+        if (eq + 1 >= end)
+            return M_NONE;
+        char pc = *(eq + 1);
+        if (pc == 'Q')
+            pro = Queen;
+        else if (pc == 'R')
+            pro = Rook;
+        else if (pc == 'B')
+            pro = Bishop;
+        else if (pc == 'N')
+            pro = Knight;
+        else
+            return M_NONE;
+        end = eq;
     }
 
-    /* Next examine the string */
-    for (; *san; san++) {
-        switch (*san) {
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case 'f':
-        case 'g':
-        case 'h': {
-            ffl = tfl;
-            tfl = *san - 'a';
-            break;
+    /* Destination square: last 3 meaningful chars =
+     *   level letter (a-o) + file letter (a-h) + rank digit (1-8) */
+    if (end - san < 3)
+        return M_NONE;
+
+    char rank_ch  = *(end - 1);
+    char file_ch  = *(end - 2);
+    char level_ch = *(end - 3);
+
+    if (rank_ch < '1' || rank_ch > '8')
+        return M_NONE;
+    if (file_ch < 'a' || file_ch > 'h')
+        return M_NONE;
+    if (level_ch < 'a' || level_ch > 'o')
+        return M_NONE;
+
+    trk = rank_ch  - '1';
+    tfl = file_ch  - 'a';
+    tll = level_ch - 'a';
+
+    if (!CSCoord::IsValid(tll, tfl, trk))
+        return M_NONE;
+
+    /* Process prefix (everything before the destination 3-char square) */
+    const char *prefix     = san;
+    const char *prefix_end = end - 3;
+
+    /* Optional piece letter at the start of the prefix */
+    if (prefix < prefix_end) {
+        switch (*prefix) {
+        case 'N': tp = Knight; prefix++; break;
+        case 'B': tp = Bishop; prefix++; break;
+        case 'R': tp = Rook;   prefix++; break;
+        case 'Q': tp = Queen;  prefix++; break;
+        case 'K': tp = King;   prefix++; break;
+        default:  break;
         }
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8': {
-            frk = trk;
-            trk = *san - '1';
-            break;
-        }
-        case 'N':
-            tp = Knight;
-            break;
-        case 'B':
-            tp = Bishop;
-            break;
-        case 'R':
-            tp = Rook;
-            break;
-        case 'Q':
-            tp = Queen;
-            break;
-        case 'K':
-            tp = King;
-            break;
-        case '=':
-            san++;
-            if (*san == 'Q')
-                pro = Queen;
-            else if (*san == 'R')
-                pro = Rook;
-            else if (*san == 'B')
-                pro = Bishop;
-            else if (*san == 'N')
-                pro = Knight;
-            else
-                return M_NONE;
-            break;
-        case 'x':
-        case '+':
-        case '#':
-            break;
-        default:
+    }
+
+    /* Remaining prefix: optional from-file (a-h) and/or from-rank (1-8),
+     * and optional capture indicator 'x' */
+    for (const char *q = prefix; q < prefix_end; q++) {
+        if (*q == 'x' || *q == '+' || *q == '#')
+            continue;
+        if (*q >= 'a' && *q <= 'h')
+            ffl = *q - 'a';
+        else if (*q >= '1' && *q <= '8')
+            frk = *q - '1';
+        else
             return M_NONE;
-        }
     }
 
     if (tp == Neutral)
@@ -2124,7 +2150,8 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
 
         if (TYPE(pmap[fr]) != tp)
             continue;
-        if (toCoord.m_nFile != tfl || toCoord.m_nRank != trk)
+        if (toCoord.m_nLevel != tll || toCoord.m_nFile != tfl ||
+            toCoord.m_nRank != trk)
             continue;
         if (ffl != -1 && frCoord.m_nFile != ffl)
             continue;
