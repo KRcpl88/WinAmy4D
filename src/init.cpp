@@ -65,12 +65,13 @@ CBitBoard ConnectedMask[CSCoord::SIZE];
 void InitMasks(void) {
     ShiftUpMask = ShiftDownMask = ShiftLeftMask = ShiftRightMask = -1;
     for (unsigned int i = 0; i < CSCoord::MAX_LEVEL_WIDTH; i++) {
-        ShiftUpMask &= CBitBoard::ClrMask(static_cast<int>(i));
+        ShiftUpMask &= CBitBoard::ClrMask(static_cast<uint16_t>(i));
         ShiftDownMask &= CBitBoard::ClrMask(
-            static_cast<int>(CSCoord::SIZE - CSCoord::MAX_LEVEL_WIDTH + i));
-        ShiftRightMask &= CBitBoard::ClrMask(
-            static_cast<int>(CSCoord::MAX_LEVEL_WIDTH * i + (CSCoord::MAX_LEVEL_WIDTH - 1)));
-        ShiftLeftMask &= CBitBoard::ClrMask(static_cast<int>(CSCoord::MAX_LEVEL_WIDTH * i));
+            static_cast<uint16_t>(CSCoord::SIZE - CSCoord::MAX_LEVEL_WIDTH + i));
+        ShiftRightMask &= CBitBoard::ClrMask(static_cast<uint16_t>(
+            CSCoord::MAX_LEVEL_WIDTH * i + (CSCoord::MAX_LEVEL_WIDTH - 1)));
+        ShiftLeftMask &= CBitBoard::ClrMask(
+            static_cast<uint16_t>(CSCoord::MAX_LEVEL_WIDTH * i));
     }
 }
 
@@ -105,16 +106,24 @@ void InitPawnMasks(void) {
         const unsigned int width = CSCoord::LEVEL_WIDTH[level];
         for (unsigned int file = 0; file < width; file++) {
             for (unsigned int rank = 0; rank < width; rank++) {
-                const int square = static_cast<int>(
-                    CSCoord(static_cast<int>(level), static_cast<int>(file), static_cast<int>(rank)));
+                const uint16_t square =
+                    CSCoord(static_cast<uint16_t>(level), static_cast<uint16_t>(file),
+                            static_cast<uint16_t>(rank))
+                        .BitOffset();
                 FileMask[file] |= CBitBoard::SetMask(square);
                 if (file > 0) {
-                    IsoMask[file] |= CBitBoard::SetMask(static_cast<int>(
-                        CSCoord(static_cast<int>(level), static_cast<int>(file - 1), static_cast<int>(rank))));
+                    IsoMask[file] |= CBitBoard::SetMask(
+                        CSCoord(static_cast<uint16_t>(level),
+                                static_cast<uint16_t>(file - 1),
+                                static_cast<uint16_t>(rank))
+                            .BitOffset());
                 }
                 if ((file + 1) < width) {
-                    IsoMask[file] |= CBitBoard::SetMask(static_cast<int>(
-                        CSCoord(static_cast<int>(level), static_cast<int>(file + 1), static_cast<int>(rank))));
+                    IsoMask[file] |= CBitBoard::SetMask(
+                        CSCoord(static_cast<uint16_t>(level),
+                                static_cast<uint16_t>(file + 1),
+                                static_cast<uint16_t>(rank))
+                            .BitOffset());
                 }
             }
 #ifdef DEBUG
@@ -137,7 +146,7 @@ void InitPawnMasks(void) {
     }
     for (i = 0; i < size; i++) {
         const CSCoord coord(i);
-        const int width = CSCoord::LEVEL_WIDTH[coord.m_nLevel];
+        const uint16_t width = static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[coord.m_nLevel]);
         PassedMaskW[i] = ForwardRayW[i];
         if (coord.m_nFile > 0)
             PassedMaskW[i] |= ForwardRayW[i - 1];
@@ -175,10 +184,12 @@ void InitPawnMasks(void) {
             const unsigned int levelWidth =
                 CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)];
             if (sqCoord.m_nFile > 0) {
-                WPawnBackwardMask[i] |= CBitBoard::SetMask(sq - 1);
+                WPawnBackwardMask[i] |=
+                    CBitBoard::SetMask(static_cast<uint16_t>(sq - 1));
             }
             if (sqFile < (levelWidth - 1)) {
-                WPawnBackwardMask[i] |= CBitBoard::SetMask(sq + 1);
+                WPawnBackwardMask[i] |=
+                    CBitBoard::SetMask(static_cast<uint16_t>(sq + 1));
             }
         }
         for (sq = i; sq < size; sq += 8) {
@@ -187,17 +198,19 @@ void InitPawnMasks(void) {
             const unsigned int levelWidth =
                 CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)];
             if (sqCoord.m_nFile > 0) {
-                BPawnBackwardMask[i] |= CBitBoard::SetMask(sq - 1);
+                BPawnBackwardMask[i] |=
+                    CBitBoard::SetMask(static_cast<uint16_t>(sq - 1));
             }
             if (sqFile < (levelWidth - 1)) {
-                BPawnBackwardMask[i] |= CBitBoard::SetMask(sq + 1);
+                BPawnBackwardMask[i] |=
+                    CBitBoard::SetMask(static_cast<uint16_t>(sq + 1));
             }
         }
     }
 
     for (i = 0; i < size; i++) {
         const CSCoord iCoord(i);
-        const int width = CSCoord::LEVEL_WIDTH[iCoord.m_nLevel];
+        const uint16_t width = static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[iCoord.m_nLevel]);
         ConnectedMask[i] = 0;
 
         if (iCoord.m_nFile < (width - 1)) {
@@ -375,7 +388,7 @@ void InitMiscMasks(void) {
 
     for (i = 0; i < size; i++) {
         const CSCoord coord(i);
-        const int width = CSCoord::LEVEL_WIDTH[coord.m_nLevel];
+        const uint16_t width = static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[coord.m_nLevel]);
         int bdist = coord.m_nRank;
         int wdist = (width - 1) - bdist;
         CSCoord wtargetCoord(coord.m_nLevel, coord.m_nFile, width - 1);
@@ -414,4 +427,3 @@ void InitAll(void) {
     InitGeometry();
     InitMiscMasks();
 }
-

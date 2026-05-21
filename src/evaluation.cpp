@@ -376,7 +376,7 @@ static int EvaluatePawns(const CPosition *p,
     pcs = p->m_rgMask[White][Pawn];
     while (pcs) {
         CSCoord sqCoord = (pcs).FindSetBitCoord();
-        int sq = sqCoord.BitOffset();
+        const uint16_t sq = sqCoord.BitOffset();
         pcs.ClearLowestBit();
 
         score += WPawnPos[sq];
@@ -423,9 +423,9 @@ static int EvaluatePawns(const CPosition *p,
             }
         }
 
-        const unsigned int levelWidth =
-            CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)];
-        const unsigned int file = static_cast<unsigned int>(sqCoord.m_nFile);
+        const uint16_t levelWidth =
+            static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel]);
+        const uint16_t file = sqCoord.m_nFile;
         if (file < (levelWidth - 1) &&
             p->m_rgMask[White][Pawn].TstBit(sq + 1)) {
             score += PawnDuo;
@@ -437,7 +437,7 @@ static int EvaluatePawns(const CPosition *p,
 
     while (pcs) {
         CSCoord sqCoord = (pcs).FindSetBitCoord();
-        int sq = sqCoord.BitOffset();
+        const uint16_t sq = sqCoord.BitOffset();
 
         pcs.ClearLowestBit();
         score -= BPawnPos[sq];
@@ -736,10 +736,11 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         int score_at_start = score;
 #endif
         CSCoord sqCoord = (pcs).FindSetBitCoord();
-        int sq = sqCoord.BitOffset();
-        const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel];
+        const uint16_t sq = sqCoord.BitOffset();
+        const uint16_t levelWidth =
+            static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel]);
         int rank = sqCoord.m_nRank;
-        const unsigned int file = static_cast<unsigned int>(sqCoord.m_nFile);
+        const uint16_t file = sqCoord.m_nFile;
 
         pcs.ClearLowestBit();
 
@@ -865,10 +866,11 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         int score_at_start = score;
 #endif
         CSCoord sqCoord = (pcs).FindSetBitCoord();
-        int sq = sqCoord.BitOffset();
-        const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel];
+        const uint16_t sq = sqCoord.BitOffset();
+        const uint16_t levelWidth =
+            static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel]);
         int rank = (levelWidth - 1) - sqCoord.m_nRank;
-        const unsigned int file = static_cast<unsigned int>(sqCoord.m_nFile);
+        const uint16_t file = sqCoord.m_nFile;
 
         pcs.ClearLowestBit(); //(pcs, sq);
 
@@ -1819,7 +1821,8 @@ void InitEvaluation(const CPosition *p) {
 
     for (sq = a2; sq <= h7; sq++) {
         const CSCoord sqCoord(sq);
-        const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel];
+        const uint16_t levelWidth =
+            static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel]);
         int wrank = sqCoord.m_nRank - 1;
         int brank = (levelWidth - 2) - sqCoord.m_nRank;
         unsigned int wfile = static_cast<unsigned int>(sqCoord.m_nFile);
@@ -1901,7 +1904,7 @@ void InitEvaluation(const CPosition *p) {
 }
 
 static bool is_edge(CSCoord coord) {
-    const int width = CSCoord::LEVEL_WIDTH[coord.m_nLevel];
+    const uint16_t width = static_cast<uint16_t>(CSCoord::LEVEL_WIDTH[coord.m_nLevel]);
     return (coord.m_nFile == 0 || coord.m_nFile == (width - 1) || coord.m_nRank == 0 ||
             coord.m_nRank == (width - 1));
 }
@@ -1913,4 +1916,3 @@ static void create_mirrored_piece_square_table(int16_t *src, int16_t *dest) {
         dest[static_cast<int>(mirrored)] = src[static_cast<int>(source)];
     }
 }
-

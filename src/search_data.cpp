@@ -691,7 +691,7 @@ CMove CSearchData::NextEvasion() {
 
         while (pawns_to) {
             CSCoord toCoord = (pawns_to).FindSetBitCoord();
-            int to = toCoord.BitOffset();
+            const uint16_t to = toCoord.BitOffset();
             pawns_to.ClearLowestBit();
             int fr = (p->m_nTurn == White) ? to - 8 : to + 8;
 
@@ -987,4 +987,3 @@ void CSearchData::PutKiller(CMove m) {
         }
     }
 }
-

@@ -52,8 +52,8 @@ class CBitBoard {
     void ClearLowestBit() { m_ullBits &= m_ullBits - 1; }
 
     // Static mask constructors
-    static CBitBoard SetMask(int i) { return CBitBoard(1ULL << i); }
-    static CBitBoard ClrMask(int i) { return CBitBoard(~(1ULL << i)); }
+    static CBitBoard SetMask(uint16_t i) { return CBitBoard(1ULL << i); }
+    static CBitBoard ClrMask(uint16_t i) { return CBitBoard(~(1ULL << i)); }
 
     // Counting and scanning
     int CountBits() const {
