@@ -134,6 +134,18 @@ Using the reccomendations provided in "Implementation path for WinAmy4D" in sect
 
 
 
+
+
+# EPD Parsing
+
+Please update the EPD parsing to accommodate multiple levels by filling each chess level from the EPD string.   From level 0 to CSCoord::NUM_LEVELS, each level will have CSCoord::LEVEL_WIDTH[level] rows and columns, each row is delimited with \.   After all the row in the first level have been filled, start filling the next level and continue until the end of the EPD string is reached or cscoord::NUM_LEVELS have been filled.  Make sure that the number of columns in each row does not exceed CSCoord::LEVEL_WIDTH[level]
+
+
+# compiler optimizations
+
+Make all the static const ints in scoord.h unsigned ints and fix any compiler warnings caused by signed unsigned conversions or comparisons , if necessary convert other ints to unsigned ints if necessary to resolve compiler warnings and a signed integer is not needed in that case
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
@@ -142,9 +154,11 @@ Add CBitBoard FindSetBitCoord which returns CSCoord
 
 
 
-# EPD Parsing
 
-Please update the EPD parsing to accommodate multiple levels by filling each chess level from the EPD string.   From level 0 to CSCoord::NUM_LEVELS, each level will have CSCoord::LEVEL_WIDTH[level] rows and columns, each row is delimited with \.   After all the row in the first level have been filled, start filling the next level and continue until the end of the EPD string is reached or cscoord::NUM_LEVELS have been filled.  Make sure that the number of columns in each row does not exceed CSCoord::LEVEL_WIDTH[level]
+
+
+
+
 
 
 
