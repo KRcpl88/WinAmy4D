@@ -223,16 +223,17 @@ static void Panic(CPosition *p) {
 #ifdef DEBUG
 static void DebugEngine(CPosition *p) {
     int kingSq = p->m_rgKingSq[White].BitOffset();
-    int i, color;
+    int color;
     CBitBoard temp;
 
-    for (i = 0; i < static_cast<int>(CSCoord::SIZE); i++) {
+    for (unsigned int i = 0; i < CSCoord::SIZE; i++) {
+        const int square = static_cast<int>(i);
         temp = p->m_rgAtkTo[i];
         while (temp) {
             int sq = (temp).FindSetBit();
             temp.ClearLowestBit();
-            if (!p->m_rgAtkFr[sq].TstBit(i)) {
-                Print(0, "AtkFr or AtkTo is bad on %c%c or %c%c\n", SQUARE(i),
+            if (!p->m_rgAtkFr[sq].TstBit(square)) {
+                Print(0, "AtkFr or AtkTo is bad on %c%c or %c%c\n", SQUARE(square),
                       SQUARE(sq));
                 ShowMoveList(p);
                 p->ShowPosition();
@@ -962,8 +963,8 @@ void CPosition::RecalcAttacks() {
     int i;
     CBitBoard tmp;
 
-    for (i = 0; i < static_cast<int>(CSCoord::SIZE); i++) {
-        p->m_rgAtkTo[i] = p->m_rgAtkFr[i] = 0;
+    for (unsigned int square = 0; square < CSCoord::SIZE; square++) {
+        p->m_rgAtkTo[square] = p->m_rgAtkFr[square] = 0;
     }
 
     for (i = Pawn; i <= King; i++) {
@@ -2515,8 +2516,8 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
     strcpy(line, epd_input);
     x = line;
 
-    for (i = 0; i < static_cast<int>(CSCoord::SIZE); i++)
-        p->m_rgPiece[i] = Neutral;
+    for (unsigned int square = 0; square < CSCoord::SIZE; square++)
+        p->m_rgPiece[square] = Neutral;
     p->m_rgMask[White][0] = p->m_rgMask[Black][0] = 0;
 
     /* scan piece placement across all levels; levels are separated by '|' */

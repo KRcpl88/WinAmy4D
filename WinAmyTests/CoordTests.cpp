@@ -45,19 +45,19 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(BitOffsetRoundTrips) {
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord coord(offset);
-            Assert::AreEqual(offset, coord.BitOffset());
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord coord(static_cast<int>(offset));
+            Assert::AreEqual(static_cast<int>(offset), coord.BitOffset());
         }
     }
 
     TEST_METHOD(EnumeratingRankFileWithCSCoordMatchesBitOffsetOrder) {
         int expectedOffset = 0;
-        for (int level = 0; level < static_cast<int>(CSCoord::NUM_LEVELS); level++) {
-            const int width = static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)]);
-            for (int rank = 0; rank < width; rank++) {
-                for (int file = 0; file < width; file++) {
-                    CSCoord square(level, file, rank);
+        for (unsigned int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+            const unsigned int width = CSCoord::LEVEL_WIDTH[level];
+            for (unsigned int rank = 0; rank < width; rank++) {
+                for (unsigned int file = 0; file < width; file++) {
+                    CSCoord square(static_cast<int>(level), static_cast<int>(file), static_cast<int>(rank));
                     Assert::AreEqual(expectedOffset, static_cast<int>(square));
                     expectedOffset++;
                 }
@@ -67,10 +67,10 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(OffsetConstructorProvidesExpectedRankAndFileAcrossBoard) {
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord square(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord square(static_cast<int>(offset));
             const int levelOffset =
-                offset - static_cast<int>(CSCoord::LEVEL_OFFSET[static_cast<unsigned int>(square.m_nLevel)]);
+                static_cast<int>(offset) - static_cast<int>(CSCoord::LEVEL_OFFSET[static_cast<unsigned int>(square.m_nLevel)]);
             const int width =
                 static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(square.m_nLevel)]);
             Assert::AreEqual(levelOffset / width, square.m_nRank);

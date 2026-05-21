@@ -430,12 +430,12 @@ static void MoveNow(char *args) {
 void Edit(char *args) {
     (void)args;
     bool editing = true;
-    int i;
+    unsigned int i;
     int side = White;
     char buffer[16];
     CPosition *p = CurrentPosition;
 
-    for (i = 0; i < static_cast<int>(CSCoord::SIZE); i++)
+    for (i = 0; i < CSCoord::SIZE; i++)
         p->m_rgPiece[i] = Neutral;
     p->m_rgMask[White][0] = p->m_rgMask[Black][0] = 0;
 

@@ -344,8 +344,8 @@ TEST_CLASS(AttackDeltaTests) {
         int slidingPieces[] = { Bishop, Rook, Queen };
 
         for (int piece : slidingPieces) {
-            for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-                CSCoord origin(offset);
+            for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+                CSCoord origin(static_cast<int>(offset));
                 CBitBoard attacks = TraceSlidingRays(origin, piece);
 
                 CBitBoard temp = attacks;
@@ -363,8 +363,8 @@ TEST_CLASS(AttackDeltaTests) {
         int leapingPieces[] = { Pawn, Knight, King, BPawn };
 
         for (int piece : leapingPieces) {
-            for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-                CSCoord origin(offset);
+            for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+                CSCoord origin(static_cast<int>(offset));
                 CBitBoard attacks = TraceLeaps(origin, piece);
 
                 CBitBoard temp = attacks;
@@ -471,8 +471,8 @@ TEST_CLASS(AttackDeltaTests) {
     // ---------------------------------------------------------------
 
     TEST_METHOD(ComputeLeapAttacksKnightMatchesEPM) {
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord sq(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(static_cast<int>(offset));
             CBitBoard computed = ComputeLeapAttacks(sq, Knight);
             Assert::IsTrue(computed == KnightEPM[offset],
                 L"Knight ComputeLeapAttacks must match KnightEPM");
@@ -480,8 +480,8 @@ TEST_CLASS(AttackDeltaTests) {
     }
 
     TEST_METHOD(ComputeLeapAttacksKingMatchesEPM) {
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord sq(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(static_cast<int>(offset));
             CBitBoard computed = ComputeLeapAttacks(sq, King);
             Assert::IsTrue(computed == KingEPM[offset],
                 L"King ComputeLeapAttacks must match KingEPM");
@@ -489,8 +489,8 @@ TEST_CLASS(AttackDeltaTests) {
     }
 
     TEST_METHOD(ComputeLeapAttacksWhitePawnMatchesEPM) {
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord sq(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(static_cast<int>(offset));
             CBitBoard computed = ComputeLeapAttacks(sq, Pawn);
             Assert::IsTrue(computed == PawnEPM[White][offset],
                 L"White Pawn ComputeLeapAttacks must match PawnEPM[White]");
@@ -498,8 +498,8 @@ TEST_CLASS(AttackDeltaTests) {
     }
 
     TEST_METHOD(ComputeLeapAttacksBlackPawnMatchesEPM) {
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord sq(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(static_cast<int>(offset));
             CBitBoard computed = ComputeLeapAttacks(sq, BPawn);
             Assert::IsTrue(computed == PawnEPM[Black][offset],
                 L"Black Pawn ComputeLeapAttacks must match PawnEPM[Black]");
@@ -514,8 +514,8 @@ TEST_CLASS(AttackDeltaTests) {
         // Verify that for every square on the empty board,
         // ComputeSlidingAttacks produces the same result as RookEPM
         CBitBoard empty;
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord sq(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(static_cast<int>(offset));
             CBitBoard computed = ComputeSlidingAttacks(sq, Rook, empty);
             Assert::IsTrue(computed == RookEPM[offset],
                 L"Rook on empty board must match RookEPM");
@@ -524,8 +524,8 @@ TEST_CLASS(AttackDeltaTests) {
 
     TEST_METHOD(ComputeSlidingAttacksBishopMatchesMagicForAllSquares) {
         CBitBoard empty;
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord sq(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(static_cast<int>(offset));
             CBitBoard computed = ComputeSlidingAttacks(sq, Bishop, empty);
             Assert::IsTrue(computed == BishopEPM[offset],
                 L"Bishop on empty board must match BishopEPM");
@@ -534,8 +534,8 @@ TEST_CLASS(AttackDeltaTests) {
 
     TEST_METHOD(ComputeSlidingAttacksQueenMatchesMagicForAllSquares) {
         CBitBoard empty;
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord sq(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(static_cast<int>(offset));
             CBitBoard computed = ComputeSlidingAttacks(sq, Queen, empty);
             Assert::IsTrue(computed == QueenEPM[offset],
                 L"Queen on empty board must match QueenEPM");
@@ -551,15 +551,17 @@ TEST_CLASS(AttackDeltaTests) {
         CBitBoard occupied = pos->m_rgMask[0][0] | pos->m_rgMask[1][0];
         BitBoardBits occupiedBits = occupied.GetBits();
 
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord sq(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(static_cast<int>(offset));
             CBitBoard rookNew = ComputeSlidingAttacks(sq, Rook, occupied);
-            CBitBoard rookRef = CBitBoard(ReferenceRookAttacks(offset, occupiedBits));
+            CBitBoard rookRef =
+                CBitBoard(ReferenceRookAttacks(static_cast<int>(offset), occupiedBits));
             Assert::IsTrue(rookNew == rookRef,
                 L"Rook ComputeSlidingAttacks must match reference with blockers");
 
             CBitBoard bishopNew = ComputeSlidingAttacks(sq, Bishop, occupied);
-            CBitBoard bishopRef = CBitBoard(ReferenceBishopAttacks(offset, occupiedBits));
+            CBitBoard bishopRef =
+                CBitBoard(ReferenceBishopAttacks(static_cast<int>(offset), occupiedBits));
             Assert::IsTrue(bishopNew == bishopRef,
                 L"Bishop ComputeSlidingAttacks must match reference with blockers");
         }
@@ -574,15 +576,17 @@ TEST_CLASS(AttackDeltaTests) {
         CBitBoard occupied = pos->m_rgMask[0][0] | pos->m_rgMask[1][0];
         BitBoardBits occupiedBits = occupied.GetBits();
 
-        for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-            CSCoord sq(offset);
+        for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+            CSCoord sq(static_cast<int>(offset));
             CBitBoard rookNew = ComputeSlidingAttacks(sq, Rook, occupied);
-            CBitBoard rookRef = CBitBoard(ReferenceRookAttacks(offset, occupiedBits));
+            CBitBoard rookRef =
+                CBitBoard(ReferenceRookAttacks(static_cast<int>(offset), occupiedBits));
             Assert::IsTrue(rookNew == rookRef,
                 L"Rook attacks must match reference in midgame position");
 
             CBitBoard bishopNew = ComputeSlidingAttacks(sq, Bishop, occupied);
-            CBitBoard bishopRef = CBitBoard(ReferenceBishopAttacks(offset, occupiedBits));
+            CBitBoard bishopRef =
+                CBitBoard(ReferenceBishopAttacks(static_cast<int>(offset), occupiedBits));
             Assert::IsTrue(bishopNew == bishopRef,
                 L"Bishop attacks must match reference in midgame position");
         }

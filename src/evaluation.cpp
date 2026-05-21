@@ -1907,8 +1907,8 @@ static bool is_edge(CSCoord coord) {
 }
 
 static void create_mirrored_piece_square_table(int16_t *src, int16_t *dest) {
-    for (int src_idx = 0; src_idx < static_cast<int>(CSCoord::SIZE); src_idx++) {
-        const CSCoord source(src_idx);
+    for (unsigned int src_idx = 0; src_idx < CSCoord::SIZE; src_idx++) {
+        const CSCoord source(static_cast<int>(src_idx));
         const CSCoord mirrored(0, 7 - source.m_nFile, source.m_nRank);
         dest[static_cast<int>(mirrored)] = src[static_cast<int>(source)];
     }

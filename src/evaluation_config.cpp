@@ -223,8 +223,8 @@ void SaveEvaluationConfig(char *file_name) {
  * Writes a piece-square table to file fout.
  */
 static void print_piece_square_table(FILE *fout, int16_t *piece_square_table) {
-    for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
-        const CSCoord square(offset);
+    for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
+        const CSCoord square(static_cast<int>(offset));
         if (square.m_nFile == 0) {
             fprintf(fout, "    ");
         }
