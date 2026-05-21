@@ -69,9 +69,12 @@ TEST_CLASS(SCoordTests) {
     TEST_METHOD(OffsetConstructorProvidesExpectedRankAndFileAcrossBoard) {
         for (int offset = 0; offset < static_cast<int>(CSCoord::SIZE); offset++) {
             CSCoord square(offset);
-            const int levelOffset = offset - CSCoord::LEVEL_OFFSET[square.m_nLevel];
-            Assert::AreEqual(levelOffset / CSCoord::LEVEL_WIDTH[square.m_nLevel], square.m_nRank);
-            Assert::AreEqual(levelOffset % CSCoord::LEVEL_WIDTH[square.m_nLevel], square.m_nFile);
+            const int levelOffset =
+                offset - static_cast<int>(CSCoord::LEVEL_OFFSET[static_cast<unsigned int>(square.m_nLevel)]);
+            const int width =
+                static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(square.m_nLevel)]);
+            Assert::AreEqual(levelOffset / width, square.m_nRank);
+            Assert::AreEqual(levelOffset % width, square.m_nFile);
         }
     }
 
