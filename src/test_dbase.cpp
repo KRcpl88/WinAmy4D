@@ -37,16 +37,16 @@
 static void test_parse_san_promotions(void) {
     CPosition *p = CPosition::CreateFromEPD("4K1k1/P7/8/8/8/8/8/8 w - -");
 
-    CMove move = p->ParseSAN("a8=Q");
+    CMove move = p->ParseSAN("aa8=Q");
     assert(move == make_promotion(a7, a8, Queen, 0));
 
-    move = p->ParseSAN("a8=R");
+    move = p->ParseSAN("aa8=R");
     assert(move == make_promotion(a7, a8, Rook, 0));
 
-    move = p->ParseSAN("a8=B");
+    move = p->ParseSAN("aa8=B");
     assert(move == make_promotion(a7, a8, Bishop, 0));
 
-    move = p->ParseSAN("a8=N");
+    move = p->ParseSAN("aa8=N");
     assert(move == make_promotion(a7, a8, Knight, 0));
 
     CPosition::Free(p);
