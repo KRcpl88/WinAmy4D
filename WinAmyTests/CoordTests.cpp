@@ -4,6 +4,7 @@
 #include "ucoord.h"
 #include "hcoord.h"
 
+#include <limits>
 #include <stdexcept>
 
 namespace WinAmyTests {
@@ -12,42 +13,42 @@ TEST_CLASS(SCoordTests) {
   public:
     TEST_METHOD(DefaultConstructorInitializesToZero) {
         CSCoord coord;
-        Assert::AreEqual(0, coord.m_nLevel);
-        Assert::AreEqual(0, coord.m_nFile);
-        Assert::AreEqual(0, coord.m_nRank);
+        Assert::AreEqual<std::uint16_t>(0, coord.m_nLevel);
+        Assert::AreEqual<std::uint16_t>(0, coord.m_nFile);
+        Assert::AreEqual<std::uint16_t>(0, coord.m_nRank);
     }
 
     TEST_METHOD(ThreeArgConstructorSetsFields) {
         CSCoord coord(0, 3, 5);
-        Assert::AreEqual(0, coord.m_nLevel);
-        Assert::AreEqual(3, coord.m_nFile);
-        Assert::AreEqual(5, coord.m_nRank);
+        Assert::AreEqual<std::uint16_t>(0, coord.m_nLevel);
+        Assert::AreEqual<std::uint16_t>(3, coord.m_nFile);
+        Assert::AreEqual<std::uint16_t>(5, coord.m_nRank);
     }
 
     TEST_METHOD(OffsetConstructorDecomposesCorrectly) {
         // Offset 0 -> level 0, rank 0, file 0
         CSCoord c0(0);
-        Assert::AreEqual(0, c0.m_nLevel);
-        Assert::AreEqual(0, c0.m_nFile);
-        Assert::AreEqual(0, c0.m_nRank);
+        Assert::AreEqual<std::uint16_t>(0, c0.m_nLevel);
+        Assert::AreEqual<std::uint16_t>(0, c0.m_nFile);
+        Assert::AreEqual<std::uint16_t>(0, c0.m_nRank);
 
         // Offset 9 -> level 0, rank 1, file 1 (9 = 1*8 + 1)
         CSCoord c9(9);
-        Assert::AreEqual(0, c9.m_nLevel);
-        Assert::AreEqual(1, c9.m_nFile);
-        Assert::AreEqual(1, c9.m_nRank);
+        Assert::AreEqual<std::uint16_t>(0, c9.m_nLevel);
+        Assert::AreEqual<std::uint16_t>(1, c9.m_nFile);
+        Assert::AreEqual<std::uint16_t>(1, c9.m_nRank);
 
         // Offset 63 -> level 0, rank 7, file 7
         CSCoord c63(63);
-        Assert::AreEqual(0, c63.m_nLevel);
-        Assert::AreEqual(7, c63.m_nFile);
-        Assert::AreEqual(7, c63.m_nRank);
+        Assert::AreEqual<std::uint16_t>(0, c63.m_nLevel);
+        Assert::AreEqual<std::uint16_t>(7, c63.m_nFile);
+        Assert::AreEqual<std::uint16_t>(7, c63.m_nRank);
     }
 
     TEST_METHOD(BitOffsetRoundTrips) {
         for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
-            CSCoord coord(static_cast<int>(offset));
-            Assert::AreEqual(static_cast<int>(offset), coord.BitOffset());
+            CSCoord coord(static_cast<std::uint16_t>(offset));
+            Assert::AreEqual<std::uint16_t>(static_cast<std::uint16_t>(offset), coord.BitOffset());
         }
     }
 
@@ -68,19 +69,17 @@ TEST_CLASS(SCoordTests) {
 
     TEST_METHOD(OffsetConstructorProvidesExpectedRankAndFileAcrossBoard) {
         for (unsigned int offset = 0; offset < CSCoord::SIZE; offset++) {
-            CSCoord square(static_cast<int>(offset));
-            const int levelOffset =
-                static_cast<int>(offset) - static_cast<int>(CSCoord::LEVEL_OFFSET[static_cast<unsigned int>(square.m_nLevel)]);
-            const int width =
-                static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(square.m_nLevel)]);
-            Assert::AreEqual(levelOffset / width, square.m_nRank);
-            Assert::AreEqual(levelOffset % width, square.m_nFile);
+            CSCoord square(static_cast<std::uint16_t>(offset));
+            const unsigned int levelOffset = offset - CSCoord::LEVEL_OFFSET[square.m_nLevel];
+            const unsigned int width = CSCoord::LEVEL_WIDTH[square.m_nLevel];
+            Assert::AreEqual<std::uint16_t>(static_cast<std::uint16_t>(levelOffset / width), square.m_nRank);
+            Assert::AreEqual<std::uint16_t>(static_cast<std::uint16_t>(levelOffset % width), square.m_nFile);
         }
     }
 
     TEST_METHOD(OperatorIntReturnsBitOffset) {
         CSCoord coord(0, 3, 5);
-        Assert::AreEqual(coord.BitOffset(), static_cast<int>(coord));
+        Assert::AreEqual(static_cast<int>(coord.BitOffset()), static_cast<int>(coord));
     }
 
     TEST_METHOD(IsValidReturnsTrueForValidCoords) {
@@ -95,7 +94,7 @@ TEST_CLASS(SCoordTests) {
         Assert::IsFalse(CSCoord::IsValid(0, CSCoord::LEVEL_WIDTH[0], 0));
         Assert::IsFalse(CSCoord::IsValid(0, 0, CSCoord::LEVEL_WIDTH[0]));
         Assert::IsFalse(CSCoord::IsValid(1, 0, 0));  // level 1 doesn't exist
-        Assert::IsFalse(CSCoord::IsValid(-1, 0, 0));
+        Assert::IsFalse(CSCoord::IsValid((std::numeric_limits<std::uint16_t>::max)(), 0, 0));
     }
 
     TEST_METHOD(IsValidOffsetReturnsTrueForValidRange) {
@@ -104,7 +103,7 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(IsValidOffsetReturnsFalseForInvalidRange) {
-        Assert::IsFalse(CSCoord::IsValid(-1));
+        Assert::IsFalse(CSCoord::IsValid((std::numeric_limits<std::uint16_t>::max)()));
         Assert::IsFalse(CSCoord::IsValid(static_cast<int>(CSCoord::SIZE)));
     }
 
@@ -116,7 +115,7 @@ TEST_CLASS(SCoordTests) {
             CSCoord coord(static_cast<int>(CSCoord::SIZE));
         });
         Assert::ExpectException<std::out_of_range>([]() {
-            CSCoord coord(-1);
+            CSCoord coord((std::numeric_limits<std::uint16_t>::max)());
         });
     }
 
@@ -124,9 +123,9 @@ TEST_CLASS(SCoordTests) {
         // level=0, rank=4, file=3
         const scoord_bitfield_t bitfield = static_cast<scoord_bitfield_t>((0 << 8) | (4 << 4) | 3);
         CSCoord coord(bitfield);
-        Assert::AreEqual(0, coord.m_nLevel);
-        Assert::AreEqual(3, coord.m_nFile);
-        Assert::AreEqual(4, coord.m_nRank);
+        Assert::AreEqual<std::uint16_t>(0, coord.m_nLevel);
+        Assert::AreEqual<std::uint16_t>(3, coord.m_nFile);
+        Assert::AreEqual<std::uint16_t>(4, coord.m_nRank);
     }
 
     TEST_METHOD(GetBitFieldRoundTripsWithBitfieldConstructor) {
@@ -270,7 +269,7 @@ TEST_CLASS(HCoordTests) {
         CSCoord sc(0, 0, 0); // file=0, rank=0
         CHCoord hc(sc);
         if (hc.IsValid()) {
-            Assert::AreEqual(sc.BitOffset(), static_cast<int>(hc));
+            Assert::AreEqual(static_cast<int>(sc.BitOffset()), static_cast<int>(hc));
         } else {
             // If no valid HCoords exist in the standard 8x8 mapping,
             // verify the CSCoord round-trip works instead

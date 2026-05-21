@@ -9,24 +9,24 @@ const unsigned int CSCoord::LEVEL_SIZE[1]{CSCoord::SIZE};
 const unsigned int CSCoord::LEVEL_WIDTH[1]{8U};
 const unsigned int CSCoord::LEVEL_OFFSET[1]{0U};
 
-CSCoord::CSCoord(int level, int file, int rank)
+CSCoord::CSCoord(std::uint16_t level, std::uint16_t file, std::uint16_t rank)
     : m_nLevel(level), m_nRank(rank), m_nFile(file) {
     Validate();
 }
 
-CSCoord::CSCoord(int offset) {
+CSCoord::CSCoord(std::uint16_t offset) {
     ValidateOffset(offset);
 
     unsigned int levelIndex = NUM_LEVELS - 1;
-    while (offset < static_cast<int>(LEVEL_OFFSET[levelIndex])) {
+    while (offset < LEVEL_OFFSET[levelIndex]) {
         --levelIndex;
     }
-    m_nLevel = static_cast<int>(levelIndex);
+    m_nLevel = static_cast<std::uint16_t>(levelIndex);
 
-    const int levelOffset = static_cast<int>(LEVEL_OFFSET[levelIndex]);
-    const int levelWidth = static_cast<int>(LEVEL_WIDTH[levelIndex]);
-    m_nRank = (offset - levelOffset) / levelWidth;
-    m_nFile = (offset - levelOffset) % levelWidth;
+    const unsigned int levelOffset = LEVEL_OFFSET[levelIndex];
+    const unsigned int levelWidth = LEVEL_WIDTH[levelIndex];
+    m_nRank = static_cast<std::uint16_t>((offset - levelOffset) / levelWidth);
+    m_nFile = static_cast<std::uint16_t>((offset - levelOffset) % levelWidth);
 }
 
 CSCoord::CSCoord(scoord_bitfield_t bitfield) {
@@ -42,7 +42,7 @@ void CSCoord::Validate() const {
     }
 }
 
-void CSCoord::ValidateOffset(int offset) {
+void CSCoord::ValidateOffset(std::uint16_t offset) {
     if (!IsValid(offset)) {
         throw std::out_of_range("CSCoord::ValidateOffset(offset) offset");
     }
@@ -52,41 +52,30 @@ bool CSCoord::IsValid() const {
     return IsValid(m_nLevel, m_nFile, m_nRank);
 }
 
-bool CSCoord::IsValid(int level, int file, int rank) {
-    if (level < 0) {
+bool CSCoord::IsValid(std::uint16_t level, std::uint16_t file, std::uint16_t rank) {
+    if (level >= NUM_LEVELS) {
         return false;
     }
 
-    const unsigned int levelIndex = static_cast<unsigned int>(level);
-    if (levelIndex >= NUM_LEVELS) {
-        return false;
-    }
-
-    const int levelWidth = static_cast<int>(LEVEL_WIDTH[levelIndex]);
-
-    if ((rank < 0) || (rank >= levelWidth) || (file < 0) || (file >= levelWidth)) {
+    const unsigned int levelWidth = LEVEL_WIDTH[level];
+    if ((rank >= levelWidth) || (file >= levelWidth)) {
         return false;
     }
 
     return true;
 }
 
-int CSCoord::BitOffset() const {
-    if (m_nLevel < 0) {
+std::uint16_t CSCoord::BitOffset() const {
+    if (m_nLevel >= NUM_LEVELS) {
         throw std::out_of_range("BitBoard::BitOffset(m_nLevel, m_nFile, m_nRank) level");
     }
 
-    const unsigned int levelIndex = static_cast<unsigned int>(m_nLevel);
-    if (levelIndex >= NUM_LEVELS) {
-        throw std::out_of_range("BitBoard::BitOffset(m_nLevel, m_nFile, m_nRank) level");
-    }
-
-    const int levelWidth = static_cast<int>(LEVEL_WIDTH[levelIndex]);
-    if ((m_nFile < 0) || (m_nFile >= levelWidth) || (m_nRank < 0) || (m_nRank >= levelWidth)) {
+    const unsigned int levelWidth = LEVEL_WIDTH[m_nLevel];
+    if ((m_nFile >= levelWidth) || (m_nRank >= levelWidth)) {
         throw std::out_of_range("BitBoard::BitOffset(m_nLevel, m_nFile, m_nRank) coordinate");
     }
 
-    return static_cast<int>(LEVEL_OFFSET[levelIndex]) + m_nRank * levelWidth + m_nFile;
+    return static_cast<std::uint16_t>(LEVEL_OFFSET[m_nLevel] + m_nRank * levelWidth + m_nFile);
 }
 
 scoord_bitfield_t CSCoord::GetBitField() const {
@@ -100,17 +89,16 @@ CSCoord CSCoord::Step(CUCoord Direction) const
     return (CSCoord)(CUCoord(*this) + Direction);
 }
 
-bool CSCoord::IsValid(int offset) {
-    return (offset >= 0) && (static_cast<unsigned int>(offset) < SIZE);
+bool CSCoord::IsValid(std::uint16_t offset) {
+    return offset < SIZE;
 }
 
 CSCoord CSCoord::ReflectRank() const {
-    int maxRank = static_cast<int>(LEVEL_WIDTH[static_cast<unsigned int>(m_nLevel)]) - 1;
-    return CSCoord(m_nLevel, m_nFile, maxRank - m_nRank);
+    const std::uint16_t maxRank = static_cast<std::uint16_t>(LEVEL_WIDTH[m_nLevel] - 1U);
+    return CSCoord(m_nLevel, m_nFile, static_cast<std::uint16_t>(maxRank - m_nRank));
 }
 
 CSCoord::operator int() const {
     Validate();
     return BitOffset();
 }
-

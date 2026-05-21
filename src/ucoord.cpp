@@ -1,5 +1,7 @@
 #include "ucoord.h"
 
+#include <limits>
+
 #include "bitboard.h"
 
 
@@ -46,32 +48,34 @@ void CUCoord::setZ(int value) {
 
 CUCoord::operator CSCoord() const {
     CSCoord scoord;
-    scoord.m_nLevel = getZ();
+    const int level = getZ();
+    const std::uint16_t invalidCoord = (std::numeric_limits<std::uint16_t>::max)();
 
     int levelOffset;
     int fileOffset;
-    if ((scoord.m_nLevel >= 0) &&
-        (static_cast<unsigned int>(scoord.m_nLevel) < CSCoord::NUM_LEVELS)) {
-        const unsigned int levelIndex = static_cast<unsigned int>(scoord.m_nLevel);
+    if ((level >= 0) && (static_cast<unsigned int>(level) < CSCoord::NUM_LEVELS)) {
+        scoord.m_nLevel = static_cast<std::uint16_t>(level);
+        const unsigned int levelIndex = static_cast<unsigned int>(level);
         levelOffset = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH - CSCoord::LEVEL_WIDTH[levelIndex]);
         fileOffset = static_cast<int>(CSCoord::LEVEL_WIDTH[levelIndex]) - 1;
     } else {
+        scoord.m_nLevel = invalidCoord;
         levelOffset = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
         fileOffset = 0;
     }
 
     const int doubleFile = getX() - getY() + fileOffset;
     if ((doubleFile & 1) != 0) {
-        scoord.m_nFile = -1;
+        scoord.m_nFile = invalidCoord;
     } else {
-        scoord.m_nFile = doubleFile >> 1;
+        scoord.m_nFile = static_cast<std::uint16_t>(doubleFile >> 1);
     }
 
     const int doubleRank = getX() + getY() - fileOffset;
     if ((doubleRank & 1) != 0) {
-        scoord.m_nRank = -1;
+        scoord.m_nRank = invalidCoord;
     } else {
-        scoord.m_nRank = (doubleRank >> 1) - levelOffset;
+        scoord.m_nRank = static_cast<std::uint16_t>((doubleRank >> 1) - levelOffset);
     }
 
     return scoord;
