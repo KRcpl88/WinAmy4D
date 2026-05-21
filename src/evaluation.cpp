@@ -423,8 +423,10 @@ static int EvaluatePawns(const CPosition *p,
             }
         }
 
-        if (sqCoord.m_nFile <
-                (static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)]) - 1) &&
+        const unsigned int levelWidth =
+            CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)];
+        const unsigned int file = static_cast<unsigned int>(sqCoord.m_nFile);
+        if (file < (levelWidth - 1) &&
             p->m_rgMask[White][Pawn].TstBit(sq + 1)) {
             score += PawnDuo;
         }
@@ -482,8 +484,10 @@ static int EvaluatePawns(const CPosition *p,
             }
         }
 
-        if (sqCoord.m_nFile <
-                (static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)]) - 1) &&
+        const unsigned int levelWidth =
+            CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)];
+        const unsigned int file = static_cast<unsigned int>(sqCoord.m_nFile);
+        if (file < (levelWidth - 1) &&
             p->m_rgMask[Black][Pawn].TstBit(sq + 1)) {
             score -= PawnDuo;
         }
@@ -518,12 +522,12 @@ static int EvaluatePawns(const CPosition *p,
 
     if (tmp_w != tmp_b) {
         tmp_w = tmp_b = 0;
-        for (file = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2);
-             file < static_cast<int>(CSCoord::MAX_LEVEL_WIDTH);
-             file++) {
-            if (p->m_rgMask[White][Pawn] & FileMask[file])
+        for (unsigned int fileIndex = CSCoord::MAX_LEVEL_WIDTH / 2;
+             fileIndex < CSCoord::MAX_LEVEL_WIDTH;
+             fileIndex++) {
+            if (p->m_rgMask[White][Pawn] & FileMask[fileIndex])
                 tmp_w++;
-            if (p->m_rgMask[Black][Pawn] & FileMask[file])
+            if (p->m_rgMask[Black][Pawn] & FileMask[fileIndex])
                 tmp_b++;
         }
 
@@ -735,7 +739,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         int sq = sqCoord.BitOffset();
         const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel];
         int rank = sqCoord.m_nRank;
-        int file = sqCoord.m_nFile;
+        const unsigned int file = static_cast<unsigned int>(sqCoord.m_nFile);
 
         pcs.ClearLowestBit();
 
@@ -822,7 +826,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         }
 
         /* Check if 'distant' passed pawn */
-        if (file < static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
+        if (file < (CSCoord::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
             (allpawns & RightOf[file]) &&
             !(p->m_rgMask[Black][Pawn] & LeftOf[file + 2])) {
 #ifdef DEBUG
@@ -834,7 +838,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             wdistant = MAX(wdistant, rank);
         }
 
-        if (file > (static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
+        if (file > ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
             !(allpawns & RightOf[file]) &&
             (allpawns & LeftOf[file]) &&
             !(p->m_rgMask[Black][Pawn] & RightOf[file - 2])) {
@@ -864,7 +868,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         int sq = sqCoord.BitOffset();
         const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel];
         int rank = (levelWidth - 1) - sqCoord.m_nRank;
-        int file = sqCoord.m_nFile;
+        const unsigned int file = static_cast<unsigned int>(sqCoord.m_nFile);
 
         pcs.ClearLowestBit(); //(pcs, sq);
 
@@ -951,7 +955,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
         }
 
         /* Check if 'distant' passed pawn */
-        if (file < static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
+        if (file < (CSCoord::MAX_LEVEL_WIDTH / 2) && !(allpawns & LeftOf[file]) &&
             (allpawns & RightOf[file]) &&
             !(p->m_rgMask[White][Pawn] & LeftOf[file + 2])) {
 #ifdef DEBUG
@@ -963,7 +967,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             bdistant = MAX(bdistant, rank);
         }
 
-        if (file > (static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
+        if (file > ((CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
             !(allpawns & RightOf[file]) &&
             (allpawns & LeftOf[file]) &&
             !(p->m_rgMask[White][Pawn] & RightOf[file - 2])) {
@@ -1798,15 +1802,14 @@ void InitEvaluation(const CPosition *p) {
 
     int npmat = (p->m_rgnNonPawn[White] + p->m_rgnNonPawn[Black]) / Value[Pawn];
 
-    int wkfile = p->m_rgKingSq[White].m_nFile;
-    int bkfile = p->m_rgKingSq[Black].m_nFile;
+    const unsigned int wkfile = static_cast<unsigned int>(p->m_rgKingSq[White].m_nFile);
+    const unsigned int bkfile = static_cast<unsigned int>(p->m_rgKingSq[Black].m_nFile);
+    const unsigned int halfBoardWidth = CSCoord::MAX_LEVEL_WIDTH / 2;
     int pawnstorm = 0;
 
-    if (wkfile < (static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2) - 1) &&
-        bkfile > static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2)) {
+    if (wkfile < (halfBoardWidth - 1) && bkfile > halfBoardWidth) {
         pawnstorm = 1;
-    } else if (wkfile > static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2) &&
-               bkfile < (static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2) - 1)) {
+    } else if (wkfile > halfBoardWidth && bkfile < (halfBoardWidth - 1)) {
         pawnstorm = 2;
     }
 
@@ -1819,13 +1822,13 @@ void InitEvaluation(const CPosition *p) {
         const int levelWidth = CSCoord::LEVEL_WIDTH[sqCoord.m_nLevel];
         int wrank = sqCoord.m_nRank - 1;
         int brank = (levelWidth - 2) - sqCoord.m_nRank;
-        int wfile = sqCoord.m_nFile;
-        int bfile = sqCoord.m_nFile;
+        unsigned int wfile = static_cast<unsigned int>(sqCoord.m_nFile);
+        unsigned int bfile = static_cast<unsigned int>(sqCoord.m_nFile);
 
-        if (p->m_rgKingSq[White].m_nFile < static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2))
-            wfile = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH - 1) - wfile;
-        if (p->m_rgKingSq[Black].m_nFile < static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2))
-            bfile = static_cast<int>(CSCoord::MAX_LEVEL_WIDTH - 1) - bfile;
+        if (wkfile < halfBoardWidth)
+            wfile = (CSCoord::MAX_LEVEL_WIDTH - 1) - wfile;
+        if (bkfile < halfBoardWidth)
+            bfile = (CSCoord::MAX_LEVEL_WIDTH - 1) - bfile;
 
         if (p->m_rgnNonPawn[Black] < eg_threshold) {
             WPawnPos[sq] = (int16_t)(PawnAdvanceEndgame[wfile] * wrank);
@@ -1833,10 +1836,9 @@ void InitEvaluation(const CPosition *p) {
             WPawnPos[sq] = (int16_t)(PawnAdvanceOpening[wfile] * wrank);
         } else {
             WPawnPos[sq] = (int16_t)(PawnAdvanceMiddlegame[wfile] * wrank);
-            if (pawnstorm == 1 && wfile > static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2)) {
+            if (pawnstorm == 1 && wfile > halfBoardWidth) {
                 WPawnPos[sq] += PawnStorm * wrank;
-            } else if (pawnstorm == 2 &&
-                       wfile < (static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2) - 1)) {
+            } else if (pawnstorm == 2 && wfile < (halfBoardWidth - 1)) {
                 WPawnPos[sq] += PawnStorm * wrank;
             }
         }
@@ -1847,11 +1849,9 @@ void InitEvaluation(const CPosition *p) {
             BPawnPos[sq] = (int16_t)(PawnAdvanceOpening[bfile] * brank);
         } else {
             BPawnPos[sq] = (int16_t)(PawnAdvanceMiddlegame[bfile] * brank);
-            if (pawnstorm == 1 &&
-                bfile < (static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2) - 1)) {
+            if (pawnstorm == 1 && bfile < (halfBoardWidth - 1)) {
                 BPawnPos[sq] += PawnStorm * brank;
-            } else if (pawnstorm == 2 &&
-                       bfile > static_cast<int>(CSCoord::MAX_LEVEL_WIDTH / 2)) {
+            } else if (pawnstorm == 2 && bfile > halfBoardWidth) {
                 BPawnPos[sq] += PawnStorm * brank;
             }
         }

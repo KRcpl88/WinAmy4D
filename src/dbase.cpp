@@ -2500,8 +2500,9 @@ CMove badmove[MAX_EPD_MOVES];
  * Read a position from an EPD string.
  */
 static void ReadEPD(CPosition *p, const char *epd_input) {
-    int level = 0;
-    int rk = CSCoord::LEVEL_WIDTH[0] - 1, fl = 0;
+    unsigned int level = 0;
+    int rk = static_cast<int>(CSCoord::LEVEL_WIDTH[0]) - 1;
+    unsigned int fl = 0;
     int i;
     char *ops[MAX_EPD_OPS];
     char *line;
@@ -2537,96 +2538,96 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
             fl += 1;
             break;
         case 'P':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Pawn;
                 p->m_rgMask[White][0].SetBit(sq);
             }
             fl++;
             break;
         case 'N':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Knight;
                 p->m_rgMask[White][0].SetBit(sq);
             }
             fl++;
             break;
         case 'B':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Bishop;
                 p->m_rgMask[White][0].SetBit(sq);
             }
             fl++;
             break;
         case 'R':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Rook;
                 p->m_rgMask[White][0].SetBit(sq);
             }
             fl++;
             break;
         case 'Q':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = Queen;
                 p->m_rgMask[White][0].SetBit(sq);
             }
             fl++;
             break;
         case 'K':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = King;
                 p->m_rgMask[White][0].SetBit(sq);
             }
             fl++;
             break;
         case 'p':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Pawn;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
             fl++;
             break;
         case 'n':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Knight;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
             fl++;
             break;
         case 'b':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Bishop;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
             fl++;
             break;
         case 'r':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Rook;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
             fl++;
             break;
         case 'q':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -Queen;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
             fl++;
             break;
         case 'k':
-            if (fl < static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)])) {
-                const int sq = static_cast<int>(CSCoord(level, fl, rk));
+            if (fl < CSCoord::LEVEL_WIDTH[level]) {
+                const int sq = static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(fl), rk));
                 p->m_rgPiece[sq] = -King;
                 p->m_rgMask[Black][0].SetBit(sq);
             }
@@ -2639,8 +2640,8 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
         case '|':
             fl = 0;
             level++;
-            if (level < static_cast<int>(CSCoord::NUM_LEVELS)) {
-                rk = static_cast<int>(CSCoord::LEVEL_WIDTH[static_cast<unsigned int>(level)]) - 1;
+            if (level < CSCoord::NUM_LEVELS) {
+                rk = static_cast<int>(CSCoord::LEVEL_WIDTH[level]) - 1;
             } else {
                 rk = -1;
             }
@@ -2770,16 +2771,16 @@ char *CPosition::MakeEPD() {
 
     char *x = epdbuffer;
 
-    const int numLevels = static_cast<int>(CSCoord::NUM_LEVELS);
-    for (int level = 0; level < numLevels; level++) {
-        const int width = CSCoord::LEVEL_WIDTH[level];
-        for (int i = width - 1; i >= 0; i--) {
+    for (unsigned int level = 0; level < CSCoord::NUM_LEVELS; level++) {
+        const unsigned int width = CSCoord::LEVEL_WIDTH[level];
+        for (int i = static_cast<int>(width) - 1; i >= 0; i--) {
             uint8_t cnt = 0;
-            for (int j = 0; j < width; j++) {
-                const int square = static_cast<int>(CSCoord(level, j, i));
+            for (unsigned int j = 0; j < width; j++) {
+                const int square =
+                    static_cast<int>(CSCoord(static_cast<int>(level), static_cast<int>(j), i));
                 if (p->m_rgPiece[square] == Neutral) {
                     cnt++;
-                    if (j == width - 1)
+                    if (j == (width - 1))
                         *(x++) = '0' + cnt;
                 } else {
                     if (cnt)
@@ -2791,7 +2792,7 @@ char *CPosition::MakeEPD() {
                         *(x++) = bname[TYPE(p->m_rgPiece[square])];
                 }
             }
-            if ((level == (numLevels - 1)) && (i == 0))
+            if ((level == (CSCoord::NUM_LEVELS - 1)) && (i == 0))
                 *(x++) = ' ';
             else if (i == 0)
                 *(x++) = '|';
