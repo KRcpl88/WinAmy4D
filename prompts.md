@@ -140,3 +140,12 @@ Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f 
 Rename all structs to begine with S, for example SGameLog instead of GameLog.
 Add CBitBoard FindSetBitCoord which returns CSCoord
 
+
+
+# EPD Parsing
+
+Please update the EPD parsing to accommodate multiple levels by filling each chess level from the EPD string.   From level 0 to CSCoord::NUM_LEVELS, each level will have CSCoord::LEVEL_WIDTH[level] rows and columns, each row is delimited with \.   After all the row in the first level have been filled, start filling the next level and continue until the end of the EPD string is reached or cscoord::NUM_LEVELS have been filled.  Make sure that the number of columns in each row does not exceed CSCoord::LEVEL_WIDTH[level]
+
+
+
+
