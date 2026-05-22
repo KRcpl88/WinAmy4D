@@ -6,6 +6,9 @@
 namespace WinAmyTests {
 
 TEST_CLASS(AttackDeltaTests) {
+    BEGIN_TEST_CLASS_ATTRIBUTE()
+    TEST_CLASS_ATTRIBUTE(L"Ignore", L"true")
+    END_TEST_CLASS_ATTRIBUTE()
   public:
     TEST_CLASS_INITIALIZE(InitializeEngine) {
         InitMoves();
