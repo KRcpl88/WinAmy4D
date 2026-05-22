@@ -353,13 +353,13 @@ CMove CSearchData::NextMove() {
 
         if (p->m_bCastle & CastleMask[p->m_nTurn][0]) {
             append_to_heap(sd->m_hHeap,
-                           make_move(p->m_nTurn == White ? e1 : e8,
-                                     p->m_nTurn == White ? g1 : g8, M_SCASTLE));
+                           make_move(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
+                                     p->m_nTurn == White ? CASTLE_G1 : CASTLE_G8, M_SCASTLE));
         }
         if (p->m_bCastle & CastleMask[p->m_nTurn][1]) {
             append_to_heap(sd->m_hHeap,
-                           make_move(p->m_nTurn == White ? e1 : e8,
-                                     p->m_nTurn == White ? c1 : c8, M_LCASTLE));
+                           make_move(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
+                                     p->m_nTurn == White ? CASTLE_C1 : CASTLE_C8, M_LCASTLE));
         }
 
         CBitBoard non_pawn = p->m_rgMask[p->m_nTurn][0] & ~p->m_rgMask[p->m_nTurn][Pawn];

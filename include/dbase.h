@@ -95,6 +95,10 @@ static inline CSCoord InvalidSquareCoord(void) {
 
 /*
  * Constants for chess board squares.
+ * NOTE: These values (0-63) correspond to legacy flat-board indices and are
+ * used to index into precomputed EPM tables in movedata.cpp. They do NOT
+ * directly map to multi-level board offsets. Use CastleSquare constants
+ * for castling coordinates on the main board (level 7).
  */
 // clang-format off
 typedef enum {
@@ -108,6 +112,39 @@ typedef enum {
     a8, b8, c8, d8, e8, f8, g8, h8
 } Square;
 // clang-format on
+
+/*
+ * Castling is only valid on the main 8x8 board (level 7).
+ * These constants provide proper CSCoord-compatible offsets for castling squares.
+ */
+static constexpr uint16_t MAIN_LEVEL = 7;
+static constexpr uint16_t MAIN_LEVEL_OFFSET = 140; // CBitBoard::LEVEL_OFFSET[7]
+
+// King home squares on level 7
+static constexpr int CASTLE_E1 = MAIN_LEVEL_OFFSET + 0 * 8 + 4; // 144
+static constexpr int CASTLE_E8 = MAIN_LEVEL_OFFSET + 7 * 8 + 4; // 200
+
+// Short castle target squares
+static constexpr int CASTLE_G1 = MAIN_LEVEL_OFFSET + 0 * 8 + 6; // 146
+static constexpr int CASTLE_G8 = MAIN_LEVEL_OFFSET + 7 * 8 + 6; // 202
+
+// Long castle target squares
+static constexpr int CASTLE_C1 = MAIN_LEVEL_OFFSET + 0 * 8 + 2; // 142
+static constexpr int CASTLE_C8 = MAIN_LEVEL_OFFSET + 7 * 8 + 2; // 198
+
+// Squares checked during castling legality (must be empty/not attacked)
+static constexpr int CASTLE_F1 = MAIN_LEVEL_OFFSET + 0 * 8 + 5; // 145
+static constexpr int CASTLE_F8 = MAIN_LEVEL_OFFSET + 7 * 8 + 5; // 201
+static constexpr int CASTLE_D1 = MAIN_LEVEL_OFFSET + 0 * 8 + 3; // 143
+static constexpr int CASTLE_D8 = MAIN_LEVEL_OFFSET + 7 * 8 + 3; // 199
+static constexpr int CASTLE_B1 = MAIN_LEVEL_OFFSET + 0 * 8 + 1; // 141
+static constexpr int CASTLE_B8 = MAIN_LEVEL_OFFSET + 7 * 8 + 1; // 197
+
+// Rook home squares for castling
+static constexpr int CASTLE_H1 = MAIN_LEVEL_OFFSET + 0 * 8 + 7; // 147
+static constexpr int CASTLE_H8 = MAIN_LEVEL_OFFSET + 7 * 8 + 7; // 203
+static constexpr int CASTLE_A1 = MAIN_LEVEL_OFFSET + 0 * 8 + 0; // 140
+static constexpr int CASTLE_A8 = MAIN_LEVEL_OFFSET + 7 * 8 + 0; // 196
 
 struct SGameLog {
     CMove gl_Move;        /* the move that has been made in the position */

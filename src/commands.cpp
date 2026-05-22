@@ -485,16 +485,16 @@ void Edit(char *args) {
     p->m_EnPassant = InvalidSquareCoord();
 
     p->RecalcAttacks();
-    if (p->m_rgPiece[e1] == King) {
-        if (p->m_rgPiece[h1] == Rook)
+    if (p->m_rgPiece[CASTLE_E1] == King) {
+        if (p->m_rgPiece[CASTLE_H1] == Rook)
             p->m_bCastle |= CastleMask[White][0];
-        if (p->m_rgPiece[a1] == Rook)
+        if (p->m_rgPiece[CASTLE_A1] == Rook)
             p->m_bCastle |= CastleMask[White][1];
     }
-    if (p->m_rgPiece[e8] == -King) {
-        if (p->m_rgPiece[h8] == -Rook)
+    if (p->m_rgPiece[CASTLE_E8] == -King) {
+        if (p->m_rgPiece[CASTLE_H8] == -Rook)
             p->m_bCastle |= CastleMask[Black][0];
-        if (p->m_rgPiece[a8] == -Rook)
+        if (p->m_rgPiece[CASTLE_A8] == -Rook)
             p->m_bCastle |= CastleMask[Black][1];
     }
     p->RecalcAttacks();
