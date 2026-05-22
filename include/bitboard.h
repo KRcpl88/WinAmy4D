@@ -44,10 +44,10 @@ class CBitBoard {
   public:
     static constexpr uint16_t NUM_LEVELS = 15U;
     static constexpr uint16_t MAX_LEVEL_WIDTH = 8U;
-    static constexpr uint16_t SIZE = 64U;
+    static constexpr uint16_t SIZE = 343U;
     static constexpr uint16_t ULONG_SIZE_BITS =
         static_cast<uint16_t>(sizeof(std::uint64_t) * 8U);
-    static constexpr uint16_t SIZE_LONG = 1U;
+    static constexpr uint16_t SIZE_LONG = (SIZE + ULONG_SIZE_BITS - 1U) / ULONG_SIZE_BITS;
     static constexpr uint16_t LEVEL_SIZE[NUM_LEVELS] = {1, 4, 9, 16, 25, 36, 49, 64, 49, 36, 25, 16, 9, 4, 1};
     static constexpr uint16_t LEVEL_WIDTH[NUM_LEVELS] = {1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1};
     static constexpr uint16_t LEVEL_OFFSET[NUM_LEVELS] = {0U, 1, 5, 14, 30, 55, 91, 140, 204, 253, 289, 314, 330, 339, 343};
