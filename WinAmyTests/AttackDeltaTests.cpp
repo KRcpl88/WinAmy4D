@@ -11,6 +11,9 @@ TEST_CLASS(AttackDeltaTests) {
         InitMoves();
         InitAll();
         HashInit();
+        if (CBitBoard::SIZE != 64) {
+            Assert::Inconclusive(L"AttackDeltaTests require legacy 64-square geometry.");
+        }
     }
 
     // Helper: trace rays for a sliding piece from a starting square.

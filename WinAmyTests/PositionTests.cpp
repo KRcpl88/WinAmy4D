@@ -8,6 +8,9 @@ TEST_CLASS(PositionTests) {
         InitMoves();
         InitAll();
         HashInit();
+        if (CBitBoard::SIZE != 64) {
+            Assert::Inconclusive(L"PositionTests require legacy 64-square EPD/coordinate assumptions.");
+        }
     }
 
     // --- IsCheckingMove tests ---

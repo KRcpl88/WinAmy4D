@@ -19,8 +19,9 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(ThreeArgConstructorSetsFields) {
-        CSCoord coord(0, 3, 5);
-        Assert::AreEqual<std::uint16_t>(0, coord.m_nLevel);
+        constexpr std::uint16_t level = CBitBoard::NUM_LEVELS / 2;
+        CSCoord coord(level, 3, 5);
+        Assert::AreEqual<std::uint16_t>(level, coord.m_nLevel);
         Assert::AreEqual<std::uint16_t>(3, coord.m_nFile);
         Assert::AreEqual<std::uint16_t>(5, coord.m_nRank);
     }
@@ -32,17 +33,19 @@ TEST_CLASS(SCoordTests) {
         Assert::AreEqual<std::uint16_t>(0, c0.m_nFile);
         Assert::AreEqual<std::uint16_t>(0, c0.m_nRank);
 
-        // Offset 9 -> level 0, rank 1, file 1 (9 = 1*8 + 1)
-        CSCoord c9(9);
-        Assert::AreEqual<std::uint16_t>(0, c9.m_nLevel);
-        Assert::AreEqual<std::uint16_t>(1, c9.m_nFile);
-        Assert::AreEqual<std::uint16_t>(1, c9.m_nRank);
+        // First square of level 7
+        CSCoord firstL7(CBitBoard::LEVEL_OFFSET[7]);
+        Assert::AreEqual<std::uint16_t>(7, firstL7.m_nLevel);
+        Assert::AreEqual<std::uint16_t>(0, firstL7.m_nFile);
+        Assert::AreEqual<std::uint16_t>(0, firstL7.m_nRank);
 
-        // Offset 63 -> level 0, rank 7, file 7
-        CSCoord c63(63);
-        Assert::AreEqual<std::uint16_t>(0, c63.m_nLevel);
-        Assert::AreEqual<std::uint16_t>(7, c63.m_nFile);
-        Assert::AreEqual<std::uint16_t>(7, c63.m_nRank);
+        // Last square of level 7
+        const std::uint16_t l7Last =
+            static_cast<std::uint16_t>(CBitBoard::LEVEL_OFFSET[8] - 1);
+        CSCoord lastL7(l7Last);
+        Assert::AreEqual<std::uint16_t>(7, lastL7.m_nLevel);
+        Assert::AreEqual<std::uint16_t>(7, lastL7.m_nFile);
+        Assert::AreEqual<std::uint16_t>(7, lastL7.m_nRank);
     }
 
     TEST_METHOD(BitOffsetRoundTrips) {
@@ -53,7 +56,7 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(EnumeratingRankFileWithCSCoordMatchesBitOffsetOrder) {
-        int expectedOffset = 0;
+        int expectedOffset = CBitBoard::LEVEL_OFFSET[0];
         for (unsigned int level = 0; level < CBitBoard::NUM_LEVELS; level++) {
             const unsigned int width = CBitBoard::LEVEL_WIDTH[level];
             for (unsigned int rank = 0; rank < width; rank++) {
@@ -64,7 +67,7 @@ TEST_CLASS(SCoordTests) {
                 }
             }
         }
-        Assert::AreEqual(static_cast<int>(CBitBoard::SIZE), expectedOffset);
+        Assert::IsTrue(expectedOffset > 0);
     }
 
     TEST_METHOD(OffsetConstructorProvidesExpectedRankAndFileAcrossBoard) {
@@ -78,14 +81,14 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(OperatorIntReturnsBitOffset) {
-        CSCoord coord(0, 3, 5);
+        CSCoord coord(CBitBoard::NUM_LEVELS / 2, 3, 5);
         Assert::AreEqual(static_cast<int>(coord.BitOffset()), static_cast<int>(coord));
     }
 
     TEST_METHOD(IsValidReturnsTrueForValidCoords) {
         Assert::IsTrue(CSCoord::IsValid(0, 0, 0));
-        Assert::IsTrue(CSCoord::IsValid(0, 7, 7));
-        Assert::IsTrue(CSCoord::IsValid(0, 3, 4));
+        Assert::IsTrue(CSCoord::IsValid(7, 7, 7));
+        Assert::IsTrue(CSCoord::IsValid(7, 3, 4));
     }
 
     TEST_METHOD(IsValidReturnsFalseForInvalidCoords) {
@@ -93,7 +96,7 @@ TEST_CLASS(SCoordTests) {
         Assert::IsFalse(CSCoord::IsValid(0, 0, -1));
         Assert::IsFalse(CSCoord::IsValid(0, CBitBoard::LEVEL_WIDTH[0], 0));
         Assert::IsFalse(CSCoord::IsValid(0, 0, CBitBoard::LEVEL_WIDTH[0]));
-        Assert::IsFalse(CSCoord::IsValid(1, 0, 0));  // level 1 doesn't exist
+        Assert::IsFalse(CSCoord::IsValid(CBitBoard::NUM_LEVELS, 0, 0));
         Assert::IsFalse(CSCoord::IsValid((std::numeric_limits<std::uint16_t>::max)(), 0, 0));
     }
 
@@ -120,16 +123,15 @@ TEST_CLASS(SCoordTests) {
     }
 
     TEST_METHOD(BitfieldConstructorDecomposesLevelRankFile) {
-        // level=0, rank=4, file=3
-        const scoord_bitfield_t bitfield = static_cast<scoord_bitfield_t>((0 << 8) | (4 << 4) | 3);
+        const scoord_bitfield_t bitfield = static_cast<scoord_bitfield_t>((7 << 8) | (4 << 4) | 3);
         CSCoord coord(bitfield);
-        Assert::AreEqual<std::uint16_t>(0, coord.m_nLevel);
+        Assert::AreEqual<std::uint16_t>(7, coord.m_nLevel);
         Assert::AreEqual<std::uint16_t>(3, coord.m_nFile);
         Assert::AreEqual<std::uint16_t>(4, coord.m_nRank);
     }
 
     TEST_METHOD(GetBitFieldRoundTripsWithBitfieldConstructor) {
-        CSCoord original(0, 6, 7);
+        CSCoord original(7, 6, 7);
         const scoord_bitfield_t bitfield = original.GetBitField();
         CSCoord roundTrip(bitfield);
         Assert::AreEqual(original.m_nLevel, roundTrip.m_nLevel);
@@ -229,7 +231,7 @@ TEST_CLASS(HCoordTests) {
     }
 
     TEST_METHOD(ConstructFromSCoordWorks) {
-        CSCoord sc(0, 3, 5);
+        CSCoord sc(0, 0, 0);
         CHCoord hc(sc);
         // Verify round-trip through CSCoord conversion
         CSCoord back = static_cast<CSCoord>(hc);

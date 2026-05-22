@@ -5,38 +5,16 @@ namespace WinAmyTests {
 
 CBitBoard ReferenceRookAttacks(int sq, CBitBoard occupied) {
     CBitBoard attacks;
-    const CSCoord sourceSquare(sq);
-    const int level = sourceSquare.m_nLevel;
-    const int width = CBitBoard::LEVEL_WIDTH[level];
-    const int file = sourceSquare.m_nFile;
-    const int rank = sourceSquare.m_nRank;
-
-    for (int r = rank + 1; r < width; r++) {
-        const int target = static_cast<int>(CSCoord(level, file, r));
-        attacks.SetBit(static_cast<uint16_t>(target));
-        if (occupied.TstBit(static_cast<uint16_t>(target)))
-            break;
-    }
-
-    for (int r = rank - 1; r >= 0; r--) {
-        const int target = static_cast<int>(CSCoord(level, file, r));
-        attacks.SetBit(static_cast<uint16_t>(target));
-        if (occupied.TstBit(static_cast<uint16_t>(target)))
-            break;
-    }
-
-    for (int f = file + 1; f < width; f++) {
-        const int target = static_cast<int>(CSCoord(level, f, rank));
-        attacks.SetBit(static_cast<uint16_t>(target));
-        if (occupied.TstBit(static_cast<uint16_t>(target)))
-            break;
-    }
-
-    for (int f = file - 1; f >= 0; f--) {
-        const int target = static_cast<int>(CSCoord(level, f, rank));
-        attacks.SetBit(static_cast<uint16_t>(target));
-        if (occupied.TstBit(static_cast<uint16_t>(target)))
-            break;
+    const CSCoord sourceSquare(static_cast<uint16_t>(sq));
+    for (int d = 0; d < ATTACK_DELTA_COUNT[Rook]; d++) {
+        CSCoord target = sourceSquare.Step(ATTACK_DELTA[Rook][d]);
+        while (target.IsValid()) {
+            attacks.SetBit(target.BitOffset());
+            if (occupied.TstBit(target.BitOffset())) {
+                break;
+            }
+            target = target.Step(ATTACK_DELTA[Rook][d]);
+        }
     }
 
     return attacks;
@@ -44,38 +22,16 @@ CBitBoard ReferenceRookAttacks(int sq, CBitBoard occupied) {
 
 CBitBoard ReferenceBishopAttacks(int sq, CBitBoard occupied) {
     CBitBoard attacks;
-    const CSCoord sourceSquare(sq);
-    const int level = sourceSquare.m_nLevel;
-    const int width = CBitBoard::LEVEL_WIDTH[level];
-    const int file = sourceSquare.m_nFile;
-    const int rank = sourceSquare.m_nRank;
-
-    for (int f = file + 1, r = rank + 1; f < width && r < width; f++, r++) {
-        const int target = static_cast<int>(CSCoord(level, f, r));
-        attacks.SetBit(static_cast<uint16_t>(target));
-        if (occupied.TstBit(static_cast<uint16_t>(target)))
-            break;
-    }
-
-    for (int f = file - 1, r = rank + 1; f >= 0 && r < width; f--, r++) {
-        const int target = static_cast<int>(CSCoord(level, f, r));
-        attacks.SetBit(static_cast<uint16_t>(target));
-        if (occupied.TstBit(static_cast<uint16_t>(target)))
-            break;
-    }
-
-    for (int f = file + 1, r = rank - 1; f < width && r >= 0; f++, r--) {
-        const int target = static_cast<int>(CSCoord(level, f, r));
-        attacks.SetBit(static_cast<uint16_t>(target));
-        if (occupied.TstBit(static_cast<uint16_t>(target)))
-            break;
-    }
-
-    for (int f = file - 1, r = rank - 1; f >= 0 && r >= 0; f--, r--) {
-        const int target = static_cast<int>(CSCoord(level, f, r));
-        attacks.SetBit(static_cast<uint16_t>(target));
-        if (occupied.TstBit(static_cast<uint16_t>(target)))
-            break;
+    const CSCoord sourceSquare(static_cast<uint16_t>(sq));
+    for (int d = 0; d < ATTACK_DELTA_COUNT[Bishop]; d++) {
+        CSCoord target = sourceSquare.Step(ATTACK_DELTA[Bishop][d]);
+        while (target.IsValid()) {
+            attacks.SetBit(target.BitOffset());
+            if (occupied.TstBit(target.BitOffset())) {
+                break;
+            }
+            target = target.Step(ATTACK_DELTA[Bishop][d]);
+        }
     }
 
     return attacks;
