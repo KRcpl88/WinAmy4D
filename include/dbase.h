@@ -72,6 +72,8 @@
 /* Maximum number of good/bad moves we attempt to parse */
 #define MAX_EPD_MOVES 64
 
+#define FROM_TO_OFFSET_SIZE (CBitBoard::BITBOARD_SIZE_BITS << 1)
+
 /*
  * Constants for piece types and colors.
  */

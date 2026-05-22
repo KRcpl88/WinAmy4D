@@ -45,6 +45,7 @@ class CBitBoard {
     static constexpr uint16_t NUM_LEVELS = 15U;
     static constexpr uint16_t MAX_LEVEL_WIDTH = 8U;
     static constexpr uint16_t SIZE = 343U;
+    static constexpr uint16_t BITBOARD_SIZE_BITS = 9U;  // ceil(log2(SIZE))
     static constexpr uint16_t ULONGLONG_SIZE_BITS =
         static_cast<uint16_t>(sizeof(std::uint64_t) * 8U);
     static constexpr uint16_t SIZE_ULONGLONG = (SIZE + ULONGLONG_SIZE_BITS - 1U) / ULONGLONG_SIZE_BITS;
