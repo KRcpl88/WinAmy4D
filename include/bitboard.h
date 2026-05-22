@@ -53,7 +53,7 @@ class CBitBoard {
     static constexpr uint16_t LEVEL_OFFSET[NUM_LEVELS] = {0U, 1, 5, 14, 30, 55, 91, 140, 204, 253, 289, 314, 330, 339, 343};
 
     CBitBoard() : m_rgBits{} {}
-    CBitBoard(BitBoardBits bits) : m_rgBits{bits} {}
+    explicit CBitBoard(BitBoardBits bits) : m_rgBits{bits} {}
 
     // Bit manipulation methods
     void SetBit(uint16_t i) {
@@ -109,21 +109,13 @@ class CBitBoard {
     uint16_t FindSetBit() const {
         for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w) {
             if (m_rgBits[w] != 0) {
-#if HAVE___BUILTIN_CTZLL
-                return static_cast<uint16_t>(w * ULONGLONG_SIZE_BITS +
-                                             __builtin_ctzll(m_rgBits[w]));
-#else
-                // DeBruijn sequence method
-                static const int index64[64] = {
-                    0,  47, 1,  56, 48, 27, 2,  60, 57, 49, 41, 37, 28, 16, 3,  61,
-                    54, 58, 35, 52, 50, 42, 21, 44, 38, 32, 29, 23, 17, 11, 4,  62,
-                    46, 55, 26, 59, 40, 36, 15, 53, 34, 51, 20, 43, 31, 22, 10, 45,
-                    25, 39, 14, 33, 19, 30, 9,  24, 13, 18, 8,  12, 7,  6,  5,  63};
-                const BitBoardBits debruijn64 = 0x03f79d71b4cb0a89ULL;
-                return static_cast<uint16_t>(
-                    w * ULONGLONG_SIZE_BITS +
-                    index64[((m_rgBits[w] ^ (m_rgBits[w] - 1)) * debruijn64) >> 58]);
-#endif
+                BitBoardBits word = m_rgBits[w];
+                uint16_t bit = 0;
+                while ((word & 1ULL) == 0) {
+                    word >>= 1;
+                    ++bit;
+                }
+                return static_cast<uint16_t>(w * ULONGLONG_SIZE_BITS + bit);
             }
         }
         return 0;  // undefined if empty
@@ -141,8 +133,6 @@ class CBitBoard {
     bool IsNotEmpty() const { return !IsEmpty(); }
     explicit operator bool() const { return !IsEmpty(); }
 
-    // Raw bits access (returns first word)
-    BitBoardBits GetBits() const { return m_rgBits[0]; }
 
     // Bitwise operators
     friend bool operator==(const CBitBoard &lhs, const CBitBoard &rhs) {
@@ -238,7 +228,9 @@ class CBitBoard {
 
     // Arithmetic (needed for magic bitboard multiplication, operates on first word)
     friend CBitBoard operator*(const CBitBoard &lhs, const CBitBoard &rhs) {
-        return CBitBoard(lhs.m_rgBits[0] * rhs.m_rgBits[0]);
+        CBitBoard result;
+        result.m_rgBits[0] = lhs.m_rgBits[0] * rhs.m_rgBits[0];
+        return result;
     }
 
     // Comparison with zero (for if(bitboard) patterns)

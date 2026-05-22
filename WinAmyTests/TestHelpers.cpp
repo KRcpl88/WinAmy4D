@@ -3,8 +3,8 @@
 
 namespace WinAmyTests {
 
-uint64_t ReferenceRookAttacks(int sq, uint64_t occupied) {
-    uint64_t attacks = 0;
+CBitBoard ReferenceRookAttacks(int sq, CBitBoard occupied) {
+    CBitBoard attacks;
     const CSCoord sourceSquare(sq);
     const int level = sourceSquare.m_nLevel;
     const int width = CBitBoard::LEVEL_WIDTH[level];
@@ -13,37 +13,37 @@ uint64_t ReferenceRookAttacks(int sq, uint64_t occupied) {
 
     for (int r = rank + 1; r < width; r++) {
         const int target = static_cast<int>(CSCoord(level, file, r));
-        attacks |= CBitBoard::SetMask(target).GetBits();
-        if (occupied & CBitBoard::SetMask(target).GetBits())
+        attacks.SetBit(static_cast<uint16_t>(target));
+        if (occupied.TstBit(static_cast<uint16_t>(target)))
             break;
     }
 
     for (int r = rank - 1; r >= 0; r--) {
         const int target = static_cast<int>(CSCoord(level, file, r));
-        attacks |= CBitBoard::SetMask(target).GetBits();
-        if (occupied & CBitBoard::SetMask(target).GetBits())
+        attacks.SetBit(static_cast<uint16_t>(target));
+        if (occupied.TstBit(static_cast<uint16_t>(target)))
             break;
     }
 
     for (int f = file + 1; f < width; f++) {
         const int target = static_cast<int>(CSCoord(level, f, rank));
-        attacks |= CBitBoard::SetMask(target).GetBits();
-        if (occupied & CBitBoard::SetMask(target).GetBits())
+        attacks.SetBit(static_cast<uint16_t>(target));
+        if (occupied.TstBit(static_cast<uint16_t>(target)))
             break;
     }
 
     for (int f = file - 1; f >= 0; f--) {
         const int target = static_cast<int>(CSCoord(level, f, rank));
-        attacks |= CBitBoard::SetMask(target).GetBits();
-        if (occupied & CBitBoard::SetMask(target).GetBits())
+        attacks.SetBit(static_cast<uint16_t>(target));
+        if (occupied.TstBit(static_cast<uint16_t>(target)))
             break;
     }
 
     return attacks;
 }
 
-uint64_t ReferenceBishopAttacks(int sq, uint64_t occupied) {
-    uint64_t attacks = 0;
+CBitBoard ReferenceBishopAttacks(int sq, CBitBoard occupied) {
+    CBitBoard attacks;
     const CSCoord sourceSquare(sq);
     const int level = sourceSquare.m_nLevel;
     const int width = CBitBoard::LEVEL_WIDTH[level];
@@ -52,29 +52,29 @@ uint64_t ReferenceBishopAttacks(int sq, uint64_t occupied) {
 
     for (int f = file + 1, r = rank + 1; f < width && r < width; f++, r++) {
         const int target = static_cast<int>(CSCoord(level, f, r));
-        attacks |= CBitBoard::SetMask(target).GetBits();
-        if (occupied & CBitBoard::SetMask(target).GetBits())
+        attacks.SetBit(static_cast<uint16_t>(target));
+        if (occupied.TstBit(static_cast<uint16_t>(target)))
             break;
     }
 
     for (int f = file - 1, r = rank + 1; f >= 0 && r < width; f--, r++) {
         const int target = static_cast<int>(CSCoord(level, f, r));
-        attacks |= CBitBoard::SetMask(target).GetBits();
-        if (occupied & CBitBoard::SetMask(target).GetBits())
+        attacks.SetBit(static_cast<uint16_t>(target));
+        if (occupied.TstBit(static_cast<uint16_t>(target)))
             break;
     }
 
     for (int f = file + 1, r = rank - 1; f < width && r >= 0; f++, r--) {
         const int target = static_cast<int>(CSCoord(level, f, r));
-        attacks |= CBitBoard::SetMask(target).GetBits();
-        if (occupied & CBitBoard::SetMask(target).GetBits())
+        attacks.SetBit(static_cast<uint16_t>(target));
+        if (occupied.TstBit(static_cast<uint16_t>(target)))
             break;
     }
 
     for (int f = file - 1, r = rank - 1; f >= 0 && r >= 0; f--, r--) {
         const int target = static_cast<int>(CSCoord(level, f, r));
-        attacks |= CBitBoard::SetMask(target).GetBits();
-        if (occupied & CBitBoard::SetMask(target).GetBits())
+        attacks.SetBit(static_cast<uint16_t>(target));
+        if (occupied.TstBit(static_cast<uint16_t>(target)))
             break;
     }
 
@@ -82,16 +82,15 @@ uint64_t ReferenceBishopAttacks(int sq, uint64_t occupied) {
 }
 
 void AssertPositionsEqual(const CPosition *lhs, const CPosition *rhs) {
-    for (int i = 0; i < 64; i++) {
-        Assert::IsTrue(CBitBoard(lhs->m_rgAtkTo[i]) == CBitBoard(rhs->m_rgAtkTo[i]));
-        Assert::IsTrue(CBitBoard(lhs->m_rgAtkFr[i]) == CBitBoard(rhs->m_rgAtkFr[i]));
+    for (unsigned int i = 0; i < CBitBoard::SIZE; i++) {
+        Assert::IsTrue(lhs->m_rgAtkTo[i] == rhs->m_rgAtkTo[i]);
+        Assert::IsTrue(lhs->m_rgAtkFr[i] == rhs->m_rgAtkFr[i]);
         Assert::AreEqual((int)lhs->m_rgPiece[i], (int)rhs->m_rgPiece[i]);
     }
 
     for (int c = 0; c < 2; c++) {
         for (int p = 0; p < 7; p++) {
-            Assert::IsTrue(CBitBoard(lhs->m_rgMask[c][p]) ==
-                           CBitBoard(rhs->m_rgMask[c][p]));
+            Assert::IsTrue(lhs->m_rgMask[c][p] == rhs->m_rgMask[c][p]);
         }
 
         Assert::AreEqual(lhs->m_rgnMaterial[c], rhs->m_rgnMaterial[c]);
@@ -101,8 +100,7 @@ void AssertPositionsEqual(const CPosition *lhs, const CPosition *rhs) {
                          (int)rhs->m_rgbMaterialSignature[c]);
     }
 
-    Assert::IsTrue(CBitBoard(lhs->m_SlidingPieces) ==
-                   CBitBoard(rhs->m_SlidingPieces));
+    Assert::IsTrue(lhs->m_SlidingPieces == rhs->m_SlidingPieces);
     Assert::AreEqual((unsigned long long)lhs->m_ullHKey, (unsigned long long)rhs->m_ullHKey);
     Assert::AreEqual((unsigned long long)lhs->m_ullPKey, (unsigned long long)rhs->m_ullPKey);
     Assert::AreEqual((int)lhs->m_bCastle, (int)rhs->m_bCastle);

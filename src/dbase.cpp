@@ -327,7 +327,7 @@ void CPosition::AtkSet(int type, int color, const CSCoord& squareCoord) {
 void CPosition::AtkClr(const CSCoord& squareCoord) {
     const unsigned int square = squareCoord.BitOffset();
     CBitBoard tmp = m_rgAtkTo[square];
-    m_rgAtkTo[square] = 0;
+    m_rgAtkTo[square] = {};
 
     while (tmp) {
         const uint16_t i = tmp.FindSetBit();
@@ -966,14 +966,14 @@ void CPosition::RecalcAttacks() {
     CBitBoard tmp;
 
     for (unsigned int square = 0; square < CBitBoard::SIZE; square++) {
-        p->m_rgAtkTo[square] = p->m_rgAtkFr[square] = 0;
+        p->m_rgAtkTo[square] = p->m_rgAtkFr[square] = {};
     }
 
     for (i = Pawn; i <= King; i++) {
-        p->m_rgMask[White][i] = p->m_rgMask[Black][i] = 0;
+        p->m_rgMask[White][i] = p->m_rgMask[Black][i] = {};
     }
 
-    p->m_SlidingPieces = 0;
+    p->m_SlidingPieces = {};
 
     p->m_rgnMaterial[White] = p->m_rgnMaterial[Black] = 0;
     p->m_rgnNonPawn[White] = p->m_rgnNonPawn[Black] = 0;
@@ -2527,7 +2527,7 @@ static void ReadEPD(CPosition *p, const char *epd_input) {
 
     for (unsigned int square = 0; square < CBitBoard::SIZE; square++)
         p->m_rgPiece[square] = Neutral;
-    p->m_rgMask[White][0] = p->m_rgMask[Black][0] = 0;
+    p->m_rgMask[White][0] = p->m_rgMask[Black][0] = {};
 
     /* scan piece placement across all levels; levels are separated by '|' */
     while (rk >= 0) {
@@ -2896,9 +2896,9 @@ const char *CPosition::GameEnd() {
  * major pieces.
  */
 static bool has_only_bishops(const CPosition *p, Color side) {
-    return (p->m_rgMask[side][Bishop] != 0ULL) &&
+    return (p->m_rgMask[side][Bishop].IsNotEmpty()) &&
            ((p->m_rgMask[side][Knight] | p->m_rgMask[side][Rook] |
-             p->m_rgMask[side][Queen]) == 0ULL);
+             p->m_rgMask[side][Queen]).IsEmpty());
 }
 /*
  * Check if this is a theoretical draw

@@ -657,7 +657,7 @@ CMove CSearchData::NextEvasion() {
              p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
             p->m_rgAtkFr[kp];
 
-        CBitBoard interpositions = 0;
+        CBitBoard interpositions;
 
         while (sliding_attackers) {
             int attacker_sq = (sliding_attackers).FindSetBit();

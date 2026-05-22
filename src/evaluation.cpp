@@ -354,7 +354,7 @@ static bool is_edge(CSCoord);
 
 static int EvaluatePawns(const CPosition *p,
                          struct PawnFacts *pawnFacts) {
-    CBitBoard pcs = 0;
+    CBitBoard pcs;
     int score = 0;
     int file = 0;
     int tmp_w, tmp_b;
@@ -371,7 +371,7 @@ static int EvaluatePawns(const CPosition *p,
     int kside_pawns_b = 0;
     int qside_pawns_b = 0;
 
-    pawnFacts->pf_WhitePassers = 0;
+    pawnFacts->pf_WhitePassers = {};
 
     pcs = p->m_rgMask[White][Pawn];
     while (pcs) {
@@ -432,7 +432,7 @@ static int EvaluatePawns(const CPosition *p,
         }
     }
 
-    pawnFacts->pf_BlackPassers = 0;
+    pawnFacts->pf_BlackPassers = {};
     pcs = p->m_rgMask[Black][Pawn];
 
     while (pcs) {
@@ -726,8 +726,8 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
     CBitBoard tmp;
     CBitBoard allpawns = p->m_rgMask[White][Pawn] | p->m_rgMask[Black][Pawn];
 
-    CBitBoard wrunner = 0;
-    CBitBoard brunner = 0;
+    CBitBoard wrunner;
+    CBitBoard brunner;
 
     pcs = pawnFacts->pf_WhitePassers;
 
@@ -1733,13 +1733,13 @@ static int EvaluatePositionForWhite(const CPosition *p) {
     if (((p->m_rgbMaterialSignature[White] & 0x1e) == SIGNATURE_BIT(Bishop)) &&
         ((p->m_rgbMaterialSignature[Black] & 0x1e) == SIGNATURE_BIT(Bishop))) {
         bool white_on_white =
-            (p->m_rgMask[White][Bishop] & WhiteSquaresMask) != 0ULL;
+            (p->m_rgMask[White][Bishop] & WhiteSquaresMask).IsNotEmpty();
         bool white_on_black =
-            (p->m_rgMask[White][Bishop] & BlackSquaresMask) != 0ULL;
+            (p->m_rgMask[White][Bishop] & BlackSquaresMask).IsNotEmpty();
         bool black_on_white =
-            (p->m_rgMask[Black][Bishop] & WhiteSquaresMask) != 0ULL;
+            (p->m_rgMask[Black][Bishop] & WhiteSquaresMask).IsNotEmpty();
         bool black_on_black =
-            (p->m_rgMask[Black][Bishop] & BlackSquaresMask) != 0ULL;
+            (p->m_rgMask[Black][Bishop] & BlackSquaresMask).IsNotEmpty();
 
         bool white_single_colored = white_on_white ^ white_on_black;
         bool black_single_colored = black_on_white ^ black_on_black;

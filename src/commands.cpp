@@ -437,7 +437,7 @@ void Edit(char *args) {
 
     for (i = 0; i < CBitBoard::SIZE; i++)
         p->m_rgPiece[i] = Neutral;
-    p->m_rgMask[White][0] = p->m_rgMask[Black][0] = 0;
+    p->m_rgMask[White][0] = p->m_rgMask[Black][0] = {};
 
     while (editing) {
         int sq;

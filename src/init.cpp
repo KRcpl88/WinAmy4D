@@ -63,7 +63,8 @@ CBitBoard KingSideMask, QueenSideMask;
 CBitBoard ConnectedMask[CBitBoard::SIZE];
 
 void InitMasks(void) {
-    ShiftUpMask = ShiftDownMask = ShiftLeftMask = ShiftRightMask = -1;
+    const CBitBoard allOnes = ~CBitBoard();
+    ShiftUpMask = ShiftDownMask = ShiftLeftMask = ShiftRightMask = allOnes;
     for (unsigned int i = 0; i < CBitBoard::MAX_LEVEL_WIDTH; i++) {
         ShiftUpMask &= CBitBoard::ClrMask(static_cast<uint16_t>(i));
         ShiftDownMask &= CBitBoard::ClrMask(
@@ -98,8 +99,8 @@ void InitPawnMasks(void) {
     const int size = static_cast<int>(CBitBoard::SIZE);
 
     for (i = 0; i < maxLevelWidth; i++) {
-        FileMask[i] = 0;
-        IsoMask[i] = 0;
+        FileMask[i] = {};
+        IsoMask[i] = {};
     }
 
     for (unsigned int level = 0; level < CBitBoard::NUM_LEVELS; level++) {
@@ -132,7 +133,7 @@ void InitPawnMasks(void) {
         }
     }
     for (i = 0; i < size; i++) {
-        ForwardRayW[i] = ForwardRayB[i] = 0;
+        ForwardRayW[i] = ForwardRayB[i] = {};
         for (j = i + 8; j < size; j += 8) {
             ForwardRayW[i] |= CBitBoard::SetMask(j);
         }
@@ -159,7 +160,7 @@ void InitPawnMasks(void) {
             PassedMaskB[i] |= ForwardRayB[i + 1];
         /* PrintBitBoard(PassedMaskW[i]); */
         /* PrintBitBoard(PassedMaskB[i]); */
-        OutpostMaskW[i] = OutpostMaskB[i] = 0;
+        OutpostMaskW[i] = OutpostMaskB[i] = {};
         if (coord.m_nFile > 0) {
             OutpostMaskW[i] |= ForwardRayW[i - 1];
             OutpostMaskB[i] |= ForwardRayB[i - 1];
@@ -177,7 +178,7 @@ void InitPawnMasks(void) {
     for (i = 0; i < size; i++) {
         int sq;
 
-        WPawnBackwardMask[i] = BPawnBackwardMask[i] = 0;
+        WPawnBackwardMask[i] = BPawnBackwardMask[i] = {};
         for (sq = i; sq > 0; sq -= 8) {
             const CSCoord sqCoord(sq);
             const unsigned int sqFile = static_cast<unsigned int>(sqCoord.m_nFile);
@@ -211,7 +212,7 @@ void InitPawnMasks(void) {
     for (i = 0; i < size; i++) {
         const CSCoord iCoord(i);
         const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[iCoord.m_nLevel]);
-        ConnectedMask[i] = 0;
+        ConnectedMask[i] = {};
 
         if (iCoord.m_nFile < (width - 1)) {
             ConnectedMask[i].SetBit(i + 1);
@@ -262,11 +263,11 @@ void InitGeometry(void) {
 
     for (i = 0; i < size; i++) {
         for (j = 0; j < size; j++) {
-            InterPath[i][j] = 0;
-            Ray[i][j] = 0;
+            InterPath[i][j] = {};
+            Ray[i][j] = {};
         }
         WPawnEPM[i] = BPawnEPM[i] = BishopEPM[i] = RookEPM[i] = QueenEPM[i] =
-            0ULL;
+            {};
     }
 
     for (j = 0; j < 100; j++) {
@@ -311,12 +312,12 @@ void InitMiscMasks(void) {
     const int maxLevelWidth = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH);
     const int size = static_cast<int>(CBitBoard::SIZE);
 
-    SeventhRank[White] = SeventhRank[Black] = 0;
-    EighthRank[White] = EighthRank[Black] = 0;
-    ThirdRank[White] = ThirdRank[Black] = 0;
+    SeventhRank[White] = SeventhRank[Black] = {};
+    EighthRank[White] = EighthRank[Black] = {};
+    ThirdRank[White] = ThirdRank[Black] = {};
 
     for (i = 0; i < maxLevelWidth; i++) {
-        RankMask[i] = 0;
+        RankMask[i] = {};
     }
 
     for (unsigned int level = 0; level < CBitBoard::NUM_LEVELS; level++) {
@@ -350,7 +351,7 @@ void InitMiscMasks(void) {
     }
 
     for (i = 0; i < maxLevelWidth; i++) {
-        LeftOf[i] = RightOf[i] = FarLeftOf[i] = FarRightOf[i] = 0;
+        LeftOf[i] = RightOf[i] = FarLeftOf[i] = FarRightOf[i] = {};
         for (j = i - 1; j >= 0; j--)
             LeftOf[i] |= FileMask[j];
         for (j = i - 2; j >= 0; j--)
@@ -361,7 +362,7 @@ void InitMiscMasks(void) {
             FarRightOf[i] |= FileMask[j];
     }
 
-    EdgeMask = 0;
+    EdgeMask = {};
 
     for (i = 0; i < maxLevelWidth; i++) {
         EdgeMask.SetBit(a1 + i);
@@ -370,7 +371,7 @@ void InitMiscMasks(void) {
         EdgeMask.SetBit(h1 + maxLevelWidth * i);
     }
 
-    WhiteSquaresMask = BlackSquaresMask = 0;
+    WhiteSquaresMask = BlackSquaresMask = {};
     for (unsigned int level = 0; level < CBitBoard::NUM_LEVELS; level++) {
         const unsigned int width = CBitBoard::LEVEL_WIDTH[level];
         for (unsigned int rank = 0; rank < width; rank++) {
@@ -394,7 +395,7 @@ void InitMiscMasks(void) {
         CSCoord wtargetCoord(coord.m_nLevel, coord.m_nFile, width - 1);
         CSCoord btargetCoord(coord.m_nLevel, coord.m_nFile, 0);
 
-        KingSquareW[i] = KingSquareB[i] = 0;
+        KingSquareW[i] = KingSquareB[i] = {};
         for (j = 0; j < size; j++) {
             CSCoord coord(j);
             if (KingDist(wtargetCoord, coord) <= wdist) {
@@ -406,7 +407,7 @@ void InitMiscMasks(void) {
         }
     }
 
-    NotAFileMask = NotHFileMask = 0;
+    NotAFileMask = NotHFileMask = {};
     for (i = 0; i < 7; i++) {
         NotAFileMask |= FileMask[i + 1];
         NotHFileMask |= FileMask[i];
