@@ -210,7 +210,7 @@ static int RecognizerKBNK(const CPosition *p, int *score) {
          * This is kbnk
          */
 
-        CBitBoard atkd = 0;
+        CBitBoard atkd;
         int color = White;
         int sqx = 0;
 

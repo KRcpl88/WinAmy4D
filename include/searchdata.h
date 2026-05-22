@@ -86,7 +86,7 @@ class CSearchData {
     CMove m_rgCounterTab[2][4096];      /* counter moves per side */
     unsigned int m_rguHistoryTab[2][4096]; /* history moves per side */
 
-    CMove m_rgPvSave[CSCoord::SIZE];
+    CMove m_rgPvSave[CBitBoard::SIZE];
 
     uint16_t m_wPly;
 

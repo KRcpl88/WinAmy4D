@@ -5,10 +5,6 @@
 
 #include "bitboard.h"
 
-const unsigned int CSCoord::LEVEL_SIZE[1]{CSCoord::SIZE};
-const unsigned int CSCoord::LEVEL_WIDTH[1]{8U};
-const unsigned int CSCoord::LEVEL_OFFSET[1]{0U};
-
 CSCoord::CSCoord(std::uint16_t level, std::uint16_t file, std::uint16_t rank)
     : m_nLevel(level), m_nRank(rank), m_nFile(file) {
     Validate();
@@ -17,14 +13,14 @@ CSCoord::CSCoord(std::uint16_t level, std::uint16_t file, std::uint16_t rank)
 CSCoord::CSCoord(std::uint16_t offset) {
     ValidateOffset(offset);
 
-    unsigned int levelIndex = NUM_LEVELS - 1;
-    while (offset < LEVEL_OFFSET[levelIndex]) {
+    unsigned int levelIndex = CBitBoard::NUM_LEVELS - 1;
+    while (offset < CBitBoard::LEVEL_OFFSET[levelIndex]) {
         --levelIndex;
     }
     m_nLevel = static_cast<std::uint16_t>(levelIndex);
 
-    const unsigned int levelOffset = LEVEL_OFFSET[levelIndex];
-    const unsigned int levelWidth = LEVEL_WIDTH[levelIndex];
+    const unsigned int levelOffset = CBitBoard::LEVEL_OFFSET[levelIndex];
+    const unsigned int levelWidth = CBitBoard::LEVEL_WIDTH[levelIndex];
     m_nRank = static_cast<std::uint16_t>((offset - levelOffset) / levelWidth);
     m_nFile = static_cast<std::uint16_t>((offset - levelOffset) % levelWidth);
 }
@@ -53,11 +49,11 @@ bool CSCoord::IsValid() const {
 }
 
 bool CSCoord::IsValid(std::uint16_t level, std::uint16_t file, std::uint16_t rank) {
-    if (level >= NUM_LEVELS) {
+    if (level >= CBitBoard::NUM_LEVELS) {
         return false;
     }
 
-    const unsigned int levelWidth = LEVEL_WIDTH[level];
+    const unsigned int levelWidth = CBitBoard::LEVEL_WIDTH[level];
     if ((rank >= levelWidth) || (file >= levelWidth)) {
         return false;
     }
@@ -66,16 +62,16 @@ bool CSCoord::IsValid(std::uint16_t level, std::uint16_t file, std::uint16_t ran
 }
 
 std::uint16_t CSCoord::BitOffset() const {
-    if (m_nLevel >= NUM_LEVELS) {
+    if (m_nLevel >= CBitBoard::NUM_LEVELS) {
         throw std::out_of_range("BitBoard::BitOffset(m_nLevel, m_nFile, m_nRank) level");
     }
 
-    const unsigned int levelWidth = LEVEL_WIDTH[m_nLevel];
+    const unsigned int levelWidth = CBitBoard::LEVEL_WIDTH[m_nLevel];
     if ((m_nFile >= levelWidth) || (m_nRank >= levelWidth)) {
         throw std::out_of_range("BitBoard::BitOffset(m_nLevel, m_nFile, m_nRank) coordinate");
     }
 
-    return static_cast<std::uint16_t>(LEVEL_OFFSET[m_nLevel] + m_nRank * levelWidth + m_nFile);
+    return static_cast<std::uint16_t>(CBitBoard::LEVEL_OFFSET[m_nLevel] + m_nRank * levelWidth + m_nFile);
 }
 
 scoord_bitfield_t CSCoord::GetBitField() const {
@@ -90,11 +86,11 @@ CSCoord CSCoord::Step(CUCoord Direction) const
 }
 
 bool CSCoord::IsValid(std::uint16_t offset) {
-    return offset < SIZE;
+    return offset < CBitBoard::SIZE;
 }
 
 CSCoord CSCoord::ReflectRank() const {
-    const std::uint16_t maxRank = static_cast<std::uint16_t>(LEVEL_WIDTH[m_nLevel] - 1U);
+    const std::uint16_t maxRank = static_cast<std::uint16_t>(CBitBoard::LEVEL_WIDTH[m_nLevel] - 1U);
     return CSCoord(m_nLevel, m_nFile, static_cast<std::uint16_t>(maxRank - m_nRank));
 }
 

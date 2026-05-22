@@ -46,8 +46,8 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
         for (int i = 0; i < 64; i++) {
-            position.get()->m_rgAtkTo[i] = 0;
-            position.get()->m_rgAtkFr[i] = 0;
+            position.get()->m_rgAtkTo[i] = {};
+            position.get()->m_rgAtkFr[i] = {};
         }
 
         position.get()->RecalcAttacks();

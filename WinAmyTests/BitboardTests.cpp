@@ -17,7 +17,8 @@ TEST_CLASS(BitboardTests) {
         for (int i = 0; i < 64; i++) {
             CBitBoard mask = CBitBoard::ClrMask(i);
             Assert::IsTrue(!mask.TstBit(i));
-            Assert::AreEqual(63, mask.CountBits());
+            Assert::AreEqual(CBitBoard::SIZE_ULONGLONG * CBitBoard::ULONGLONG_SIZE_BITS - 1,
+                             mask.CountBits());
             // FindSetBit should return the lowest set bit, which is 0 unless i==0
             if (i == 0)
                 Assert::AreEqual(1, static_cast<int>(mask.FindSetBit()));
@@ -27,7 +28,7 @@ TEST_CLASS(BitboardTests) {
     }
 
     TEST_METHOD(SetBitSetsSpecifiedBit) {
-        CBitBoard b = 0;
+        CBitBoard b{};
         b.SetBit(0);
         Assert::IsTrue(b.TstBit(0));
         Assert::IsTrue(!b.TstBit(1));
@@ -53,7 +54,7 @@ TEST_CLASS(BitboardTests) {
     }
 
     TEST_METHOD(ClrBitClearsSpecifiedBit) {
-        CBitBoard b = 0;
+        CBitBoard b{};
         for (int i = 0; i < 64; i++)
             b.SetBit(i);
         Assert::AreEqual(64, b.CountBits());
@@ -81,7 +82,7 @@ TEST_CLASS(BitboardTests) {
     }
 
     TEST_METHOD(TstBitReturnsTrueForSetBits) {
-        CBitBoard b = 0;
+        CBitBoard b{};
         b.SetBit(e4);
         b.SetBit(a1);
         b.SetBit(h8);
@@ -96,26 +97,26 @@ TEST_CLASS(BitboardTests) {
 
     TEST_METHOD(FindSetBitReturnsLeastSignificantSetBit) {
         // Build bitboards using SetBit and verify FindSetBit finds the lowest
-        CBitBoard b = 0;
+        CBitBoard b{};
         b.SetBit(3);
         b.SetBit(5);
         b.SetBit(7);
         Assert::AreEqual(3, static_cast<int>(b.FindSetBit()));
 
-        CBitBoard b2 = 0;
+        CBitBoard b2{};
         b2.SetBit(0);
         Assert::AreEqual(0, static_cast<int>(b2.FindSetBit()));
 
-        CBitBoard b3 = 0;
+        CBitBoard b3{};
         b3.SetBit(63);
         Assert::AreEqual(63, static_cast<int>(b3.FindSetBit()));
 
-        CBitBoard b4 = 0;
+        CBitBoard b4{};
         b4.SetBit(5);
         Assert::AreEqual(5, static_cast<int>(b4.FindSetBit()));
 
         // All bits set ΓÇö lowest is 0
-        CBitBoard b5 = 0;
+        CBitBoard b5{};
         for (int i = 0; i < 64; i++)
             b5.SetBit(i);
         Assert::AreEqual(0, static_cast<int>(b5.FindSetBit()));
@@ -129,7 +130,7 @@ TEST_CLASS(BitboardTests) {
 
     TEST_METHOD(FindSetBitAdvancesAsLowBitsCleared) {
         // Set bits at various positions, then clear from low to high
-        CBitBoard b = 0;
+        CBitBoard b{};
         b.SetBit(4);
         b.SetBit(17);
         b.SetBit(33);
@@ -147,7 +148,7 @@ TEST_CLASS(BitboardTests) {
     TEST_METHOD(FindSetBitWithAdjacentBits) {
         // Two adjacent bits ΓÇö should always find the lower one
         for (int i = 0; i < 63; i++) {
-            CBitBoard b = 0;
+            CBitBoard b{};
             b.SetBit(i);
             b.SetBit(i + 1);
             Assert::AreEqual(i, static_cast<int>(b.FindSetBit()));
@@ -156,7 +157,7 @@ TEST_CLASS(BitboardTests) {
 
     TEST_METHOD(FindSetBitIteratesAllSetBits) {
         // Simulate a bit-scan loop: set known bits, extract them one by one
-        CBitBoard b = 0;
+        CBitBoard b{};
         int squares[] = {0, 7, 15, 28, 35, 42, 56, 63};
         int numSquares = 8;
 
@@ -175,23 +176,23 @@ TEST_CLASS(BitboardTests) {
     }
 
     TEST_METHOD(CountBitsReturnsNumberOfSetBits) {
-        CBitBoard empty = 0;
+        CBitBoard empty{};
         Assert::AreEqual(0, empty.CountBits());
 
-        CBitBoard full = 0;
+        CBitBoard full{};
         for (int i = 0; i < 64; i++)
             full.SetBit(i);
         Assert::AreEqual(64, full.CountBits());
 
-        CBitBoard one = 0;
+        CBitBoard one{};
         one.SetBit(0);
         Assert::AreEqual(1, one.CountBits());
 
-        CBitBoard oneHigh = 0;
+        CBitBoard oneHigh{};
         oneHigh.SetBit(63);
         Assert::AreEqual(1, oneHigh.CountBits());
 
-        CBitBoard three = 0;
+        CBitBoard three{};
         three.SetBit(a1);
         three.SetBit(h8);
         three.SetBit(e4);
@@ -205,7 +206,7 @@ TEST_CLASS(BitboardTests) {
     }
 
     TEST_METHOD(CountBitsForContiguousBits) {
-        CBitBoard b = 0;
+        CBitBoard b{};
         for (int i = 0; i < 64; i++) {
             b.SetBit(i);
             Assert::AreEqual(i + 1, b.CountBits());
@@ -214,7 +215,7 @@ TEST_CLASS(BitboardTests) {
     }
 
     TEST_METHOD(SetBitAndClrBitAreInverses) {
-        CBitBoard b = 0;
+        CBitBoard b{};
         for (int i = 0; i < 64; i++) {
             b.SetBit(i);
         }
@@ -234,7 +235,8 @@ TEST_CLASS(BitboardTests) {
     TEST_METHOD(SetMaskAndClrMaskAreComplements) {
         for (int i = 0; i < 64; i++) {
             CBitBoard combined = CBitBoard::SetMask(i) | CBitBoard::ClrMask(i);
-            Assert::AreEqual(64, combined.CountBits());
+            Assert::AreEqual(CBitBoard::SIZE_ULONGLONG * CBitBoard::ULONGLONG_SIZE_BITS,
+                             combined.CountBits());
             CBitBoard intersection = CBitBoard::SetMask(i) & CBitBoard::ClrMask(i);
             Assert::AreEqual(0, intersection.CountBits());
         }

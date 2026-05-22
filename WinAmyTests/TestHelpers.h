@@ -26,8 +26,8 @@ class PositionGuard {
     CPosition *m_pPosition;
 };
 
-uint64_t ReferenceRookAttacks(int sq, uint64_t occupied);
-uint64_t ReferenceBishopAttacks(int sq, uint64_t occupied);
+CBitBoard ReferenceRookAttacks(int sq, CBitBoard occupied);
+CBitBoard ReferenceBishopAttacks(int sq, CBitBoard occupied);
 void AssertPositionsEqual(const CPosition *lhs, const CPosition *rhs);
 
 } // namespace WinAmyTests
