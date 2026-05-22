@@ -131,7 +131,7 @@ int KnightBlocksCPawn = -100;
 int KnightEdgePenalty = -130;
 
 // clang-format off
-int16_t KnightPos[CBitBoard::SIZE] = {
+static const int16_t KnightPosL7[64] = {
      -30,  -30,  -30,  -30,  -30,  -30,  -30,  -30,
      -30,  -30,   60,   60,   60,   60,  -30,  -30,
      -30,   60,  130,  130,  130,  130,   60,  -30,
@@ -142,7 +142,7 @@ int16_t KnightPos[CBitBoard::SIZE] = {
        0,    0,    0,    0,    0,    0,    0,    0
 };
 
-int16_t KnightOutpost[CBitBoard::SIZE] = {
+static const int16_t KnightOutpostL7[64] = {
     0, 0,  0,   0,   0,  0, 0, 0,
     0, 0,  0,   0,   0,  0, 0, 0,
     0, 0,  0,   0,   0,  0, 0, 0,
@@ -153,6 +153,9 @@ int16_t KnightOutpost[CBitBoard::SIZE] = {
     0, 0,  0,   0,   0,  0, 0, 0
 };
 // clang-format on
+
+int16_t KnightPos[CBitBoard::SIZE] = {};
+int16_t KnightOutpost[CBitBoard::SIZE] = {};
 
 /**
  * Bishop scoring parameters
@@ -168,7 +171,7 @@ int BishopKingProximity = 7;
 int BishopTrapped = -1500;
 
 // clang-format off
-int16_t BishopPos[CBitBoard::SIZE] = {
+static const int16_t BishopPosL7[64] = {
      60,  60,  60,  60,  60,  60,  60,  60,
      60, 250,  60,  60,  60,  60, 250,  60,
      60, 160, 160, 160, 160, 160, 160,  60,
@@ -179,6 +182,8 @@ int16_t BishopPos[CBitBoard::SIZE] = {
     160, 160, 160, 160, 160, 160, 160, 160
 };
 // clang-format on
+
+int16_t BishopPos[CBitBoard::SIZE] = {};
 
 /**
  * Rook scoring parameters
@@ -197,7 +202,7 @@ int RookBehindPasser = 12; /* will be scaled by phase */
 int RookOn7thRank = 300;
 
 // clang-format off
-int16_t RookPos[CBitBoard::SIZE] = {
+static const int16_t RookPosL7[64] = {
       0,  90, 130, 220, 220, 130,  90,   0,
       0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,
@@ -209,6 +214,8 @@ int16_t RookPos[CBitBoard::SIZE] = {
 };
 // clang-format on
 
+int16_t RookPos[CBitBoard::SIZE] = {};
+
 /**
  * Queen scoring parameters
  */
@@ -216,7 +223,7 @@ int16_t RookPos[CBitBoard::SIZE] = {
 int QueenKingProximity = 8;
 
 // clang-format off
-int16_t QueenPos[CBitBoard::SIZE] = {
+static const int16_t QueenPosL7[64] = {
     0, 0,  0,  0,  0,  0,  0,  0,
     0, 30, 30, 30, 30, 30, 30, 0,
     0, 30, 60, 60, 60, 60, 30, 0,
@@ -227,7 +234,7 @@ int16_t QueenPos[CBitBoard::SIZE] = {
     0, 0,  0,  0,  0,  0,  0,  0
 };
 
-int16_t QueenPosDevelopment[CBitBoard::SIZE] = {
+static const int16_t QueenPosDevelopmentL7[64] = {
     -200, -200,  0,  0,  0, 0, -200, -200,
     -200, -200, 30, 30, 30, 0, -200, -200,
     -200, -200,  0,  0,  0, 0, -200, -200,
@@ -239,6 +246,9 @@ int16_t QueenPosDevelopment[CBitBoard::SIZE] = {
 };
 // clang-format on
 
+int16_t QueenPos[CBitBoard::SIZE] = {};
+int16_t QueenPosDevelopment[CBitBoard::SIZE] = {};
+
 /**
  * King scoring parameters
  */
@@ -248,7 +258,7 @@ int KingInCenter = -100;
 int KingSafetyScale = 1024;
 
 // clang-format off
-int16_t KingPosMiddlegame[CBitBoard::SIZE] = {
+static const int16_t KingPosMiddlegameL7[64] = {
     -100, 0,    -200, -300, -300, -200,    0, -100,
     -100, -100, -200, -300, -300, -200, -100, -100,
     -300, -300, -300, -300, -300, -300, -300, -300,
@@ -258,7 +268,7 @@ int16_t KingPosMiddlegame[CBitBoard::SIZE] = {
     -700, -700, -700, -700, -700, -700, -700, -700,
     -800, -800, -800, -800, -800, -800, -800, -800};
 
-int16_t KingPosEndgame[CBitBoard::SIZE] = {
+static const int16_t KingPosEndgameL7[64] = {
     -300, -300, -300, -300, -300, -300, -300, -300,
     -300, -200, -100, -100, -100, -100, -200, -300,
     -300, -100,    0,  100,  100,    0, -100, -300,
@@ -268,7 +278,7 @@ int16_t KingPosEndgame[CBitBoard::SIZE] = {
     -300, -100, -100, -100, -100, -100, -100, -300,
     -300, -300, -300, -300, -300, -300, -300, -300};
 
-int16_t KingPosEndgameQueenSide[CBitBoard::SIZE] = {
+static const int16_t KingPosEndgameQueenSideL7[64] = {
     -300, -300, -300, -300, -300, -400, -500, -600,
     -100, -100, -100, -100, -100, -200, -300, -600,
        0,  100,  100,    0, -100, -200, -300, -600,
@@ -278,6 +288,10 @@ int16_t KingPosEndgameQueenSide[CBitBoard::SIZE] = {
     -100, -100, -100, -100, -100, -200, -300, -600,
     -300, -300, -300, -300, -300, -400, -500, -600};
 // clang-format on
+
+int16_t KingPosMiddlegame[CBitBoard::SIZE] = {};
+int16_t KingPosEndgame[CBitBoard::SIZE] = {};
+int16_t KingPosEndgameQueenSide[CBitBoard::SIZE] = {};
 
 // Calculated by mirroring KingPosEndgameQueenSide
 static int16_t KingPosEndgameKingSide[CBitBoard::SIZE];
@@ -1797,9 +1811,46 @@ int EvaluatePosition(const CPosition *p) {
  * Do the pre-search initialization of evaluation.
  */
 
-void InitEvaluation(const CPosition *p) {
-    int sq;
+/*
+ * Map a coordinate on a board of the given width to the nearest index in a
+ * standard 8-wide (level-7) piece-square table.  Width-1 maps to 7 and 0
+ * maps to 0; intermediate values are rounded to the nearest integer.
+ */
+static int pst_map_to_l7_idx(unsigned int coord, unsigned int width) {
+    if (width <= 1u)
+        return 3;
+    return (int)((2u * coord * 7u + (width - 1u)) / (2u * (width - 1u)));
+}
 
+/*
+ * Fill a piece-square table for every square on every board level.
+ * Level-7 (the standard 8x8 board) uses the 64-entry src8x8 array directly.
+ * Every other level scales each square's file and rank to the nearest
+ * equivalent position in the 8x8 source.
+ */
+static void init_pst_all_levels(int16_t *table, const int16_t *src8x8) {
+    for (unsigned int level = 0; level < CBitBoard::NUM_LEVELS; level++) {
+        const unsigned int width = CBitBoard::LEVEL_WIDTH[level];
+        for (unsigned int rank = 0; rank < width; rank++) {
+            for (unsigned int file = 0; file < width; file++) {
+                const uint16_t offset =
+                    CSCoord(static_cast<uint16_t>(level),
+                            static_cast<uint16_t>(file),
+                            static_cast<uint16_t>(rank))
+                        .BitOffset();
+                if (level == 7u) {
+                    table[offset] = src8x8[rank * 8 + file];
+                } else {
+                    const int file8 = pst_map_to_l7_idx(file, width);
+                    const int rank8 = pst_map_to_l7_idx(rank, width);
+                    table[offset] = src8x8[rank8 * 8 + file8];
+                }
+            }
+        }
+    }
+}
+
+void InitEvaluation(const CPosition *p) {
     int eg_threshold = Value[Queen] + Value[Bishop];
 
     int npmat = (p->m_rgnNonPawn[White] + p->m_rgnNonPawn[Black]) / Value[Pawn];
@@ -1816,54 +1867,75 @@ void InitEvaluation(const CPosition *p) {
     }
 
     /*
+     * Initialize piece/square tables for all board levels.
+     */
+
+    init_pst_all_levels(KnightPos, KnightPosL7);
+    init_pst_all_levels(KnightOutpost, KnightOutpostL7);
+    init_pst_all_levels(BishopPos, BishopPosL7);
+    init_pst_all_levels(RookPos, RookPosL7);
+    init_pst_all_levels(QueenPos, QueenPosL7);
+    init_pst_all_levels(QueenPosDevelopment, QueenPosDevelopmentL7);
+    init_pst_all_levels(KingPosMiddlegame, KingPosMiddlegameL7);
+    init_pst_all_levels(KingPosEndgame, KingPosEndgameL7);
+    init_pst_all_levels(KingPosEndgameQueenSide, KingPosEndgameQueenSideL7);
+
+    /*
      * Setup pawn piece/square tables
      */
 
-    for (sq = a2; sq <= h7; sq++) {
-        const CSCoord sqCoord(sq);
-        const uint16_t levelWidth =
-            static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
-        int wrank = sqCoord.m_nRank - 1;
-        int brank = (levelWidth - 2) - sqCoord.m_nRank;
-        unsigned int wfile = static_cast<unsigned int>(sqCoord.m_nFile);
-        unsigned int bfile = static_cast<unsigned int>(sqCoord.m_nFile);
+    for (unsigned int level = 0; level < CBitBoard::NUM_LEVELS; level++) {
+        const unsigned int levelWidth = CBitBoard::LEVEL_WIDTH[level];
+        for (unsigned int rank = 1; rank < levelWidth - 1; rank++) {
+            for (unsigned int file = 0; file < levelWidth; file++) {
+                const uint16_t sqOffset =
+                    CSCoord(static_cast<uint16_t>(level),
+                            static_cast<uint16_t>(file),
+                            static_cast<uint16_t>(rank))
+                        .BitOffset();
+                int wrank = static_cast<int>(rank) - 1;
+                int brank = static_cast<int>(levelWidth) - 2 - static_cast<int>(rank);
+                unsigned int wfile = static_cast<unsigned int>(file);
+                unsigned int bfile = static_cast<unsigned int>(file);
 
-        if (wkfile < halfBoardWidth)
-            wfile = (CBitBoard::MAX_LEVEL_WIDTH - 1) - wfile;
-        if (bkfile < halfBoardWidth)
-            bfile = (CBitBoard::MAX_LEVEL_WIDTH - 1) - bfile;
+                if (wkfile < halfBoardWidth)
+                    wfile = (CBitBoard::MAX_LEVEL_WIDTH - 1) - wfile;
+                if (bkfile < halfBoardWidth)
+                    bfile = (CBitBoard::MAX_LEVEL_WIDTH - 1) - bfile;
 
-        if (p->m_rgnNonPawn[Black] < eg_threshold) {
-            WPawnPos[sq] = (int16_t)(PawnAdvanceEndgame[wfile] * wrank);
-        } else if (p->m_bCastle & 3) {
-            WPawnPos[sq] = (int16_t)(PawnAdvanceOpening[wfile] * wrank);
-        } else {
-            WPawnPos[sq] = (int16_t)(PawnAdvanceMiddlegame[wfile] * wrank);
-            if (pawnstorm == 1 && wfile > halfBoardWidth) {
-                WPawnPos[sq] += PawnStorm * wrank;
-            } else if (pawnstorm == 2 && wfile < (halfBoardWidth - 1)) {
-                WPawnPos[sq] += PawnStorm * wrank;
-            }
-        }
+                if (p->m_rgnNonPawn[Black] < eg_threshold) {
+                    WPawnPos[sqOffset] = (int16_t)(PawnAdvanceEndgame[wfile] * wrank);
+                } else if (p->m_bCastle & 3) {
+                    WPawnPos[sqOffset] = (int16_t)(PawnAdvanceOpening[wfile] * wrank);
+                } else {
+                    WPawnPos[sqOffset] = (int16_t)(PawnAdvanceMiddlegame[wfile] * wrank);
+                    if (pawnstorm == 1 && wfile > halfBoardWidth) {
+                        WPawnPos[sqOffset] += PawnStorm * wrank;
+                    } else if (pawnstorm == 2 && wfile < (halfBoardWidth - 1)) {
+                        WPawnPos[sqOffset] += PawnStorm * wrank;
+                    }
+                }
 
-        if (p->m_rgnNonPawn[White] < eg_threshold) {
-            BPawnPos[sq] = (int16_t)(PawnAdvanceEndgame[bfile] * brank);
-        } else if (p->m_bCastle & 12) {
-            BPawnPos[sq] = (int16_t)(PawnAdvanceOpening[bfile] * brank);
-        } else {
-            BPawnPos[sq] = (int16_t)(PawnAdvanceMiddlegame[bfile] * brank);
-            if (pawnstorm == 1 && bfile < (halfBoardWidth - 1)) {
-                BPawnPos[sq] += PawnStorm * brank;
-            } else if (pawnstorm == 2 && bfile > halfBoardWidth) {
-                BPawnPos[sq] += PawnStorm * brank;
+                if (p->m_rgnNonPawn[White] < eg_threshold) {
+                    BPawnPos[sqOffset] = (int16_t)(PawnAdvanceEndgame[bfile] * brank);
+                } else if (p->m_bCastle & 12) {
+                    BPawnPos[sqOffset] = (int16_t)(PawnAdvanceOpening[bfile] * brank);
+                } else {
+                    BPawnPos[sqOffset] = (int16_t)(PawnAdvanceMiddlegame[bfile] * brank);
+                    if (pawnstorm == 1 && bfile < (halfBoardWidth - 1)) {
+                        BPawnPos[sqOffset] += PawnStorm * brank;
+                    } else if (pawnstorm == 2 && bfile > halfBoardWidth) {
+                        BPawnPos[sqOffset] += PawnStorm * brank;
+                    }
+                }
             }
         }
     }
 
-    WPawnPos[d2] += CrampingPawn;
-    WPawnPos[e2] += CrampingPawn;
-    BPawnPos[d7] += CrampingPawn;
-    BPawnPos[e7] += CrampingPawn;
+    WPawnPos[CSCoord(7, 3, 1).BitOffset()] += CrampingPawn;  /* d2 */
+    WPawnPos[CSCoord(7, 4, 1).BitOffset()] += CrampingPawn;  /* e2 */
+    BPawnPos[CSCoord(7, 3, 6).BitOffset()] += CrampingPawn;  /* d7 */
+    BPawnPos[CSCoord(7, 4, 6).BitOffset()] += CrampingPawn;  /* e7 */
 
     ClearPawnHashTable();
 
@@ -1911,8 +1983,12 @@ static bool is_edge(CSCoord coord) {
 
 static void create_mirrored_piece_square_table(int16_t *src, int16_t *dest) {
     for (unsigned int src_idx = 0; src_idx < CBitBoard::SIZE; src_idx++) {
-        const CSCoord source(static_cast<int>(src_idx));
-        const CSCoord mirrored(0, 7 - source.m_nFile, source.m_nRank);
-        dest[static_cast<int>(mirrored)] = src[static_cast<int>(source)];
+        const CSCoord source(static_cast<uint16_t>(src_idx));
+        const uint16_t levelWidth =
+            static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[source.m_nLevel]);
+        const uint16_t mirroredFile =
+            static_cast<uint16_t>(levelWidth - 1u - source.m_nFile);
+        const CSCoord mirrored(source.m_nLevel, mirroredFile, source.m_nRank);
+        dest[mirrored.BitOffset()] = src[src_idx];
     }
 }
