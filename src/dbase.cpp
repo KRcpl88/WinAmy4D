@@ -1212,7 +1212,13 @@ bool CPosition::MayCastle(CMove move) {
 bool CPosition::LegalMove(CMove move) {
     CPosition *p = this;
     const CSCoord& frCoord = move.GetFromCoord();
+    if (!frCoord.IsValid())
+        return false;
+        
     const CSCoord& toCoord = move.GetToCoord();
+    if (!toCoord.IsValid())
+        return false;
+
     const uint16_t fr = frCoord.BitOffset();
     const uint16_t to = toCoord.BitOffset();
 
