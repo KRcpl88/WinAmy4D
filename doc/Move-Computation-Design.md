@@ -198,6 +198,24 @@ Main components in `EvaluatePositionForWhite()` include:
 - Development and piece-specific terms (knight/bishop/rook/queen/king PST and mobility)  
 (`src/evaluation.cpp:1290-1767`)
 
+How PSTs are interpreted and applied in this step:
+
+- PST values are positional centipawn-like bonuses/penalties indexed by square for each piece type (`KnightPos`, `BishopPos`, `RookPos`, `QueenPos`, king PST variants, and pawn PST tables).
+- A **positive PST entry** means “good square for that piece from White’s perspective”; a **negative entry** means “bad square.”
+- White piece contribution: PST value is added to the running score.
+- Black piece contribution: the engine uses `sq.ReflectRank()` to map Black squares onto the same White-oriented PST, then subtracts that value, yielding a symmetric White-minus-Black positional term.
+- Because score is computed in `EvaluatePositionForWhite()`, the position score is first “White POV”; `EvaluatePosition()` then flips sign when Black is to move, so final output is always side-to-move relative.
+
+How PST values affect the final static evaluation:
+
+- Material and structure terms are accumulated first, then piece-position terms are added/subtracted piece-by-piece.
+- Knight/queen PST terms are applied directly (`score +=/-= KnightPos[...]`, `QueenPos[...]`).
+- Bishop/rook PST terms are phase-weighted (`ScaleUp[phase]`), so their PST impact increases/decreases with game phase rather than being constant.
+- King uses blended PSTs: middlegame king table and an endgame king table are mixed with `ScaleUp/ScaleDown` based on phase, so king placement preferences shift smoothly from safety (middlegame) toward activity/centralization (endgame).
+- Pawn PST tables (`WPawnPos`, `BPawnPos`) are initialized in `InitEvaluation()` using current king placement/castling context and then consumed in pawn evaluation; this makes pawn-square bonuses context-sensitive, not static constants.
+
+In short, PSTs provide the “where the pieces stand” component of static eval: each piece’s square contributes a signed positional value, and the sum of these values (with phase/context scaling) directly shifts the final evaluation up or down.
+
 Pre-search eval setup:
 
 - `InitEvaluation(p)` called in `Iterate()` and `QuiescenceSearch()` (`src/search.cpp:1764`, `1848`)
@@ -233,4 +251,3 @@ So, the “best move” is the head of the root list after iterative deepening +
 Because `DoMove()` toggles `m_nTurn` (`src/dbase.cpp:662-665`), the same pipeline computes “best move for each side” naturally on alternating turns.
 
   
-
