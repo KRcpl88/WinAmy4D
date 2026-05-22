@@ -17,7 +17,8 @@ TEST_CLASS(BitboardTests) {
         for (int i = 0; i < 64; i++) {
             CBitBoard mask = CBitBoard::ClrMask(i);
             Assert::IsTrue(!mask.TstBit(i));
-            Assert::AreEqual(63, mask.CountBits());
+            Assert::AreEqual(CBitBoard::SIZE_ULONGLONG * CBitBoard::ULONGLONG_SIZE_BITS - 1,
+                             mask.CountBits());
             // FindSetBit should return the lowest set bit, which is 0 unless i==0
             if (i == 0)
                 Assert::AreEqual(1, static_cast<int>(mask.FindSetBit()));
@@ -234,7 +235,8 @@ TEST_CLASS(BitboardTests) {
     TEST_METHOD(SetMaskAndClrMaskAreComplements) {
         for (int i = 0; i < 64; i++) {
             CBitBoard combined = CBitBoard::SetMask(i) | CBitBoard::ClrMask(i);
-            Assert::AreEqual(64, combined.CountBits());
+            Assert::AreEqual(CBitBoard::SIZE_ULONGLONG * CBitBoard::ULONGLONG_SIZE_BITS,
+                             combined.CountBits());
             CBitBoard intersection = CBitBoard::SetMask(i) & CBitBoard::ClrMask(i);
             Assert::AreEqual(0, intersection.CountBits());
         }
