@@ -292,7 +292,7 @@ void CSearchData::StoreResult(int score, int alpha, int beta,
     CPosition *p = sd->m_pPosition;
 
     if (!(move.IsTactical()) && score > alpha) {
-        sd->m_rguHistoryTab[p->m_nTurn][move.GetFromToIndex()] += depth * depth;
+        sd->m_rguHistoryTab[p->m_nTurn][move.GetFromCoord().BitOffset()][move.GetToCoord().BitOffset()] += depth * depth;
     }
 
     StoreHT(p->m_ullHKey, score, alpha, beta, move, depth, threat, sd->m_wPly
@@ -814,7 +814,7 @@ int CSearchData::NegaScout(int alpha, int beta,
                 if (tmp >= beta) {
                     if (!(move.IsTactical())) {
                         sd->PutKiller(move);
-                        sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromToIndex()] = move;
+                        sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()] = move;
                     }
                     sd->StoreResult(tmp, alpha, beta, move, depth, threat);
                     best = tmp;
@@ -878,7 +878,7 @@ int CSearchData::NegaScout(int alpha, int beta,
         if (tmp >= beta) {
             if (!(move.IsTactical())) {
                 sd->PutKiller(move);
-                sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromToIndex()] = move;
+                sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()] = move;
             }
             sd->StoreResult(tmp, alpha, beta, move, depth, threat);
             best = tmp;

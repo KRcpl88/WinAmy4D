@@ -101,13 +101,13 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        CMove move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(CASTLE_E1, CASTLE_G1, M_SCASTLE);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)King, (int)position.get()->m_rgPiece[g1]);
-        Assert::AreEqual((int)Rook, (int)position.get()->m_rgPiece[f1]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[e1]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[h1]);
+        Assert::AreEqual((int)King, (int)position.get()->m_rgPiece[CASTLE_G1]);
+        Assert::AreEqual((int)Rook, (int)position.get()->m_rgPiece[CASTLE_F1]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[CASTLE_E1]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[CASTLE_H1]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -118,13 +118,13 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::CreateFromEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        CMove move = make_move(e1, c1, M_LCASTLE);
+        CMove move = make_move(CASTLE_E1, CASTLE_C1, M_LCASTLE);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)King, (int)position.get()->m_rgPiece[c1]);
-        Assert::AreEqual((int)Rook, (int)position.get()->m_rgPiece[d1]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[e1]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[a1]);
+        Assert::AreEqual((int)King, (int)position.get()->m_rgPiece[CASTLE_C1]);
+        Assert::AreEqual((int)Rook, (int)position.get()->m_rgPiece[CASTLE_D1]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[CASTLE_E1]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[CASTLE_A1]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -231,8 +231,9 @@ TEST_CLASS(MoveTests) {
 
     TEST_METHOD(CMoveFromToIndexMatchesSquareEncoding) {
         const CMove move = make_move(CSCoord(c2), CSCoord(g7), 0);
-        const int expected = c2 + (g7 << 6);
-        Assert::AreEqual(expected, move.GetFromToIndex());
+        const SFromToIndex expected(c2, g7);
+        Assert::AreEqual(static_cast<std::uint16_t>(c2), move.GetFromCoord().BitOffset());
+        Assert::AreEqual(static_cast<std::uint16_t>(g7), move.GetToCoord().BitOffset());
     }
 
     TEST_METHOD(MFromAndMToDecodeFromScooordBitfields) {

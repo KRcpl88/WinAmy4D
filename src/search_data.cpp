@@ -281,7 +281,7 @@ CMove CSearchData::NextMove() {
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromToIndex()];
+            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {
@@ -353,13 +353,13 @@ CMove CSearchData::NextMove() {
 
         if (p->m_bCastle & CastleMask[p->m_nTurn][0]) {
             append_to_heap(sd->m_hHeap,
-                           make_move(p->m_nTurn == White ? e1 : e8,
-                                     p->m_nTurn == White ? g1 : g8, M_SCASTLE));
+                           make_move(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
+                                     p->m_nTurn == White ? CASTLE_G1 : CASTLE_G8, M_SCASTLE));
         }
         if (p->m_bCastle & CastleMask[p->m_nTurn][1]) {
             append_to_heap(sd->m_hHeap,
-                           make_move(p->m_nTurn == White ? e1 : e8,
-                                     p->m_nTurn == White ? c1 : c8, M_LCASTLE));
+                           make_move(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
+                                     p->m_nTurn == White ? CASTLE_C1 : CASTLE_C8, M_LCASTLE));
         }
 
         CBitBoard non_pawn = p->m_rgMask[p->m_nTurn][0] & ~p->m_rgMask[p->m_nTurn][Pawn];
@@ -419,11 +419,12 @@ CMove CSearchData::NextMove() {
         while (section->end > section->start) {
             int besti = section->start;
             int best =
-                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromToIndex()];
+                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromCoord().BitOffset()][sd->m_hHeap->data[besti].GetToCoord().BitOffset()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
                 int hval = sd->m_rguHistoryTab[p->m_nTurn]
-                                        [sd->m_hHeap->data[i].GetFromToIndex()];
+                                        [sd->m_hHeap->data[i].GetFromCoord().BitOffset()]
+                                        [sd->m_hHeap->data[i].GetToCoord().BitOffset()];
                 if (hval > best) {
                     best = hval;
                     besti = i;
@@ -572,7 +573,7 @@ CMove CSearchData::NextEvasion() {
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromToIndex()];
+            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {
@@ -731,11 +732,12 @@ CMove CSearchData::NextEvasion() {
         while (section->end > section->start) {
             unsigned int besti = section->start;
             int best =
-                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromToIndex()];
+                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromCoord().BitOffset()][sd->m_hHeap->data[besti].GetToCoord().BitOffset()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
                 int hval = sd->m_rguHistoryTab[p->m_nTurn]
-                                        [sd->m_hHeap->data[i].GetFromToIndex()];
+                                        [sd->m_hHeap->data[i].GetFromCoord().BitOffset()]
+                                        [sd->m_hHeap->data[i].GetToCoord().BitOffset()];
                 if (hval > best) {
                     best = hval;
                     besti = i;

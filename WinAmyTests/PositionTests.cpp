@@ -187,7 +187,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/8/8/4K2R w K -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        CMove move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(CASTLE_E1, CASTLE_G1, M_SCASTLE);
         Assert::IsTrue(position.get()->MayCastle(move));
     }
 
@@ -195,7 +195,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/8/8/R3K3 w Q -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        CMove move = make_move(e1, c1, M_LCASTLE);
+        CMove move = make_move(CASTLE_E1, CASTLE_C1, M_LCASTLE);
         Assert::IsTrue(position.get()->MayCastle(move));
     }
 
@@ -204,7 +204,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4r3/8/8/8/8/8/8/4K2R w K -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        CMove move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(CASTLE_E1, CASTLE_G1, M_SCASTLE);
         Assert::IsFalse(position.get()->MayCastle(move));
     }
 
@@ -213,7 +213,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/8/8/4KN1R w K -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        CMove move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(CASTLE_E1, CASTLE_G1, M_SCASTLE);
         Assert::IsFalse(position.get()->MayCastle(move));
     }
 
@@ -222,7 +222,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4kr2/8/8/8/8/8/8/4K2R w K -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        CMove move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(CASTLE_E1, CASTLE_G1, M_SCASTLE);
         Assert::IsFalse(position.get()->MayCastle(move));
     }
 
@@ -231,7 +231,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "4k3/8/8/8/8/8/8/4K2R w - -";
         PositionGuard position(CPosition::CreateFromEPD(epd));
 
-        CMove move = make_move(e1, g1, M_SCASTLE);
+        CMove move = make_move(CASTLE_E1, CASTLE_G1, M_SCASTLE);
         Assert::IsFalse(position.get()->MayCastle(move));
     }
 

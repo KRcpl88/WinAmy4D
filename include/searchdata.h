@@ -33,7 +33,10 @@
 #define SEARCHDATA_H
 
 #include "dbase.h"
+#include "bitboard.h"
 #include <stdint.h>
+
+
 
 typedef enum {
     HashMove,
@@ -83,8 +86,8 @@ class CSearchData {
     int32_t *m_pnDataHeap;
     unsigned int m_uDataHeapSize;
 
-    CMove m_rgCounterTab[2][4096];      /* counter moves per side */
-    unsigned int m_rguHistoryTab[2][4096]; /* history moves per side */
+    CMove m_rgCounterTab[2][CBitBoard::SIZE][CBitBoard::SIZE];      /* counter moves per side */
+    unsigned int m_rguHistoryTab[2][CBitBoard::SIZE][CBitBoard::SIZE]; /* history moves per side */
 
     CMove m_rgPvSave[CBitBoard::SIZE];
 

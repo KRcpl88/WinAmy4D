@@ -51,6 +51,7 @@
 #include "types.h"
 #include "utils.h"
 #include "ucoord.h"
+#include "move.h"
 
 #define INITIAL_GAME_LOG_SIZE 40 /* Initial size of game history */
 
@@ -1106,18 +1107,19 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
 
         /* Generate castling moves
          * we will check legality later...
+         * Castling is only valid on the main board (level 7).
          */
 
-        if (TYPE(p->m_rgPiece[square]) == King) {
+        if (TYPE(p->m_rgPiece[square]) == King && squareCoord.m_nLevel == MAIN_LEVEL) {
             if (p->m_bCastle & CastleMask[p->m_nTurn][0]) {
                 /* OK, we might castle king p->m_nTurn */
-                append_to_heap(heap, make_move(p->m_nTurn == White ? e1 : e8,
-                                               p->m_nTurn == White ? g1 : g8,
+                append_to_heap(heap, make_move(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
+                                               p->m_nTurn == White ? CASTLE_G1 : CASTLE_G8,
                                                M_SCASTLE));
             }
             if (p->m_bCastle & CastleMask[p->m_nTurn][1]) {
-                append_to_heap(heap, make_move(p->m_nTurn == White ? e1 : e8,
-                                               p->m_nTurn == White ? c1 : c8,
+                append_to_heap(heap, make_move(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
+                                               p->m_nTurn == White ? CASTLE_C1 : CASTLE_C8,
                                                M_LCASTLE));
             }
         }
@@ -1159,7 +1161,7 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
 bool CPosition::MayCastle(CMove move) {
     CPosition *p = this;
     const CSCoord& fromCoord = move.GetFromCoord();
-    const CSCoord kingHome((p->m_nTurn == White) ? e1 : e8);
+    const CSCoord kingHome(static_cast<uint16_t>((p->m_nTurn == White) ? CASTLE_E1 : CASTLE_E8));
     /* Sometimes there might be a legal castling move, but for the
        wrong p->m_nTurn, probably from the Countermove table */
     if (fromCoord.m_nLevel != kingHome.m_nLevel || fromCoord.m_nFile != kingHome.m_nFile ||
@@ -1171,8 +1173,8 @@ bool CPosition::MayCastle(CMove move) {
 
     /* king p->m_nTurn castling */
     if (move.IsShortCastle() && (p->m_bCastle & CastleMask[p->m_nTurn][0])) {
-        int fs = (p->m_nTurn == White ? f1 : f8);
-        int gs = (p->m_nTurn == White ? g1 : g8);
+        int fs = (p->m_nTurn == White ? CASTLE_F1 : CASTLE_F8);
+        int gs = (p->m_nTurn == White ? CASTLE_G1 : CASTLE_G8);
 
         /* Check if f and g square are empty */
         if (p->m_rgPiece[fs] == Neutral && p->m_rgPiece[gs] == Neutral) {
@@ -1186,9 +1188,9 @@ bool CPosition::MayCastle(CMove move) {
 
     /* queen p->m_nTurn castling */
     if (move.IsLongCastle() && (p->m_bCastle & CastleMask[p->m_nTurn][1])) {
-        int bs = (p->m_nTurn == White ? b1 : b8);
-        int cs = (p->m_nTurn == White ? c1 : c8);
-        int ds = (p->m_nTurn == White ? d1 : d8);
+        int bs = (p->m_nTurn == White ? CASTLE_B1 : CASTLE_B8);
+        int cs = (p->m_nTurn == White ? CASTLE_C1 : CASTLE_C8);
+        int ds = (p->m_nTurn == White ? CASTLE_D1 : CASTLE_D8);
 
         /* Check if b, c and d square are empty */
         if (p->m_rgPiece[bs] == Neutral && p->m_rgPiece[cs] == Neutral &&
@@ -1211,7 +1213,13 @@ bool CPosition::MayCastle(CMove move) {
 bool CPosition::LegalMove(CMove move) {
     CPosition *p = this;
     const CSCoord& frCoord = move.GetFromCoord();
+    if (!frCoord.IsValid())
+        return false;
+        
     const CSCoord& toCoord = move.GetToCoord();
+    if (!toCoord.IsValid())
+        return false;
+
     const uint16_t fr = frCoord.BitOffset();
     const uint16_t to = toCoord.BitOffset();
 
@@ -1720,16 +1728,16 @@ char *ICS_SAN(CMove move) {
 CMove parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
         !strncmp(san, "0-0-0", 5)) {
-        CMove move(CSCoord(p->m_nTurn == White ? e1 : e8),
-                   CSCoord(p->m_nTurn == White ? c1 : c8), M_LCASTLE);
+        CMove move(CSCoord(static_cast<uint16_t>(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8)),
+                   CSCoord(static_cast<uint16_t>(p->m_nTurn == White ? CASTLE_C1 : CASTLE_C8)), M_LCASTLE);
         if (p->MayCastle(move))
             return move;
     }
 
     if (!strncmp(san, "O-O", 3) || !strncmp(san, "o-o", 3) ||
         !strncmp(san, "0-0", 3)) {
-        CMove move(CSCoord(p->m_nTurn == White ? e1 : e8),
-                   CSCoord(p->m_nTurn == White ? g1 : g8), M_SCASTLE);
+        CMove move(CSCoord(static_cast<uint16_t>(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8)),
+                   CSCoord(static_cast<uint16_t>(p->m_nTurn == White ? CASTLE_G1 : CASTLE_G8)), M_SCASTLE);
         if (p->MayCastle(move))
             return move;
     }
@@ -1754,7 +1762,7 @@ CMove parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
     int fr = CSCoord(fr_level, fr_file, fr_rank).BitOffset();
     int to = CSCoord(to_level, to_file, to_rank).BitOffset();
 
-    int mask = fr + (to << 6);
+    SFromToIndex mask(fr , to);
 
     for (unsigned int i = heap->current_section->start;
          i < heap->current_section->end; i++) {
@@ -1798,13 +1806,12 @@ CMove CPosition::ParseGSAN(char *san) {
 
 CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
     int fr, to;
-    int mask;
     int i;
 
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
         !strncmp(san, "0-0-0", 5)) {
-        CMove move(CSCoord(side == White ? e1 : e8),
-                   CSCoord(side == White ? c1 : c8), M_LCASTLE);
+        CMove move(CSCoord(static_cast<uint16_t>(side == White ? CASTLE_E1 : CASTLE_E8)),
+                   CSCoord(static_cast<uint16_t>(side == White ? CASTLE_C1 : CASTLE_C8)), M_LCASTLE);
 
         for (i = 0; i < cnt; i++)
             if (move == mvs[i])
@@ -1814,8 +1821,8 @@ CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
 
     if (!strncmp(san, "O-O", 3) || !strncmp(san, "o-o", 3) ||
         !strncmp(san, "0-0", 3)) {
-        CMove move(CSCoord(side == White ? e1 : e8),
-                   CSCoord(side == White ? g1 : g8), M_SCASTLE);
+        CMove move(CSCoord(static_cast<uint16_t>(side == White ? CASTLE_E1 : CASTLE_E8)),
+                   CSCoord(static_cast<uint16_t>(side == White ? CASTLE_G1 : CASTLE_G8)), M_SCASTLE);
 
         for (i = 0; i < cnt; i++)
             if (move == mvs[i])
@@ -1837,7 +1844,7 @@ CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
     fr = CSCoord(fr_level, fr_file, fr_rank).BitOffset();
     to = CSCoord(to_level, to_file, to_rank).BitOffset();
 
-    mask = fr + (to << 6);
+    SFromToIndex mask(fr , to);
 
     for (i = 0; i < cnt; i++) {
         if (mvs[i].GetFromToIndex() == mask) {
@@ -1892,8 +1899,8 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
 
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
         !strncmp(san, "0-0-0", 5)) {
-        move = CMove(CSCoord(p->m_nTurn == White ? e1 : e8),
-                     CSCoord(p->m_nTurn == White ? c1 : c8), M_LCASTLE);
+        move = CMove(CSCoord(static_cast<uint16_t>(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8)),
+                     CSCoord(static_cast<uint16_t>(p->m_nTurn == White ? CASTLE_C1 : CASTLE_C8)), M_LCASTLE);
         if (p->MayCastle(move))
             return move;
         else
@@ -1902,8 +1909,8 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
 
     if (!strncmp(san, "O-O", 3) || !strncmp(san, "o-o", 3) ||
         !strncmp(san, "0-0", 3)) {
-        move = CMove(CSCoord(p->m_nTurn == White ? e1 : e8),
-                     CSCoord(p->m_nTurn == White ? g1 : g8), M_SCASTLE);
+        move = CMove(CSCoord(static_cast<uint16_t>(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8)),
+                     CSCoord(static_cast<uint16_t>(p->m_nTurn == White ? CASTLE_G1 : CASTLE_G8)), M_SCASTLE);
         if (p->MayCastle(move))
             return move;
         else
@@ -2048,8 +2055,8 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
 
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
         !strncmp(san, "0-0-0", 5)) {
-        move = CMove(CSCoord(side == White ? e1 : e8),
-                     CSCoord(side == White ? c1 : c8), M_LCASTLE);
+        move = CMove(CSCoord(static_cast<uint16_t>(side == White ? CASTLE_E1 : CASTLE_E8)),
+                     CSCoord(static_cast<uint16_t>(side == White ? CASTLE_C1 : CASTLE_C8)), M_LCASTLE);
         for (i = 0; i < cnt; i++)
             if (move == mvs[i])
                 return move;
@@ -2058,8 +2065,8 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
 
     if (!strncmp(san, "O-O", 3) || !strncmp(san, "o-o", 3) ||
         !strncmp(san, "0-0", 3)) {
-        move = CMove(CSCoord(side == White ? e1 : e8),
-                     CSCoord(side == White ? g1 : g8), M_SCASTLE);
+        move = CMove(CSCoord(static_cast<uint16_t>(side == White ? CASTLE_E1 : CASTLE_E8)),
+                     CSCoord(static_cast<uint16_t>(side == White ? CASTLE_G1 : CASTLE_G8)), M_SCASTLE);
         for (i = 0; i < cnt; i++)
             if (move == mvs[i])
                 return move;
