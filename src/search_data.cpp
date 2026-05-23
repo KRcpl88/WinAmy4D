@@ -281,7 +281,7 @@ CMove CSearchData::NextMove() {
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromToIndex()];
+            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {
@@ -419,11 +419,12 @@ CMove CSearchData::NextMove() {
         while (section->end > section->start) {
             int besti = section->start;
             int best =
-                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromToIndex()];
+                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromCoord().BitOffset()][sd->m_hHeap->data[besti].GetToCoord().BitOffset()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
                 int hval = sd->m_rguHistoryTab[p->m_nTurn]
-                                        [sd->m_hHeap->data[i].GetFromToIndex()];
+                                        [sd->m_hHeap->data[i].GetFromCoord().BitOffset()]
+                                        [sd->m_hHeap->data[i].GetToCoord().BitOffset()];
                 if (hval > best) {
                     best = hval;
                     besti = i;
@@ -572,7 +573,7 @@ CMove CSearchData::NextEvasion() {
 #endif
         st->st_cm = M_NONE;
         if (lmove != M_NULL) {
-            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromToIndex()];
+            move = sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()];
 
             if (move != M_NONE && move != st->st_hashmove &&
                 move != st->st_k1 && move != st->st_k2 && p->LegalMove(move)) {
@@ -731,11 +732,12 @@ CMove CSearchData::NextEvasion() {
         while (section->end > section->start) {
             unsigned int besti = section->start;
             int best =
-                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromToIndex()];
+                sd->m_rguHistoryTab[p->m_nTurn][sd->m_hHeap->data[besti].GetFromCoord().BitOffset()][sd->m_hHeap->data[besti].GetToCoord().BitOffset()];
 
             for (unsigned int i = section->start + 1; i < section->end; i++) {
                 int hval = sd->m_rguHistoryTab[p->m_nTurn]
-                                        [sd->m_hHeap->data[i].GetFromToIndex()];
+                                        [sd->m_hHeap->data[i].GetFromCoord().BitOffset()]
+                                        [sd->m_hHeap->data[i].GetToCoord().BitOffset()];
                 if (hval > best) {
                     best = hval;
                     besti = i;

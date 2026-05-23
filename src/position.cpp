@@ -66,7 +66,7 @@ extern int PBHit;
 extern CMove PBAltMove;
 extern char BestLine[2048];
 extern char ShortBestLine[2048];
-extern char AnalysisLine[FROM_TO_OFFSET_SIZE];
+extern char AnalysisLine[4096];
 extern OPTIONAL_ATOMIC unsigned long TotalNodes;
 extern void *IterateInt(void *x);
 

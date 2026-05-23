@@ -14,8 +14,11 @@ const CSCoord& CMove::GetToCoord() const {
     return m_To;
 }
 
-int CMove::GetFromToIndex() const {
-    return m_From.BitOffset() + (m_To.BitOffset() << 6);
+
+SFromToIndex CMove::GetFromToIndex() const {
+    SFromToIndex RetVal(m_From.BitOffset(), m_To.BitOffset());
+    
+    return RetVal;
 }
 
 bool CMove::IsCapture() const {

@@ -231,8 +231,9 @@ TEST_CLASS(MoveTests) {
 
     TEST_METHOD(CMoveFromToIndexMatchesSquareEncoding) {
         const CMove move = make_move(CSCoord(c2), CSCoord(g7), 0);
-        const int expected = c2 + (g7 <<CBitBoard::BITBOARD_SIZE_BITS);
-        Assert::AreEqual(expected, move.GetFromToIndex());
+        const SFromToIndex expected(c2, g7);
+        Assert::AreEqual(static_cast<std::uint16_t>(c2), move.GetFromCoord().BitOffset());
+        Assert::AreEqual(static_cast<std::uint16_t>(g7), move.GetToCoord().BitOffset());
     }
 
     TEST_METHOD(MFromAndMToDecodeFromScooordBitfields) {

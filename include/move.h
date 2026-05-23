@@ -4,6 +4,21 @@
 
 #include "scoord.h"
 
+
+struct SFromToIndex
+{
+    uint16_t nFromOffset;
+    uint16_t nToOffset;
+
+    SFromToIndex (uint16_t nFrom, uint16_t nTo) :
+        nFromOffset(nFrom), nToOffset(nTo)
+    {}
+
+    friend bool operator==(const SFromToIndex &lhs, const SFromToIndex &rhs) {
+        return (lhs.nFromOffset == rhs.nFromOffset) && (lhs.nToOffset == rhs.nToOffset);
+    }    
+};
+
 class CMove {
 public:
     static constexpr std::uint32_t FLAG_CAPTURE = (1u << 12);
@@ -22,7 +37,7 @@ public:
 
     const CSCoord& GetFromCoord() const;
     const CSCoord& GetToCoord() const;
-    int GetFromToIndex() const;
+    SFromToIndex GetFromToIndex() const;
 
     bool IsCapture() const;
     bool IsShortCastle() const;

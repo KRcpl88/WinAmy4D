@@ -86,8 +86,8 @@ class CSearchData {
     int32_t *m_pnDataHeap;
     unsigned int m_uDataHeapSize;
 
-    CMove m_rgCounterTab[2][FROM_TO_OFFSET_SIZE];      /* counter moves per side */
-    unsigned int m_rguHistoryTab[2][FROM_TO_OFFSET_SIZE]; /* history moves per side */
+    CMove m_rgCounterTab[2][CBitBoard::SIZE][CBitBoard::SIZE];      /* counter moves per side */
+    unsigned int m_rguHistoryTab[2][CBitBoard::SIZE][CBitBoard::SIZE]; /* history moves per side */
 
     CMove m_rgPvSave[CBitBoard::SIZE];
 

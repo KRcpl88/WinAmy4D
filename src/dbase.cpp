@@ -51,6 +51,7 @@
 #include "types.h"
 #include "utils.h"
 #include "ucoord.h"
+#include "move.h"
 
 #define INITIAL_GAME_LOG_SIZE 40 /* Initial size of game history */
 
@@ -1761,7 +1762,7 @@ CMove parse_gsan_internal(CPosition *p, char *san, heap_t heap) {
     int fr = CSCoord(fr_level, fr_file, fr_rank).BitOffset();
     int to = CSCoord(to_level, to_file, to_rank).BitOffset();
 
-    int mask = fr + (to << 6);
+    SFromToIndex mask(fr , to);
 
     for (unsigned int i = heap->current_section->start;
          i < heap->current_section->end; i++) {
@@ -1805,7 +1806,6 @@ CMove CPosition::ParseGSAN(char *san) {
 
 CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
     int fr, to;
-    int mask;
     int i;
 
     if (!strncmp(san, "O-O-O", 5) || !strncmp(san, "o-o-o", 5) ||
@@ -1844,7 +1844,7 @@ CMove ParseGSANList(char *san, Color side, CMove *mvs, int cnt) {
     fr = CSCoord(fr_level, fr_file, fr_rank).BitOffset();
     to = CSCoord(to_level, to_file, to_rank).BitOffset();
 
-    mask = fr + (to << 6);
+    SFromToIndex mask(fr , to);
 
     for (i = 0; i < cnt; i++) {
         if (mvs[i].GetFromToIndex() == mask) {
