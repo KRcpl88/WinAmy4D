@@ -11,6 +11,7 @@
 #include "search.h"
 
 #include <cstdint>
+#include <string>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -29,5 +30,12 @@ class PositionGuard {
 CBitBoard ReferenceRookAttacks(int sq, CBitBoard occupied);
 CBitBoard ReferenceBishopAttacks(int sq, CBitBoard occupied);
 void AssertPositionsEqual(const CPosition *lhs, const CPosition *rhs);
+uint16_t MainBoardOffset(int square);
+CSCoord MainBoardCoord(int square);
+CMove MakeMainBoardMove(int from, int to, int flags);
+CMove MakeMainBoardPromotion(int from, int to, int promotionType, int flags);
+std::string BuildMainBoardEPD(const std::string &mainBoardPlacement, const std::string &sideToMove,
+                              const std::string &castleRights, const std::string &enPassant);
+CPosition *CreatePositionFromLegacyMainEPD(const char *legacyMainBoardEpd);
 
 } // namespace WinAmyTests

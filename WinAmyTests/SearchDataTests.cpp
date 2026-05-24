@@ -3,9 +3,6 @@
 namespace WinAmyTests {
 
 TEST_CLASS(SearchDataTests) {
-    BEGIN_TEST_CLASS_ATTRIBUTE()
-    TEST_CLASS_ATTRIBUTE(L"Ignore", L"true")
-    END_TEST_CLASS_ATTRIBUTE()
   public:
     TEST_CLASS_INITIALIZE(InitializeEngine) {
         InitMoves();
@@ -48,7 +45,7 @@ TEST_CLASS(SearchDataTests) {
     TEST_METHOD(NextMoveReturnsLegalMove) {
         PositionGuard position(CPosition::Initial());
         CSearchData searchData(position.get());
-        CMove expected = make_move(e2, e4, M_PAWND);
+        CMove expected = MakeMainBoardMove(e2, e4, M_PAWND);
 
         searchData.EnterNode();
         searchData.m_pCurrent->st_hashmove = expected;
@@ -61,9 +58,9 @@ TEST_CLASS(SearchDataTests) {
 
     TEST_METHOD(NextEvasionReturnsLegalMoveWhenInCheck) {
         char epd[] = "4r3/8/8/8/8/8/8/4K3 w - -";
-        PositionGuard position(CPosition::CreateFromEPD(epd));
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         CSearchData searchData(position.get());
-        CMove expected = make_move(e1, d1, 0);
+        CMove expected = MakeMainBoardMove(e1, d1, 0);
 
         searchData.EnterNode();
         searchData.m_pCurrent->st_hashmove = expected;
@@ -76,7 +73,7 @@ TEST_CLASS(SearchDataTests) {
 
     TEST_METHOD(NextMoveQReturnsCaptureWhenCaptureExists) {
         char epd[] = "4k3/8/8/8/4p3/8/4Q3/4K3 w - -";
-        PositionGuard position(CPosition::CreateFromEPD(epd));
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         CSearchData searchData(position.get());
 
         searchData.EnterNode();
@@ -92,8 +89,8 @@ TEST_CLASS(SearchDataTests) {
         PositionGuard position(CPosition::Initial());
         CSearchData searchData(position.get());
 
-        CMove moveOne = make_move(e2, e4, M_PAWND);
-        CMove moveTwo = make_move(d2, d4, M_PAWND);
+        CMove moveOne = MakeMainBoardMove(e2, e4, M_PAWND);
+        CMove moveTwo = MakeMainBoardMove(d2, d4, M_PAWND);
 
         searchData.PutKiller(moveOne);
         Assert::IsTrue(searchData.m_pKiller->killer1 == moveOne);
