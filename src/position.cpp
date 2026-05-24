@@ -250,10 +250,10 @@ int CPosition::ScoreMove(CMove move) {
     if (move.HasPromotion())
         score += Value[PromoType(move)] - Value[Pawn];
     else if (TYPE(p->m_rgPiece[move.GetFromCoord().BitOffset()]) == Pawn) {
-        if (p->m_nTurn == White && move.GetToCoord().BitOffset() >= a7) {
+        if (p->m_nTurn == White && move.GetToCoord().BitOffset() >= ha7) {
             score += Value[Bishop];
         }
-        if (p->m_nTurn == Black && move.GetToCoord().BitOffset() <= h2) {
+        if (p->m_nTurn == Black && move.GetToCoord().BitOffset() <= hh2) {
             score += Value[Bishop];
         }
     }

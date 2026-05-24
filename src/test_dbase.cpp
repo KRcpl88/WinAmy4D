@@ -35,19 +35,24 @@
 #include <assert.h>
 
 static void test_parse_san_promotions(void) {
-    CPosition *p = CPosition::CreateFromEPD("4K1k1/P7/8/8/8/8/8/8 w - -");
+    /* 3D EPD: all levels empty except level 'h' (level 7), which has a white
+     * pawn on ha7, white king on he8, and black king on hg8. */
+    CPosition *p = CPosition::CreateFromEPD(
+        "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|7/7/7/7/7/7/7"
+        "|4K1k1/P7/8/8/8/8/8/8"
+        "|7/7/7/7/7/7/7|6/6/6/6/6/6|5/5/5/5/5|4/4/4/4|3/3/3|2/2|1 w - -");
 
-    CMove move = p->ParseSAN("aa8=Q");
-    assert(move == make_promotion(a7, a8, Queen, 0));
+    CMove move = p->ParseSAN("ha8=Q");
+    assert(move == make_promotion(ha7, ha8, Queen, 0));
 
-    move = p->ParseSAN("aa8=R");
-    assert(move == make_promotion(a7, a8, Rook, 0));
+    move = p->ParseSAN("ha8=R");
+    assert(move == make_promotion(ha7, ha8, Rook, 0));
 
-    move = p->ParseSAN("aa8=B");
-    assert(move == make_promotion(a7, a8, Bishop, 0));
+    move = p->ParseSAN("ha8=B");
+    assert(move == make_promotion(ha7, ha8, Bishop, 0));
 
-    move = p->ParseSAN("aa8=N");
-    assert(move == make_promotion(a7, a8, Knight, 0));
+    move = p->ParseSAN("ha8=N");
+    assert(move == make_promotion(ha7, ha8, Knight, 0));
 
     CPosition::Free(p);
 }

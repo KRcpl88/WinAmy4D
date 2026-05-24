@@ -47,7 +47,7 @@ TEST_CLASS(SearchDataTests) {
     TEST_METHOD(NextMoveReturnsLegalMove) {
         PositionGuard position(CPosition::Initial());
         std::unique_ptr<CSearchData> searchData(new CSearchData(position.get()));
-        CMove expected = MakeMainBoardMove(e2, e4, M_PAWND);
+        CMove expected = MakeMainBoardMove(he2, he4, M_PAWND);
 
         searchData->EnterNode();
         searchData->m_pCurrent->st_hashmove = expected;
@@ -62,7 +62,7 @@ TEST_CLASS(SearchDataTests) {
         char epd[] = "4r3/8/8/8/8/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         std::unique_ptr<CSearchData> searchData(new CSearchData(position.get()));
-        CMove expected = MakeMainBoardMove(e1, d1, 0);
+        CMove expected = MakeMainBoardMove(he1, hd1, 0);
 
         searchData->EnterNode();
         searchData->m_pCurrent->st_hashmove = expected;
@@ -91,8 +91,8 @@ TEST_CLASS(SearchDataTests) {
         PositionGuard position(CPosition::Initial());
         std::unique_ptr<CSearchData> searchData(new CSearchData(position.get()));
 
-        CMove moveOne = MakeMainBoardMove(e2, e4, M_PAWND);
-        CMove moveTwo = MakeMainBoardMove(d2, d4, M_PAWND);
+        CMove moveOne = MakeMainBoardMove(he2, he4, M_PAWND);
+        CMove moveTwo = MakeMainBoardMove(hd2, hd4, M_PAWND);
 
         searchData->PutKiller(moveOne);
         Assert::IsTrue(searchData->m_pKiller->killer1 == moveOne);

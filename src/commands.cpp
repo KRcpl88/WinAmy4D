@@ -674,7 +674,7 @@ static void Help(char *args) {
 
 static void Benchmark(char *args) {
     (void)args;
-    CMove move = make_move(g1, f3, 0);
+    CMove move = make_move(hg1, hf3, 0);
     int i;
     const int cycles = 10000000;
     unsigned long start, end;

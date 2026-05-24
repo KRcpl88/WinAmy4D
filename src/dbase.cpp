@@ -600,9 +600,9 @@ void CPosition::DoMove(CMove move) {
             /* No more castling rights */
             p->m_bCastle &= ~(CastleMask[p->m_nTurn][0] | CastleMask[p->m_nTurn][1]);
         } else if (tp == Rook) {
-            if (fromOffset == (p->m_nTurn == White ? h1 : h8))
+            if (fromOffset == (p->m_nTurn == White ? hh1 : hh8))
                 p->m_bCastle &= ~(CastleMask[p->m_nTurn][0]);
-            if (fromOffset == (p->m_nTurn == White ? a1 : a8))
+            if (fromOffset == (p->m_nTurn == White ? ha1 : ha8))
                 p->m_bCastle &= ~(CastleMask[p->m_nTurn][1]);
         }
         if (move.IsCapture()) {
@@ -633,10 +633,10 @@ void CPosition::DoMove(CMove move) {
             p->m_ullHKey ^= HashKeys[OPP(p->m_nTurn)][sp][toOffset];
             if (sp == Pawn)
                 p->m_ullPKey ^= HashKeys[OPP(p->m_nTurn)][Pawn][toOffset];
-            if (toOffset == (OPP(p->m_nTurn) == White ? h1 : h8)) {
+            if (toOffset == (OPP(p->m_nTurn) == White ? hh1 : hh8)) {
                 p->m_bCastle &= ~(CastleMask[OPP(p->m_nTurn)][0]);
             }
-            if (toOffset == (OPP(p->m_nTurn) == White ? a1 : a8)) {
+            if (toOffset == (OPP(p->m_nTurn) == White ? ha1 : ha8)) {
                 p->m_bCastle &= ~(CastleMask[OPP(p->m_nTurn)][1]);
             }
         } else if (move.IsEnPassant()) {

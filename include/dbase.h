@@ -94,22 +94,26 @@ static inline CSCoord InvalidSquareCoord(void) {
 }
 
 /*
- * Constants for chess board squares.
- * NOTE: These values (0-63) correspond to legacy flat-board indices and are
- * used to index into precomputed EPM tables in movedata.cpp. They do NOT
- * directly map to multi-level board offsets. Use CastleSquare constants
- * for castling coordinates on the main board (level 7).
+ * Named constants for squares on the main 8x8 board (level 'h', level 7).
+ * Values equal 140 (= CBitBoard::LEVEL_OFFSET[7]) + rank*8 + file, so they
+ * map directly to 3D BitBoard offsets.  ha1 is white's bottom-left corner
+ * (offset 140), hh8 is black's top-right corner (offset 203).
+ *
+ * aa1 and oa1 are the single squares of the bottom-most (level 'a', level 0)
+ * and top-most (level 'o', level 14) boards respectively.
  */
 // clang-format off
 typedef enum {
-    a1 = 0, b1, c1, d1, e1, f1, g1, h1,
-    a2, b2, c2, d2, e2, f2, g2, h2,
-    a3, b3, c3, d3, e3, f3, g3, h3,
-    a4, b4, c4, d4, e4, f4, g4, h4,
-    a5, b5, c5, d5, e5, f5, g5, h5,
-    a6, b6, c6, d6, e6, f6, g6, h6,
-    a7, b7, c7, d7, e7, f7, g7, h7,
-    a8, b8, c8, d8, e8, f8, g8, h8
+    ha1 = 140, hb1, hc1, hd1, he1, hf1, hg1, hh1,
+    ha2, hb2, hc2, hd2, he2, hf2, hg2, hh2,
+    ha3, hb3, hc3, hd3, he3, hf3, hg3, hh3,
+    ha4, hb4, hc4, hd4, he4, hf4, hg4, hh4,
+    ha5, hb5, hc5, hd5, he5, hf5, hg5, hh5,
+    ha6, hb6, hc6, hd6, he6, hf6, hg6, hh6,
+    ha7, hb7, hc7, hd7, he7, hf7, hg7, hh7,
+    ha8, hb8, hc8, hd8, he8, hf8, hg8, hh8,
+    aa1 = 0,   // level 'a' (bottom 1x1 board) -- only square
+    oa1 = 343  // level 'o' (top 1x1 board)    -- only square
 } Square;
 // clang-format on
 
