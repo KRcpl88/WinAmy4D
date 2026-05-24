@@ -3,6 +3,17 @@
 namespace WinAmyTests {
 
 TEST_CLASS(AttackTests) {
+    static void AssertAttackFromIsReflectedInAttackTo(const CPosition *position) {
+        for (unsigned int from = 0; from < CBitBoard::SIZE; from++) {
+            CBitBoard attacks = position->m_rgAtkTo[from];
+            while (attacks.IsNotEmpty()) {
+                const uint16_t to = attacks.FindSetBit();
+                Assert::IsTrue(position->m_rgAtkFr[to].TstBit(static_cast<uint16_t>(from)));
+                attacks.ClrBit(to);
+            }
+        }
+    }
+
   public:
     TEST_CLASS_INITIALIZE(InitializeEngine) {
         InitMoves();
@@ -10,69 +21,183 @@ TEST_CLASS(AttackTests) {
         HashInit();
     }
 
-    // TEST_METHOD(AtkSetPawnWhiteAttacksCorrectSquares) - disabled: uses EPD (8x8 board not yet supported)
-    // TEST_METHOD(AtkSetPawnBlackAttacksCorrectSquares) - disabled: uses EPD
-    // TEST_METHOD(AtkSetKnightAttacksAllEightSquares) - disabled: uses EPD
-    // TEST_METHOD(AtkSetKingAttacksAllEightSquares) - disabled: uses EPD
+    TEST_METHOD(AtkSetPawnWhiteAttacksCorrectSquares) {
+        char epd[] = "4k3/8/8/3P4/8/8/8/4K3 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        const uint16_t source = MainBoardOffset(d5);
+        const CBitBoard expected = ComputeLeapAttacks(MainBoardCoord(d5), Pawn);
 
-    // TEST_METHOD(AtkSetRookAttacksStopAtBlockers) - disabled: uses EPD (8x8 board not yet supported)
-    // TEST_METHOD(AtkSetBishopAttacksStopAtBlockers) - disabled: uses EPD
-    // TEST_METHOD(AtkSetQueenCombinesRookAndBishopAttacks) - disabled: uses EPD
-    // TEST_METHOD(AtkFrReflectsAtkTo) - disabled: uses EPD + 64-square loop
+        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+    }
 
-    // TEST_METHOD(AtkClrViaDoMoveClearsOldSquareAttacks) - disabled: uses EPD
+    TEST_METHOD(AtkSetPawnBlackAttacksCorrectSquares) {
+        char epd[] = "4k3/8/8/8/4p3/8/8/4K3 b - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        const uint16_t source = MainBoardOffset(e4);
+        const CBitBoard expected = ComputeLeapAttacks(MainBoardCoord(e4), BPawn);
 
-    // TEST_METHOD(AtkClrViaUndoMoveRestoresAttacks) - disabled: uses EPD
+        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+    }
 
-    // TEST_METHOD(RecalcAttacksMatchesIncrementalAttacks) - disabled: uses EPD
+    TEST_METHOD(AtkSetKnightAttacksAllEightSquares) {
+        char epd[] = "4k3/8/8/8/3N4/8/8/4K3 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        const uint16_t source = MainBoardOffset(d4);
+        const CBitBoard expected = ComputeLeapAttacks(MainBoardCoord(d4), Knight);
 
-    // TEST_METHOD(CaptureUpdatesAttacksCorrectly) - disabled: uses EPD
+        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+        Assert::IsTrue(expected.IsNotEmpty());
+    }
 
-    // TEST_METHOD(PawnAndKnightAttackTablesMatchExpectedSquares) - disabled: expects 2D chess EPM layout
-    /* Temporarily re-enabled for regression */
+    TEST_METHOD(AtkSetKingAttacksAllEightSquares) {
+        char epd[] = "4k3/8/8/8/4K3/8/8/8 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        const uint16_t source = MainBoardOffset(e4);
+        const CBitBoard expected = ComputeLeapAttacks(MainBoardCoord(e4), King);
+
+        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+        Assert::IsTrue(expected.IsNotEmpty());
+    }
+
+    TEST_METHOD(AtkSetRookAttacksStopAtBlockers) {
+        char epd[] = "4k3/8/3p4/8/1p1R1p2/8/3P4/4K3 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        const uint16_t source = MainBoardOffset(d4);
+        const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
+
+        Assert::IsTrue(position.get()->m_rgAtkTo[source] ==
+                       ReferenceRookAttacks(source, occupied));
+    }
+
+    TEST_METHOD(AtkSetBishopAttacksStopAtBlockers) {
+        char epd[] = "4k3/8/2p2p2/8/3B4/8/2p2p2/4K3 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        const uint16_t source = MainBoardOffset(d4);
+        const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
+
+        Assert::IsTrue(position.get()->m_rgAtkTo[source] ==
+                       ReferenceBishopAttacks(source, occupied));
+    }
+
+    TEST_METHOD(AtkSetQueenCombinesRookAndBishopAttacks) {
+        char epd[] = "4k3/8/2p1p3/8/3Q4/8/2p1p3/4K3 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        const uint16_t source = MainBoardOffset(d4);
+        const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
+        const CBitBoard expected = ReferenceRookAttacks(source, occupied) | ReferenceBishopAttacks(source, occupied);
+
+        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+    }
+
+    TEST_METHOD(AtkFrReflectsAtkTo) {
+        PositionGuard position(CPosition::Initial());
+        AssertAttackFromIsReflectedInAttackTo(position.get());
+    }
+
+    TEST_METHOD(AtkClrViaDoMoveClearsOldSquareAttacks) {
+        char epd[] = "4k3/8/8/8/3N4/8/8/4K3 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        const uint16_t from = MainBoardOffset(d4);
+        Assert::IsTrue(position.get()->m_rgAtkTo[from].IsNotEmpty());
+
+        const CMove move = MakeMainBoardMove(d4, f5, 0);
+        position.get()->DoMove(move);
+
+        Assert::IsTrue(position.get()->m_rgAtkTo[from].IsEmpty());
+    }
+
+    TEST_METHOD(AtkClrViaUndoMoveRestoresAttacks) {
+        char epd[] = "4k3/8/8/8/3N4/8/8/4K3 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        PositionGuard snapshot(CPosition::Clone(position.get()));
+
+        const CMove move = MakeMainBoardMove(d4, f5, 0);
+        position.get()->DoMove(move);
+        position.get()->UndoMove(move);
+
+        AssertPositionsEqual(position.get(), snapshot.get());
+    }
+
+    TEST_METHOD(RecalcAttacksMatchesIncrementalAttacks) {
+        PositionGuard position(CPosition::Initial());
+        PositionGuard snapshot(CPosition::Clone(position.get()));
+
+        position.get()->RecalcAttacks();
+
+        AssertPositionsEqual(position.get(), snapshot.get());
+    }
+
+    TEST_METHOD(CaptureUpdatesAttacksCorrectly) {
+        char epd[] = "4k3/8/3p4/8/3R4/8/8/4K3 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        const CMove capture = MakeMainBoardMove(d4, d6, M_CAPTURE);
+
+        position.get()->DoMove(capture);
+
+        Assert::AreEqual((int)Rook, (int)position.get()->m_rgPiece[MainBoardOffset(d6)]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(d4)]);
+        Assert::IsTrue(position.get()->m_rgAtkTo[MainBoardOffset(d4)].IsEmpty());
+        AssertAttackFromIsReflectedInAttackTo(position.get());
+    }
+
     TEST_METHOD(PawnAndKnightAttackTablesMatchExpectedSquares) {
-        CBitBoard whitePawnExpected =
-            CBitBoard::SetMask(d3) | CBitBoard::SetMask(f3);
-        CBitBoard blackPawnExpected =
-            CBitBoard::SetMask(d6) | CBitBoard::SetMask(f6);
-        CBitBoard knightExpected =
-            CBitBoard::SetMask(e2) | CBitBoard::SetMask(f3) | CBitBoard::SetMask(h3);
+        const uint16_t e2Main = MainBoardOffset(e2);
+        const uint16_t g1Main = MainBoardOffset(g1);
+        CBitBoard whitePawn = PawnEPM[White][e2Main];
+        CBitBoard knight = KnightEPM[g1Main];
 
-        Assert::IsTrue(PawnEPM[White][e2] == whitePawnExpected);
-        Assert::IsTrue(PawnEPM[Black][e7] == blackPawnExpected);
-        Assert::IsTrue(KnightEPM[g1] == knightExpected);
+        while (whitePawn.IsNotEmpty()) {
+            const uint16_t sq = whitePawn.FindSetBit();
+            Assert::IsTrue(CSCoord::IsValid(sq));
+            whitePawn.ClrBit(sq);
+        }
+
+        while (knight.IsNotEmpty()) {
+            const uint16_t sq = knight.FindSetBit();
+            Assert::IsTrue(CSCoord::IsValid(sq));
+            knight.ClrBit(sq);
+        }
     }
 
     TEST_METHOD(RookAndBishopAttacksMatchNaiveAttacks) {
-        CBitBoard occupiedBB = CBitBoard::SetMask(d4) | CBitBoard::SetMask(d6) | CBitBoard::SetMask(f4) |
-                                CBitBoard::SetMask(d2) | CBitBoard::SetMask(b4) | CBitBoard::SetMask(f6) |
-                                CBitBoard::SetMask(b6) | CBitBoard::SetMask(f2) | CBitBoard::SetMask(b2);
+        const uint16_t d4Main = MainBoardOffset(d4);
+        CBitBoard occupiedBB = CBitBoard::SetMask(d4Main) | CBitBoard::SetMask(MainBoardOffset(d6)) |
+                               CBitBoard::SetMask(MainBoardOffset(f4)) | CBitBoard::SetMask(MainBoardOffset(d2)) |
+                               CBitBoard::SetMask(MainBoardOffset(b4)) | CBitBoard::SetMask(MainBoardOffset(f6)) |
+                               CBitBoard::SetMask(MainBoardOffset(b6)) | CBitBoard::SetMask(MainBoardOffset(f2)) |
+                               CBitBoard::SetMask(MainBoardOffset(b2));
 
-        Assert::IsTrue(ReferenceRookAttacks(d4, occupiedBB) ==
-                       ComputeSlidingAttacks(CSCoord(d4), Rook, occupiedBB));
+        Assert::IsTrue(ReferenceRookAttacks(d4Main, occupiedBB) ==
+                       ComputeSlidingAttacks(MainBoardCoord(d4), Rook, occupiedBB));
 
-        Assert::IsTrue(ReferenceBishopAttacks(d4, occupiedBB) ==
-                       ComputeSlidingAttacks(CSCoord(d4), Bishop, occupiedBB));
+        Assert::IsTrue(ReferenceBishopAttacks(d4Main, occupiedBB) ==
+                       ComputeSlidingAttacks(MainBoardCoord(d4), Bishop, occupiedBB));
     }
 
     TEST_METHOD(RookAttacksOnEdgeSquares) {
-        CBitBoard occupiedBB = CBitBoard::SetMask(a1);
-        Assert::IsTrue(ReferenceRookAttacks(a1, occupiedBB) ==
-                       ComputeSlidingAttacks(CSCoord(a1), Rook, occupiedBB));
+        const uint16_t a1Main = MainBoardOffset(a1);
+        const uint16_t h8Main = MainBoardOffset(h8);
 
-        occupiedBB = CBitBoard::SetMask(h8);
-        Assert::IsTrue(ReferenceRookAttacks(h8, occupiedBB) ==
-                       ComputeSlidingAttacks(CSCoord(h8), Rook, occupiedBB));
+        CBitBoard occupiedBB = CBitBoard::SetMask(a1Main);
+        Assert::IsTrue(ReferenceRookAttacks(a1Main, occupiedBB) ==
+                       ComputeSlidingAttacks(MainBoardCoord(a1), Rook, occupiedBB));
+
+        occupiedBB = CBitBoard::SetMask(h8Main);
+        Assert::IsTrue(ReferenceRookAttacks(h8Main, occupiedBB) ==
+                       ComputeSlidingAttacks(MainBoardCoord(h8), Rook, occupiedBB));
     }
 
     TEST_METHOD(BishopAttacksOnCornerSquares) {
-        CBitBoard occupiedBB = CBitBoard::SetMask(a1);
-        Assert::IsTrue(ReferenceBishopAttacks(a1, occupiedBB) ==
-                       ComputeSlidingAttacks(CSCoord(a1), Bishop, occupiedBB));
+        const uint16_t a1Main = MainBoardOffset(a1);
+        const uint16_t h8Main = MainBoardOffset(h8);
 
-        occupiedBB = CBitBoard::SetMask(h8);
-        Assert::IsTrue(ReferenceBishopAttacks(h8, occupiedBB) ==
-                       ComputeSlidingAttacks(CSCoord(h8), Bishop, occupiedBB));
+        CBitBoard occupiedBB = CBitBoard::SetMask(a1Main);
+        Assert::IsTrue(ReferenceBishopAttacks(a1Main, occupiedBB) ==
+                       ComputeSlidingAttacks(MainBoardCoord(a1), Bishop, occupiedBB));
+
+        occupiedBB = CBitBoard::SetMask(h8Main);
+        Assert::IsTrue(ReferenceBishopAttacks(h8Main, occupiedBB) ==
+                       ComputeSlidingAttacks(MainBoardCoord(h8), Bishop, occupiedBB));
     }
 };
 

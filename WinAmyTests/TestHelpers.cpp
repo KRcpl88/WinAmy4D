@@ -1,6 +1,8 @@
 #include "TestHelpers.h"
 #include "scoord.h"
 
+#include <sstream>
+
 namespace WinAmyTests {
 
 CBitBoard ReferenceRookAttacks(int sq, CBitBoard occupied) {
@@ -66,6 +68,53 @@ void AssertPositionsEqual(const CPosition *lhs, const CPosition *rhs) {
     }
     Assert::AreEqual((int)lhs->m_nTurn, (int)rhs->m_nTurn);
     Assert::AreEqual((int)lhs->m_wPly, (int)rhs->m_wPly);
+}
+
+uint16_t MainBoardOffset(int square) {
+    if (square >= 0 && square < 64) {
+        const int file = square % 8;
+        const int rank = square / 8;
+        return static_cast<uint16_t>(CSCoord(MAIN_LEVEL, file, rank).BitOffset());
+    }
+    return static_cast<uint16_t>(square);
+}
+
+CSCoord MainBoardCoord(int square) {
+    return CSCoord(MainBoardOffset(square));
+}
+
+CMove MakeMainBoardMove(int from, int to, int flags) {
+    return make_move(MainBoardCoord(from), MainBoardCoord(to), flags);
+}
+
+CMove MakeMainBoardPromotion(int from, int to, int promotionType, int flags) {
+    return make_promotion(MainBoardCoord(from), MainBoardCoord(to), promotionType, flags);
+}
+
+std::string BuildMainBoardEPD(const std::string &mainBoardPlacement, const std::string &sideToMove,
+                              const std::string &castleRights, const std::string &enPassant) {
+    static const char *kLevelPrefix =
+        "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|7/7/7/7/7/7/7|";
+    return std::string(kLevelPrefix) + mainBoardPlacement + " " + sideToMove + " " + castleRights +
+           " " + enPassant;
+}
+
+CPosition *CreatePositionFromLegacyMainEPD(const char *legacyMainBoardEpd) {
+    std::istringstream parser(legacyMainBoardEpd ? legacyMainBoardEpd : "");
+    std::string board;
+    std::string side = "w";
+    std::string castle = "-";
+    std::string ep = "-";
+    parser >> board >> side >> castle >> ep;
+    const bool hasEnPassant = ep.size() == 2 && ep != "-";
+    std::string epd = BuildMainBoardEPD(board, side, castle, hasEnPassant ? "-" : ep);
+    CPosition *position = CPosition::CreateFromEPD(epd.c_str());
+    if (hasEnPassant) {
+        const int file = ep[0] - 'a';
+        const int rank = ep[1] - '1';
+        position->m_EnPassant = CSCoord(MAIN_LEVEL, file, rank);
+    }
+    return position;
 }
 
 } // namespace WinAmyTests
