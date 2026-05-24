@@ -1,0 +1,27 @@
+#include "resource.h"
+#include <windows.h>
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New Game\tCtrl+N",   IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",               IDM_FILE_EXIT
+    END
+    POPUP "&Options"
+    BEGIN
+        POPUP "&Search Depth"
+        BEGIN
+            MENUITEM "1",   IDM_DEPTH_1
+            MENUITEM "2",   IDM_DEPTH_2
+            MENUITEM "3",   IDM_DEPTH_3, CHECKED
+            MENUITEM "4",   IDM_DEPTH_4
+            MENUITEM "5",   IDM_DEPTH_5
+            MENUITEM "6",   IDM_DEPTH_6
+            MENUITEM "7",   IDM_DEPTH_7
+            MENUITEM "8",   IDM_DEPTH_8
+            MENUITEM "9",   IDM_DEPTH_9
+        END
+    END
+END

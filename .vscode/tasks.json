@@ -76,6 +76,21 @@
             "dependsOn": "Build WinAmy (Debug x64)",
             "problemMatcher": "$msCompile",
             "detail": "Build and run the WinAmyTests C++ unit tests (Debug x64)"
+        },
+        {
+            "label": "Build WinAmyGUI (Debug x64)",
+            "type": "shell",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
+            "args": [
+                "${workspaceFolder}\\WinAmy.sln",
+                "/t:WinAmyGUI",
+                "/p:Configuration=Debug",
+                "/p:Platform=x64",
+                "/m"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "detail": "Build the WinAmyGUI project in Debug x64 configuration"
         }
     ]
 }

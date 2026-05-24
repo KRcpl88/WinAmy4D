@@ -323,6 +323,20 @@ if2if3
 
 
 
+# GUI
+
+Create a plan to create a graphical UI for the WinAmy.lib.  Create the GUI program in a new project folder WinAmyGUI and link to the WinAmy.lib to play the game.
+
+The game should have the following minimal features:
+
+1. Create a new game
+2. set search depth from 1 to 9.  Defsult should be 3.
+3. Display the board position in a GUI format, including all levels, on a single screen.  This may be difficult.  Either display the board levels side by side some way, or use a semi transparent top down to show all levels at once, or perhaps a perspective 3D view that allows the levels to be viewed at an angle so that all the pieces may be seen.
+4. Allow 1, 2, or 0 players (self play).  The user may change the number of players at sny point during the game, and if the play is set to self play, a button will allow the user to pause the game to either view the board or change the number of players
+5. During self play, the board will show each move made by the computer as they happen.
+6. The user msay undo a move if needed.
+
+
 
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
