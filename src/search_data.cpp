@@ -192,7 +192,7 @@ CMove CSearchData::NextMove() {
         }
 
         CBitBoard promoting_pawns =
-            p->m_rgMask[p->m_nTurn][Pawn] & SeventhRank[p->m_nTurn];
+            p->m_rgMask[p->m_nTurn][Pawn] & PrePromoRank[p->m_nTurn];
         while (promoting_pawns) {
             CSCoord from = (promoting_pawns).FindSetBitCoord();
             promoting_pawns.ClearLowestBit();
@@ -377,7 +377,7 @@ CMove CSearchData::NextMove() {
 
         {
             const int direction = (p->m_nTurn == White) ? 1 : -1;
-            CBitBoard pawns = p->m_rgMask[p->m_nTurn][Pawn] & ~SeventhRank[p->m_nTurn];
+            CBitBoard pawns = p->m_rgMask[p->m_nTurn][Pawn] & ~PrePromoRank[p->m_nTurn];
             while (pawns) {
                 CSCoord fromCoord = pawns.FindSetBitCoord();
                 pawns.ClearLowestBit();
@@ -765,7 +765,7 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
     att = p->m_rgMask[p->m_nTurn][0];
 
     /* Handle pawn promotions first */
-    pwn7th = p->m_rgMask[p->m_nTurn][Pawn] & SeventhRank[p->m_nTurn];
+    pwn7th = p->m_rgMask[p->m_nTurn][Pawn] & PrePromoRank[p->m_nTurn];
     att &= ~pwn7th;
 
     while (pwn7th) {
@@ -775,7 +775,10 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
 
         i = (pwn7th).FindSetBit();
         pwn7th.ClearLowestBit();
-        next = (p->m_nTurn == White) ? i + 8 : i - 8;
+        const CSCoord iCoord(static_cast<uint16_t>(i));
+        next = (p->m_nTurn == White)
+                   ? i + static_cast<int>(CBitBoard::LEVEL_WIDTH[iCoord.m_nLevel])
+                   : i - static_cast<int>(CBitBoard::LEVEL_WIDTH[iCoord.m_nLevel]);
 
         if (p->m_rgPiece[next] == Neutral) {
             CMove move = make_promotion(i, next, Queen, 0);

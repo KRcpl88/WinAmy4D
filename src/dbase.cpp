@@ -246,6 +246,8 @@ void InitGeometry3D() {
         BishopEPM[fromOffset] = {};
         RookEPM[fromOffset]   = {};
         QueenEPM[fromOffset]  = {};
+        WPawnEPM[fromOffset]  = ComputeLeapAttacks(from, Pawn);
+        BPawnEPM[fromOffset]  = ComputeLeapAttacks(from, BPawn);
 
         // Bishop directions
         for (int d = 0; d < ATTACK_DELTA_COUNT[Bishop]; d++) {
@@ -1637,12 +1639,16 @@ void CPosition::GenChecks(heap_t heap) {
         tmp.ClearLowestBit();
 
         if (p->m_nTurn == White) {
-            if (p->m_rgPiece[sq - 8] == Pawn) {
-                append_to_heap(heap, make_move(sq - 8, sq, 0));
+            const CSCoord sqCoord(static_cast<uint16_t>(sq));
+            const int pawnOff = sq - static_cast<int>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
+            if (pawnOff >= 0 && p->m_rgPiece[pawnOff] == Pawn) {
+                append_to_heap(heap, make_move(pawnOff, sq, 0));
             }
         } else {
-            if (p->m_rgPiece[sq + 8] == -Pawn) {
-                append_to_heap(heap, make_move(sq + 8, sq, 0));
+            const CSCoord sqCoord(static_cast<uint16_t>(sq));
+            const int pawnOff = sq + static_cast<int>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
+            if (pawnOff < static_cast<int>(CBitBoard::SIZE) && p->m_rgPiece[pawnOff] == -Pawn) {
+                append_to_heap(heap, make_move(pawnOff, sq, 0));
             }
         }
     }

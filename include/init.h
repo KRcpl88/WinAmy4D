@@ -47,6 +47,7 @@ extern const CBitBoard KnightEPM[CBitBoard::SIZE], KingEPM[CBitBoard::SIZE];
 extern const CBitBoard PawnEPM[2][CBitBoard::SIZE];
 extern CBitBoard BishopEPM[CBitBoard::SIZE], RookEPM[CBitBoard::SIZE], QueenEPM[CBitBoard::SIZE];
 extern CBitBoard SeventhRank[2], ThirdRank[2], EighthRank[2];
+extern CBitBoard PrePromoRank[2];
 extern CBitBoard LeftOf[8], RightOf[8], FarLeftOf[8], FarRightOf[8];
 extern CBitBoard EdgeMask;
 extern CBitBoard BlackSquaresMask, WhiteSquaresMask;

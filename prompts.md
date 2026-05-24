@@ -156,6 +156,174 @@ The chess board square location enums a1 through h8 represent squares on the old
 
 
 
+
+# NegaScout bug
+Please investigate a bug in CSearchData::NegaScout.  UndoMove is called from NegaScout.  UndoMove calls AtkSet at line 987, but the piece type tp is set to 0.  This causes AtkSet to call Panic at line 419.  The main problme seems to be that NegaScout is trying to undo a move where the piece is not valid, whihc should not happen.  It is possible the square does nto have  piece set but its not clear how NEgaScout would try to call UndoMove for an invalid square.
+
+Here is the complete call stack:
+
+ucrtbased.dll!00007ff9928a4805() (Unknown Source:0)
+ucrtbased.dll!00007ff9928a49a3() (Unknown Source:0)
+ucrtbased.dll!00007ff9928bba9d() (Unknown Source:0)
+WinAmy.exe!Panic(CPosition * p) Line 324 (c:\github\WinAmy4D\src\dbase.cpp:324)
+WinAmy.exe!CPosition::AtkSet(int type, int color, const CSCoord & squareCoord) Line 419 (c:\github\WinAmy4D\src\dbase.cpp:419)
+WinAmy.exe!CPosition::UndoMove(CMove move) Line 987 (c:\github\WinAmy4D\src\dbase.cpp:987)
+WinAmy.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 793 (c:\github\WinAmy4D\src\search.cpp:793)
+WinAmy.exe!IterateInt(void * x) Line 1055 (c:\github\WinAmy4D\src\search.cpp:1055)
+WinAmy.exe!CPosition::Iterate(int * score_ptr, CMove alternate_move, int * alternate_score_ptr) Line 426 (c:\github\WinAmy4D\src\position.cpp:426)
+WinAmy.exe!CPosition::SearchRoot() Line 470 (c:\github\WinAmy4D\src\position.cpp:470)
+WinAmy.exe!StateMachine() Line 97 (c:\github\WinAmy4D\src\state_machine.cpp:97)
+WinAmy.exe!main(int argc, char * * argv) Line 206 (c:\github\WinAmy4D\WinAmy\main.cpp:206)
+WinAmy.exe!invoke_main() Line 79 (d:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:79)
+WinAmy.exe!__scrt_common_main_seh() Line 288 (d:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:288)
+WinAmy.exe!__scrt_common_main() Line 331 (d:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:331)
+WinAmy.exe!mainCRTStartup(void * __formal) Line 17 (d:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_main.cpp:17)
+kernel32.dll!00007ff9e20a7374() (Unknown Source:0)
+ntdll.dll!00007ff9e253cc91() (Unknown Source:0)
+
+This is a list of the moves in the game so far, each is a pair of SAN moves, white first then black.
+
+id2id4
+hd7hd5
+hd2hd4
+hg8hf6
+hc2hc4
+hd5xhc4
+hg1hf3
+ib7hd6
+hc1hf4
+if7he6
+hf4xhd6
+hd8xhd6
+he2he3
+hb7hb5
+ha2ha4
+hc7hc6
+hb1hc3
+hb8gc6
+ib1ic3
+ia7fb5
+hf3he5
+he6gc4
+ic3ie4
+hd6gd5
+he5xif6
+ie7xif6
+ie4xif6
+he8ie7
+ic1ig5
+ie7if7
+ha4xhb5
+id7hd7
+hb5xhc6
+hd7xhc6
+hc3ga4
+hc6fc4
+ga4xfb5
+fc4xfb5
+id4id5
+ie6xid5
+if6xhh8
+ig7xhh8
+hf1xhc4
+hc8hg4
+hd1ic1
+fb5hc6
+ha1hc1
+he7he6
+ic1if4
+if7hg8
+he1hg1
+hf8hd6
+hf2hf3
+hg4ff3
+ie1ic3
+gc6hb5
+hc4fb3
+hc6hd5
+if4id2
+gc4hb3
+hc1hc2
+hb5xic3
+ib2xic3
+hb3ic4
+if1ie3
+ic4xid2
+ie3xhd5
+id2xhf1
+hd5xhf6
+hg7xhf6
+hg1xhf1
+hh8ig7
+hc2hc6
+ig7ba1
+hc6xic6
+ba1xga1
+id1gc2
+ha8hc8
+ig1ib1
+ga1aa1
+gc2gg2
+gd5hd5
+fb3fc2
+aa1cc1
+ic6xjc6
+cc1xgc1
+gg2gf3
+ff3fc6
+jc6xjd6
+gc1xgb1
+gf3gd3
+gb1hc1
+hf1if1
+hd6xhh2
+gd3xgd7
+hc1hg1
+if1hf2
+fc6fb5
+jd6xhf6
+hd5hg5
+gd7hd7
+hc8hf8
+hf6fd4
+hf8jd6
+ig5ie3
+hg5fe5
+fd4fb4
+fb5jb5
+fb4xia6
+jd6xjd1
+ia6xgb7
+hg1xje1
+ib1ie1
+jd1xie1
+ge1xie1Q
+je1xie1
+ia1xie1
+fe5ba1
+gb7xga7
+jb5xjf1
+hg2xjf1Q
+ba1hg7
+ga7xha7
+hg7hg1
+hf2ge2
+hg1xgg1
+hd7he8
+hg8if7
+jf1xja6
+gg1gg4
+ge2he2
+gg4ig4
+ja6xjb6
+ig4ie4
+he2id1
+id5id4
+if2if3
+
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove

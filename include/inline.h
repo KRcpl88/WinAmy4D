@@ -131,8 +131,11 @@ static inline CMove make_promotion(int from, int to, int type, int flags) {
 
 /**
  * Returns if the square is a promotion square.
+ * Promotion only occurs on levels f–j (indices 5–9).
  */
 static inline bool is_promo_square(CSCoord sq) {
+    if (sq.m_nLevel < 5 || sq.m_nLevel > 9)
+        return false;
     const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
     return sq.m_nRank == 0 || sq.m_nRank == (width - 1);
 }
