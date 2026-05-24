@@ -46,6 +46,29 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug WinAmyGUI (Debug x64)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\x64\\Debug\\WinAmyGUI.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "externalTerminal",
+            "preLaunchTask": "Build WinAmyGUI (Debug x64)"
+        },
+        {
+            "name": "Launch WinAmyGUI (Debug x64)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\x64\\Debug\\WinAmyGUI.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "externalTerminal"
         }
     ]
 }

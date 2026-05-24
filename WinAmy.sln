@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "src", "src\src.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinAmyTests", "WinAmyTests\WinAmyTests.vcxproj", "{C9FD8F0C-8DD3-4F65-8A89-6718D5792F55}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinAmyGUI", "WinAmyGUI\WinAmyGUI.vcxproj", "{A2B3C4D5-E6F7-4891-A2B3-C4D5E6F78901}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,12 @@ Global
 		{C9FD8F0C-8DD3-4F65-8A89-6718D5792F55}.Release|x64.Build.0 = Release|x64
 		{C9FD8F0C-8DD3-4F65-8A89-6718D5792F55}.Release|x86.ActiveCfg = Release|Win32
 		{C9FD8F0C-8DD3-4F65-8A89-6718D5792F55}.Release|x86.Build.0 = Release|Win32
+		{A2B3C4D5-E6F7-4891-A2B3-C4D5E6F78901}.Debug|x64.ActiveCfg = Debug|x64
+		{A2B3C4D5-E6F7-4891-A2B3-C4D5E6F78901}.Debug|x64.Build.0 = Debug|x64
+		{A2B3C4D5-E6F7-4891-A2B3-C4D5E6F78901}.Debug|x86.ActiveCfg = Debug|x64
+		{A2B3C4D5-E6F7-4891-A2B3-C4D5E6F78901}.Release|x64.ActiveCfg = Release|x64
+		{A2B3C4D5-E6F7-4891-A2B3-C4D5E6F78901}.Release|x64.Build.0 = Release|x64
+		{A2B3C4D5-E6F7-4891-A2B3-C4D5E6F78901}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -323,6 +323,52 @@ if2if3
 
 
 
+# GUI
+
+Create a plan to create a graphical UI for the WinAmy.lib.  Create the GUI program in a new project folder WinAmyGUI and link to the WinAmy.lib to play the game.
+
+The game should have the following minimal features:
+
+1. Create a new game
+2. set search depth from 1 to 9.  Defsult should be 3.
+3. Display the board position in a GUI format, including all levels, on a single screen.  This may be difficult.  Either display the board levels side by side some way, or use a semi transparent top down to show all levels at once, or perhaps a perspective 3D view that allows the levels to be viewed at an angle so that all the pieces may be seen.
+4. Allow 1, 2, or 0 players (self play).  The user may change the number of players at sny point during the game, and if the play is set to self play, a button will allow the user to pause the game to either view the board or change the number of players
+5. During self play, the board will show each move made by the computer as they happen.
+6. The user msay undo a move if needed.
+
+
+
+
+# GUI bug
+I hit an access violoation in WinAmyGUI.exe: "0xC0000005: Access violation reading location 0x0000000000000000"  when I tried to make a move.
+
+WinAmyGUI.exe!ProbeST(unsigned __int64 key, int * score) Line 350 (c:\github\WinAmy4D\src\hashtable.cpp:350)
+WinAmyGUI.exe!EvaluatePositionForWhite(const CPosition * p) Line 2133 (c:\github\WinAmy4D\src\evaluation.cpp:2133)
+WinAmyGUI.exe!EvaluatePosition(const CPosition * p) Line 2626 (c:\github\WinAmy4D\src\evaluation.cpp:2626)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 357 (c:\github\WinAmy4D\src\search.cpp:357)
+WinAmyGUI.exe!IterateInt(void * x) Line 1062 (c:\github\WinAmy4D\src\search.cpp:1062)
+WinAmyGUI.exe!CPosition::Iterate(int * score_ptr, CMove alternate_move, int * alternate_score_ptr) Line 434 (c:\github\WinAmy4D\src\position.cpp:434)
+WinAmyGUI.exe!GameController::StartEngineSearch::__l2::<lambda_1>::operator()() Line 85 (c:\github\WinAmy4D\WinAmyGUI\GameController.cpp:85)
+WinAmyGUI.exe!std::invoke<`GameController::StartEngineSearch'::`2'::<lambda_1>>(GameController::StartEngineSearch::__l2::<lambda_1> && _Obj) Line 1670 (c:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.44.35207\include\type_traits:1670)
+WinAmyGUI.exe!std::thread::_Invoke<std::tuple<`GameController::StartEngineSearch'::`2'::<lambda_1>>,0>(void * _RawVals) Line 60 (c:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.44.35207\include\thread:60)
+ucrtbased.dll!00007ff982d72ec5() (Unknown Source:0)
+kernel32.dll!00007ff9e20a7374() (Unknown Source:0)
+ntdll.dll!00007ff9e253cc91() (Unknown Source:0)
+
+
+
+
+
+# GUI features
+
+1. the scroll bars are not working
+2. Odd levels should use a different color from even ones
+3. Reorder the levels form top to bottom, in 3 rows.  The top row is levels j-o, the middle row is levels g, h, and i, and the botttom row is a-f
+4. on ech row, space all thre levels proportional to their widths, instead of using c onctatn width for every level.
+
+
+
+
 
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
