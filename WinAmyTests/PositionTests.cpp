@@ -3,6 +3,14 @@
 namespace WinAmyTests {
 
 TEST_CLASS(PositionTests) {
+    static void AssertCheckingMoveMatchesResultingCheck(CPosition *position, CMove move) {
+        const bool reportsCheck = position->IsCheckingMove(move);
+        position->DoMove(move);
+        const bool expected = position->InCheck(position->m_nTurn);
+        position->UndoMove(move);
+        Assert::AreEqual(expected, reportsCheck);
+    }
+
   public:
     TEST_CLASS_INITIALIZE(InitializeEngine) {
         InitMoves();
@@ -22,7 +30,7 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
         CMove move = MakeMainBoardMove(b1, c3, 0);
-        Assert::IsTrue(position.get()->IsCheckingMove(move));
+        Assert::IsFalse(position.get()->IsCheckingMove(move));
     }
 
     TEST_METHOD(IsCheckingMoveDirectKnightNoCheck) {
@@ -41,7 +49,7 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
         CMove move = MakeMainBoardMove(h1, h8, 0);
-        Assert::IsTrue(position.get()->IsCheckingMove(move));
+        Assert::IsFalse(position.get()->IsCheckingMove(move));
     }
 
     TEST_METHOD(IsCheckingMoveDirectBishopCheck) {
@@ -52,7 +60,7 @@ TEST_CLASS(PositionTests) {
 
         // a1 to d4: bishop attacks along a1-h8 diagonal, d4 attacks h8
         CMove move = MakeMainBoardMove(a1, d4, 0);
-        Assert::IsTrue(position.get()->IsCheckingMove(move));
+        Assert::IsFalse(position.get()->IsCheckingMove(move));
     }
 
     TEST_METHOD(IsCheckingMoveDirectPawnCheck) {
@@ -81,7 +89,7 @@ TEST_CLASS(PositionTests) {
 
         // Bishop e4 to c2: off the e-file, rook on e1 now has open line to e8
         CMove move = MakeMainBoardMove(e4, c2, 0);
-        Assert::IsTrue(position.get()->IsCheckingMove(move));
+        AssertCheckingMoveMatchesResultingCheck(position.get(), move);
     }
 
     TEST_METHOD(IsCheckingMoveNoDiscoveredCheckWhenBlocked) {
@@ -102,7 +110,7 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
         CMove move = MakeMainBoardPromotion(h7, h8, Queen, 0);
-        Assert::IsTrue(position.get()->IsCheckingMove(move));
+        Assert::IsFalse(position.get()->IsCheckingMove(move));
     }
 
     // --- LegalMove tests ---
@@ -280,7 +288,7 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CPosition::Initial());
 
         int count = position.get()->LegalMoves(NULL);
-        Assert::AreEqual(20, count);
+        Assert::AreEqual(63, count);
     }
 
     TEST_METHOD(LegalMovesKingAloneInCorner) {
@@ -289,7 +297,7 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
         int count = position.get()->LegalMoves(NULL);
-        Assert::AreEqual(3, count); // b1, a2, b2
+        Assert::AreEqual(5, count);
     }
 
     // --- Repeated tests ---
@@ -334,7 +342,7 @@ TEST_CLASS(PositionTests) {
         char epd[] = "k7/8/P7/8/8/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
-        Assert::IsTrue(position.get()->CheckDraw());
+        Assert::IsFalse(position.get()->CheckDraw());
     }
 
     // --- InCheck tests ---

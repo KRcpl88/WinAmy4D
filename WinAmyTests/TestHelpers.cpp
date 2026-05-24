@@ -106,8 +106,15 @@ CPosition *CreatePositionFromLegacyMainEPD(const char *legacyMainBoardEpd) {
     std::string castle = "-";
     std::string ep = "-";
     parser >> board >> side >> castle >> ep;
-    std::string epd = BuildMainBoardEPD(board, side, castle, ep);
-    return CPosition::CreateFromEPD(epd.c_str());
+    const bool hasEnPassant = ep.size() == 2 && ep != "-";
+    std::string epd = BuildMainBoardEPD(board, side, castle, hasEnPassant ? "-" : ep);
+    CPosition *position = CPosition::CreateFromEPD(epd.c_str());
+    if (hasEnPassant) {
+        const int file = ep[0] - 'a';
+        const int rank = ep[1] - '1';
+        position->m_EnPassant = CSCoord(MAIN_LEVEL, file, rank);
+    }
+    return position;
 }
 
 } // namespace WinAmyTests
