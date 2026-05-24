@@ -220,7 +220,7 @@ void InitNextSQ() {
             CSCoord curr = prev.Step(dir);
             while (curr.IsValid()) {
                 NextSQ[fromOffset][prev.BitOffset()] =
-                    static_cast<int16_t>(curr.BitOffset());
+                    static_cast<uint16_t>(curr.BitOffset());
                 prev = curr;
                 curr = curr.Step(dir);
             }
@@ -449,20 +449,19 @@ void CPosition::GainAttack(const CSCoord& fromCoord,
                        const CSCoord& toCoord) {
     const uint16_t from = fromCoord.BitOffset();
     const uint16_t to = toCoord.BitOffset();
-    int16_t *nsq = NextSQ[from];
-    int sq = to;
+    const uint16_t *nsq = NextSQ[from];
+    uint16_t sq = to;
     const CBitBoard all = m_rgMask[0][0] | m_rgMask[1][0];
 
     for (;;) {
         sq = nsq[sq];
-        if (sq < 0)
+        if (sq == 0xffff)
             break;
 
-        const uint16_t attackSquare = static_cast<uint16_t>(sq);
-        m_rgAtkTo[from].SetBit(attackSquare);
-        m_rgAtkFr[attackSquare].SetBit(from);
+        m_rgAtkTo[from].SetBit(sq);
+        m_rgAtkFr[sq].SetBit(from);
 
-        if (all.TstBit(attackSquare))
+        if (all.TstBit(sq))
             break;
     }
 }
@@ -476,16 +475,16 @@ void CPosition::LooseAttack(const CSCoord& fromCoord,
                         const CSCoord& toCoord) {
     const uint16_t from = fromCoord.BitOffset();
     const uint16_t to = toCoord.BitOffset();
-    int16_t *nsq = NextSQ[from];
-    int sq = to;
+    const uint16_t *nsq = NextSQ[from];
+    uint16_t sq = to;
     const CBitBoard all = m_rgMask[0][0] | m_rgMask[1][0];
 
     for (;;) {
         sq = nsq[sq];
-        if (sq < 0)
+        if (sq == 0xffff)
             break;
 
-        const uint16_t attackSquare = static_cast<uint16_t>(sq);
+        const uint16_t attackSquare = sq;
         m_rgAtkTo[from].ClrBit(attackSquare);
         m_rgAtkFr[attackSquare].ClrBit(from);
 

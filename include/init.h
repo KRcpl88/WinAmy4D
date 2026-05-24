@@ -57,7 +57,7 @@ extern CBitBoard WPawnBackwardMask[CBitBoard::SIZE], BPawnBackwardMask[CBitBoard
 extern CBitBoard KingSideMask, QueenSideMask;
 extern CBitBoard ConnectedMask[CBitBoard::SIZE];
 
-extern int16_t NextSQ[CBitBoard::SIZE][CBitBoard::SIZE];
+extern uint16_t NextSQ[CBitBoard::SIZE][CBitBoard::SIZE];
 
 void InitAll(void);
 void InitNextSQ(void);

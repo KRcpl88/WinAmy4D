@@ -39,7 +39,7 @@
 
 static signed char conv[128];
 
-int16_t NextSQ[CBitBoard::SIZE][CBitBoard::SIZE];
+uint16_t NextSQ[CBitBoard::SIZE][CBitBoard::SIZE];
 
 static int QueenDirs[] = {16, 1, -16, -1, 15, 17, -15, -17};
 
@@ -312,7 +312,7 @@ void InitMoves(void) {
     // once the ATTACK_DELTA tables are available.
     for (unsigned int sqIndex = 0; sqIndex < CBitBoard::SIZE; sqIndex++) {
         for (unsigned int sq2Index = 0; sq2Index < CBitBoard::SIZE; sq2Index++) {
-            NextSQ[sqIndex][sq2Index] = -1;
+            NextSQ[sqIndex][sq2Index] = 0xffff;
         }
     }
 }
