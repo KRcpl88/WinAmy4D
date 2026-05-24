@@ -1,4 +1,4 @@
-name: Add WinAmy.exe to Release Binaries
+name: Add release binaries
 
 on:
   release:
@@ -43,7 +43,7 @@ jobs:
       - name: Build solution (Release x64)
         run: msbuild WinAmy.sln /p:Configuration=Release /p:Platform=x64 /m
 
-      - name: Upload WinAmy.exe to release assets
+      - name: Upload release binaries to release assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name }}
