@@ -196,10 +196,113 @@ CBitBoard ComputeLeapAttacks(const CSCoord &sq, int pieceType) {
 }
 
 
-/* local prototypes
+/*
+ * Initialize the NextSQ table for all 3D squares.
+ *
+ * NextSQ[from][through] gives the next square beyond 'through' on the
+ * sliding-piece ray that originates at 'from' and passes through 'through',
+ * or -1 if no such square exists on the board.  This table drives the
+ * incremental attack updates in GainAttack / LooseAttack.
+ *
+ * Must be called after InitMoves() (which zeroes the table).
  */
+void InitNextSQ() {
+    for (uint16_t fromOffset = 0; fromOffset < CBitBoard::SIZE; fromOffset++) {
+        if (!CSCoord::IsValid(fromOffset))
+            continue;
+        CSCoord from(fromOffset);
+        // Queen covers all sliding directions (bishop + rook).
+        for (int d = 0; d < ATTACK_DELTA_COUNT[Queen]; d++) {
+            CUCoord dir = ATTACK_DELTA[Queen][d];
+            CSCoord prev = from.Step(dir);
+            if (!prev.IsValid())
+                continue;
+            CSCoord curr = prev.Step(dir);
+            while (curr.IsValid()) {
+                NextSQ[fromOffset][prev.BitOffset()] =
+                    static_cast<int16_t>(curr.BitOffset());
+                prev = curr;
+                curr = curr.Step(dir);
+            }
+            // NextSQ[fromOffset][prev.BitOffset()] stays -1 (end of ray).
+        }
+    }
+}
 
-static void DoCastle(CPosition *, int);
+/*
+ * Initialize InterPath, Ray, BishopEPM, RookEPM, and QueenEPM for all 3D
+ * squares using ATTACK_DELTA.  Overwrites the 2D-board values placed by
+ * InitGeometry() with correct 3D values.
+ *
+ * Must be called after InitGeometry() so that the tables are zeroed first.
+ */
+void InitGeometry3D() {
+    for (uint16_t fromOffset = 0; fromOffset < CBitBoard::SIZE; fromOffset++) {
+        if (!CSCoord::IsValid(fromOffset))
+            continue;
+        CSCoord from(fromOffset);
+
+        // Reset EPM tables for every valid 3D square.
+        BishopEPM[fromOffset] = {};
+        RookEPM[fromOffset]   = {};
+        QueenEPM[fromOffset]  = {};
+
+        // Bishop directions
+        for (int d = 0; d < ATTACK_DELTA_COUNT[Bishop]; d++) {
+            const CUCoord dir = ATTACK_DELTA[Bishop][d];
+            CBitBoard interPath = {};
+            CSCoord curr = from.Step(dir);
+            while (curr.IsValid()) {
+                const uint16_t currOff = curr.BitOffset();
+                BishopEPM[fromOffset].SetBit(currOff);
+                QueenEPM[fromOffset].SetBit(currOff);
+                InterPath[fromOffset][currOff] = interPath;
+                interPath.SetBit(currOff);
+                curr = curr.Step(dir);
+            }
+            // Build Ray[from][each] = squares beyond that square along this ray.
+            curr = from.Step(dir);
+            while (curr.IsValid()) {
+                CBitBoard ray = {};
+                CSCoord beyond = curr.Step(dir);
+                while (beyond.IsValid()) {
+                    ray.SetBit(beyond.BitOffset());
+                    beyond = beyond.Step(dir);
+                }
+                Ray[fromOffset][curr.BitOffset()] = ray;
+                curr = curr.Step(dir);
+            }
+        }
+
+        // Rook directions
+        for (int d = 0; d < ATTACK_DELTA_COUNT[Rook]; d++) {
+            const CUCoord dir = ATTACK_DELTA[Rook][d];
+            CBitBoard interPath = {};
+            CSCoord curr = from.Step(dir);
+            while (curr.IsValid()) {
+                const uint16_t currOff = curr.BitOffset();
+                RookEPM[fromOffset].SetBit(currOff);
+                QueenEPM[fromOffset].SetBit(currOff);
+                InterPath[fromOffset][currOff] = interPath;
+                interPath.SetBit(currOff);
+                curr = curr.Step(dir);
+            }
+            curr = from.Step(dir);
+            while (curr.IsValid()) {
+                CBitBoard ray = {};
+                CSCoord beyond = curr.Step(dir);
+                while (beyond.IsValid()) {
+                    ray.SetBit(beyond.BitOffset());
+                    beyond = beyond.Step(dir);
+                }
+                Ray[fromOffset][curr.BitOffset()] = ray;
+                curr = curr.Step(dir);
+            }
+        }
+    }
+}
+
+
 static void UndoCastle(CPosition *, int);
 
 /*
@@ -346,7 +449,7 @@ void CPosition::GainAttack(const CSCoord& fromCoord,
                        const CSCoord& toCoord) {
     const uint16_t from = fromCoord.BitOffset();
     const uint16_t to = toCoord.BitOffset();
-    signed char *nsq = NextSQ[from];
+    int16_t *nsq = NextSQ[from];
     int sq = to;
     const CBitBoard all = m_rgMask[0][0] | m_rgMask[1][0];
 
@@ -373,7 +476,7 @@ void CPosition::LooseAttack(const CSCoord& fromCoord,
                         const CSCoord& toCoord) {
     const uint16_t from = fromCoord.BitOffset();
     const uint16_t to = toCoord.BitOffset();
-    signed char *nsq = NextSQ[from];
+    int16_t *nsq = NextSQ[from];
     int sq = to;
     const CBitBoard all = m_rgMask[0][0] | m_rgMask[1][0];
 

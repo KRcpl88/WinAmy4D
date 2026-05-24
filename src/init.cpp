@@ -34,6 +34,7 @@
  */
 
 #include "dbase.h"
+#include "init.h"
 #include "inline.h"
 #include "scoord.h"
 #include "utils.h"
@@ -426,5 +427,7 @@ void InitAll(void) {
     InitMasks();
     InitPawnMasks();
     InitGeometry();
+    InitGeometry3D();
     InitMiscMasks();
+    InitNextSQ();
 }

@@ -43,24 +43,22 @@ TEST_CLASS(PositionTests) {
     }
 
     TEST_METHOD(IsCheckingMoveDirectRookCheck) {
-        // White rook on ha1, black king on ha8. Ra1-ha5 doesn't check (blocked by nothing, but ha5 not ha8)
-        // Actually use: rook on hh1, king on he8. Rh8 gives check.
+        // White rook on hh1, black king on he8. Rh8 gives check (same rank).
         char epd[] = "4k3/8/8/8/8/8/8/4K2R w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
         CMove move = MakeMainBoardMove(hh1, hh8, 0);
-        Assert::IsFalse(position.get()->IsCheckingMove(move));
+        Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
     TEST_METHOD(IsCheckingMoveDirectBishopCheck) {
-        // White bishop on hc1, black king on hh6. Bd2 doesn't check, but Bf4 might not...
-        // Use: bishop on ha1, king on hh8. Bishop to hd4 gives check on diagonal.
+        // White bishop on ha1, king on hh8. Bishop to hd4 gives check on diagonal.
         char epd[] = "7k/8/8/8/8/8/8/B3K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
         // ha1 to hd4: bishop attacks along ha1-hh8 diagonal, hd4 attacks hh8
         CMove move = MakeMainBoardMove(ha1, hd4, 0);
-        Assert::IsFalse(position.get()->IsCheckingMove(move));
+        Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
     TEST_METHOD(IsCheckingMoveDirectPawnCheck) {
@@ -103,14 +101,12 @@ TEST_CLASS(PositionTests) {
     }
 
     TEST_METHOD(IsCheckingMovePromotionToQueenCheck) {
-        // White pawn on he7, black king on ha3 (won't get direct queen check from he8 to ha3 easily)
-        // Use: pawn on hd7, king on hd8... no, king can't be on promo rank for white pawn promo.
         // Pawn on hh7, king on he8. Promote to queen on hh8 checks via rank.
         char epd[] = "4k3/7P/8/8/8/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
         CMove move = MakeMainBoardPromotion(hh7, hh8, Queen, 0);
-        Assert::IsFalse(position.get()->IsCheckingMove(move));
+        Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
     // --- LegalMove tests ---
