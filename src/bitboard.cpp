@@ -29,9 +29,183 @@
 
 */
 
-/*
- * bitboard.cpp - bitboard routines (now just a placeholder, all
- * implementations are inline in bitboard.h)
- */
-
 #include "bitboard.h"
+
+void CBitBoard::ClearLowestBit() {
+    for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w) {
+        if (m_rgBits[w] != 0) {
+            m_rgBits[w] &= m_rgBits[w] - 1;
+            return;
+        }
+    }
+}
+
+CBitBoard CBitBoard::SetMask(uint16_t i) {
+    CBitBoard bb;
+    bb.SetBit(i);
+    return bb;
+}
+
+CBitBoard CBitBoard::ClrMask(uint16_t i) {
+    CBitBoard bb;
+    for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w)
+        bb.m_rgBits[w] = ~0ULL;
+    bb.ClrBit(i);
+    return bb;
+}
+
+int CBitBoard::CountBits() const {
+    int count = 0;
+    for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w) {
+#if HAVE___BUILTIN_POPCOUNTLL
+        count += __builtin_popcountll(m_rgBits[w]);
+#else
+        BitBoardBits x = m_rgBits[w];
+        x = x - ((x >> 1) & 0x5555555555555555ULL);
+        x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
+        count += (int)((((x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FULL) * 0x0101010101010101ULL) >> 56);
+#endif
+    }
+    return count;
+}
+
+uint16_t CBitBoard::FindSetBit() const {
+    for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w) {
+        if (m_rgBits[w] != 0) {
+            BitBoardBits word = m_rgBits[w];
+            uint16_t bit = 0;
+            while ((word & 1ULL) == 0) {
+                word >>= 1;
+                ++bit;
+            }
+            return static_cast<uint16_t>(w * ULONGLONG_SIZE_BITS + bit);
+        }
+    }
+    return 0;  // undefined if empty
+}
+
+CSCoord CBitBoard::FindSetBitCoord() const {
+    return CSCoord(FindSetBit());
+}
+
+bool CBitBoard::IsEmpty() const {
+    for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w) {
+        if (m_rgBits[w] != 0) return false;
+    }
+    return true;
+}
+
+bool CBitBoard::IsNotEmpty() const {
+    return !IsEmpty();
+}
+
+CBitBoard::operator bool() const {
+    return !IsEmpty();
+}
+
+bool operator==(const CBitBoard &lhs, const CBitBoard &rhs) {
+    for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w) {
+        if (lhs.m_rgBits[w] != rhs.m_rgBits[w]) return false;
+    }
+    return true;
+}
+
+bool operator!=(const CBitBoard &lhs, const CBitBoard &rhs) {
+    return !(lhs == rhs);
+}
+
+CBitBoard operator&(const CBitBoard &lhs, const CBitBoard &rhs) {
+    CBitBoard result;
+    for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w)
+        result.m_rgBits[w] = lhs.m_rgBits[w] & rhs.m_rgBits[w];
+    return result;
+}
+
+CBitBoard operator|(const CBitBoard &lhs, const CBitBoard &rhs) {
+    CBitBoard result;
+    for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w)
+        result.m_rgBits[w] = lhs.m_rgBits[w] | rhs.m_rgBits[w];
+    return result;
+}
+
+CBitBoard operator^(const CBitBoard &lhs, const CBitBoard &rhs) {
+    CBitBoard result;
+    for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w)
+        result.m_rgBits[w] = lhs.m_rgBits[w] ^ rhs.m_rgBits[w];
+    return result;
+}
+
+CBitBoard operator~(const CBitBoard &bb) {
+    CBitBoard result;
+    for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w)
+        result.m_rgBits[w] = ~bb.m_rgBits[w];
+    return result;
+}
+
+CBitBoard operator<<(const CBitBoard &bb, int shift) {
+    CBitBoard result;
+    const int wordShift = shift / CBitBoard::ULONGLONG_SIZE_BITS;
+    const int bitShift = shift % CBitBoard::ULONGLONG_SIZE_BITS;
+    for (int i = CBitBoard::SIZE_ULONGLONG - 1; i >= 0; --i) {
+        const int src = i - wordShift;
+        if (src >= 0) {
+            result.m_rgBits[i] = bb.m_rgBits[src] << bitShift;
+            if (bitShift > 0 && src - 1 >= 0)
+                result.m_rgBits[i] |= bb.m_rgBits[src - 1] >> (CBitBoard::ULONGLONG_SIZE_BITS - bitShift);
+        }
+    }
+    return result;
+}
+
+CBitBoard operator>>(const CBitBoard &bb, int shift) {
+    CBitBoard result;
+    const int wordShift = shift / CBitBoard::ULONGLONG_SIZE_BITS;
+    const int bitShift = shift % CBitBoard::ULONGLONG_SIZE_BITS;
+    for (int i = 0; i < CBitBoard::SIZE_ULONGLONG; ++i) {
+        const int src = i + wordShift;
+        if (src < CBitBoard::SIZE_ULONGLONG) {
+            result.m_rgBits[i] = bb.m_rgBits[src] >> bitShift;
+            if (bitShift > 0 && src + 1 < CBitBoard::SIZE_ULONGLONG)
+                result.m_rgBits[i] |= bb.m_rgBits[src + 1] << (CBitBoard::ULONGLONG_SIZE_BITS - bitShift);
+        }
+    }
+    return result;
+}
+
+CBitBoard &CBitBoard::operator|=(const CBitBoard &rhs) {
+    for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w)
+        m_rgBits[w] |= rhs.m_rgBits[w];
+    return *this;
+}
+
+CBitBoard &CBitBoard::operator&=(const CBitBoard &rhs) {
+    for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w)
+        m_rgBits[w] &= rhs.m_rgBits[w];
+    return *this;
+}
+
+CBitBoard &CBitBoard::operator^=(const CBitBoard &rhs) {
+    for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w)
+        m_rgBits[w] ^= rhs.m_rgBits[w];
+    return *this;
+}
+
+CBitBoard &CBitBoard::operator<<=(int shift) {
+    *this = *this << shift;
+    return *this;
+}
+
+CBitBoard &CBitBoard::operator>>=(int shift) {
+    *this = *this >> shift;
+    return *this;
+}
+
+CBitBoard operator*(const CBitBoard &lhs, const CBitBoard &rhs) {
+    CBitBoard result;
+    result.m_rgBits[0] = lhs.m_rgBits[0] * rhs.m_rgBits[0];
+    return result;
+}
+
+bool operator!(const CBitBoard &bb) {
+    return bb.IsEmpty();
+}
