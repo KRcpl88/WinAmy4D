@@ -219,12 +219,20 @@ int CPosition::CheckExtend() {
                 if ((tmp2 = p->m_rgAtkFr[i] & def)) {
                     cnt += (tmp2).CountBits();
                 }
-                if (p->m_nTurn == White && (i - 8) > 0 &&
-                    p->m_rgMask[White][Pawn].TstBit(i - 8) && def.TstBit(i - 8))
-                    cnt++;
-                if (p->m_nTurn == Black && (i + 8) < static_cast<int>(CBitBoard::SIZE) &&
-                    p->m_rgMask[Black][Pawn].TstBit(i + 8) && def.TstBit(i + 8))
-                    cnt++;
+                if (p->m_nTurn == White) {
+                    const int lw = static_cast<int>(
+                        CBitBoard::LEVEL_WIDTH[CSCoord(static_cast<uint16_t>(i)).m_nLevel]);
+                    if ((i - lw) > 0 && p->m_rgMask[White][Pawn].TstBit(i - lw) &&
+                        def.TstBit(i - lw))
+                        cnt++;
+                }
+                if (p->m_nTurn == Black) {
+                    const int lw = static_cast<int>(
+                        CBitBoard::LEVEL_WIDTH[CSCoord(static_cast<uint16_t>(i)).m_nLevel]);
+                    if ((i + lw) < static_cast<int>(CBitBoard::SIZE) &&
+                        p->m_rgMask[Black][Pawn].TstBit(i + lw) && def.TstBit(i + lw))
+                        cnt++;
+                }
                 if (cnt > 1)
                     return nd;
             }

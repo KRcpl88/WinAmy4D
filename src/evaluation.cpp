@@ -1240,7 +1240,8 @@ static int EvaluatePawns(const CPosition *p,
                 Print(2, "isolated pawn on %c%c\n", SQUARE(sq));
 #endif
         } else if (!(p->m_rgMask[White][Pawn] & WPawnBackwardMask[sq]) &&
-                   (p->m_rgAtkFr[sq + 8] & p->m_rgMask[Black][Pawn])) {
+                   (p->m_rgAtkFr[sq + CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]] &
+                    p->m_rgMask[Black][Pawn])) {
             if (p->m_rgMask[Black][Pawn] & ForwardRayW[sq]) {
                 score += HiddenBackwardPawn;
 #ifdef DEBUG
@@ -1301,7 +1302,8 @@ static int EvaluatePawns(const CPosition *p,
                 Print(2, "isolated pawn on %c%c\n", SQUARE(sq));
 #endif
         } else if (!(p->m_rgMask[Black][Pawn] & BPawnBackwardMask[sq]) &&
-                   (p->m_rgAtkFr[sq - 8] & p->m_rgMask[White][Pawn])) {
+                   (p->m_rgAtkFr[sq - CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]] &
+                    p->m_rgMask[White][Pawn])) {
             if (p->m_rgMask[White][Pawn] & ForwardRayB[sq]) {
                 score -= HiddenBackwardPawn;
 #ifdef DEBUG
@@ -1579,7 +1581,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 
         /* Basic score */
 
-        if (!p->m_rgMask[Black][0].TstBit(sq + 8)) {
+        if (!p->m_rgMask[Black][0].TstBit(sq + levelWidth)) {
             score += ScaleDown[wphase] * PassedPawn[rank] / 16;
         } else {
             score += ScaleDown[wphase] * PassedPawnBlocked[rank] / 16;
@@ -1648,7 +1650,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 
         /* Check if pawn is out of the king's square */
         if (p->m_rgnNonPawn[Black] == 0) {
-            int sq2 = (p->m_nTurn == White) ? sq : sq - 8;
+            int sq2 = (p->m_nTurn == White) ? sq : sq - levelWidth;
             if (!(p->m_rgMask[Black][King] & KingSquareW[sq2])) {
                 wrunner.SetBit(sq);
 #ifdef DEBUG
@@ -1709,7 +1711,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 
         /* Basic score */
 
-        if (!p->m_rgMask[White][0].TstBit(sq - 8)) {
+        if (!p->m_rgMask[White][0].TstBit(sq - levelWidth)) {
             score -= ScaleDown[bphase] * PassedPawn[rank] / 16;
         } else {
             score -= ScaleDown[bphase] * PassedPawnBlocked[rank] / 16;
@@ -1778,7 +1780,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 
         /* Check if pawn is out of the king's square */
         if (p->m_rgnNonPawn[White] == 0) {
-            int sq2 = (p->m_nTurn == Black) ? sq : sq + 8;
+            int sq2 = (p->m_nTurn == Black) ? sq : sq + levelWidth;
             if (!(p->m_rgMask[White][King] & KingSquareB[sq2])) {
                 brunner.SetBit(sq);
 #ifdef DEBUG
