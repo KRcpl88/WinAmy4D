@@ -47,5 +47,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name }}
-          files: x64/Release/WinAmy.exe
+          files: |
+            x64/Release/WinAmy.exe
+            x64/Release/WinAmyGUI.exe
           overwrite_files: true

@@ -51,4 +51,5 @@ jobs:
       with:
         files: |
           x64/Release/WinAmy.exe
+          x64/Release/WinAmyGUI.exe
           WinAmy-${{ github.ref_name }}-source.zip
