@@ -83,16 +83,16 @@ TEST_CLASS(BitboardTests) {
 
     TEST_METHOD(TstBitReturnsTrueForSetBits) {
         CBitBoard b{};
-        b.SetBit(e4);
-        b.SetBit(a1);
-        b.SetBit(h8);
-        Assert::IsTrue(b.TstBit(e4));
-        Assert::IsTrue(b.TstBit(a1));
-        Assert::IsTrue(b.TstBit(h8));
-        Assert::IsTrue(!b.TstBit(d4));
-        Assert::IsTrue(!b.TstBit(b2));
+        b.SetBit(he4);
+        b.SetBit(ha1);
+        b.SetBit(hh8);
+        Assert::IsTrue(b.TstBit(he4));
+        Assert::IsTrue(b.TstBit(ha1));
+        Assert::IsTrue(b.TstBit(hh8));
+        Assert::IsTrue(!b.TstBit(hd4));
+        Assert::IsTrue(!b.TstBit(hb2));
         Assert::AreEqual(3, b.CountBits());
-        Assert::AreEqual((int)a1, static_cast<int>(b.FindSetBit())); // a1 is the lowest square
+        Assert::AreEqual((int)ha1, static_cast<int>(b.FindSetBit())); // ha1 is the lowest square
     }
 
     TEST_METHOD(FindSetBitReturnsLeastSignificantSetBit) {
@@ -103,23 +103,23 @@ TEST_CLASS(BitboardTests) {
         b.SetBit(7);
         Assert::AreEqual(3, static_cast<int>(b.FindSetBit()));
 
-        CBitBoard b2{};
-        b2.SetBit(0);
-        Assert::AreEqual(0, static_cast<int>(b2.FindSetBit()));
+        CBitBoard hb2{};
+        hb2.SetBit(0);
+        Assert::AreEqual(0, static_cast<int>(hb2.FindSetBit()));
 
-        CBitBoard b3{};
-        b3.SetBit(63);
-        Assert::AreEqual(63, static_cast<int>(b3.FindSetBit()));
+        CBitBoard hb3{};
+        hb3.SetBit(63);
+        Assert::AreEqual(63, static_cast<int>(hb3.FindSetBit()));
 
-        CBitBoard b4{};
-        b4.SetBit(5);
-        Assert::AreEqual(5, static_cast<int>(b4.FindSetBit()));
+        CBitBoard hb4{};
+        hb4.SetBit(5);
+        Assert::AreEqual(5, static_cast<int>(hb4.FindSetBit()));
 
-        // All bits set ΓÇö lowest is 0
-        CBitBoard b5{};
+        // All bits set ??? lowest is 0
+        CBitBoard hb5{};
         for (int i = 0; i < 64; i++)
-            b5.SetBit(i);
-        Assert::AreEqual(0, static_cast<int>(b5.FindSetBit()));
+            hb5.SetBit(i);
+        Assert::AreEqual(0, static_cast<int>(hb5.FindSetBit()));
     }
 
     TEST_METHOD(FindSetBitForEachSquare) {
@@ -146,7 +146,7 @@ TEST_CLASS(BitboardTests) {
     }
 
     TEST_METHOD(FindSetBitWithAdjacentBits) {
-        // Two adjacent bits ΓÇö should always find the lower one
+        // Two adjacent bits ??? should always find the lower one
         for (int i = 0; i < 63; i++) {
             CBitBoard b{};
             b.SetBit(i);
@@ -193,9 +193,9 @@ TEST_CLASS(BitboardTests) {
         Assert::AreEqual(1, oneHigh.CountBits());
 
         CBitBoard three{};
-        three.SetBit(a1);
-        three.SetBit(h8);
-        three.SetBit(e4);
+        three.SetBit(ha1);
+        three.SetBit(hh8);
+        three.SetBit(he4);
         Assert::AreEqual(3, three.CountBits());
     }
 

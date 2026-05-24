@@ -365,10 +365,10 @@ void InitMiscMasks(void) {
     EdgeMask = {};
 
     for (i = 0; i < maxLevelWidth; i++) {
-        EdgeMask.SetBit(a1 + i);
-        EdgeMask.SetBit(a8 + i);
-        EdgeMask.SetBit(a1 + maxLevelWidth * i);
-        EdgeMask.SetBit(h1 + maxLevelWidth * i);
+        EdgeMask.SetBit(ha1 + i);
+        EdgeMask.SetBit(ha8 + i);
+        EdgeMask.SetBit(ha1 + maxLevelWidth * i);
+        EdgeMask.SetBit(hh1 + maxLevelWidth * i);
     }
 
     WhiteSquaresMask = BlackSquaresMask = {};
@@ -413,10 +413,10 @@ void InitMiscMasks(void) {
         NotHFileMask |= FileMask[i];
     }
 
-    CornerMaskA1 = CBitBoard::SetMask(a1) | CBitBoard::SetMask(a2) | CBitBoard::SetMask(b1) | CBitBoard::SetMask(b2);
-    CornerMaskA8 = CBitBoard::SetMask(a8) | CBitBoard::SetMask(a7) | CBitBoard::SetMask(b8) | CBitBoard::SetMask(b7);
-    CornerMaskH1 = CBitBoard::SetMask(h1) | CBitBoard::SetMask(h2) | CBitBoard::SetMask(g1) | CBitBoard::SetMask(g2);
-    CornerMaskH8 = CBitBoard::SetMask(h8) | CBitBoard::SetMask(h7) | CBitBoard::SetMask(g8) | CBitBoard::SetMask(g7);
+    CornerMaskA1 = CBitBoard::SetMask(ha1) | CBitBoard::SetMask(ha2) | CBitBoard::SetMask(hb1) | CBitBoard::SetMask(hb2);
+    CornerMaskA8 = CBitBoard::SetMask(ha8) | CBitBoard::SetMask(ha7) | CBitBoard::SetMask(hb8) | CBitBoard::SetMask(hb7);
+    CornerMaskH1 = CBitBoard::SetMask(hh1) | CBitBoard::SetMask(hh2) | CBitBoard::SetMask(hg1) | CBitBoard::SetMask(hg2);
+    CornerMaskH8 = CBitBoard::SetMask(hh8) | CBitBoard::SetMask(hh7) | CBitBoard::SetMask(hg8) | CBitBoard::SetMask(hg7);
 
     KingSideMask = FileMask[7] | FileMask[6] | FileMask[5] | FileMask[4];
     QueenSideMask = FileMask[0] | FileMask[1] | FileMask[2] | FileMask[3];

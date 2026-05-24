@@ -44,7 +44,7 @@ static void test_get_best_move_from_comment(void) {
 
     CMove move = get_best_move_from_comment(comment, p, eval_buf);
 
-    assert(move == make_move(e2, e4, M_PAWND));
+    assert(move == make_move(he2, he4, M_PAWND));
     assert(strcmp(eval_buf, "0.5003") == 0);
 
     CPosition::Free(p);

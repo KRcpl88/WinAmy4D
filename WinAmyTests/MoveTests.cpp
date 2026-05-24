@@ -14,11 +14,11 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CPosition::Initial());
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        const CMove move = MakeMainBoardMove(e2, e4, M_PAWND);
+        const CMove move = MakeMainBoardMove(he2, he4, M_PAWND);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)Pawn, (int)position.get()->m_rgPiece[MainBoardOffset(e4)]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(e2)]);
+        Assert::AreEqual((int)Pawn, (int)position.get()->m_rgPiece[MainBoardOffset(he4)]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(he2)]);
         Assert::AreEqual((int)Black, (int)position.get()->m_nTurn);
         Assert::AreEqual(1, (int)position.get()->m_wPly);
 
@@ -27,7 +27,7 @@ TEST_CLASS(MoveTests) {
     }
 
     TEST_METHOD(DoNullAndUndoNullRestorePositionFields) {
-        // Position with en passant available on d6.
+        // Position with en passant available on hd6.
         char epd[] = "4k3/8/8/3pP3/8/8/8/4K3 w - d6";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
@@ -41,7 +41,7 @@ TEST_CLASS(MoveTests) {
     }
 
     TEST_METHOD(RecalcAttacksRebuildsAtkSetDerivedData) {
-        // Position with a white bishop on d5.
+        // Position with a white bishop on hd5.
         char epd[] = "4k3/8/8/3B4/8/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
@@ -53,14 +53,14 @@ TEST_CLASS(MoveTests) {
         position.get()->RecalcAttacks();
 
         CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
-        CBitBoard expectedBishopAttacks = ComputeSlidingAttacks(MainBoardCoord(d5), Bishop, occupied);
+        CBitBoard expectedBishopAttacks = ComputeSlidingAttacks(MainBoardCoord(hd5), Bishop, occupied);
 
-        Assert::IsTrue(position.get()->m_rgAtkTo[MainBoardOffset(d5)] == expectedBishopAttacks);
-        Assert::IsTrue((position.get()->m_rgAtkFr[MainBoardOffset(e6)] &
-                        CBitBoard::SetMask(MainBoardOffset(d5)))
+        Assert::IsTrue(position.get()->m_rgAtkTo[MainBoardOffset(hd5)] == expectedBishopAttacks);
+        Assert::IsTrue((position.get()->m_rgAtkFr[MainBoardOffset(he6)] &
+                        CBitBoard::SetMask(MainBoardOffset(hd5)))
                            .IsNotEmpty());
-        Assert::IsTrue((position.get()->m_rgAtkFr[MainBoardOffset(c4)] &
-                        CBitBoard::SetMask(MainBoardOffset(d5)))
+        Assert::IsTrue((position.get()->m_rgAtkFr[MainBoardOffset(hc4)] &
+                        CBitBoard::SetMask(MainBoardOffset(hd5)))
                            .IsNotEmpty());
     }
 
@@ -70,28 +70,28 @@ TEST_CLASS(MoveTests) {
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        CMove move = MakeMainBoardMove(d4, e6, M_CAPTURE);
+        CMove move = MakeMainBoardMove(hd4, he6, M_CAPTURE);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)Knight, (int)position.get()->m_rgPiece[MainBoardOffset(e6)]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(d4)]);
+        Assert::AreEqual((int)Knight, (int)position.get()->m_rgPiece[MainBoardOffset(he6)]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(hd4)]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
     }
 
     TEST_METHOD(DoMoveEnPassantCapturesCorrectly) {
-        // White pawn on e5, black pawn just moved d7-d5, en passant on d6
+        // White pawn on he5, black pawn just moved hd7-hd5, en passant on hd6
         char epd[] = "4k3/8/8/3pP3/8/8/8/4K3 w - d6";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
-        CMove move = MakeMainBoardMove(e5, d6, M_ENPASSANT);
+        CMove move = MakeMainBoardMove(he5, hd6, M_ENPASSANT);
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)Pawn, (int)position.get()->m_rgPiece[MainBoardOffset(d6)]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(e5)]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(d5)]);
+        Assert::AreEqual((int)Pawn, (int)position.get()->m_rgPiece[MainBoardOffset(hd6)]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(he5)]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(hd5)]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -137,12 +137,12 @@ TEST_CLASS(MoveTests) {
         PositionGuard snapshot(CPosition::Clone(position.get()));
 
         CMove move = MakeMainBoardMove(
-            e7, e8,
+            he7, he8,
             static_cast<int>(static_cast<uint32_t>(Queen) << M_PROMOTION_OFFSET));
         position.get()->DoMove(move);
 
-        Assert::AreEqual((int)Queen, (int)position.get()->m_rgPiece[MainBoardOffset(e8)]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(e7)]);
+        Assert::AreEqual((int)Queen, (int)position.get()->m_rgPiece[MainBoardOffset(he8)]);
+        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(he7)]);
 
         position.get()->UndoMove(move);
         AssertPositionsEqual(position.get(), snapshot.get());
@@ -150,7 +150,7 @@ TEST_CLASS(MoveTests) {
 
     TEST_METHOD(CMoveFlagQueriesReflectConstructorFlags) {
         const CMove move = MakeMainBoardPromotion(
-            e2, e4, Queen, M_CAPTURE | M_PAWND | M_ENPASSANT | M_SCASTLE | M_LCASTLE);
+            he2, he4, Queen, M_CAPTURE | M_PAWND | M_ENPASSANT | M_SCASTLE | M_LCASTLE);
 
         Assert::IsTrue(move.IsCapture());
         Assert::IsTrue(move.IsPawnDoublePush());
@@ -164,7 +164,7 @@ TEST_CLASS(MoveTests) {
     }
 
     TEST_METHOD(CMoveMutatorsSetAndClearFlags) {
-        CMove move = MakeMainBoardMove(a2, a3, 0);
+        CMove move = MakeMainBoardMove(ha2, ha3, 0);
 
         Assert::IsFalse(move.IsCapture());
         Assert::IsFalse(move.IsShortCastle());
@@ -202,7 +202,7 @@ TEST_CLASS(MoveTests) {
     }
 
     TEST_METHOD(CMovePromotionMutatorsControlPromotionFlags) {
-        CMove move = MakeMainBoardMove(h7, h8, 0);
+        CMove move = MakeMainBoardMove(hh7, hh8, 0);
         Assert::IsFalse(move.HasPromotion());
         Assert::AreEqual(0, move.GetPromotionType());
         Assert::IsFalse(move.IsTactical());
@@ -219,10 +219,10 @@ TEST_CLASS(MoveTests) {
     }
 
     TEST_METHOD(CMoveEqualityAndInequalityCompareMoveBits) {
-        const CMove moveA = MakeMainBoardMove(b1, c3, M_CAPTURE);
-        const CMove moveB = MakeMainBoardMove(b1, c3, M_CAPTURE);
-        const CMove moveDifferentFlags = MakeMainBoardMove(b1, c3, 0);
-        const CMove moveDifferentTo = MakeMainBoardMove(b1, a3, M_CAPTURE);
+        const CMove moveA = MakeMainBoardMove(hb1, hc3, M_CAPTURE);
+        const CMove moveB = MakeMainBoardMove(hb1, hc3, M_CAPTURE);
+        const CMove moveDifferentFlags = MakeMainBoardMove(hb1, hc3, 0);
+        const CMove moveDifferentTo = MakeMainBoardMove(hb1, ha3, M_CAPTURE);
 
         Assert::IsTrue(moveA == moveB);
         Assert::IsFalse(moveA != moveB);
@@ -231,15 +231,15 @@ TEST_CLASS(MoveTests) {
     }
 
     TEST_METHOD(CMoveFromToIndexMatchesSquareEncoding) {
-        const CMove move = MakeMainBoardMove(c2, g7, 0);
-        const SFromToIndex expected(MainBoardOffset(c2), MainBoardOffset(g7));
+        const CMove move = MakeMainBoardMove(hc2, hg7, 0);
+        const SFromToIndex expected(MainBoardOffset(hc2), MainBoardOffset(hg7));
         Assert::AreEqual(expected.nFromOffset, move.GetFromCoord().BitOffset());
         Assert::AreEqual(expected.nToOffset, move.GetToCoord().BitOffset());
     }
 
     TEST_METHOD(MFromAndMToDecodeFromScooordBitfields) {
-        const CSCoord fromSquare(MAIN_LEVEL, 4, 1); // e2 on main board
-        const CSCoord toSquare(MAIN_LEVEL, 4, 3);   // e4 on main board
+        const CSCoord fromSquare(MAIN_LEVEL, 4, 1); // he2 on main board
+        const CSCoord toSquare(MAIN_LEVEL, 4, 3);   // he4 on main board
         const CMove move = MakeMainBoardMove(static_cast<int>(fromSquare), static_cast<int>(toSquare), M_PAWND);
 
         Assert::AreEqual(fromSquare.m_nLevel, move.GetFromCoord().m_nLevel);

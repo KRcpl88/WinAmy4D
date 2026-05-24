@@ -42,39 +42,39 @@ TEST_CLASS(AttackDeltaTests) {
     }
 
     TEST_METHOD(WhitePawnAttacksFromD4) {
-        const CSCoord d4(MAIN_LEVEL, 3, 3);
-        Assert::IsTrue(ComputeLeapAttacks(d4, Pawn) == TraceLeaps(d4, Pawn));
+        const CSCoord hd4(MAIN_LEVEL, 3, 3);
+        Assert::IsTrue(ComputeLeapAttacks(hd4, Pawn) == TraceLeaps(hd4, Pawn));
     }
 
     TEST_METHOD(BlackPawnAttacksFromE5) {
-        const CSCoord e5(MAIN_LEVEL, 4, 4);
-        Assert::IsTrue(ComputeLeapAttacks(e5, BPawn) == TraceLeaps(e5, BPawn));
+        const CSCoord he5(MAIN_LEVEL, 4, 4);
+        Assert::IsTrue(ComputeLeapAttacks(he5, BPawn) == TraceLeaps(he5, BPawn));
     }
 
     TEST_METHOD(KnightAttacksFromE4Center) {
-        const CSCoord e4(MAIN_LEVEL, 4, 3);
-        Assert::IsTrue(ComputeLeapAttacks(e4, Knight) == TraceLeaps(e4, Knight));
+        const CSCoord he4(MAIN_LEVEL, 4, 3);
+        Assert::IsTrue(ComputeLeapAttacks(he4, Knight) == TraceLeaps(he4, Knight));
     }
 
     TEST_METHOD(KingAttacksFromE4Center) {
-        const CSCoord e4(MAIN_LEVEL, 4, 3);
-        Assert::IsTrue(ComputeLeapAttacks(e4, King) == TraceLeaps(e4, King));
+        const CSCoord he4(MAIN_LEVEL, 4, 3);
+        Assert::IsTrue(ComputeLeapAttacks(he4, King) == TraceLeaps(he4, King));
     }
 
     TEST_METHOD(BishopAttacksFromD4Center) {
-        const CSCoord d4(MAIN_LEVEL, 3, 3);
-        Assert::IsTrue(ComputeSlidingAttacks(d4, Bishop, {}) == TraceSlidingRays(d4, Bishop));
+        const CSCoord hd4(MAIN_LEVEL, 3, 3);
+        Assert::IsTrue(ComputeSlidingAttacks(hd4, Bishop, {}) == TraceSlidingRays(hd4, Bishop));
     }
 
     TEST_METHOD(RookAttacksFromD4Center) {
-        const CSCoord d4(MAIN_LEVEL, 3, 3);
-        Assert::IsTrue(ComputeSlidingAttacks(d4, Rook, {}) == TraceSlidingRays(d4, Rook));
+        const CSCoord hd4(MAIN_LEVEL, 3, 3);
+        Assert::IsTrue(ComputeSlidingAttacks(hd4, Rook, {}) == TraceSlidingRays(hd4, Rook));
     }
 
     TEST_METHOD(QueenAttacksEqualBishopPlusRook) {
-        const CSCoord d4(MAIN_LEVEL, 3, 3);
-        const CBitBoard queen = ComputeSlidingAttacks(d4, Queen, {});
-        const CBitBoard parts = ComputeSlidingAttacks(d4, Bishop, {}) | ComputeSlidingAttacks(d4, Rook, {});
+        const CSCoord hd4(MAIN_LEVEL, 3, 3);
+        const CBitBoard queen = ComputeSlidingAttacks(hd4, Queen, {});
+        const CBitBoard parts = ComputeSlidingAttacks(hd4, Bishop, {}) | ComputeSlidingAttacks(hd4, Rook, {});
         Assert::IsTrue(queen == parts);
     }
 
@@ -109,35 +109,35 @@ TEST_CLASS(AttackDeltaTests) {
     }
 
     TEST_METHOD(RookBlockedByPieceOnSameFile) {
-        const CSCoord d4(MAIN_LEVEL, 3, 3);
-        const CSCoord d6(MAIN_LEVEL, 3, 5);
-        CBitBoard occupied = CBitBoard::SetMask(d6.BitOffset());
+        const CSCoord hd4(MAIN_LEVEL, 3, 3);
+        const CSCoord hd6(MAIN_LEVEL, 3, 5);
+        CBitBoard occupied = CBitBoard::SetMask(hd6.BitOffset());
 
-        const CBitBoard expected = TraceSlidingRays(d4, Rook, occupied);
-        const CBitBoard computed = ComputeSlidingAttacks(d4, Rook, occupied);
+        const CBitBoard expected = TraceSlidingRays(hd4, Rook, occupied);
+        const CBitBoard computed = ComputeSlidingAttacks(hd4, Rook, occupied);
         Assert::IsTrue(computed == expected);
-        Assert::IsTrue(computed.TstBit(d6.BitOffset()));
+        Assert::IsTrue(computed.TstBit(hd6.BitOffset()));
     }
 
     TEST_METHOD(BishopBlockedByPieceOnDiagonal) {
-        const CSCoord d4(MAIN_LEVEL, 3, 3);
-        const CSCoord f6(MAIN_LEVEL, 5, 5);
-        CBitBoard occupied = CBitBoard::SetMask(f6.BitOffset());
+        const CSCoord hd4(MAIN_LEVEL, 3, 3);
+        const CSCoord hf6(MAIN_LEVEL, 5, 5);
+        CBitBoard occupied = CBitBoard::SetMask(hf6.BitOffset());
 
-        const CBitBoard expected = TraceSlidingRays(d4, Bishop, occupied);
-        const CBitBoard computed = ComputeSlidingAttacks(d4, Bishop, occupied);
+        const CBitBoard expected = TraceSlidingRays(hd4, Bishop, occupied);
+        const CBitBoard computed = ComputeSlidingAttacks(hd4, Bishop, occupied);
         Assert::IsTrue(computed == expected);
-        Assert::IsTrue(computed.TstBit(f6.BitOffset()));
+        Assert::IsTrue(computed.TstBit(hf6.BitOffset()));
     }
 
     TEST_METHOD(QueenBlockedMultipleDirections) {
-        const CSCoord d4(MAIN_LEVEL, 3, 3);
+        const CSCoord hd4(MAIN_LEVEL, 3, 3);
         CBitBoard occupied = CBitBoard::SetMask(CSCoord(MAIN_LEVEL, 3, 5).BitOffset()) |
                              CBitBoard::SetMask(CSCoord(MAIN_LEVEL, 5, 3).BitOffset()) |
                              CBitBoard::SetMask(CSCoord(MAIN_LEVEL, 5, 5).BitOffset());
 
-        const CBitBoard expected = TraceSlidingRays(d4, Queen, occupied);
-        const CBitBoard computed = ComputeSlidingAttacks(d4, Queen, occupied);
+        const CBitBoard expected = TraceSlidingRays(hd4, Queen, occupied);
+        const CBitBoard computed = ComputeSlidingAttacks(hd4, Queen, occupied);
         Assert::IsTrue(computed == expected);
     }
 
@@ -154,29 +154,29 @@ TEST_CLASS(AttackDeltaTests) {
     TEST_METHOD(ComputeSlidingAttacksMatchesReferenceWithBlockers) {
         char epd[] = "4k3/8/3p1p2/8/3Q4/8/3P1P2/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
-        const uint16_t source = MainBoardOffset(d4);
+        const uint16_t source = MainBoardOffset(hd4);
         const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
 
         const CBitBoard rookExpected = ReferenceRookAttacks(source, occupied);
         const CBitBoard bishopExpected = ReferenceBishopAttacks(source, occupied);
         const CBitBoard queenExpected = rookExpected | bishopExpected;
 
-        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(d4), Rook, occupied) == rookExpected);
-        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(d4), Bishop, occupied) == bishopExpected);
-        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(d4), Queen, occupied) == queenExpected);
+        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(hd4), Rook, occupied) == rookExpected);
+        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(hd4), Bishop, occupied) == bishopExpected);
+        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(hd4), Queen, occupied) == queenExpected);
     }
 
     TEST_METHOD(ComputeSlidingAttacksMatchesReferenceMidgamePosition) {
         char epd[] = "r3k2r/ppp2ppp/2npbn2/3qp3/3P4/2N1PN2/PPP2PPP/R2QKB1R w KQkq -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
-        const uint16_t whiteQueen = MainBoardOffset(d1);
-        const uint16_t blackQueen = MainBoardOffset(d5);
+        const uint16_t whiteQueen = MainBoardOffset(hd1);
+        const uint16_t blackQueen = MainBoardOffset(hd5);
 
-        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(d1), Queen, occupied) ==
+        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(hd1), Queen, occupied) ==
                        (ReferenceRookAttacks(whiteQueen, occupied) |
                         ReferenceBishopAttacks(whiteQueen, occupied)));
-        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(d5), Queen, occupied) ==
+        Assert::IsTrue(ComputeSlidingAttacks(MainBoardCoord(hd5), Queen, occupied) ==
                        (ReferenceRookAttacks(blackQueen, occupied) |
                         ReferenceBishopAttacks(blackQueen, occupied)));
     }

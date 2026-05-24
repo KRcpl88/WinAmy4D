@@ -273,8 +273,8 @@ static void *PvMalloc(size_t cb) {
 #define INF 4000
 
 // Enumaration: valid positions with 2 kings on board; white king restricted to
-// a1-d1-d4 triangle; also, if it's at a1-d4 half-diagonal, then black king
-// must be in a1-h1-h8 triangle
+// ha1-hd1-hd4 triangle; also, if it's at ha1-hd4 half-diagonal, then black king
+// must be in ha1-hh1-hh8 triangle
 
 static const short rgsTriKings[64 * 64] = {
     INF, INF, 0,   1,   2,   3,   4,   5,   INF, INF, 6,   7,   8,   9,   10,
