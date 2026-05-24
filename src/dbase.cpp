@@ -2321,7 +2321,7 @@ void CPosition::ShowPosition() {
             Print(0, "\n");
         }
         if (numLevels > 1) {
-            Print(0, "      Level %d\n", level + 1);
+            Print(0, "      Level %c\n", static_cast<char>('a' + level));
         }
 
         Print(0, "        ");
