@@ -149,10 +149,10 @@ Make all the static const ints in scoord.h unsigned ints and fix any compiler wa
 
 
 # chess square enums
-The chess board square location enums a1 through h8 represent squares on the old 2D chess board on level 8.  Because they represent a holdover from the 2D implementation of the chess program, they in theory shold no longer be relevant. Carefully examine every place in the code where they are still being used and justfiy why they are still relvant in the 3D version of the game or if not how the code can be upgraded to use a 3D logic.  Then, make a plan to 2 2 things:
+The chess board square location enums a1 through h8 represent squares on the old 2D chess board on level 8.  Because they represent a holdover from the 2D implementation of the chess program, they in theory should no longer be relevant, except in cases where the mechanics are specific to that level. Carefully examine every place in the code where they are still being used and justify why they are still relevant in the 3D version of the game or if not how the code can be upgraded to use a 3D logic.  Then, make a plan to 2 2 things:
 
-1. Either update or remove any code that uses the 2D chess board enum values
-2. IF they are still needed in some places, at least ranem them to include the level in the enum name to ha1 - hh8, and add new enums for the top and bottom corneres, aa1 and oa1
+1. Either update or remove any code that uses the 2D chess board enum values.  Some places which may still use the old enums are castling, which only occurs on the king's level which is level h, and other king level specific mechanics.
+2. IF they are still needed in some places, at least rename them to include the level in the enum name to ha1 - hh8, and add new enums for the top and bottom corners, aa1 and oa1.  Also make sure any locations which reference these square names.
 
 
 
