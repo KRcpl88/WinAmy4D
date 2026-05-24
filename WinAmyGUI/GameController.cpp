@@ -13,6 +13,7 @@ void GameController::InitEngine() {
     InitMoves();
     InitAll();
     HashInit();
+    AllocateHT();
 }
 
 // ---------------------------------------------------------------------------

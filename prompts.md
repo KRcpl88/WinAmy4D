@@ -338,6 +338,38 @@ The game should have the following minimal features:
 
 
 
+
+# GUI bug
+I hit an access violoation in WinAmyGUI.exe: "0xC0000005: Access violation reading location 0x0000000000000000"  when I tried to make a move.
+
+WinAmyGUI.exe!ProbeST(unsigned __int64 key, int * score) Line 350 (c:\github\WinAmy4D\src\hashtable.cpp:350)
+WinAmyGUI.exe!EvaluatePositionForWhite(const CPosition * p) Line 2133 (c:\github\WinAmy4D\src\evaluation.cpp:2133)
+WinAmyGUI.exe!EvaluatePosition(const CPosition * p) Line 2626 (c:\github\WinAmy4D\src\evaluation.cpp:2626)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 357 (c:\github\WinAmy4D\src\search.cpp:357)
+WinAmyGUI.exe!IterateInt(void * x) Line 1062 (c:\github\WinAmy4D\src\search.cpp:1062)
+WinAmyGUI.exe!CPosition::Iterate(int * score_ptr, CMove alternate_move, int * alternate_score_ptr) Line 434 (c:\github\WinAmy4D\src\position.cpp:434)
+WinAmyGUI.exe!GameController::StartEngineSearch::__l2::<lambda_1>::operator()() Line 85 (c:\github\WinAmy4D\WinAmyGUI\GameController.cpp:85)
+WinAmyGUI.exe!std::invoke<`GameController::StartEngineSearch'::`2'::<lambda_1>>(GameController::StartEngineSearch::__l2::<lambda_1> && _Obj) Line 1670 (c:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.44.35207\include\type_traits:1670)
+WinAmyGUI.exe!std::thread::_Invoke<std::tuple<`GameController::StartEngineSearch'::`2'::<lambda_1>>,0>(void * _RawVals) Line 60 (c:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.44.35207\include\thread:60)
+ucrtbased.dll!00007ff982d72ec5() (Unknown Source:0)
+kernel32.dll!00007ff9e20a7374() (Unknown Source:0)
+ntdll.dll!00007ff9e253cc91() (Unknown Source:0)
+
+
+
+
+
+# GUI features
+
+1. the scroll bars are not working
+2. Odd levels should use a different color from even ones
+3. Reorder the levels form top to bottom, in 3 rows.  The top row is levels j-o, the middle row is levels g, h, and i, and the botttom row is a-f
+4. on ech row, space all thre levels proportional to their widths, instead of using c onctatn width for every level.
+
+
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove

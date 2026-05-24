@@ -55,6 +55,10 @@ static bool            g_fHaveSelection = false;
 static CSCoord         g_SelectedSquare;
 static std::vector<CSCoord> g_LegalDests;
 
+// Scroll state (pixels scrolled from origin).
+static int             g_scrollX = 0;
+static int             g_scrollY = 0;
+
 // Self-play pause state.
 static bool            g_fPaused = false;
 
@@ -70,6 +74,7 @@ static void UpdateStatusBar();
 static void UpdatePlayerButtons();
 static void SetDepthFromMenu(int depth);
 static void CreateControls(HWND hWnd);
+static void UpdateScrollBars(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 // ---------------------------------------------------------------------------
@@ -270,9 +275,8 @@ static void OnSquareClick(POINT pt) {
     // In 1-player mode, human plays White (turn 0).
     if (g_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->m_nTurn == 1) return;
 
-    // Adjust for toolbar height.
-    POINT boardPt{ pt.x, pt.y - TOOLBAR_H };
-    CSCoord sq = g_Renderer.HitTest(boardPt);
+    // pt is already in board coordinates (scroll + toolbar applied by caller).
+    CSCoord sq = g_Renderer.HitTest(pt);
 
     if (!sq.IsValid()) {
         g_fHaveSelection = false;
@@ -403,6 +407,40 @@ static void SetDepthFromMenu(int depth) {
 }
 
 // ---------------------------------------------------------------------------
+// UpdateScrollBars — recompute scroll range from board and client sizes
+// ---------------------------------------------------------------------------
+
+static void UpdateScrollBars(HWND hWnd) {
+    RECT clientRect;
+    GetClientRect(hWnd, &clientRect);
+    int clientW = clientRect.right  - clientRect.left;
+    int clientH = clientRect.bottom - clientRect.top - TOOLBAR_H - STATUSBAR_H;
+    if (clientH < 0) clientH = 0;
+
+    SIZE boardSz = BoardRenderer::GetBoardAreaSize();
+
+    SCROLLINFO si{};
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
+
+    // Horizontal
+    si.nMin  = 0;
+    si.nMax  = boardSz.cx;
+    si.nPage = clientW;
+    if (g_scrollX > boardSz.cx - (int)si.nPage) g_scrollX = max(0, boardSz.cx - (int)si.nPage);
+    si.nPos  = g_scrollX;
+    SetScrollInfo(hWnd, SB_HORZ, &si, TRUE);
+
+    // Vertical
+    si.nMin  = 0;
+    si.nMax  = boardSz.cy;
+    si.nPage = (UINT)clientH;
+    if (g_scrollY > boardSz.cy - (int)si.nPage) g_scrollY = max(0, boardSz.cy - (int)si.nPage);
+    si.nPos  = g_scrollY;
+    SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
+}
+
+// ---------------------------------------------------------------------------
 // Window Procedure
 // ---------------------------------------------------------------------------
 
@@ -410,12 +448,57 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     switch (uMsg) {
     case WM_CREATE:
         CreateControls(hWnd);
-        // Set initial depth checkmark.
         SetDepthFromMenu(3);
+        UpdateScrollBars(hWnd);
         return 0;
 
     case WM_SIZE: {
         if (g_hStatus) SendMessage(g_hStatus, WM_SIZE, 0, 0);
+        UpdateScrollBars(hWnd);
+        return 0;
+    }
+
+    case WM_HSCROLL: {
+        SCROLLINFO si{ sizeof(si), SIF_ALL };
+        GetScrollInfo(hWnd, SB_HORZ, &si);
+        int oldX = g_scrollX;
+        switch (LOWORD(wParam)) {
+        case SB_LINELEFT:      g_scrollX -= BoardRenderer::SQUARE_SIZE; break;
+        case SB_LINERIGHT:     g_scrollX += BoardRenderer::SQUARE_SIZE; break;
+        case SB_PAGELEFT:      g_scrollX -= si.nPage; break;
+        case SB_PAGERIGHT:     g_scrollX += si.nPage; break;
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION: g_scrollX  = HIWORD(wParam); break;
+        }
+        g_scrollX = max(0, min(g_scrollX, si.nMax - (int)si.nPage));
+        if (g_scrollX != oldX) {
+            SetScrollPos(hWnd, SB_HORZ, g_scrollX, TRUE);
+            ScrollWindowEx(hWnd, oldX - g_scrollX, 0,
+                           nullptr, nullptr, nullptr, nullptr, SW_INVALIDATE);
+            UpdateWindow(hWnd);
+        }
+        return 0;
+    }
+
+    case WM_VSCROLL: {
+        SCROLLINFO si{ sizeof(si), SIF_ALL };
+        GetScrollInfo(hWnd, SB_VERT, &si);
+        int oldY = g_scrollY;
+        switch (LOWORD(wParam)) {
+        case SB_LINEUP:        g_scrollY -= BoardRenderer::SQUARE_SIZE; break;
+        case SB_LINEDOWN:      g_scrollY += BoardRenderer::SQUARE_SIZE; break;
+        case SB_PAGEUP:        g_scrollY -= si.nPage; break;
+        case SB_PAGEDOWN:      g_scrollY += si.nPage; break;
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION: g_scrollY  = HIWORD(wParam); break;
+        }
+        g_scrollY = max(0, min(g_scrollY, si.nMax - (int)si.nPage));
+        if (g_scrollY != oldY) {
+            SetScrollPos(hWnd, SB_VERT, g_scrollY, TRUE);
+            ScrollWindowEx(hWnd, 0, oldY - g_scrollY,
+                           nullptr, nullptr, nullptr, nullptr, SW_INVALIDATE);
+            UpdateWindow(hWnd);
+        }
         return 0;
     }
 
@@ -423,8 +506,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
 
-        // Offset drawing by the toolbar height.
-        SetViewportOrgEx(hdc, 0, TOOLBAR_H, nullptr);
+        // Offset by toolbar height and current scroll position.
+        SetViewportOrgEx(hdc, -g_scrollX, TOOLBAR_H - g_scrollY, nullptr);
 
         const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
         g_Renderer.DrawBoard(hdc, g_Game.GetPosition(), sel, g_LegalDests);
@@ -435,7 +518,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     }
 
     case WM_LBUTTONDOWN: {
-        POINT pt{ GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        // Adjust click coordinates for scroll offset and toolbar.
+        POINT pt{
+            GET_X_LPARAM(lParam) + g_scrollX,
+            GET_Y_LPARAM(lParam) - TOOLBAR_H + g_scrollY
+        };
         OnSquareClick(pt);
         return 0;
     }
