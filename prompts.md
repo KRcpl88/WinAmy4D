@@ -146,6 +146,16 @@ Please update the EPD parsing to accommodate multiple levels by filling each che
 Make all the static const ints in scoord.h unsigned ints and fix any compiler warnings caused by signed unsigned conversions or comparisons , if necessary convert other ints to unsigned ints if necessary to resolve compiler warnings and a signed integer is not needed in that case
 
 
+
+
+# chess square enums
+The chess board square location enums a1 through h8 represent squares on the old 2D chess board on level 8.  Because they represent a holdover from the 2D implementation of the chess program, they in theory shold no longer be relevant. Carefully examine every place in the code where they are still being used and justfiy why they are still relvant in the 3D version of the game or if not how the code can be upgraded to use a 3D logic.  Then, make a plan to 2 2 things:
+
+1. Either update or remove any code that uses the 2D chess board enum values
+2. IF they are still needed in some places, at least ranem them to include the level in the enum name to ha1 - hh8, and add new enums for the top and bottom corneres, aa1 and oa1
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
