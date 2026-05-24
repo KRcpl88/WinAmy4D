@@ -35,10 +35,11 @@
 
 #include "bitboard.h"
 #include "scoord.h"
+#include <cstdint>
 
 static signed char conv[128];
 
-signed char NextSQ[CBitBoard::SIZE][CBitBoard::SIZE];
+uint16_t NextSQ[CBitBoard::SIZE][CBitBoard::SIZE];
 
 static int QueenDirs[] = {16, 1, -16, -1, 15, 17, -15, -17};
 
@@ -306,50 +307,12 @@ extern const CBitBoard PawnEPM[2][CBitBoard::SIZE] = {{CBitBoard{0x200ULL},
                                   CBitBoard{0x40000000000000ULL}}};
 
 void InitMoves(void) {
-    int sq, sq2;
-
-    for (sq = 0; sq < 128; sq++) {
-        conv[sq] = 127;
-    }
-    for (sq = 0; sq < 128; sq++) {
-        if (!(sq & 0x88)) {
-            const int file = sq % 16;
-            const int rank = sq / 16;
-            sq2 = rank * 8 + file;
-            conv[sq] = (signed char)sq2;
-        }
-    }
-
+    // Initialize entire NextSQ table to -1 (no next square).
+    // The 3D entries are populated later by InitNextSQ() (called from InitAll),
+    // once the ATTACK_DELTA tables are available.
     for (unsigned int sqIndex = 0; sqIndex < CBitBoard::SIZE; sqIndex++) {
         for (unsigned int sq2Index = 0; sq2Index < CBitBoard::SIZE; sq2Index++) {
-            NextSQ[sqIndex][sq2Index] = -1;
-        }
-    }
-
-    /*
-     * Inititialize NextSQ
-     */
-
-    for (sq = 0; sq < 128; sq++) {
-        int dir;
-
-        if (sq & 0x88)
-            continue;
-
-        for (dir = 0; dir < 8; dir++) {
-            int next, next2;
-
-            next = sq + QueenDirs[dir];
-            if (next & 0x88)
-                continue;
-
-            for (;;) {
-                next2 = next + QueenDirs[dir];
-                if (next2 & 0x88)
-                    break;
-                NextSQ[conv[sq]][conv[next]] = conv[next2];
-                next = next2;
-            }
+            NextSQ[sqIndex][sq2Index] = 0xffff;
         }
     }
 }

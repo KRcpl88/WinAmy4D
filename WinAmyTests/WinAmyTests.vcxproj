@@ -161,6 +161,7 @@
     <ClCompile Include="PositionTests.cpp" />
     <ClCompile Include="CoordTests.cpp" />
     <ClCompile Include="SearchDataTests.cpp" />
+    <ClCompile Include="CheckmateTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectCapability Include="TestContainer" />
