@@ -296,17 +296,16 @@ static void OnSquareClick(POINT pt) {
         g_fHaveSelection = true;
         g_SelectedSquare = sq;
 
-        // Generate legal moves and collect destinations from this square.
+        // Generate all strictly legal moves, then collect destinations from this square.
         g_LegalDests.clear();
         heap_t heap = allocate_heap();
         push_section(heap);
-        const_cast<CPosition*>(pos)->GenFrom(sq, heap);
+        const_cast<CPosition*>(pos)->LegalMoves(heap);
         for (unsigned i = heap->current_section->start;
              i < heap->current_section->end; ++i) {
             CMove mv = heap->data[i];
-            if (const_cast<CPosition*>(pos)->LegalMove(mv)) {
-                CSCoord dest = mv.GetToCoord();
-                g_LegalDests.push_back(dest);
+            if (mv.GetFromCoord().BitOffset() == sq.BitOffset()) {
+                g_LegalDests.push_back(mv.GetToCoord());
             }
         }
         free_heap(heap);
@@ -317,15 +316,15 @@ static void OnSquareClick(POINT pt) {
         bool madeMove = false;
         for (const auto& dest : g_LegalDests) {
             if (dest.BitOffset() == sq.BitOffset()) {
-                // Re-generate moves from selected square and pick the matching one.
+                // Re-generate legal moves and pick the first legal move to this square.
                 heap_t heap = allocate_heap();
                 push_section(heap);
-                const_cast<CPosition*>(pos)->GenFrom(g_SelectedSquare, heap);
+                const_cast<CPosition*>(pos)->LegalMoves(heap);
                 for (unsigned i = heap->current_section->start;
                      i < heap->current_section->end; ++i) {
                     CMove mv = heap->data[i];
-                    if (mv.GetToCoord().BitOffset() == sq.BitOffset()
-                        && const_cast<CPosition*>(pos)->LegalMove(mv)) {
+                    if (mv.GetFromCoord().BitOffset() == g_SelectedSquare.BitOffset()
+                        && mv.GetToCoord().BitOffset() == sq.BitOffset()) {
                         g_Game.MakeMove(mv);
                         madeMove = true;
                         break;
