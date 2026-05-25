@@ -304,10 +304,7 @@ static void OnSquareClick(POINT pt) {
         for (unsigned i = heap->current_section->start;
              i < heap->current_section->end; ++i) {
             CMove mv = heap->data[i];
-            const CSCoord& from = mv.GetFromCoord();
-            if (from.m_nLevel == sq.m_nLevel
-                    && from.m_nFile == sq.m_nFile
-                    && from.m_nRank == sq.m_nRank) {
+            if (mv.GetFromCoord() == sq) {
                 g_LegalDests.push_back(mv.GetToCoord());
             }
         }
@@ -318,10 +315,7 @@ static void OnSquareClick(POINT pt) {
         // Attempt to make a move to the clicked destination.
         bool madeMove = false;
         for (const auto& dest : g_LegalDests) {
-            const CSCoord& d = dest;
-            if (d.m_nLevel == sq.m_nLevel
-                    && d.m_nFile == sq.m_nFile
-                    && d.m_nRank == sq.m_nRank) {
+            if (dest == sq) {
                 // Re-generate legal moves and pick the first legal move to this square.
                 heap_t heap = allocate_heap();
                 push_section(heap);
@@ -329,14 +323,8 @@ static void OnSquareClick(POINT pt) {
                 for (unsigned i = heap->current_section->start;
                      i < heap->current_section->end; ++i) {
                     CMove mv = heap->data[i];
-                    const CSCoord& mfr = mv.GetFromCoord();
-                    const CSCoord& mto = mv.GetToCoord();
-                    if (mfr.m_nLevel == g_SelectedSquare.m_nLevel
-                            && mfr.m_nFile == g_SelectedSquare.m_nFile
-                            && mfr.m_nRank == g_SelectedSquare.m_nRank
-                            && mto.m_nLevel == sq.m_nLevel
-                            && mto.m_nFile == sq.m_nFile
-                            && mto.m_nRank == sq.m_nRank) {
+                    if (mv.GetFromCoord() == g_SelectedSquare
+                            && mv.GetToCoord() == sq) {
                         g_Game.MakeMove(mv);
                         madeMove = true;
                         break;

@@ -41,6 +41,9 @@ public:
     // Mirror rank within the level (rank 0↔max, 1↔max-1, etc.)
     CSCoord ReflectRank() const;
 
+    bool operator==(const CSCoord& other) const;
+    bool operator!=(const CSCoord& other) const;
+
     explicit operator int() const;
 
 private:
