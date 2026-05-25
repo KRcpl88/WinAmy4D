@@ -370,6 +370,14 @@ ntdll.dll!00007ff9e253cc91() (Unknown Source:0)
 
 
 
+
+# GUI bugs
+
+2. When selecting a piece to move, the legal moves are only showing up for a pawn
+
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
