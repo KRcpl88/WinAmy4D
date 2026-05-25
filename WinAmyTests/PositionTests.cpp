@@ -1,5 +1,8 @@
 #include "TestHelpers.h"
 
+#include <set>
+#include <utility>
+
 namespace WinAmyTests {
 
 TEST_CLASS(PositionTests) {
@@ -285,6 +288,97 @@ TEST_CLASS(PositionTests) {
 
         int count = position.get()->LegalMoves(NULL);
         Assert::AreEqual(63, count);
+    }
+
+    TEST_METHOD(LegalMovesInitialPositionAllPieceMovesPresent) {
+        // Verify every expected legal move from the 4D opening position is present
+        // in the output of LegalMoves.  The 63 moves break down as:
+        //   Main board (h, 8x8)  : 8 pawns × 2 (push+double) + 2 knights × 3 = 22
+        //   Level g (6, 7x7)     : 7 pawns × 1 (single push, not at homeRank) = 7
+        //   Level i (8, 7x7)     : 7 pawns × 2 + 2 knights × 7 (incl. cross-level) = 28
+        //   Level j (9, 6x6)     : 6 pawns × 1 (single push, not at homeRank) = 6
+        PositionGuard position(CPosition::Initial());
+
+        // Collect all fully-legal moves into a heap, then index by (from, to) offsets.
+        heap_t heap = allocate_heap();
+        const int count = position.get()->LegalMoves(heap);
+        Assert::AreEqual(63, count);
+
+        std::set<std::pair<uint16_t, uint16_t>> legalSet;
+        for (unsigned int i = heap->current_section->start;
+             i < heap->current_section->end; i++) {
+            legalSet.insert({heap->data[i].GetFromCoord().BitOffset(),
+                             heap->data[i].GetToCoord().BitOffset()});
+        }
+        free_heap(heap);
+
+        auto AssertPresent = [&](CSCoord from, CSCoord to) {
+            Assert::IsTrue(
+                legalSet.count({from.BitOffset(), to.BitOffset()}) > 0,
+                L"Expected legal move not found in LegalMoves output");
+        };
+
+        // --- Main board (level h = 7): 22 moves ---
+
+        // 8 white pawns on rank 1 (ha2–hh2): single push to rank 2, double push to rank 3.
+        for (uint16_t file = 0; file < 8; file++) {
+            CSCoord from(MAIN_LEVEL, file, 1);
+            AssertPresent(from, CSCoord(MAIN_LEVEL, file, 2)); // single push
+            AssertPresent(from, CSCoord(MAIN_LEVEL, file, 3)); // double push (M_PAWND)
+        }
+        // Knight hb1 (file=1, rank=0): ha3, hc3 on main board + gc2 on level g.
+        CSCoord hb1(MAIN_LEVEL, 1, 0);
+        AssertPresent(hb1, CSCoord(MAIN_LEVEL, 0, 2)); // ha3
+        AssertPresent(hb1, CSCoord(MAIN_LEVEL, 2, 2)); // hc3
+        AssertPresent(hb1, CSCoord(6, 2, 1));           // gc2
+
+        // Knight hg1 (file=6, rank=0): hf3, hh3 on main board + ge2 on level g.
+        CSCoord hg1(MAIN_LEVEL, 6, 0);
+        AssertPresent(hg1, CSCoord(MAIN_LEVEL, 5, 2)); // hf3
+        AssertPresent(hg1, CSCoord(MAIN_LEVEL, 7, 2)); // hh3
+        AssertPresent(hg1, CSCoord(6, 4, 1));           // ge2
+
+        // --- Level g (index 6, 7x7): 7 moves ---
+        // 7 white pawns on rank 0 (ga1–gg1).
+        // Rank 0 ≠ homeRank (1) so no double push is available; single push only.
+        for (uint16_t file = 0; file < 7; file++) {
+            AssertPresent(CSCoord(6, file, 0), CSCoord(6, file, 1));
+        }
+
+        // --- Level i (index 8, 7x7): 28 moves ---
+        // 7 white pawns on rank 1 (ia2–ig2).
+        // Rank 1 == homeRank so both single and double push are available.
+        for (uint16_t file = 0; file < 7; file++) {
+            CSCoord from(8, file, 1);
+            AssertPresent(from, CSCoord(8, file, 2)); // single push to rank 2
+            AssertPresent(from, CSCoord(8, file, 3)); // double push to rank 3 (M_PAWND)
+        }
+        // Knight ib1 (file=1, rank=0): 2 same-level + 5 cross-level jumps.
+        CSCoord ib1(8, 1, 0);
+        AssertPresent(ib1, CSCoord(8, 0, 2));          // ia3
+        AssertPresent(ib1, CSCoord(8, 2, 2));          // ic3
+        AssertPresent(ib1, CSCoord(9, 2, 1));          // jc2 (level j)
+        AssertPresent(ib1, CSCoord(5, 0, 0));          // fa1 (level f)
+        AssertPresent(ib1, CSCoord(5, 1, 0));          // fb1 (level f)
+        AssertPresent(ib1, CSCoord(MAIN_LEVEL, 0, 2)); // ha3 (main board)
+        AssertPresent(ib1, CSCoord(MAIN_LEVEL, 3, 2)); // hd3 (main board)
+
+        // Knight if1 (file=5, rank=0): 2 same-level + 5 cross-level jumps.
+        CSCoord if1(8, 5, 0);
+        AssertPresent(if1, CSCoord(8, 4, 2));          // ie3
+        AssertPresent(if1, CSCoord(8, 6, 2));          // ig3
+        AssertPresent(if1, CSCoord(9, 3, 1));          // jd2 (level j)
+        AssertPresent(if1, CSCoord(5, 4, 0));          // fe1 (level f)
+        AssertPresent(if1, CSCoord(5, 5, 0));          // ff1 (level f)
+        AssertPresent(if1, CSCoord(MAIN_LEVEL, 4, 2)); // he3 (main board)
+        AssertPresent(if1, CSCoord(MAIN_LEVEL, 7, 2)); // hh3 (main board)
+
+        // --- Level j (index 9, 6x6): 6 moves ---
+        // 6 white pawns on rank 0 (ja1–jf1).
+        // Rank 0 ≠ homeRank (1) so single push only.
+        for (uint16_t file = 0; file < 6; file++) {
+            AssertPresent(CSCoord(9, file, 0), CSCoord(9, file, 1));
+        }
     }
 
     TEST_METHOD(LegalMovesKingAloneInCorner) {
