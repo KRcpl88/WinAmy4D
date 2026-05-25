@@ -98,3 +98,13 @@ CSCoord::operator int() const {
     Validate();
     return BitOffset();
 }
+
+bool CSCoord::operator==(const CSCoord& other) const {
+    return m_nLevel == other.m_nLevel
+        && m_nFile  == other.m_nFile
+        && m_nRank  == other.m_nRank;
+}
+
+bool CSCoord::operator!=(const CSCoord& other) const {
+    return !(*this == other);
+}

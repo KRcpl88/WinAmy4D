@@ -304,7 +304,7 @@ static void OnSquareClick(POINT pt) {
         for (unsigned i = heap->current_section->start;
              i < heap->current_section->end; ++i) {
             CMove mv = heap->data[i];
-            if (mv.GetFromCoord().BitOffset() == sq.BitOffset()) {
+            if (mv.GetFromCoord() == sq) {
                 g_LegalDests.push_back(mv.GetToCoord());
             }
         }
@@ -315,7 +315,7 @@ static void OnSquareClick(POINT pt) {
         // Attempt to make a move to the clicked destination.
         bool madeMove = false;
         for (const auto& dest : g_LegalDests) {
-            if (dest.BitOffset() == sq.BitOffset()) {
+            if (dest == sq) {
                 // Re-generate legal moves and pick the first legal move to this square.
                 heap_t heap = allocate_heap();
                 push_section(heap);
@@ -323,8 +323,8 @@ static void OnSquareClick(POINT pt) {
                 for (unsigned i = heap->current_section->start;
                      i < heap->current_section->end; ++i) {
                     CMove mv = heap->data[i];
-                    if (mv.GetFromCoord().BitOffset() == g_SelectedSquare.BitOffset()
-                        && mv.GetToCoord().BitOffset() == sq.BitOffset()) {
+                    if (mv.GetFromCoord() == g_SelectedSquare
+                            && mv.GetToCoord() == sq) {
                         g_Game.MakeMove(mv);
                         madeMove = true;
                         break;
