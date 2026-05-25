@@ -304,7 +304,10 @@ static void OnSquareClick(POINT pt) {
         for (unsigned i = heap->current_section->start;
              i < heap->current_section->end; ++i) {
             CMove mv = heap->data[i];
-            if (mv.GetFromCoord().BitOffset() == sq.BitOffset()) {
+            const CSCoord& from = mv.GetFromCoord();
+            if (from.m_nLevel == sq.m_nLevel
+                    && from.m_nFile == sq.m_nFile
+                    && from.m_nRank == sq.m_nRank) {
                 g_LegalDests.push_back(mv.GetToCoord());
             }
         }
@@ -315,7 +318,10 @@ static void OnSquareClick(POINT pt) {
         // Attempt to make a move to the clicked destination.
         bool madeMove = false;
         for (const auto& dest : g_LegalDests) {
-            if (dest.BitOffset() == sq.BitOffset()) {
+            const CSCoord& d = dest;
+            if (d.m_nLevel == sq.m_nLevel
+                    && d.m_nFile == sq.m_nFile
+                    && d.m_nRank == sq.m_nRank) {
                 // Re-generate legal moves and pick the first legal move to this square.
                 heap_t heap = allocate_heap();
                 push_section(heap);
@@ -323,8 +329,14 @@ static void OnSquareClick(POINT pt) {
                 for (unsigned i = heap->current_section->start;
                      i < heap->current_section->end; ++i) {
                     CMove mv = heap->data[i];
-                    if (mv.GetFromCoord().BitOffset() == g_SelectedSquare.BitOffset()
-                        && mv.GetToCoord().BitOffset() == sq.BitOffset()) {
+                    const CSCoord& mfr = mv.GetFromCoord();
+                    const CSCoord& mto = mv.GetToCoord();
+                    if (mfr.m_nLevel == g_SelectedSquare.m_nLevel
+                            && mfr.m_nFile == g_SelectedSquare.m_nFile
+                            && mfr.m_nRank == g_SelectedSquare.m_nRank
+                            && mto.m_nLevel == sq.m_nLevel
+                            && mto.m_nFile == sq.m_nFile
+                            && mto.m_nRank == sq.m_nRank) {
                         g_Game.MakeMove(mv);
                         madeMove = true;
                         break;
