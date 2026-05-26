@@ -378,6 +378,23 @@ ntdll.dll!00007ff9e253cc91() (Unknown Source:0)
 
 
 
+# CUCoordFloat
+
+Please create a copy of the CUCoord class using slaoting point doubles, CUCoordFloat, with the follwing methods:
+
+- copy constructor for a CUCoord CUCoordFloat
+- ==, + and assingment operators
+
+Also please create 3 new classes:
+
+CUCoordRotate, representatin a rotation.  CUCoordRotate has 2 members, m_rgAxes is an array of 2 CUCoordFloat objects, whch are 2 orthogonal unit lenght vectors reperesetingin 2 rotational axes, and m_rgdwRotation, and array or 2 angles of rotation about each of the axes. 
+CChord, which contains 2 CUCoord members m_Start and m_End, with == oprator, and assignment operator, and CChord copy constructor
+CPoly, whic conatins an array of 3 CUCoordFloat floats m_rfPoints, with == oprator, and assignment operator, and CPoly copy constructor
+
+Include basic unit tests for each new class
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
