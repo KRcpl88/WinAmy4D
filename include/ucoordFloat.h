@@ -3,23 +3,24 @@
 #include "ucoord.h"
 
 class CUCoordFloat {
-public:
     double m_rgdData[3]{};
+public:
 
     CUCoordFloat() = default;
-    CUCoordFloat(double x, double y, double z);
+    CUCoordFloat(double dX, double dY, double dZ);
+    CUCoordFloat(double rgdData[3]);
     CUCoordFloat(const CUCoordFloat& other) = default;
     explicit CUCoordFloat(const CUCoord& coord);
 
-    double getX() const;
-    void setX(double value);
-    double getY() const;
-    void setY(double value);
-    double getZ() const;
-    void setZ(double value);
+    double GetX() const;
+    void SetX(double value);
+    double GetY() const;
+    void SetY(double value);
+    double GetZ() const;
+    void SetZ(double value);
 
-    double& operator[](int index);
-    const double& operator[](int index) const;
+    double& operator[](uint16_t i);
+    const double& operator[](uint16_t i) const;
 
     CUCoordFloat& operator=(const CUCoordFloat& other) = default;
     bool operator==(const CUCoordFloat& other) const;

@@ -1,47 +1,53 @@
 #include "ucoordFloat.h"
 
-CUCoordFloat::CUCoordFloat(double x, double y, double z) {
-    setX(x);
-    setY(y);
-    setZ(z);
+CUCoordFloat::CUCoordFloat(double dX, double dY, double dZ) {
+    SetX(dX);
+    SetY(dY);
+    SetZ(dZ);
+}
+
+CUCoordFloat::CUCoordFloat(double rgdData[3]) {
+    SetX(rgdData[0]);
+    SetY(rgdData[1]);
+    SetZ(rgdData[2]);
 }
 
 CUCoordFloat::CUCoordFloat(const CUCoord& coord) {
-    setX(static_cast<double>(coord.getX()));
-    setY(static_cast<double>(coord.getY()));
-    setZ(static_cast<double>(coord.getZ()));
+    SetX(static_cast<double>(coord.getX()));
+    SetY(static_cast<double>(coord.getY()));
+    SetZ(static_cast<double>(coord.getZ()));
 }
 
-double CUCoordFloat::getX() const {
+double CUCoordFloat::GetX() const {
     return m_rgdData[0];
 }
 
-void CUCoordFloat::setX(double value) {
+void CUCoordFloat::SetX(double value) {
     m_rgdData[0] = value;
 }
 
-double CUCoordFloat::getY() const {
+double CUCoordFloat::GetY() const {
     return m_rgdData[1];
 }
 
-void CUCoordFloat::setY(double value) {
+void CUCoordFloat::SetY(double value) {
     m_rgdData[1] = value;
 }
 
-double CUCoordFloat::getZ() const {
+double CUCoordFloat::GetZ() const {
     return m_rgdData[2];
 }
 
-void CUCoordFloat::setZ(double value) {
+void CUCoordFloat::SetZ(double value) {
     m_rgdData[2] = value;
 }
 
-double& CUCoordFloat::operator[](int index) {
-    return m_rgdData[index];
+double& CUCoordFloat::operator[](uint16_t i) {
+    return m_rgdData[i];
 }
 
-const double& CUCoordFloat::operator[](int index) const {
-    return m_rgdData[index];
+const double& CUCoordFloat::operator[](uint16_t i) const {
+    return m_rgdData[i];
 }
 
 bool CUCoordFloat::operator==(const CUCoordFloat& other) const {
