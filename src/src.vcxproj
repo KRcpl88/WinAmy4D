@@ -154,6 +154,10 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="..\include\scoord.h" />
     <ClInclude Include="..\include\ucoord.h" />
+    <ClInclude Include="..\include\ucoordFloat.h" />
+    <ClInclude Include="..\include\ucoordRotate.h" />
+    <ClInclude Include="..\include\chord.h" />
+    <ClInclude Include="..\include\poly.h" />
     <ClInclude Include="..\include\hcoord.h" />
     <ClInclude Include="..\include\move.h" />
   </ItemGroup>
@@ -189,6 +193,10 @@
     <ClCompile Include="swap.cpp" />
     <ClCompile Include="scoord.cpp" />
     <ClCompile Include="ucoord.cpp" />
+    <ClCompile Include="ucoordFloat.cpp" />
+    <ClCompile Include="ucoordRotate.cpp" />
+    <ClCompile Include="chord.cpp" />
+    <ClCompile Include="poly.cpp" />
     <ClCompile Include="hcoord.cpp" />
     <ClCompile Include="test_blunder.cpp" />
     <ClCompile Include="test_dbase.cpp" />
