@@ -4,7 +4,7 @@
 
 class CPoly {
 public:
-    CUCoordFloat m_rfPoints[3]{};
+    CUCoordFloat m_rgPoints[3]{};
 
     CPoly() = default;
     CPoly(const CUCoordFloat& p0, const CUCoordFloat& p1, const CUCoordFloat& p2);

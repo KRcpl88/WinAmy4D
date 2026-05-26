@@ -9,9 +9,9 @@ TEST_CLASS(PolyTests) {
   public:
     TEST_METHOD(DefaultConstructorInitializesToZero) {
         CPoly poly;
-        Assert::AreEqual(0.0, poly.m_rfPoints[0].getX());
-        Assert::AreEqual(0.0, poly.m_rfPoints[1].getX());
-        Assert::AreEqual(0.0, poly.m_rfPoints[2].getX());
+        Assert::AreEqual(0.0, poly.m_rgPoints[0].getX());
+        Assert::AreEqual(0.0, poly.m_rgPoints[1].getX());
+        Assert::AreEqual(0.0, poly.m_rgPoints[2].getX());
     }
 
     TEST_METHOD(ConstructorSetsThreePoints) {
@@ -19,9 +19,9 @@ TEST_CLASS(PolyTests) {
         CUCoordFloat p1(0.0, 1.0, 0.0);
         CUCoordFloat p2(0.0, 0.0, 1.0);
         CPoly poly(p0, p1, p2);
-        Assert::IsTrue(poly.m_rfPoints[0] == p0);
-        Assert::IsTrue(poly.m_rfPoints[1] == p1);
-        Assert::IsTrue(poly.m_rfPoints[2] == p2);
+        Assert::IsTrue(poly.m_rgPoints[0] == p0);
+        Assert::IsTrue(poly.m_rgPoints[1] == p1);
+        Assert::IsTrue(poly.m_rgPoints[2] == p2);
     }
 
     TEST_METHOD(CopyConstructorCopiesAllPoints) {
@@ -30,9 +30,9 @@ TEST_CLASS(PolyTests) {
         CUCoordFloat p2(7.0, 8.0, 9.0);
         CPoly original(p0, p1, p2);
         CPoly copy(original);
-        Assert::IsTrue(copy.m_rfPoints[0] == original.m_rfPoints[0]);
-        Assert::IsTrue(copy.m_rfPoints[1] == original.m_rfPoints[1]);
-        Assert::IsTrue(copy.m_rfPoints[2] == original.m_rfPoints[2]);
+        Assert::IsTrue(copy.m_rgPoints[0] == original.m_rgPoints[0]);
+        Assert::IsTrue(copy.m_rgPoints[1] == original.m_rgPoints[1]);
+        Assert::IsTrue(copy.m_rgPoints[2] == original.m_rgPoints[2]);
     }
 
     TEST_METHOD(AssignmentOperatorCopiesAllPoints) {
@@ -42,9 +42,9 @@ TEST_CLASS(PolyTests) {
         CPoly original(p0, p1, p2);
         CPoly copy;
         copy = original;
-        Assert::IsTrue(copy.m_rfPoints[0] == original.m_rfPoints[0]);
-        Assert::IsTrue(copy.m_rfPoints[1] == original.m_rfPoints[1]);
-        Assert::IsTrue(copy.m_rfPoints[2] == original.m_rfPoints[2]);
+        Assert::IsTrue(copy.m_rgPoints[0] == original.m_rgPoints[0]);
+        Assert::IsTrue(copy.m_rgPoints[1] == original.m_rgPoints[1]);
+        Assert::IsTrue(copy.m_rgPoints[2] == original.m_rgPoints[2]);
     }
 
     TEST_METHOD(EqualityOperatorReturnsTrueForIdentical) {

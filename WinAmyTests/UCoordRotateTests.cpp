@@ -11,8 +11,8 @@ TEST_CLASS(UCoordRotateTests) {
         CUCoordRotate rot;
         Assert::AreEqual(0.0, rot.m_rgAxes[0].getX());
         Assert::AreEqual(0.0, rot.m_rgAxes[1].getX());
-        Assert::AreEqual(0.0, rot.m_rgdwRotation[0]);
-        Assert::AreEqual(0.0, rot.m_rgdwRotation[1]);
+        Assert::AreEqual(0.0, rot.m_rgdRotation[0]);
+        Assert::AreEqual(0.0, rot.m_rgdRotation[1]);
     }
 
     TEST_METHOD(ConstructorSetsAxesAndAngles) {
@@ -21,8 +21,8 @@ TEST_CLASS(UCoordRotateTests) {
         CUCoordRotate rot(axis0, axis1, 0.5, 1.0);
         Assert::IsTrue(rot.m_rgAxes[0] == axis0);
         Assert::IsTrue(rot.m_rgAxes[1] == axis1);
-        Assert::AreEqual(0.5, rot.m_rgdwRotation[0]);
-        Assert::AreEqual(1.0, rot.m_rgdwRotation[1]);
+        Assert::AreEqual(0.5, rot.m_rgdRotation[0]);
+        Assert::AreEqual(1.0, rot.m_rgdRotation[1]);
     }
 
     TEST_METHOD(CopyConstructorCopiesAllFields) {
@@ -32,8 +32,8 @@ TEST_CLASS(UCoordRotateTests) {
         CUCoordRotate copy(original);
         Assert::IsTrue(copy.m_rgAxes[0] == original.m_rgAxes[0]);
         Assert::IsTrue(copy.m_rgAxes[1] == original.m_rgAxes[1]);
-        Assert::AreEqual(copy.m_rgdwRotation[0], original.m_rgdwRotation[0]);
-        Assert::AreEqual(copy.m_rgdwRotation[1], original.m_rgdwRotation[1]);
+        Assert::AreEqual(copy.m_rgdRotation[0], original.m_rgdRotation[0]);
+        Assert::AreEqual(copy.m_rgdRotation[1], original.m_rgdRotation[1]);
     }
 
     TEST_METHOD(AssignmentOperatorCopiesAllFields) {
@@ -44,8 +44,8 @@ TEST_CLASS(UCoordRotateTests) {
         copy = original;
         Assert::IsTrue(copy.m_rgAxes[0] == original.m_rgAxes[0]);
         Assert::IsTrue(copy.m_rgAxes[1] == original.m_rgAxes[1]);
-        Assert::AreEqual(copy.m_rgdwRotation[0], original.m_rgdwRotation[0]);
-        Assert::AreEqual(copy.m_rgdwRotation[1], original.m_rgdwRotation[1]);
+        Assert::AreEqual(copy.m_rgdRotation[0], original.m_rgdRotation[0]);
+        Assert::AreEqual(copy.m_rgdRotation[1], original.m_rgdRotation[1]);
     }
 };
 

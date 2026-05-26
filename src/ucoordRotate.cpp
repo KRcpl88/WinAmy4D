@@ -4,6 +4,6 @@ CUCoordRotate::CUCoordRotate(const CUCoordFloat& axis0, const CUCoordFloat& axis
                              double rotation0, double rotation1) {
     m_rgAxes[0] = axis0;
     m_rgAxes[1] = axis1;
-    m_rgdwRotation[0] = rotation0;
-    m_rgdwRotation[1] = rotation1;
+    m_rgdRotation[0] = rotation0;
+    m_rgdRotation[1] = rotation1;
 }

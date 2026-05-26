@@ -5,7 +5,7 @@
 class CUCoordRotate {
 public:
     CUCoordFloat m_rgAxes[2]{};
-    double m_rgdwRotation[2]{};
+    double m_rgdRotation[2]{};
 
     CUCoordRotate() = default;
     CUCoordRotate(const CUCoordFloat& axis0, const CUCoordFloat& axis1,
