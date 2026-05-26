@@ -2,6 +2,8 @@
 
 #include "scoord.h"
 
+class CChord;
+
 class CUCoord {
 public:
     int m_rgnData[3]{};
@@ -10,6 +12,8 @@ public:
     CUCoord(int nX, int nY, int nZ);
     CUCoord(const int rgnData[3]);
     explicit CUCoord(const CSCoord& scoord);
+
+    bool GetOutline( __inout_ecount(cChords) CChord* prgChords, __in size_t cChords) const;
 
     int GetX() const;
     void SetX(int nValue);

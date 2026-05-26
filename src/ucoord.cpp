@@ -3,7 +3,7 @@
 #include <limits>
 
 #include "bitboard.h"
-
+#include "chord.h"
 
 CUCoord::CUCoord(int nX, int nY, int nZ) {
     SetX(nX);
@@ -26,6 +26,25 @@ CUCoord::CUCoord(const CSCoord& scoord) {
     const int fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[levelIndex]) - 1;
     SetX(levelOffset + scoord.m_nFile + scoord.m_nRank);
     SetY(levelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
+}
+
+
+CChord g_krgCellOutline[2]
+{
+    {{0, 0, 0}, {0, 0, 0}},
+    {{0, 0, 0}, {0, 0, 0}}
+};
+
+bool CUCoord::GetOutline( __inout_ecount(cChords) CChord* prgChords, __in size_t cChords) const
+{
+
+    for (size_t i = 0; (ARRAYSIZE(g_krgCellOutline) > i) && (cChords > i); ++i)
+    {
+        prgChords[i].SetX((*this) + g_krgCellOutline[i].GetX());
+        prgChords[i].SetY((*this) + g_krgCellOutline[i].GetY());
+    }
+
+    return true;
 }
 
 int CUCoord::GetX() const {
