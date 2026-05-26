@@ -160,6 +160,10 @@
     <ClCompile Include="MoveTests.cpp" />
     <ClCompile Include="PositionTests.cpp" />
     <ClCompile Include="CoordTests.cpp" />
+    <ClCompile Include="UCoordFloatTests.cpp" />
+    <ClCompile Include="UCoordRotateTests.cpp" />
+    <ClCompile Include="ChordTests.cpp" />
+    <ClCompile Include="PolyTests.cpp" />
     <ClCompile Include="SearchDataTests.cpp" />
     <ClCompile Include="CheckmateTests.cpp" />
   </ItemGroup>
