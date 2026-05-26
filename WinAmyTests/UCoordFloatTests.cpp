@@ -66,6 +66,30 @@ TEST_CLASS(UCoordFloatTests) {
         Assert::AreEqual(3.5, result.getY());
         Assert::AreEqual(5.5, result.getZ());
     }
+
+    TEST_METHOD(SubscriptOperatorReadsComponents) {
+        CUCoordFloat coord(1.0, 2.0, 3.0);
+        Assert::AreEqual(1.0, coord[0]);
+        Assert::AreEqual(2.0, coord[1]);
+        Assert::AreEqual(3.0, coord[2]);
+    }
+
+    TEST_METHOD(SubscriptOperatorWritesComponents) {
+        CUCoordFloat coord;
+        coord[0] = 4.0;
+        coord[1] = 5.0;
+        coord[2] = 6.0;
+        Assert::AreEqual(4.0, coord.getX());
+        Assert::AreEqual(5.0, coord.getY());
+        Assert::AreEqual(6.0, coord.getZ());
+    }
+
+    TEST_METHOD(ConstSubscriptOperatorReadsComponents) {
+        const CUCoordFloat coord(7.0, 8.0, 9.0);
+        Assert::AreEqual(7.0, coord[0]);
+        Assert::AreEqual(8.0, coord[1]);
+        Assert::AreEqual(9.0, coord[2]);
+    }
 };
 
 } // namespace WinAmyTests

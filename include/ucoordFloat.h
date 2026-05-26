@@ -18,6 +18,9 @@ public:
     double getZ() const;
     void setZ(double value);
 
+    double& operator[](int index);
+    const double& operator[](int index) const;
+
     CUCoordFloat& operator=(const CUCoordFloat& other) = default;
     bool operator==(const CUCoordFloat& other) const;
     CUCoordFloat operator+(const CUCoordFloat& other) const;

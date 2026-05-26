@@ -36,6 +36,14 @@ void CUCoordFloat::setZ(double value) {
     m_rgdData[2] = value;
 }
 
+double& CUCoordFloat::operator[](int index) {
+    return m_rgdData[index];
+}
+
+const double& CUCoordFloat::operator[](int index) const {
+    return m_rgdData[index];
+}
+
 bool CUCoordFloat::operator==(const CUCoordFloat& other) const {
     if (m_rgdData[0] != other.m_rgdData[0]) {
         return false;
