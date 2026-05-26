@@ -395,6 +395,14 @@ Include basic unit tests for each new class
 
 
 
+# Vector math
+
+Please add common vector operations to CUCoordFloat including vector normalization, vector length, dot product, cross product, scalar product, rotation about a CUCoordFloat axis, and computing the angle between two CUCoordFloat vectors, all operations using the common origin 0,0,0.   Override the multiplication operator to use cross product.  Please add unit tests for these operations.  
+
+
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
