@@ -7,15 +7,19 @@ public:
     int m_rgnData[3]{};
 
     CUCoord() = default;
-    CUCoord(int x, int y, int z);
+    CUCoord(int nX, int nY, int nZ);
+    CUCoord(const int rgnData[3]);
     explicit CUCoord(const CSCoord& scoord);
 
-    int getX() const;
-    void setX(int value);
-    int getY() const;
-    void setY(int value);
-    int getZ() const;
-    void setZ(int value);
+    int GetX() const;
+    void SetX(int nValue);
+    int GetY() const;
+    void SetY(int nValue);
+    int GetZ() const;
+    void SetZ(int nValue);
+
+    int& operator[](uint16_t i) { return m_rgnData[i]; }
+    const int& operator[](uint16_t i) const { return m_rgnData[i]; }
 
     explicit operator CSCoord() const;
 

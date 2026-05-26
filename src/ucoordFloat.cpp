@@ -13,33 +13,33 @@ CUCoordFloat::CUCoordFloat(double rgdData[3]) {
 }
 
 CUCoordFloat::CUCoordFloat(const CUCoord& coord) {
-    SetX(static_cast<double>(coord.getX()));
-    SetY(static_cast<double>(coord.getY()));
-    SetZ(static_cast<double>(coord.getZ()));
+    SetX(static_cast<double>(coord.GetX()));
+    SetY(static_cast<double>(coord.GetY()));
+    SetZ(static_cast<double>(coord.GetZ()));
 }
 
 double CUCoordFloat::GetX() const {
     return m_rgdData[0];
 }
 
-void CUCoordFloat::SetX(double value) {
-    m_rgdData[0] = value;
+void CUCoordFloat::SetX(double dValue) {
+    m_rgdData[0] = dValue;
 }
 
 double CUCoordFloat::GetY() const {
     return m_rgdData[1];
 }
 
-void CUCoordFloat::SetY(double value) {
-    m_rgdData[1] = value;
+void CUCoordFloat::SetY(double dValue) {
+    m_rgdData[1] = dValue;
 }
 
 double CUCoordFloat::GetZ() const {
     return m_rgdData[2];
 }
 
-void CUCoordFloat::SetZ(double value) {
-    m_rgdData[2] = value;
+void CUCoordFloat::SetZ(double dValue) {
+    m_rgdData[2] = dValue;
 }
 
 double& CUCoordFloat::operator[](uint16_t i) {

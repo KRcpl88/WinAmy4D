@@ -9,8 +9,8 @@ TEST_CLASS(ChordTests) {
   public:
     TEST_METHOD(DefaultConstructorInitializesToZero) {
         CChord chord;
-        Assert::AreEqual(0, chord[0].getX());
-        Assert::AreEqual(0, chord[1].getX());
+        Assert::AreEqual(0, chord[0].GetX());
+        Assert::AreEqual(0, chord[1].GetX());
     }
 
     TEST_METHOD(ConstructorSetsStartAndEnd) {

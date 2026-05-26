@@ -144,26 +144,34 @@ TEST_CLASS(UCoordTests) {
   public:
     TEST_METHOD(DefaultConstructorInitializesToZero) {
         CUCoord coord;
-        Assert::AreEqual(0, coord.getX());
-        Assert::AreEqual(0, coord.getY());
-        Assert::AreEqual(0, coord.getZ());
+        Assert::AreEqual(0, coord.GetX());
+        Assert::AreEqual(0, coord.GetY());
+        Assert::AreEqual(0, coord.GetZ());
     }
 
     TEST_METHOD(ThreeArgConstructorSetsFields) {
         CUCoord coord(2, 5, 0);
-        Assert::AreEqual(2, coord.getX());
-        Assert::AreEqual(5, coord.getY());
-        Assert::AreEqual(0, coord.getZ());
+        Assert::AreEqual(2, coord.GetX());
+        Assert::AreEqual(5, coord.GetY());
+        Assert::AreEqual(0, coord.GetZ());
+    }
+
+    TEST_METHOD(ArrayConstructorSetsFields) {
+        int rgnData[3] = { 3, 7, 2 };
+        CUCoord coord(rgnData);
+        Assert::AreEqual(3, coord.GetX());
+        Assert::AreEqual(7, coord.GetY());
+        Assert::AreEqual(2, coord.GetZ());
     }
 
     TEST_METHOD(SettersAndGettersWork) {
         CUCoord coord;
-        coord.setX(3);
-        coord.setY(4);
-        coord.setZ(0);
-        Assert::AreEqual(3, coord.getX());
-        Assert::AreEqual(4, coord.getY());
-        Assert::AreEqual(0, coord.getZ());
+        coord.SetX(3);
+        coord.SetY(4);
+        coord.SetZ(0);
+        Assert::AreEqual(3, coord.GetX());
+        Assert::AreEqual(4, coord.GetY());
+        Assert::AreEqual(0, coord.GetZ());
     }
 
     TEST_METHOD(ConstructFromSCoordRoundTrips) {
@@ -191,26 +199,26 @@ TEST_CLASS(UCoordTests) {
         CUCoord a(1, 2, 0);
         CUCoord b(3, 4, 0);
         CUCoord result = a + b;
-        Assert::AreEqual(4, result.getX());
-        Assert::AreEqual(6, result.getY());
-        Assert::AreEqual(0, result.getZ());
+        Assert::AreEqual(4, result.GetX());
+        Assert::AreEqual(6, result.GetY());
+        Assert::AreEqual(0, result.GetZ());
     }
 
     TEST_METHOD(SubtractionOperatorWorks) {
         CUCoord a(5, 7, 0);
         CUCoord b(2, 3, 0);
         CUCoord result = a - b;
-        Assert::AreEqual(3, result.getX());
-        Assert::AreEqual(4, result.getY());
-        Assert::AreEqual(0, result.getZ());
+        Assert::AreEqual(3, result.GetX());
+        Assert::AreEqual(4, result.GetY());
+        Assert::AreEqual(0, result.GetZ());
     }
 
     TEST_METHOD(NegationOperatorWorks) {
         CUCoord a(3, -2, 0);
         CUCoord result = -a;
-        Assert::AreEqual(-3, result.getX());
-        Assert::AreEqual(2, result.getY());
-        Assert::AreEqual(0, result.getZ());
+        Assert::AreEqual(-3, result.GetX());
+        Assert::AreEqual(2, result.GetY());
+        Assert::AreEqual(0, result.GetZ());
     }
 };
 

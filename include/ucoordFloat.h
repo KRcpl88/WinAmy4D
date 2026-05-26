@@ -13,11 +13,11 @@ public:
     explicit CUCoordFloat(const CUCoord& coord);
 
     double GetX() const;
-    void SetX(double value);
+    void SetX(double dValue);
     double GetY() const;
-    void SetY(double value);
+    void SetY(double dValue);
     double GetZ() const;
-    void SetZ(double value);
+    void SetZ(double dValue);
 
     double& operator[](uint16_t i);
     const double& operator[](uint16_t i) const;
