@@ -3,11 +3,12 @@
 #include "ucoord.h"
 
 class CUCoordFloat {
-public:
     double m_rgdData[3]{};
+public:
 
     CUCoordFloat() = default;
-    CUCoordFloat(double x, double y, double z);
+    CUCoordFloat(double dX, double dY, double dZ);
+    CUCoordFloat(double rgdData[3]);
     CUCoordFloat(const CUCoordFloat& other) = default;
     explicit CUCoordFloat(const CUCoord& coord);
 

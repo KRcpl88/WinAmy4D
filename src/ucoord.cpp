@@ -3,52 +3,77 @@
 #include <limits>
 
 #include "bitboard.h"
+#include "chord.h"
 
+CUCoord::CUCoord(int nX, int nY, int nZ) {
+    SetX(nX);
+    SetY(nY);
+    SetZ(nZ);
+}
 
-CUCoord::CUCoord(int x, int y, int z) {
-    setX(x);
-    setY(y);
-    setZ(z);
+CUCoord::CUCoord(const int rgnData[3]) {
+    SetX(rgnData[0]);
+    SetY(rgnData[1]);
+    SetZ(rgnData[2]);
 }
 
 CUCoord::CUCoord(const CSCoord& scoord) {
     scoord.Validate();
 
-    setZ(scoord.m_nLevel);
+    SetZ(scoord.m_nLevel);
     const unsigned int levelIndex = static_cast<unsigned int>(scoord.m_nLevel);
     const int levelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH - CBitBoard::LEVEL_WIDTH[levelIndex]);
     const int fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[levelIndex]) - 1;
-    setX(levelOffset + scoord.m_nFile + scoord.m_nRank);
-    setY(levelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
+    SetX(levelOffset + scoord.m_nFile + scoord.m_nRank);
+    SetY(levelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
 }
 
-int CUCoord::getX() const {
+
+CChord g_krgCellOutline[2]
+{
+    {{0, 0, 0}, {0, 0, 0}},
+    {{0, 0, 0}, {0, 0, 0}}
+};
+
+bool CUCoord::GetOutline( __inout_ecount(cChords) CChord* prgChords, __in size_t cChords) const
+{
+
+    for (size_t i = 0; (ARRAYSIZE(g_krgCellOutline) > i) && (cChords > i); ++i)
+    {
+        prgChords[i].SetX((*this) + g_krgCellOutline[i].GetX());
+        prgChords[i].SetY((*this) + g_krgCellOutline[i].GetY());
+    }
+
+    return true;
+}
+
+int CUCoord::GetX() const {
     return m_rgnData[0];
 }
 
-void CUCoord::setX(int value) {
-    m_rgnData[0] = value;
+void CUCoord::SetX(int nValue) {
+    m_rgnData[0] = nValue;
 }
 
-int CUCoord::getY() const {
+int CUCoord::GetY() const {
     return m_rgnData[1];
 }
 
-void CUCoord::setY(int value) {
-    m_rgnData[1] = value;
+void CUCoord::SetY(int nValue) {
+    m_rgnData[1] = nValue;
 }
 
-int CUCoord::getZ() const {
+int CUCoord::GetZ() const {
     return m_rgnData[2];
 }
 
-void CUCoord::setZ(int value) {
-    m_rgnData[2] = value;
+void CUCoord::SetZ(int nValue) {
+    m_rgnData[2] = nValue;
 }
 
 CUCoord::operator CSCoord() const {
     CSCoord scoord;
-    const int level = getZ();
+    const int level = GetZ();
     const std::uint16_t invalidCoord = (std::numeric_limits<std::uint16_t>::max)();
 
     int levelOffset;
@@ -64,14 +89,14 @@ CUCoord::operator CSCoord() const {
         fileOffset = 0;
     }
 
-    const int doubleFile = getX() - getY() + fileOffset;
+    const int doubleFile = GetX() - GetY() + fileOffset;
     if ((doubleFile & 1) != 0) {
         scoord.m_nFile = invalidCoord;
     } else {
         scoord.m_nFile = static_cast<std::uint16_t>(doubleFile >> 1);
     }
 
-    const int doubleRank = getX() + getY() - fileOffset;
+    const int doubleRank = GetX() + GetY() - fileOffset;
     if ((doubleRank & 1) != 0) {
         scoord.m_nRank = invalidCoord;
     } else {

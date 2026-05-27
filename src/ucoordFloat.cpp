@@ -2,16 +2,22 @@
 
 #include <cmath>
 
-CUCoordFloat::CUCoordFloat(double x, double y, double z) {
-    SetX(x);
-    SetY(y);
-    SetZ(z);
+CUCoordFloat::CUCoordFloat(double dX, double dY, double dZ) {
+    SetX(dX);
+    SetY(dY);
+    SetZ(dZ);
+}
+
+CUCoordFloat::CUCoordFloat(double rgdData[3]) {
+    SetX(rgdData[0]);
+    SetY(rgdData[1]);
+    SetZ(rgdData[2]);
 }
 
 CUCoordFloat::CUCoordFloat(const CUCoord& coord) {
-    SetX(static_cast<double>(coord.getX()));
-    SetY(static_cast<double>(coord.getY()));
-    SetZ(static_cast<double>(coord.getZ()));
+    SetX(static_cast<double>(coord.GetX()));
+    SetY(static_cast<double>(coord.GetY()));
+    SetZ(static_cast<double>(coord.GetZ()));
 }
 
 double CUCoordFloat::GetX() const {

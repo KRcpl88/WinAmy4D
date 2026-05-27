@@ -72,6 +72,24 @@ extern "C" {
 }
 ```
 
+### Naming Conventions
+
+- **All C++ function and method names use PascalCase** (e.g., `GetX`, `SetAxis`, `CreatePositionFromEPD`)
+- This applies to all member functions in engine classes, test helpers, and test methods alike
+- **All variable and parameter names use Hungarian notation with PascalCase**, following Win32 API conventions:
+  - `n` — integer (e.g., `nIndex`, `nCount`)
+  - `dw` — DWORD / unsigned 32-bit (e.g., `dwFlags`)
+  - `w` — WORD / unsigned 16-bit (e.g., `wOffset`)
+  - `b` — BYTE / unsigned 8-bit or bool (e.g., `bValid`)
+  - `d` — double (e.g., `dRotation`)
+  - `f` — float (e.g., `fScale`)
+  - `sz` / `psz` — null-terminated string / pointer to string (e.g., `szName`)
+  - `p` — pointer (e.g., `pNode`)
+  - `rg` — array (e.g., `rgAxes`, `rgnData`)
+  - `m_` — member variable prefix (e.g., `m_nLevel`, `m_rgdData`)
+  - `g_` — global variable prefix (e.g., `g_nCount`)
+  - `s_` — static variable prefix (e.g., `s_nInstances`)
+
 ### Test Naming
 
 - Test classes: PascalCase (e.g., `BitboardTests`, `PositionTests`)

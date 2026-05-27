@@ -9,9 +9,9 @@ TEST_CLASS(PolyTests) {
   public:
     TEST_METHOD(DefaultConstructorInitializesToZero) {
         CPoly poly;
-        Assert::AreEqual(0.0, poly.m_rgPoints[0].getX());
-        Assert::AreEqual(0.0, poly.m_rgPoints[1].getX());
-        Assert::AreEqual(0.0, poly.m_rgPoints[2].getX());
+        Assert::AreEqual(0.0, poly.m_rgPoints[0].GetX());
+        Assert::AreEqual(0.0, poly.m_rgPoints[1].GetX());
+        Assert::AreEqual(0.0, poly.m_rgPoints[2].GetX());
     }
 
     TEST_METHOD(ConstructorSetsThreePoints) {

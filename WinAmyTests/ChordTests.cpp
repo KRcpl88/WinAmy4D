@@ -9,16 +9,16 @@ TEST_CLASS(ChordTests) {
   public:
     TEST_METHOD(DefaultConstructorInitializesToZero) {
         CChord chord;
-        Assert::AreEqual(0, chord.m_Start.getX());
-        Assert::AreEqual(0, chord.m_End.getX());
+        Assert::AreEqual(0, chord[0].GetX());
+        Assert::AreEqual(0, chord[1].GetX());
     }
 
     TEST_METHOD(ConstructorSetsStartAndEnd) {
         CUCoord start(1, 2, 0);
         CUCoord end(3, 4, 0);
         CChord chord(start, end);
-        Assert::IsTrue(chord.m_Start == start);
-        Assert::IsTrue(chord.m_End == end);
+        Assert::IsTrue(chord[0] == start);
+        Assert::IsTrue(chord[1] == end);
     }
 
     TEST_METHOD(CopyConstructorCopiesStartAndEnd) {
@@ -26,8 +26,8 @@ TEST_CLASS(ChordTests) {
         CUCoord end(5, 6, 0);
         CChord original(start, end);
         CChord copy(original);
-        Assert::IsTrue(copy.m_Start == original.m_Start);
-        Assert::IsTrue(copy.m_End == original.m_End);
+        Assert::IsTrue(copy[0] == original[0]);
+        Assert::IsTrue(copy[1] == original[1]);
     }
 
     TEST_METHOD(AssignmentOperatorCopiesStartAndEnd) {
@@ -36,8 +36,31 @@ TEST_CLASS(ChordTests) {
         CChord original(start, end);
         CChord copy;
         copy = original;
-        Assert::IsTrue(copy.m_Start == original.m_Start);
-        Assert::IsTrue(copy.m_End == original.m_End);
+        Assert::IsTrue(copy[0] == original[0]);
+        Assert::IsTrue(copy[1] == original[1]);
+    }
+
+    TEST_METHOD(IndexOperatorReadsValue) {
+        CUCoord start(1, 2, 0);
+        CUCoord end(3, 4, 0);
+        CChord chord(start, end);
+        Assert::IsTrue(chord[0] == start);
+        Assert::IsTrue(chord[1] == end);
+    }
+
+    TEST_METHOD(IndexOperatorWritesValue) {
+        CChord chord;
+        CUCoord newStart(7, 8, 0);
+        chord[0] = newStart;
+        Assert::IsTrue(chord[0] == newStart);
+    }
+
+    TEST_METHOD(ConstIndexOperatorReadsValue) {
+        CUCoord start(2, 3, 0);
+        CUCoord end(5, 6, 0);
+        const CChord chord(start, end);
+        Assert::IsTrue(chord[0] == start);
+        Assert::IsTrue(chord[1] == end);
     }
 
     TEST_METHOD(EqualityOperatorReturnsTrueForIdentical) {

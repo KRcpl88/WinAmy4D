@@ -14,41 +14,52 @@ TEST_CLASS(UCoordFloatTests) {
   public:
     TEST_METHOD(DefaultConstructorInitializesToZero) {
         CUCoordFloat coord;
-        Assert::AreEqual(0.0, coord.getX());
-        Assert::AreEqual(0.0, coord.getY());
-        Assert::AreEqual(0.0, coord.getZ());
+        Assert::AreEqual(0.0, coord.GetX());
+        Assert::AreEqual(0.0, coord.GetY());
+        Assert::AreEqual(0.0, coord.GetZ());
     }
 
     TEST_METHOD(ThreeArgConstructorSetsFields) {
         CUCoordFloat coord(1.5, 2.5, 3.5);
-        Assert::AreEqual(1.5, coord.getX());
-        Assert::AreEqual(2.5, coord.getY());
-        Assert::AreEqual(3.5, coord.getZ());
+        Assert::AreEqual(1.5, coord.GetX());
+        Assert::AreEqual(2.5, coord.GetY());
+        Assert::AreEqual(3.5, coord.GetZ());
+    }
+
+    TEST_METHOD(ArrayArgConstructorSetsFields) {
+        CUCoordFloat rgCoord[2] = {{1.5, 2.5, 3.5}, {0.5, 1.5, 2.5}};
+        Assert::AreEqual(1.5, rgCoord[0].GetX());
+        Assert::AreEqual(2.5, rgCoord[0].GetY());
+        Assert::AreEqual(3.5, rgCoord[0].GetZ());
+
+        Assert::AreEqual(0.5, rgCoord[1].GetX());
+        Assert::AreEqual(1.5, rgCoord[1].GetY());
+        Assert::AreEqual(2.5, rgCoord[1].GetZ());        
     }
 
     TEST_METHOD(CopyConstructorFromCUCoordSetsFields) {
         CUCoord icoord(2, 5, 1);
         CUCoordFloat fcoord(icoord);
-        Assert::AreEqual(2.0, fcoord.getX());
-        Assert::AreEqual(5.0, fcoord.getY());
-        Assert::AreEqual(1.0, fcoord.getZ());
+        Assert::AreEqual(2.0, fcoord.GetX());
+        Assert::AreEqual(5.0, fcoord.GetY());
+        Assert::AreEqual(1.0, fcoord.GetZ());
     }
 
     TEST_METHOD(CopyConstructorCopiesAllFields) {
         CUCoordFloat original(1.1, 2.2, 3.3);
         CUCoordFloat copy(original);
-        Assert::AreEqual(original.getX(), copy.getX());
-        Assert::AreEqual(original.getY(), copy.getY());
-        Assert::AreEqual(original.getZ(), copy.getZ());
+        Assert::AreEqual(original.GetX(), copy.GetX());
+        Assert::AreEqual(original.GetY(), copy.GetY());
+        Assert::AreEqual(original.GetZ(), copy.GetZ());
     }
 
     TEST_METHOD(AssignmentOperatorCopiesAllFields) {
         CUCoordFloat a(1.0, 2.0, 3.0);
         CUCoordFloat b;
         b = a;
-        Assert::AreEqual(1.0, b.getX());
-        Assert::AreEqual(2.0, b.getY());
-        Assert::AreEqual(3.0, b.getZ());
+        Assert::AreEqual(1.0, b.GetX());
+        Assert::AreEqual(2.0, b.GetY());
+        Assert::AreEqual(3.0, b.GetZ());
     }
 
     TEST_METHOD(EqualityOperatorReturnsTrueForIdentical) {
@@ -67,9 +78,9 @@ TEST_CLASS(UCoordFloatTests) {
         CUCoordFloat a(1.0, 2.0, 3.0);
         CUCoordFloat b(0.5, 1.5, 2.5);
         CUCoordFloat result = a + b;
-        Assert::AreEqual(1.5, result.getX());
-        Assert::AreEqual(3.5, result.getY());
-        Assert::AreEqual(5.5, result.getZ());
+        Assert::AreEqual(1.5, result.GetX());
+        Assert::AreEqual(3.5, result.GetY());
+        Assert::AreEqual(5.5, result.GetZ());
     }
 
     TEST_METHOD(SubscriptOperatorReadsComponents) {
@@ -84,9 +95,9 @@ TEST_CLASS(UCoordFloatTests) {
         coord[0] = 4.0;
         coord[1] = 5.0;
         coord[2] = 6.0;
-        Assert::AreEqual(4.0, coord.getX());
-        Assert::AreEqual(5.0, coord.getY());
-        Assert::AreEqual(6.0, coord.getZ());
+        Assert::AreEqual(4.0, coord.GetX());
+        Assert::AreEqual(5.0, coord.GetY());
+        Assert::AreEqual(6.0, coord.GetZ());
     }
 
     TEST_METHOD(ConstSubscriptOperatorReadsComponents) {
