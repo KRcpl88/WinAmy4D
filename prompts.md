@@ -285,6 +285,10 @@ Phase 3
 2) When entering the piece to move, as the user types in the box, a real time text filter will filter a selection of all pieces with legal moves as they type.  The user may select the piece to move form the list at any time, which will fill in the box for the piece to move.  This selection will also be filled in if the user clicks on a piece on the board.  When a piece is selected, valid legal moves are highlighted in the 3D board view for that piece.
 3) A second text box allows the user to enter the full move in SAN notation.  As in #2, as the user types the available legal moves are filtered from a selection list using the input, and the user may select a move from the list at any time.  If the user has selected a piece to move in the piece to move box, then only legal moves for that piece are shown in the list.  If no piece has been selected, then all legal moves will be in the selection list.  However, if a piece to move has already been selected, simply typing in the destination square level, file and rank in SAN format will match the move for that piece.
 
+Phase 4
+1) Create a simple, retro vector terminal display style vectorized font using std::unordered_set<CChord>, supporting ASCII upper and lowercase letters only and numbers.  Use minimal number of chords, no more than 16 chords per char
+2) Allow toggle options to display SAN board location for each board location using the vector fonts.  Allow options for all locations, locations with pieces for the current side, or target locations when a piece to move is selected.
+
 
 
 # future cleanup:
