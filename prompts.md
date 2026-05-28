@@ -181,145 +181,6 @@ WinAmy.exe!mainCRTStartup(void * __formal) Line 17 (d:\a\_work\1\s\src\vctools\c
 kernel32.dll!00007ff9e20a7374() (Unknown Source:0)
 ntdll.dll!00007ff9e253cc91() (Unknown Source:0)
 
-This is a list of the moves in the game so far, each is a pair of SAN moves, white first then black.
-
-id2id4
-hd7hd5
-hd2hd4
-hg8hf6
-hc2hc4
-hd5xhc4
-hg1hf3
-ib7hd6
-hc1hf4
-if7he6
-hf4xhd6
-hd8xhd6
-he2he3
-hb7hb5
-ha2ha4
-hc7hc6
-hb1hc3
-hb8gc6
-ib1ic3
-ia7fb5
-hf3he5
-he6gc4
-ic3ie4
-hd6gd5
-he5xif6
-ie7xif6
-ie4xif6
-he8ie7
-ic1ig5
-ie7if7
-ha4xhb5
-id7hd7
-hb5xhc6
-hd7xhc6
-hc3ga4
-hc6fc4
-ga4xfb5
-fc4xfb5
-id4id5
-ie6xid5
-if6xhh8
-ig7xhh8
-hf1xhc4
-hc8hg4
-hd1ic1
-fb5hc6
-ha1hc1
-he7he6
-ic1if4
-if7hg8
-he1hg1
-hf8hd6
-hf2hf3
-hg4ff3
-ie1ic3
-gc6hb5
-hc4fb3
-hc6hd5
-if4id2
-gc4hb3
-hc1hc2
-hb5xic3
-ib2xic3
-hb3ic4
-if1ie3
-ic4xid2
-ie3xhd5
-id2xhf1
-hd5xhf6
-hg7xhf6
-hg1xhf1
-hh8ig7
-hc2hc6
-ig7ba1
-hc6xic6
-ba1xga1
-id1gc2
-ha8hc8
-ig1ib1
-ga1aa1
-gc2gg2
-gd5hd5
-fb3fc2
-aa1cc1
-ic6xjc6
-cc1xgc1
-gg2gf3
-ff3fc6
-jc6xjd6
-gc1xgb1
-gf3gd3
-gb1hc1
-hf1if1
-hd6xhh2
-gd3xgd7
-hc1hg1
-if1hf2
-fc6fb5
-jd6xhf6
-hd5hg5
-gd7hd7
-hc8hf8
-hf6fd4
-hf8jd6
-ig5ie3
-hg5fe5
-fd4fb4
-fb5jb5
-fb4xia6
-jd6xjd1
-ia6xgb7
-hg1xje1
-ib1ie1
-jd1xie1
-ge1xie1Q
-je1xie1
-ia1xie1
-fe5ba1
-gb7xga7
-jb5xjf1
-hg2xjf1Q
-ba1hg7
-ga7xha7
-hg7hg1
-hf2ge2
-hg1xgg1
-hd7he8
-hg8if7
-jf1xja6
-gg1gg4
-ge2he2
-gg4ig4
-ja6xjb6
-ig4ie4
-he2id1
-id5id4
-if2if3
 
 
 
@@ -400,6 +261,29 @@ Include basic unit tests for each new class
 Please add common vector operations to CUCoordFloat including vector normalization, vector length, dot product, cross product, scalar product, rotation about a CUCoordFloat axis, and computing the angle between two CUCoordFloat vectors, all operations using the common origin 0,0,0.   Override the multiplication operator to use cross product.  Please add unit tests for these operations.  
 
 
+
+
+# 3D view
+
+Create a multi phase plan to make several sequential feature enhancements for the program
+
+Phase 1
+1) Add a menu option to switch to a 3D rendered view.  Use Direct3D for the 3D view.  
+2) If necessary, port the existing 2D view to Direct3D, or just switch between Direct3D and GDI depending on which view option the user selects
+3) Enumerate all valid CSCoord board locations and get the vector outlines of each location using CUCoord::GetOutline, then render them in 3D
+4) render the location vector outlines using light blue lines on a black background.  For phase 1 use  Unicode chess characters as a temporary placeholder.  For black pieces, render the black Unicode char on a white circle so they can been seen on the black background.
+5) When selecting a piece to move, show valid moves in cyan outlines.
+6) allow the user to rotate the view to view the board position from any perspective.
+7) existing options for number of players, search depth, etc.  will still be available on the menu for 3D mode.
+
+Phase 2
+1) Add 3D vector models for chess piece outlines, using std::unordered_set<CChord>
+2) Render chess pieces using 3D vector models, using red or blue vector outlines for black or white pieces.
+
+Phase 3
+1) Add text boxes to input both the selected piece to move and the move in SAN notation.
+2) When entering the piece to move, as the user types in the box, a real time text filter will filter a selection of all pieces with legal moves as they type.  The user may select the piece to move form the list at any time, which will fill in the box for the piece to move.  This selection will also be filled in if the user clicks on a piece on the board.  When a piece is selected, valid legal moves are highlighted in the 3D board view for that piece.
+3) A second text box allows the user to enter the full move in SAN notation.  As in #2, as the user types the available legal moves are filtered from a selection list using the input, and the user may select a move from the list at any time.  If the user has selected a piece to move in the piece to move box, then only legal moves for that piece are shown in the list.  If no piece has been selected, then all legal moves will be in the selection list.  However, if a piece to move has already been selected, simply typing in the destination square level, file and rank in SAN format will match the move for that piece.
 
 
 
