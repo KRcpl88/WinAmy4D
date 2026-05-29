@@ -24,6 +24,12 @@
     <ClCompile Include="BoardRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D3DBoardRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PieceAtlas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -33,6 +39,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BoardRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DBoardRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PieceAtlas.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
