@@ -24,4 +24,9 @@ BEGIN
             MENUITEM "9",   IDM_DEPTH_9
         END
     END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&2D Board\tCtrl+2", IDM_VIEW_2D, CHECKED
+        MENUITEM "&3D Board\tCtrl+3", IDM_VIEW_3D
+    END
 END

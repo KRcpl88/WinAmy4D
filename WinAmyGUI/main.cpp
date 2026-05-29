@@ -13,6 +13,7 @@
 #include "resource.h"
 #include "GameController.h"
 #include "BoardRenderer.h"
+#include "D3DBoardRenderer.h"
 
 #include "dbase.h"
 #include "heap.h"
@@ -33,11 +34,14 @@ static constexpr int BTN_H       = 28;
 static constexpr int BTN_Y       = (TOOLBAR_H - BTN_H) / 2;
 static constexpr int BTN_GAP     = 6;
 
+enum class ViewMode { Mode2D, Mode3D };
+
 // ---------------------------------------------------------------------------
 // Globals
 // ---------------------------------------------------------------------------
 
 static HWND            g_hWnd       = nullptr;
+static HWND            g_hRender3D  = nullptr; // Child window the D3D swap chain renders into.
 static HWND            g_hStatus    = nullptr;
 static HWND            g_hBtnNew    = nullptr;
 static HWND            g_hBtn0P     = nullptr;
@@ -49,6 +53,10 @@ static HWND            g_hSpinDepth = nullptr;
 
 static GameController  g_Game;
 static BoardRenderer   g_Renderer;
+static D3DBoardRenderer g_D3DRenderer;
+static ViewMode        g_eViewMode  = ViewMode::Mode2D;
+
+static const wchar_t* RENDER_CLASS = L"WinAmyGUI_Render3D";
 
 // Click-to-move state.
 static bool            g_fHaveSelection = false;
@@ -73,9 +81,124 @@ static void MaybeStartEngine();
 static void UpdateStatusBar();
 static void UpdatePlayerButtons();
 static void SetDepthFromMenu(int depth);
+static void SetViewMode(ViewMode mode);
 static void CreateControls(HWND hWnd);
 static void UpdateScrollBars(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+
+// Returns the size of the renderable client area (below the toolbar,
+// above the status bar). Used by the D3D renderer to size its swap chain.
+static SIZE GetRenderAreaSize(HWND hWnd) {
+    RECT rc;
+    GetClientRect(hWnd, &rc);
+    int w = rc.right - rc.left;
+    int h = rc.bottom - rc.top - TOOLBAR_H - STATUSBAR_H;
+    if (w < 1) w = 1;
+    if (h < 1) h = 1;
+    return SIZE{ w, h };
+}
+
+// Handles a click on a CSCoord that came from the 3D pick. Mirrors the
+// selection/move logic in OnSquareClick but skips the 2D hit-test.
+static void OnSquareClick3D(const CSCoord& sq) {
+    if (g_Game.IsEngineRunning() || g_Game.IsGameOver()
+        || g_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
+    const CPosition* pos = g_Game.GetPosition();
+    if (!pos) return;
+    if (g_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->m_nTurn == 1) return;
+
+    if (!g_fHaveSelection) {
+        uint16_t off = sq.BitOffset();
+        int8_t piece = pos->m_rgPiece[off];
+        bool isWhitePiece = (piece > 0);
+        bool isWhiteTurn  = (pos->m_nTurn == 0);
+        if (piece == 0 || isWhitePiece != isWhiteTurn) return;
+        g_fHaveSelection = true;
+        g_SelectedSquare = sq;
+        g_LegalDests.clear();
+        heap_t heap = allocate_heap();
+        push_section(heap);
+        const_cast<CPosition*>(pos)->LegalMoves(heap);
+        for (unsigned i = heap->current_section->start;
+             i < heap->current_section->end; ++i) {
+            CMove mv = heap->data[i];
+            if (mv.GetFromCoord() == sq) {
+                g_LegalDests.push_back(mv.GetToCoord());
+            }
+        }
+        free_heap(heap);
+        InvalidateRect(g_hRender3D ? g_hRender3D : g_hWnd, nullptr, FALSE);
+    } else {
+        bool madeMove = false;
+        for (const auto& dest : g_LegalDests) {
+            if (dest == sq) {
+                heap_t heap = allocate_heap();
+                push_section(heap);
+                const_cast<CPosition*>(pos)->LegalMoves(heap);
+                for (unsigned i = heap->current_section->start;
+                     i < heap->current_section->end; ++i) {
+                    CMove mv = heap->data[i];
+                    if (mv.GetFromCoord() == g_SelectedSquare && mv.GetToCoord() == sq) {
+                        g_Game.MakeMove(mv);
+                        madeMove = true;
+                        break;
+                    }
+                }
+                free_heap(heap);
+                break;
+            }
+        }
+        g_fHaveSelection = false;
+        g_LegalDests.clear();
+        InvalidateRect(g_hRender3D ? g_hRender3D : g_hWnd, nullptr, FALSE);
+        if (madeMove) {
+            UpdateStatusBar();
+            if (!g_Game.IsGameOver()) MaybeStartEngine();
+        }
+    }
+}
+
+// Render3D child window proc — handles mouse for orbit/zoom and paint via D3D.
+static LRESULT CALLBACK Render3DProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+    case WM_ERASEBKGND:
+        return 1; // suppress flicker; the swap chain owns the surface
+    case WM_PAINT: {
+        PAINTSTRUCT ps;
+        BeginPaint(hWnd, &ps);
+        if (g_D3DRenderer.IsInitialized()) {
+            const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
+            g_D3DRenderer.Render(g_Game.GetPosition(), sel, g_LegalDests);
+        }
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
+    case WM_LBUTTONDOWN:
+        if (g_D3DRenderer.IsInitialized())
+            g_D3DRenderer.OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
+    case WM_MOUSEMOVE:
+        if (g_D3DRenderer.IsInitialized())
+            g_D3DRenderer.OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
+    case WM_LBUTTONUP:
+        if (g_D3DRenderer.IsInitialized()) {
+            int x = GET_X_LPARAM(lParam);
+            int y = GET_Y_LPARAM(lParam);
+            g_D3DRenderer.OnMouseUp(x, y);
+            if (g_D3DRenderer.LastInteractionWasClick()) {
+                CSCoord sq = g_D3DRenderer.HitTest3D(x, y);
+                if (sq.IsValid()) OnSquareClick3D(sq);
+            }
+        }
+        return 0;
+    case WM_MOUSEWHEEL:
+        if (g_D3DRenderer.IsInitialized())
+            g_D3DRenderer.OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
+        return 0;
+    }
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
 
 // ---------------------------------------------------------------------------
 // WinMain
@@ -102,6 +225,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     wc.hIcon         = LoadIcon(nullptr, IDI_APPLICATION);
     wc.hIconSm       = LoadIcon(nullptr, IDI_APPLICATION);
     RegisterClassExW(&wc);
+
+    // Register the child render window class used for 3D mode.
+    WNDCLASSEXW rwc{};
+    rwc.cbSize        = sizeof(rwc);
+    rwc.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    rwc.lpfnWndProc   = Render3DProc;
+    rwc.hInstance     = hInstance;
+    rwc.hCursor       = LoadCursor(nullptr, IDC_ARROW);
+    rwc.hbrBackground = nullptr; // we own the surface via the swap chain
+    rwc.lpszClassName = RENDER_CLASS;
+    RegisterClassExW(&rwc);
 
     SIZE boardSz = BoardRenderer::GetBoardAreaSize();
     int winW = boardSz.cx + 16;
@@ -175,6 +309,13 @@ static void CreateControls(HWND hWnd) {
         WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
         0, 0, 0, 0, hWnd, nullptr, hInst, nullptr);
 
+    // 3D render child window — covers the area between the toolbar and the
+    // status bar. Initially hidden; SetViewMode toggles visibility.
+    g_hRender3D = CreateWindowExW(0, RENDER_CLASS, nullptr,
+        WS_CHILD,
+        0, TOOLBAR_H, 10, 10,
+        hWnd, nullptr, hInst, nullptr);
+
     // Set initial button states
     UpdatePlayerButtons();
     EnableWindow(g_hBtnPause, FALSE);
@@ -194,6 +335,7 @@ static void OnNewGame() {
     EnableWindow(g_hBtnPause, FALSE);
     SetWindowTextW(g_hBtnPause, L"Pause");
     InvalidateRect(g_hWnd, nullptr, TRUE);
+    if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
     MaybeStartEngine();
 }
@@ -247,6 +389,7 @@ static void OnEngineMove(LPARAM /*lParam*/) {
     g_LegalDests.clear();
 
     InvalidateRect(g_hWnd, nullptr, TRUE);
+    if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
 
     if (g_Game.IsGameOver()) return;
@@ -390,6 +533,46 @@ static void UpdatePlayerButtons() {
 }
 
 // ---------------------------------------------------------------------------
+// SetViewMode — toggle between 2D GDI rendering and 3D Direct3D 11 rendering
+// ---------------------------------------------------------------------------
+
+static void SetViewMode(ViewMode mode) {
+    if (mode == g_eViewMode) return;
+    g_eViewMode = mode;
+
+    HMENU hMenu = GetMenu(g_hWnd);
+    CheckMenuItem(hMenu, IDM_VIEW_2D, MF_BYCOMMAND | (mode == ViewMode::Mode2D ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hMenu, IDM_VIEW_3D, MF_BYCOMMAND | (mode == ViewMode::Mode3D ? MF_CHECKED : MF_UNCHECKED));
+
+    if (mode == ViewMode::Mode3D) {
+        // Position the child render window over the render area.
+        SIZE sz = GetRenderAreaSize(g_hWnd);
+        SetWindowPos(g_hRender3D, nullptr, 0, TOOLBAR_H, sz.cx, sz.cy,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+        // Lazy-create the D3D renderer the first time the user enters 3D.
+        if (!g_D3DRenderer.IsInitialized()) {
+            if (!g_D3DRenderer.Initialize(g_hRender3D)) {
+                MessageBoxW(g_hWnd, L"Failed to initialise Direct3D 11. Reverting to 2D view.",
+                            L"WinAmy 4D", MB_OK | MB_ICONERROR);
+                g_eViewMode = ViewMode::Mode2D;
+                CheckMenuItem(hMenu, IDM_VIEW_2D, MF_BYCOMMAND | MF_CHECKED);
+                CheckMenuItem(hMenu, IDM_VIEW_3D, MF_BYCOMMAND | MF_UNCHECKED);
+                return;
+            }
+        } else {
+            g_D3DRenderer.Resize(sz.cx, sz.cy);
+        }
+        ShowWindow(g_hRender3D, SW_SHOW);
+        ShowScrollBar(g_hWnd, SB_BOTH, FALSE);
+    } else {
+        ShowWindow(g_hRender3D, SW_HIDE);
+        ShowScrollBar(g_hWnd, SB_BOTH, TRUE);
+        UpdateScrollBars(g_hWnd);
+    }
+    InvalidateRect(g_hWnd, nullptr, TRUE);
+}
+
+// ---------------------------------------------------------------------------
 // SetDepthFromMenu — set depth via menu checkmark
 // ---------------------------------------------------------------------------
 
@@ -454,10 +637,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     case WM_SIZE: {
         if (g_hStatus) SendMessage(g_hStatus, WM_SIZE, 0, 0);
         UpdateScrollBars(hWnd);
+        if (g_hRender3D) {
+            SIZE sz = GetRenderAreaSize(hWnd);
+            SetWindowPos(g_hRender3D, nullptr, 0, TOOLBAR_H, sz.cx, sz.cy,
+                         SWP_NOZORDER | SWP_NOACTIVATE);
+            if (g_eViewMode == ViewMode::Mode3D && g_D3DRenderer.IsInitialized()) {
+                g_D3DRenderer.Resize(sz.cx, sz.cy);
+            }
+        }
         return 0;
     }
 
     case WM_HSCROLL: {
+        if (g_eViewMode != ViewMode::Mode2D) return 0;
         SCROLLINFO si{ sizeof(si), SIF_ALL };
         GetScrollInfo(hWnd, SB_HORZ, &si);
         int oldX = g_scrollX;
@@ -480,6 +672,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     }
 
     case WM_VSCROLL: {
+        if (g_eViewMode != ViewMode::Mode2D) return 0;
         SCROLLINFO si{ sizeof(si), SIF_ALL };
         GetScrollInfo(hWnd, SB_VERT, &si);
         int oldY = g_scrollY;
@@ -505,18 +698,23 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
 
-        // Offset by toolbar height and current scroll position.
-        SetViewportOrgEx(hdc, -g_scrollX, TOOLBAR_H - g_scrollY, nullptr);
+        if (g_eViewMode != ViewMode::Mode3D) {
+            // Offset by toolbar height and current scroll position.
+            SetViewportOrgEx(hdc, -g_scrollX, TOOLBAR_H - g_scrollY, nullptr);
 
-        const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
-        g_Renderer.DrawBoard(hdc, g_Game.GetPosition(), sel, g_LegalDests);
+            const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
+            g_Renderer.DrawBoard(hdc, g_Game.GetPosition(), sel, g_LegalDests);
 
-        SetViewportOrgEx(hdc, 0, 0, nullptr);
+            SetViewportOrgEx(hdc, 0, 0, nullptr);
+        }
+        // In 3D mode the child render window covers the render area and
+        // owns the painting; nothing to do here.
         EndPaint(hWnd, &ps);
         return 0;
     }
 
     case WM_LBUTTONDOWN: {
+        if (g_eViewMode == ViewMode::Mode3D) return 0; // handled by child
         // Adjust click coordinates for scroll offset and toolbar.
         POINT pt{
             GET_X_LPARAM(lParam) + g_scrollX,
@@ -540,6 +738,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         case IDM_FILE_EXIT:
             DestroyWindow(hWnd);
+            break;
+
+        case IDM_VIEW_2D:
+            SetViewMode(ViewMode::Mode2D);
+            break;
+        case IDM_VIEW_3D:
+            SetViewMode(ViewMode::Mode3D);
             break;
 
         case IDM_DEPTH_1: case IDM_DEPTH_2: case IDM_DEPTH_3:
@@ -601,6 +806,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
     case WM_DESTROY:
         g_Game.PauseEngine();
+        g_D3DRenderer.Shutdown();
         PostQuitMessage(0);
         return 0;
     }

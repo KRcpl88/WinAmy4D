@@ -12,6 +12,8 @@
 #define IDM_DEPTH_7         1017
 #define IDM_DEPTH_8         1018
 #define IDM_DEPTH_9         1019
+#define IDM_VIEW_2D         1031
+#define IDM_VIEW_3D         1032
 
 // Button IDs
 #define IDC_BTN_NEW_GAME    2001
