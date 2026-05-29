@@ -55,11 +55,13 @@ void RenderGlyphCell(wchar_t wGlyph, bool bIsWhite, uint32_t* pCellPixels) {
     }
 
     // Composite the black-piece backing disc directly into the bitmap
-    // (alpha = 255, RGB = white) before drawing the glyph on top with GDI.
+    // (alpha = 255, dark gray RGB) before drawing the glyph on top with
+    // GDI. The disc is sized just large enough to frame the glyph so it
+    // doesn't dominate the cell.
     if (!bIsWhite) {
         const float fCx = nW * 0.5f;
         const float fCy = nH * 0.5f;
-        const float fR  = nW * 0.42f;
+        const float fR  = nW * 0.34f;
         const float fRSq = fR * fR;
         uint32_t* pPx = static_cast<uint32_t*>(pvBits);
         for (int y = 0; y < nH; ++y) {
@@ -67,7 +69,7 @@ void RenderGlyphCell(wchar_t wGlyph, bool bIsWhite, uint32_t* pCellPixels) {
                 float fDx = x + 0.5f - fCx;
                 float fDy = y + 0.5f - fCy;
                 if (fDx * fDx + fDy * fDy <= fRSq) {
-                    pPx[y * nW + x] = PackBGRA(255, 255, 255, 255);
+                    pPx[y * nW + x] = PackBGRA(80, 80, 80, 255);
                 }
             }
         }
@@ -90,9 +92,9 @@ void RenderGlyphCell(wchar_t wGlyph, bool bIsWhite, uint32_t* pCellPixels) {
 
     // GDI ignores alpha; reconstruct it for glyph pixels.
     //  - White-piece pixels: alpha = max(R,G,B) of the painted glyph.
-    //  - Black-piece pixels: keep the already-rendered white disc opaque
-    //    and force the dark-glyph foreground to fully opaque black so
-    //    anti-aliasing edges blend onto the disc rather than the scene.
+    //  - Black-piece pixels: keep the already-rendered gray disc opaque
+    //    and force the dark-glyph foreground to fully opaque so anti-aliasing
+    //    edges blend onto the disc rather than the scene.
     {
         uint32_t* pPx = static_cast<uint32_t*>(pvBits);
         for (int i = 0; i < nW * nH; ++i) {

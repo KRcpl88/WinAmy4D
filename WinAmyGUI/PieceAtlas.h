@@ -3,9 +3,10 @@
 // PieceAtlas
 //
 // Pre-renders the 12 Unicode chess piece glyphs (white King..Pawn and black
-// King..Pawn from the U+2654..U+265F range) into a single 4 x 3 tile texture
+// King..Pawn from the U+2654..U+265F range) into a single 6 x 2 tile texture
 // atlas usable as a D3D11 shader resource. Black pieces are rendered onto a
-// filled white disc so they remain visible against the dark 3D background.
+// dark-gray disc backing so they remain visible against the dark 3D
+// background without dominating the cell.
 
 #include <windows.h>
 #include <d3d11.h>

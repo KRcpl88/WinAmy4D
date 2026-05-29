@@ -73,6 +73,16 @@ public:
     // matching CSCoord. Returns an invalid CSCoord if no cell is hit.
     CSCoord HitTest3D(int nX, int nY) const;
 
+    // Show/hide the cell wireframe (pieces and target markers remain).
+    void SetShowOutlines(bool bShow);
+    bool GetShowOutlines() const { return m_bShowOutlines; }
+
+    // Reset orbit yaw/pitch and zoom distance to defaults.
+    void ResetView();
+
+    // Adjust zoom by a multiplicative factor (>1.0 = zoom out, <1.0 = zoom in).
+    void AdjustZoom(float fFactor);
+
 private:
     template <typename T>
     using ComPtr = Microsoft::WRL::ComPtr<T>;
@@ -111,6 +121,12 @@ private:
 
     PieceAtlas                      m_PieceAtlas;
 
+    // Target marker texture (a soft-edged yellow disc) drawn on each legal
+    // destination cell when a piece is selected, to make targets easy to
+    // click.
+    ComPtr<ID3D11Texture2D>          m_pTargetTex;
+    ComPtr<ID3D11ShaderResourceView> m_pTargetSRV;
+
     // ---- Cell geometry (lattice positions used for picking & lines) ----
     struct LineVertex {
         float x, y, z;
@@ -126,9 +142,15 @@ private:
     float                           m_BoardRadius{1.0f};
 
     // ---- Camera ----
-    float m_fYaw{0.6f};
-    float m_fPitch{-0.4f};
+    static constexpr float kDefaultYaw   =  0.6f;
+    static constexpr float kDefaultPitch = -0.4f;
+    float m_fYaw{kDefaultYaw};
+    float m_fPitch{kDefaultPitch};
     float m_fDistance{0.0f};
+    float m_fDefaultDistance{0.0f};
+
+    // Show/hide cell outlines.
+    bool  m_bShowOutlines{true};
 
     int   m_nClientW{1}, m_nClientH{1};
     HWND  m_hWnd{nullptr};
@@ -143,6 +165,7 @@ private:
     bool  CreateDeviceAndSwapChain();
     bool  CreateBackBufferViews();
     bool  CreatePipelines();
+    bool  CreateTargetMarkerTexture();
     void  BuildCellGeometry();
     void  EnsureSpriteCapacity(UINT uNeededVerts);
     void  EnsureHighlightCapacity(UINT uNeededVerts);
@@ -161,4 +184,6 @@ private:
                           const std::vector<CSCoord>& LegalDests);
     void RenderPieces(const DirectX::XMMATRIX& mViewProj,
                       const CPosition* pPosition);
+    void RenderTargetMarkers(const DirectX::XMMATRIX& mViewProj,
+                             const std::vector<CSCoord>& LegalDests);
 };

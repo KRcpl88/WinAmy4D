@@ -48,8 +48,10 @@ static HWND            g_hBtn0P     = nullptr;
 static HWND            g_hBtn1P     = nullptr;
 static HWND            g_hBtn2P     = nullptr;
 static HWND            g_hBtnPause  = nullptr;
-static HWND            g_hEditDepth = nullptr;
-static HWND            g_hSpinDepth = nullptr;
+static HWND            g_hBtnOutlines  = nullptr;
+static HWND            g_hBtnResetView = nullptr;
+static HWND            g_hBtnZoomIn    = nullptr;
+static HWND            g_hBtnZoomOut   = nullptr;
 
 static GameController  g_Game;
 static BoardRenderer   g_Renderer;
@@ -287,22 +289,16 @@ static void CreateControls(HWND hWnd) {
     g_hBtnPause = makeBtn(L"Pause",     IDC_BTN_PAUSE, 70);
     x += BTN_GAP * 2;
 
-    // Depth label + edit + spin
-    CreateWindowExW(0, L"STATIC", L"Depth:",
-        WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-        x, BTN_Y, 44, BTN_H, hWnd, nullptr, hInst, nullptr);
-    x += 44 + 2;
-
-    g_hEditDepth = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"3",
-        WS_CHILD | WS_VISIBLE | ES_NUMBER | ES_CENTER,
-        x, BTN_Y, 30, BTN_H, hWnd, (HMENU)(INT_PTR)IDC_EDIT_DEPTH, hInst, nullptr);
-
-    g_hSpinDepth = CreateWindowExW(0, UPDOWN_CLASSW, nullptr,
-        WS_CHILD | WS_VISIBLE | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS,
-        0, 0, 0, 0, hWnd, (HMENU)(INT_PTR)IDC_SPIN_DEPTH, hInst, nullptr);
-    SendMessage(g_hSpinDepth, UDM_SETBUDDY,  (WPARAM)g_hEditDepth, 0);
-    SendMessage(g_hSpinDepth, UDM_SETRANGE,  0, MAKELPARAM(9, 1));
-    SendMessage(g_hSpinDepth, UDM_SETPOS,    0, 3);
+    // 3D-mode controls. Search depth is configured exclusively via the
+    // Options > Search Depth menu; there are no toolbar depth controls.
+    g_hBtnOutlines  = makeBtn(L"Outlines: On", IDC_BTN_OUTLINES,   90);
+    g_hBtnResetView = makeBtn(L"Reset View",   IDC_BTN_RESET_VIEW, 80);
+    g_hBtnZoomIn    = makeBtn(L"Zoom +",       IDC_BTN_ZOOM_IN,    60);
+    g_hBtnZoomOut   = makeBtn(L"Zoom -",       IDC_BTN_ZOOM_OUT,   60);
+    EnableWindow(g_hBtnOutlines,  FALSE);
+    EnableWindow(g_hBtnResetView, FALSE);
+    EnableWindow(g_hBtnZoomIn,    FALSE);
+    EnableWindow(g_hBtnZoomOut,   FALSE);
 
     // Status bar
     g_hStatus = CreateWindowExW(0, STATUSCLASSNAMEW, nullptr,
@@ -331,7 +327,7 @@ static void OnNewGame() {
     g_fHaveSelection = false;
     g_LegalDests.clear();
     g_Game.NewGame();
-    g_Game.SetDepth((int)SendMessage(g_hSpinDepth, UDM_GETPOS, 0, 0));
+    // Preserve the depth previously selected via the Options menu.
     EnableWindow(g_hBtnPause, FALSE);
     SetWindowTextW(g_hBtnPause, L"Pause");
     InvalidateRect(g_hWnd, nullptr, TRUE);
@@ -536,6 +532,12 @@ static void UpdatePlayerButtons() {
 // SetViewMode — toggle between 2D GDI rendering and 3D Direct3D 11 rendering
 // ---------------------------------------------------------------------------
 
+static void UpdateOutlinesButtonText() {
+    if (!g_hBtnOutlines) return;
+    bool bOn = g_D3DRenderer.IsInitialized() ? g_D3DRenderer.GetShowOutlines() : true;
+    SetWindowTextW(g_hBtnOutlines, bOn ? L"Outlines: On" : L"Outlines: Off");
+}
+
 static void SetViewMode(ViewMode mode) {
     if (mode == g_eViewMode) return;
     g_eViewMode = mode;
@@ -564,10 +566,19 @@ static void SetViewMode(ViewMode mode) {
         }
         ShowWindow(g_hRender3D, SW_SHOW);
         ShowScrollBar(g_hWnd, SB_BOTH, FALSE);
+        EnableWindow(g_hBtnOutlines,  TRUE);
+        EnableWindow(g_hBtnResetView, TRUE);
+        EnableWindow(g_hBtnZoomIn,    TRUE);
+        EnableWindow(g_hBtnZoomOut,   TRUE);
+        UpdateOutlinesButtonText();
     } else {
         ShowWindow(g_hRender3D, SW_HIDE);
         ShowScrollBar(g_hWnd, SB_BOTH, TRUE);
         UpdateScrollBars(g_hWnd);
+        EnableWindow(g_hBtnOutlines,  FALSE);
+        EnableWindow(g_hBtnResetView, FALSE);
+        EnableWindow(g_hBtnZoomIn,    FALSE);
+        EnableWindow(g_hBtnZoomOut,   FALSE);
     }
     InvalidateRect(g_hWnd, nullptr, TRUE);
 }
@@ -578,7 +589,6 @@ static void SetViewMode(ViewMode mode) {
 
 static void SetDepthFromMenu(int depth) {
     g_Game.SetDepth(depth);
-    SendMessage(g_hSpinDepth, UDM_SETPOS, 0, depth);
 
     HMENU hMenu  = GetMenu(g_hWnd);
     HMENU hOpts  = GetSubMenu(hMenu, 1);
@@ -747,6 +757,25 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             SetViewMode(ViewMode::Mode3D);
             break;
 
+        case IDC_BTN_OUTLINES:
+            if (g_D3DRenderer.IsInitialized()) {
+                g_D3DRenderer.SetShowOutlines(!g_D3DRenderer.GetShowOutlines());
+                UpdateOutlinesButtonText();
+            }
+            break;
+
+        case IDC_BTN_RESET_VIEW:
+            if (g_D3DRenderer.IsInitialized()) g_D3DRenderer.ResetView();
+            break;
+
+        case IDC_BTN_ZOOM_IN:
+            if (g_D3DRenderer.IsInitialized()) g_D3DRenderer.AdjustZoom(0.85f);
+            break;
+
+        case IDC_BTN_ZOOM_OUT:
+            if (g_D3DRenderer.IsInitialized()) g_D3DRenderer.AdjustZoom(1.18f);
+            break;
+
         case IDM_DEPTH_1: case IDM_DEPTH_2: case IDM_DEPTH_3:
         case IDM_DEPTH_4: case IDM_DEPTH_5: case IDM_DEPTH_6:
         case IDM_DEPTH_7: case IDM_DEPTH_8: case IDM_DEPTH_9:
@@ -783,23 +812,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 MaybeStartEngine();
             }
             break;
-
-        case IDC_EDIT_DEPTH: {
-            if (HIWORD(wParam) == EN_CHANGE) {
-                int d = (int)SendMessage(g_hSpinDepth, UDM_GETPOS, 0, 0);
-                if (d >= 1 && d <= 9) {
-                    g_Game.SetDepth(d);
-                    // Update menu checkmarks.
-                    HMENU hMenu  = GetMenu(hWnd);
-                    HMENU hOpts  = GetSubMenu(hMenu, 1);
-                    HMENU hDepth = GetSubMenu(hOpts, 0);
-                    for (int i = 0; i < 9; ++i)
-                        CheckMenuItem(hDepth, IDM_DEPTH_1 + i, MF_BYCOMMAND | MF_UNCHECKED);
-                    CheckMenuItem(hDepth, IDM_DEPTH_1 + (d - 1), MF_BYCOMMAND | MF_CHECKED);
-                }
-            }
-            break;
-        }
         }
         return 0;
     }

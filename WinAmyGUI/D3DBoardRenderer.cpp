@@ -107,6 +107,8 @@ D3DBoardRenderer::~D3DBoardRenderer() { Shutdown(); }
 
 void D3DBoardRenderer::Shutdown() {
     if (m_pContext) m_pContext->ClearState();
+    m_pTargetSRV.Reset();
+    m_pTargetTex.Reset();
     m_PieceAtlas.Release();
     m_pSampler.Reset();
     m_pSpriteCB.Reset();
@@ -145,6 +147,7 @@ bool D3DBoardRenderer::Initialize(HWND hWnd) {
     if (!CreateBackBufferViews())    { Shutdown(); return false; }
     if (!CreatePipelines())          { Shutdown(); return false; }
     if (!m_PieceAtlas.Build(m_pDevice.Get())) { Shutdown(); return false; }
+    if (!CreateTargetMarkerTexture()) { Shutdown(); return false; }
 
     BuildCellGeometry();
 
@@ -163,7 +166,8 @@ bool D3DBoardRenderer::Initialize(HWND hWnd) {
     }
 
     // Initial camera: distance enough to see the whole board.
-    m_fDistance = (std::max)(8.0f, m_BoardRadius * 2.5f);
+    m_fDefaultDistance = (std::max)(8.0f, m_BoardRadius * 2.5f);
+    m_fDistance        = m_fDefaultDistance;
 
     return true;
 }
@@ -255,12 +259,14 @@ bool D3DBoardRenderer::CreateBackBufferViews() {
 
 bool D3DBoardRenderer::CreatePipelines() {
     // Rasterizer (no culling — we draw lines and billboards).
+    // AA off: hardware lines are 1px; AA tends to make them look thicker
+    // and slightly blurred, so we render crisp 1-pixel lines instead.
     {
         D3D11_RASTERIZER_DESC rd{};
         rd.FillMode = D3D11_FILL_SOLID;
         rd.CullMode = D3D11_CULL_NONE;
         rd.DepthClipEnable = TRUE;
-        rd.AntialiasedLineEnable = TRUE;
+        rd.AntialiasedLineEnable = FALSE;
         if (FAILED(m_pDevice->CreateRasterizerState(&rd, m_pRasterState.GetAddressOf()))) return false;
     }
     // Depth states.
@@ -501,18 +507,94 @@ void D3DBoardRenderer::Render(const CPosition* pPosition,
     XMMATRIX mViewProj = mView * mProj;
 
     RenderLines(mViewProj);
+    RenderTargetMarkers(mViewProj, LegalDests);
     RenderHighlights(mViewProj, pPosition, pSelectedSquare, LegalDests);
     RenderPieces(mViewProj, pPosition);
 
     m_pSwapChain->Present(1, 0);
 }
 
+// ---------------------------------------------------------------------------
+// Outline visibility, view reset, and zoom controls
+// ---------------------------------------------------------------------------
+
+void D3DBoardRenderer::SetShowOutlines(bool bShow) {
+    if (m_bShowOutlines == bShow) return;
+    m_bShowOutlines = bShow;
+    if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
+}
+
+void D3DBoardRenderer::ResetView() {
+    m_fYaw      = kDefaultYaw;
+    m_fPitch    = kDefaultPitch;
+    m_fDistance = m_fDefaultDistance > 0.0f ? m_fDefaultDistance : (m_BoardRadius * 2.5f);
+    if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
+}
+
+void D3DBoardRenderer::AdjustZoom(float fFactor) {
+    if (fFactor <= 0.0f) return;
+    m_fDistance *= fFactor;
+    if (m_fDistance < 1.5f)   m_fDistance = 1.5f;
+    if (m_fDistance > 500.0f) m_fDistance = 500.0f;
+    if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
+}
+
+// ---------------------------------------------------------------------------
+// CreateTargetMarkerTexture — soft-edged filled yellow disc on transparent
+// background, used as a billboard sprite on each legal-destination cell so
+// the targets read clearly and are easy to click.
+// ---------------------------------------------------------------------------
+
+bool D3DBoardRenderer::CreateTargetMarkerTexture() {
+    constexpr int kSize = 64;
+    std::vector<uint32_t> Pixels(static_cast<size_t>(kSize) * kSize, 0);
+    const float fCenter = kSize * 0.5f - 0.5f;
+    const float fInner  = kSize * 0.40f; // fully opaque
+    const float fOuter  = kSize * 0.46f; // edge softening
+    for (int y = 0; y < kSize; ++y) {
+        for (int x = 0; x < kSize; ++x) {
+            float fDx = x - fCenter;
+            float fDy = y - fCenter;
+            float fR  = std::sqrt(fDx * fDx + fDy * fDy);
+            float fA  = 1.0f;
+            if (fR >= fOuter)      fA = 0.0f;
+            else if (fR >  fInner) fA = (fOuter - fR) / (fOuter - fInner);
+            uint8_t a = static_cast<uint8_t>(fA * 0.85f * 255.0f); // ~85% peak so background still bleeds through
+            // BGRA: yellow = (B=0, G=255, R=255)
+            Pixels[static_cast<size_t>(y) * kSize + x] =
+                (static_cast<uint32_t>(a) << 24) |
+                (255u << 16) | // R
+                (255u <<  8) | // G
+                (  0u);        // B
+        }
+    }
+
+    D3D11_TEXTURE2D_DESC desc{};
+    desc.Width            = kSize;
+    desc.Height           = kSize;
+    desc.MipLevels        = 1;
+    desc.ArraySize        = 1;
+    desc.Format           = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.Usage            = D3D11_USAGE_IMMUTABLE;
+    desc.BindFlags        = D3D11_BIND_SHADER_RESOURCE;
+    D3D11_SUBRESOURCE_DATA srd{};
+    srd.pSysMem     = Pixels.data();
+    srd.SysMemPitch = kSize * sizeof(uint32_t);
+    if (FAILED(m_pDevice->CreateTexture2D(&desc, &srd, m_pTargetTex.GetAddressOf()))) return false;
+    if (FAILED(m_pDevice->CreateShaderResourceView(m_pTargetTex.Get(), nullptr, m_pTargetSRV.GetAddressOf()))) return false;
+    return true;
+}
+
 void D3DBoardRenderer::RenderLines(const XMMATRIX& mViewProj) {
+    if (!m_bShowOutlines) return;
     if (!m_pLineVB || m_LineVertices.empty()) return;
 
     LineCB cb;
     XMStoreFloat4x4(&cb.mViewProj, mViewProj);
-    cb.vColor = XMFLOAT4(0.10f, 0.85f, 0.10f, 1.0f);
+    // Dim green so the wireframe reads as a fine, low-contrast guide rather
+    // than a dominant element of the scene.
+    cb.vColor = XMFLOAT4(0.05f, 0.50f, 0.05f, 1.0f);
 
     D3D11_MAPPED_SUBRESOURCE map{};
     if (FAILED(m_pContext->Map(m_pLineCB.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &map))) return;
@@ -605,15 +687,10 @@ void D3DBoardRenderer::RenderHighlights(const XMMATRIX& mViewProj,
         m_pContext->Draw(static_cast<UINT>(Verts.size()), 0);
     };
 
-    // Legal destinations (bright cyan).
-    if (!LegalDests.empty()) {
-        std::vector<LineVertex> Verts;
-        Verts.reserve(LegalDests.size() * 24 * 2);
-        for (const auto& Dest : LegalDests) {
-            if (Dest.IsValid()) BuildBufferForCell(Dest, Verts);
-        }
-        DrawCellList(Verts, XMFLOAT4(0.2f, 1.0f, 1.0f, 1.0f));
-    }
+    // Legal destinations are now shown as filled yellow discs by
+    // RenderTargetMarkers, which reads more clearly than wireframe outlines
+    // and gives a larger pick target. No cyan outline pass needed.
+    (void)LegalDests;
 
     // Selected square (yellow, drawn last so it sits on top).
     if (pSelectedSquare && pSelectedSquare->IsValid()) {
@@ -709,6 +786,81 @@ void D3DBoardRenderer::RenderPieces(const XMMATRIX& mViewProj, const CPosition* 
     m_pContext->VSSetConstantBuffers(0, 1, m_pSpriteCB.GetAddressOf());
     m_pContext->PSSetShader(m_pSpritePS.Get(), nullptr, 0);
     auto* pSRV = m_PieceAtlas.GetSRV();
+    m_pContext->PSSetShaderResources(0, 1, &pSRV);
+    m_pContext->PSSetSamplers(0, 1, m_pSampler.GetAddressOf());
+    m_pContext->OMSetDepthStencilState(m_pDepthStateSprites.Get(), 0);
+    float blendFactor[4]{};
+    m_pContext->OMSetBlendState(m_pBlendAlpha.Get(), blendFactor, 0xffffffff);
+
+    m_pContext->Draw(static_cast<UINT>(Verts.size()), 0);
+}
+
+// ---------------------------------------------------------------------------
+// RenderTargetMarkers — draw a soft yellow disc on each legal-destination
+// cell to make targets read clearly and give the user a larger pick target.
+// Re-uses the sprite pipeline; only the bound texture differs.
+// ---------------------------------------------------------------------------
+
+void D3DBoardRenderer::RenderTargetMarkers(const XMMATRIX& mViewProj,
+                                            const std::vector<CSCoord>& LegalDests) {
+    if (LegalDests.empty()) return;
+    if (!m_pTargetSRV) return;
+
+    XMMATRIX mView = MakeView();
+    XMVECTOR vDet;
+    XMMATRIX mInvView = XMMatrixInverse(&vDet, mView);
+    XMFLOAT3 vRight, vUp;
+    XMStoreFloat3(&vRight, mInvView.r[0]);
+    XMStoreFloat3(&vUp,    mInvView.r[1]);
+
+    // Slightly larger than the piece quads (0.55) so the disc is visible
+    // around any piece sitting on the target square.
+    const float fHalf = 0.65f;
+
+    std::vector<SpriteVertex> Verts;
+    Verts.reserve(LegalDests.size() * 6);
+
+    for (const auto& Dest : LegalDests) {
+        if (!Dest.IsValid()) continue;
+        XMFLOAT3 c = CellCenter(Dest);
+        XMFLOAT3 r{ vRight.x * fHalf, vRight.y * fHalf, vRight.z * fHalf };
+        XMFLOAT3 u{ vUp.x    * fHalf, vUp.y    * fHalf, vUp.z    * fHalf };
+        XMFLOAT3 p00{ c.x - r.x - u.x, c.y - r.y - u.y, c.z - r.z - u.z };
+        XMFLOAT3 p10{ c.x + r.x - u.x, c.y + r.y - u.y, c.z + r.z - u.z };
+        XMFLOAT3 p01{ c.x - r.x + u.x, c.y - r.y + u.y, c.z - r.z + u.z };
+        XMFLOAT3 p11{ c.x + r.x + u.x, c.y + r.y + u.y, c.z + r.z + u.z };
+        Verts.push_back({ p01, { 0.0f, 0.0f } });
+        Verts.push_back({ p11, { 1.0f, 0.0f } });
+        Verts.push_back({ p00, { 0.0f, 1.0f } });
+        Verts.push_back({ p11, { 1.0f, 0.0f } });
+        Verts.push_back({ p10, { 1.0f, 1.0f } });
+        Verts.push_back({ p00, { 0.0f, 1.0f } });
+    }
+    if (Verts.empty()) return;
+
+    EnsureSpriteCapacity(static_cast<UINT>(Verts.size()));
+    if (!m_pSpriteVB) return;
+
+    D3D11_MAPPED_SUBRESOURCE map{};
+    if (FAILED(m_pContext->Map(m_pSpriteVB.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &map))) return;
+    memcpy(map.pData, Verts.data(), Verts.size() * sizeof(SpriteVertex));
+    m_pContext->Unmap(m_pSpriteVB.Get(), 0);
+
+    SpriteCB cb;
+    XMStoreFloat4x4(&cb.mViewProj, mViewProj);
+    if (FAILED(m_pContext->Map(m_pSpriteCB.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &map))) return;
+    memcpy(map.pData, &cb, sizeof(cb));
+    m_pContext->Unmap(m_pSpriteCB.Get(), 0);
+
+    UINT uStride = sizeof(SpriteVertex);
+    UINT uOffset = 0;
+    m_pContext->IASetInputLayout(m_pSpriteLayout.Get());
+    m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_pContext->IASetVertexBuffers(0, 1, m_pSpriteVB.GetAddressOf(), &uStride, &uOffset);
+    m_pContext->VSSetShader(m_pSpriteVS.Get(), nullptr, 0);
+    m_pContext->VSSetConstantBuffers(0, 1, m_pSpriteCB.GetAddressOf());
+    m_pContext->PSSetShader(m_pSpritePS.Get(), nullptr, 0);
+    auto* pSRV = m_pTargetSRV.Get();
     m_pContext->PSSetShaderResources(0, 1, &pSRV);
     m_pContext->PSSetSamplers(0, 1, m_pSampler.GetAddressOf());
     m_pContext->OMSetDepthStencilState(m_pDepthStateSprites.Get(), 0);

@@ -28,7 +28,7 @@ CUCoord::CUCoord(const CSCoord& scoord) {
     SetY(levelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
 }
 
-
+/*
 CChord g_krgCellOutline[24]
 {
     // +x/+y quadrant
@@ -60,8 +60,17 @@ CChord g_krgCellOutline[24]
     {{-1.0,  0.0,  0.0}, {-0.5,  0.5,  0.5}},
     {{-0.5,  0.5,  0.5}, { 0.0,  0.0,  1.0}},
 };
+*/
 
-bool CUCoord::GetOutline( __inout std::unordered_set<CChord> & Chords) const
+CChord g_krgCellOutline[4]
+{
+    {{ 1.0,  0.0,  0.0}, { 0.0, -1.0,  0.0}},
+    {{ 0.0, -1.0,  0.0}, {-1.0,  0.0,  0.0}},
+    {{-1.0,  0.0,  0.0}, { 0.0,  1.0,  0.0}},
+    {{ 0.0,  1.0,  0.0}, { 1.0,  0.0,  0.0}},
+};  
+
+    bool CUCoord::GetOutline( __inout std::unordered_set<CChord> & Chords) const
 {
     CUCoordFloat Origin = (CUCoordFloat)(*this);
 
