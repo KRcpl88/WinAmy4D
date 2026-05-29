@@ -29,19 +29,45 @@ CUCoord::CUCoord(const CSCoord& scoord) {
 }
 
 
-CChord g_krgCellOutline[2]
+CChord g_krgCellOutline[24]
 {
-    {{0, 0, 0}, {0, 0, 0}},
-    {{0, 0, 0}, {0, 0, 0}}
+    // +x/+y quadrant
+    {{ 0.0,  0.0, -1.0}, { 0.5,  0.5, -0.5}},
+    {{ 0.5,  0.5, -0.5}, { 0.0,  1.0,  0.0}},
+    {{ 0.0,  1.0,  0.0}, { 0.5,  0.5,  0.5}},
+    {{ 0.5,  0.5, -0.5}, { 1.0,  0.0,  0.0}},
+    {{ 1.0,  0.0,  0.0}, { 0.5,  0.5,  0.5}},
+    {{ 0.5,  0.5,  0.5}, { 0.0,  0.0,  1.0}},
+    // +x/-y quadrant
+    {{ 0.0,  0.0, -1.0}, { 0.5, -0.5, -0.5}},
+    {{ 0.5, -0.5, -0.5}, { 0.0, -1.0,  0.0}},
+    {{ 0.0, -1.0,  0.0}, { 0.5, -0.5,  0.5}},
+    {{ 0.5, -0.5, -0.5}, { 1.0,  0.0,  0.0}},
+    {{ 1.0,  0.0,  0.0}, { 0.5, -0.5,  0.5}},
+    {{ 0.5, -0.5,  0.5}, { 0.0,  0.0,  1.0}},
+    // -x/-y quadrant
+    {{ 0.0,  0.0, -1.0}, {-0.5, -0.5, -0.5}},
+    {{-0.5, -0.5, -0.5}, { 0.0, -1.0,  0.0}},
+    {{ 0.0, -1.0,  0.0}, {-0.5, -0.5,  0.5}},
+    {{-0.5, -0.5, -0.5}, {-1.0,  0.0,  0.0}},
+    {{-1.0,  0.0,  0.0}, {-0.5, -0.5,  0.5}},
+    {{-0.5, -0.5,  0.5}, { 0.0,  0.0,  1.0}},
+    // -x/+y quadrant
+    {{ 0.0,  0.0, -1.0}, {-0.5,  0.5, -0.5}},
+    {{-0.5,  0.5, -0.5}, { 0.0,  1.0,  0.0}},
+    {{ 0.0,  1.0,  0.0}, {-0.5,  0.5,  0.5}},
+    {{-0.5,  0.5, -0.5}, {-1.0,  0.0,  0.0}},
+    {{-1.0,  0.0,  0.0}, {-0.5,  0.5,  0.5}},
+    {{-0.5,  0.5,  0.5}, { 0.0,  0.0,  1.0}},
 };
 
-bool CUCoord::GetOutline( __inout_ecount(cChords) CChord* prgChords, __in size_t cChords) const
+bool CUCoord::GetOutline( __inout std::unordered_set<CChord> & Chords) const
 {
+    CUCoordFloat Origin = (CUCoordFloat)(*this);
 
-    for (size_t i = 0; (ARRAYSIZE(g_krgCellOutline) > i) && (cChords > i); ++i)
+    for (size_t i = 0; (ARRAYSIZE(g_krgCellOutline) > i); ++i)
     {
-        prgChords[i].SetX((*this) + g_krgCellOutline[i].GetX());
-        prgChords[i].SetY((*this) + g_krgCellOutline[i].GetY());
+        Chords.insert( CChord(Origin + g_krgCellOutline[i].GetStart(), Origin + g_krgCellOutline[i].GetEnd()));
     }
 
     return true;

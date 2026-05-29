@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "scoord.h"
 
 class CChord;
@@ -13,7 +15,7 @@ public:
     CUCoord(const int rgnData[3]);
     explicit CUCoord(const CSCoord& scoord);
 
-    bool GetOutline( __inout_ecount(cChords) CChord* prgChords, __in size_t cChords) const;
+    bool GetOutline( __inout std::unordered_set<CChord> & Chords) const;
 
     int GetX() const;
     void SetX(int nValue);
