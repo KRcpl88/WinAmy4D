@@ -59,23 +59,7 @@ That's **344 squares** in total. The widths of the levels are:
 
 A side-on silhouette of the stack:
 
-```
-                  o   (1)
-                 nnn
-                mmmmm
-               lllllll
-              kkkkkkkkk
-             jjjjjjjjjjj
-            ggggggggggggg
-           hhhhhhhhhhhhhhh   <-- standard 8x8 board
-            iiiiiiiiiiiii
-             ffffffffffff
-              eeeeeeeeee
-               dddddddd
-                cccccc
-                 bbbb
-                  a    (1)
-```
+![chess board 3D](4d_board.JPG)
 
 ### Relationship to standard 2D chess
 
