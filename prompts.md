@@ -297,6 +297,9 @@ Given 3 vectors X (-1,0,0), Y (-1,0,0) and Z (0,0,-1) which form an orthnormal b
 # hex variants
 g_krgHex1CellOutline are the chords for a hexagonal subset of the complete dodecahedron cell outline around the corner points -1,0,0, 0,-1,0, and 0,0,-1.  Please extrapolate from those chords the outline for corresponding hexagonal subsets g_krgHex2CellOutline including -1,0,0, 0,-1,0, and 0,0,1, g_krgHex3CellOutline including -1,0,0, 0,1,0, and 0,0,-1, and g_krgHex4CellOutline including 1,0,0, 0,-1,0, and 0,0,1. 
 
+# flattening hex outlines
+g_krgHex1CellOutline has been derived from g_krgHex1RawCellOutline by flattening the end coords in each chord so that the end coord is coplanar with the    primary 3 endpoints which define the hex, -1,0,0, 0,-1,0, and 0,0,-1, and then shifting all the chords (in the direction of a vector normal to the hex      plane) by 0.1 times the sum of the three andpoints, -1,-1,-1, so that the hex outline is aligned with the bottom of the chess piece in that location.       Please make the same adjustments in subsets g_krgHex2CellOutline (based on -1,0,0, 0,-1,0, and 0,0,1), g_krgHex3CellOutline ( based on -1,0,0, 0,1,0, and   0,0,-1), and g_krgHex4CellOutline (based on 1,0,0, 0,-1,0, and 0,0,1)                                                                                       
+
 
 
 # future cleanup:
