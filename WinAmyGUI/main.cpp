@@ -256,7 +256,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
         nullptr, nullptr, hInstance, nullptr
     );
 
-    ShowWindow(g_hWnd, nCmdShow);
+    ShowWindow(g_hWnd, SW_SHOWMAXIMIZED);
     UpdateWindow(g_hWnd);
 
     // Start the first engine move if in auto mode.
