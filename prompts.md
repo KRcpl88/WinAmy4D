@@ -302,6 +302,15 @@ g_krgHex1CellOutline has been derived from g_krgHex1RawCellOutline by flattening
 
 
 
+# GUI usability enhancements
+These changes are looking really good.  The game is much easier to play now because it is really difficult to visualize the board in 3D withouth the 3D visualizations.  To make these view more discoverable, please make the following improvments:
+
+1. Move the number of player buttons off of the ribon and onto the menu, so the number of players and also the paus option are not only available from the menu.
+2. Add a toggle button to the ribbon to toggle 2D and 3D view.
+3. Add a drop down grid view picker control to the ribbon that allows the user to seelct from the different 3D grid types.
+4. for 2D mode, please fix the alignment of the different board levels to be vertically center justified in each row, whihc makes it easier to visualize how the squares aligne from one level to the next.
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove

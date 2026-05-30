@@ -23,6 +23,14 @@ BEGIN
             MENUITEM "8",   IDM_DEPTH_8
             MENUITEM "9",   IDM_DEPTH_9
         END
+        POPUP "&Players"
+        BEGIN
+            MENUITEM "&0 Players (Engine self-play)", IDM_PLAYERS_0
+            MENUITEM "&1 Player (vs Engine)",         IDM_PLAYERS_1, CHECKED
+            MENUITEM "&2 Players (Human vs Human)",   IDM_PLAYERS_2
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Pause Engine\tCtrl+P",             IDM_PAUSE, GRAYED
     END
     POPUP "&View"
     BEGIN
@@ -40,7 +48,7 @@ BEGIN
             MENUITEM "Hex &1 (-X,-Y,-Z)",   IDM_GRID_HEX_1, CHECKED
             MENUITEM "Hex &2 (-X,-Y,+Z)",   IDM_GRID_HEX_2
             MENUITEM "Hex &3 (-X,+Y,-Z)",   IDM_GRID_HEX_3
-            MENUITEM "Hex &4 (+X,-Y,+Z)",   IDM_GRID_HEX_4
+            MENUITEM "Hex &4 (+X,-Y,-Z)",   IDM_GRID_HEX_4
         END
     END
 END
