@@ -151,18 +151,12 @@ bool D3DBoardRenderer::Initialize(HWND hWnd) {
 
     BuildCellGeometry();
 
-    // Upload static line vertex buffer.
-    if (!m_LineVertices.empty()) {
-        D3D11_BUFFER_DESC bd{};
-        bd.ByteWidth = static_cast<UINT>(sizeof(LineVertex) * m_LineVertices.size());
-        bd.Usage     = D3D11_USAGE_IMMUTABLE;
-        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        D3D11_SUBRESOURCE_DATA srd{};
-        srd.pSysMem = m_LineVertices.data();
-        if (FAILED(m_pDevice->CreateBuffer(&bd, &srd, m_pLineVB.GetAddressOf()))) {
-            Shutdown();
-            return false;
-        }
+    // Build the line vertex buffer for the initial outline selection.
+    // An empty buffer is acceptable (no chords -> nothing to draw); only
+    // a hard CreateBuffer failure aborts init.
+    if (!RebuildLineGeometry()) {
+        Shutdown();
+        return false;
     }
 
     // Initial camera: distance enough to see the whole board.
@@ -366,18 +360,18 @@ bool D3DBoardRenderer::CreatePipelines() {
 // ---------------------------------------------------------------------------
 // BuildCellGeometry
 //
-// Enumerates every valid CSCoord, builds:
-//   * m_Cells      — list of cells with their render-space centers.
-//   * m_LineVertices — flattened pairs of endpoints for every unique CChord
-//                     across all cells (dedup via unordered_set<CChord>).
-// Also computes m_BoardCenter and m_BoardRadius for the orbit camera.
+// Enumerates every valid CSCoord and builds:
+//   * m_Cells       — list of cells with their render-space centers.
+//   * m_BoardCenter — center of the lattice bounding box (orbit pivot).
+//   * m_BoardRadius — bounding-sphere radius used to choose a default camera
+//                     distance.
+// The line vertex buffer that draws the cell wireframe is produced separately
+// by RebuildLineGeometry so the outline style can be changed at runtime
+// without re-walking the lattice.
 // ---------------------------------------------------------------------------
 
 void D3DBoardRenderer::BuildCellGeometry() {
     m_Cells.clear();
-    m_LineVertices.clear();
-
-    std::unordered_set<CChord> Chords;
 
     // Track bounding-box extents in render space.
     float fMinX =  1e9f, fMinY =  1e9f, fMinZ =  1e9f;
@@ -401,8 +395,6 @@ void D3DBoardRenderer::BuildCellGeometry() {
                 fMaxX = (std::max)(fMaxX, Info.Center.x);
                 fMaxY = (std::max)(fMaxY, Info.Center.y);
                 fMaxZ = (std::max)(fMaxZ, Info.Center.z);
-
-                UCoord.GetOutline(Chords);
             }
         }
     }
@@ -416,17 +408,64 @@ void D3DBoardRenderer::BuildCellGeometry() {
     float fDy = fMaxY - fMinY;
     float fDz = fMaxZ - fMinZ;
     m_BoardRadius = 0.5f * std::sqrt(fDx*fDx + fDy*fDy + fDz*fDz) + 1.5f;
+}
 
-    m_LineVertices.reserve(Chords.size() * 2);
+// ---------------------------------------------------------------------------
+// RebuildLineGeometry
+//
+// Re-collects per-cell outline chords using the currently selected
+// EOutlineType, dedups them across cells, and re-creates the static line
+// vertex buffer used by RenderLines. Built into local containers and only
+// swapped onto the renderer after a successful CreateBuffer so that a
+// failure leaves the existing m_pLineVB / m_LineVertices intact and
+// consistent.
+//
+// Returns true on success, false if no device is available or CreateBuffer
+// fails. When no chords are produced (e.g. an empty outline) the line
+// buffer is released so RenderLines safely no-ops.
+// ---------------------------------------------------------------------------
+
+bool D3DBoardRenderer::RebuildLineGeometry() {
+    if (!m_pDevice) return false;
+
+    std::unordered_set<CChord> Chords;
+    for (const auto& Cell : m_Cells) {
+        CUCoord(Cell.Coord).GetOutline(Chords, m_eOutlineType);
+    }
+
+    std::vector<LineVertex> NewVertices;
+    NewVertices.reserve(Chords.size() * 2);
     for (const auto& C : Chords) {
         const CUCoordFloat& A = C.GetStart();
         const CUCoordFloat& B = C.GetEnd();
-        LineVertex va{ (float)A.GetX(), (float)A.GetY(), (float)A.GetZ() };
-        LineVertex vb{ (float)B.GetX(), (float)B.GetY(), (float)B.GetZ() };
-        m_LineVertices.push_back(va);
-        m_LineVertices.push_back(vb);
+        NewVertices.push_back(LineVertex{ (float)A.GetX(), (float)A.GetY(), (float)A.GetZ() });
+        NewVertices.push_back(LineVertex{ (float)B.GetX(), (float)B.GetY(), (float)B.GetZ() });
     }
+
+    if (NewVertices.empty()) {
+        m_pLineVB.Reset();
+        m_LineVertices.clear();
+        if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
+        return true;
+    }
+
+    ComPtr<ID3D11Buffer> pNewVB;
+    D3D11_BUFFER_DESC bd{};
+    bd.ByteWidth = static_cast<UINT>(sizeof(LineVertex) * NewVertices.size());
+    bd.Usage     = D3D11_USAGE_IMMUTABLE;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA srd{};
+    srd.pSysMem = NewVertices.data();
+    if (FAILED(m_pDevice->CreateBuffer(&bd, &srd, pNewVB.GetAddressOf()))) {
+        return false;
+    }
+
+    m_LineVertices = std::move(NewVertices);
+    m_pLineVB = std::move(pNewVB);
+    if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
+    return true;
 }
+
 
 XMFLOAT3 D3DBoardRenderer::CellCenter(const CSCoord& Coord) const {
     for (const auto& C : m_Cells) {
@@ -522,6 +561,15 @@ void D3DBoardRenderer::SetShowOutlines(bool bShow) {
     if (m_bShowOutlines == bShow) return;
     m_bShowOutlines = bShow;
     if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
+}
+
+void D3DBoardRenderer::SetOutlineType(CUCoord::EOutlineType eType) {
+    if (m_eOutlineType == eType) return;
+    m_eOutlineType = eType;
+    // Only rebuild the GPU buffer if the device is up; otherwise the new
+    // selection is picked up by the first RebuildLineGeometry call in
+    // Initialize.
+    if (m_pDevice) RebuildLineGeometry();
 }
 
 void D3DBoardRenderer::ResetView() {
@@ -644,7 +692,7 @@ void D3DBoardRenderer::RenderHighlights(const XMMATRIX& mViewProj,
 
     auto BuildBufferForCell = [&](const CSCoord& Coord, std::vector<LineVertex>& Out) {
         std::unordered_set<CChord> Chords;
-        CUCoord(Coord).GetOutline(Chords);
+        CUCoord(Coord).GetOutline(Chords, m_eOutlineType);
         for (const auto& C : Chords) {
             const auto& A = C.GetStart();
             const auto& B = C.GetEnd();

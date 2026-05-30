@@ -23,10 +23,32 @@ BEGIN
             MENUITEM "8",   IDM_DEPTH_8
             MENUITEM "9",   IDM_DEPTH_9
         END
+        POPUP "&Players"
+        BEGIN
+            MENUITEM "&0 Players (Engine self-play)", IDM_PLAYERS_0
+            MENUITEM "&1 Player (vs Engine)",         IDM_PLAYERS_1, CHECKED
+            MENUITEM "&2 Players (Human vs Human)",   IDM_PLAYERS_2
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Pause Engine\tCtrl+P",             IDM_PAUSE, GRAYED
     END
     POPUP "&View"
     BEGIN
         MENUITEM "&2D Board\tCtrl+2", IDM_VIEW_2D, CHECKED
         MENUITEM "&3D Board\tCtrl+3", IDM_VIEW_3D
+        MENUITEM SEPARATOR
+        POPUP "&Grid Type"
+        BEGIN
+            MENUITEM "&Full Dodecahedron",  IDM_GRID_FULL
+            MENUITEM SEPARATOR
+            MENUITEM "Square &Z Slice",     IDM_GRID_SQUARE_Z
+            MENUITEM "Square &Y Slice",     IDM_GRID_SQUARE_Y
+            MENUITEM "Square &X Slice",     IDM_GRID_SQUARE_X
+            MENUITEM SEPARATOR
+            MENUITEM "Hex &1 (-X,-Y,-Z)",   IDM_GRID_HEX_1, CHECKED
+            MENUITEM "Hex &2 (-X,-Y,+Z)",   IDM_GRID_HEX_2
+            MENUITEM "Hex &3 (-X,+Y,-Z)",   IDM_GRID_HEX_3
+            MENUITEM "Hex &4 (+X,-Y,-Z)",   IDM_GRID_HEX_4
+        END
     END
 END

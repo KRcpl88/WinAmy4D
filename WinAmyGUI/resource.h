@@ -15,16 +15,36 @@
 #define IDM_VIEW_2D         1031
 #define IDM_VIEW_3D         1032
 
-// Button IDs
+// Grid (cell outline) type — contiguous range so CheckMenuRadioItem works.
+#define IDM_GRID_FIRST      1040
+#define IDM_GRID_FULL       1040
+#define IDM_GRID_SQUARE_Z   1041
+#define IDM_GRID_SQUARE_Y   1042
+#define IDM_GRID_SQUARE_X   1043
+#define IDM_GRID_HEX_1      1044
+#define IDM_GRID_HEX_2      1045
+#define IDM_GRID_HEX_3      1046
+#define IDM_GRID_HEX_4      1047
+#define IDM_GRID_LAST       1047
+
+// Player-count menu items — contiguous range so CheckMenuRadioItem works.
+#define IDM_PLAYERS_FIRST   1051
+#define IDM_PLAYERS_0       1051
+#define IDM_PLAYERS_1       1052
+#define IDM_PLAYERS_2       1053
+#define IDM_PLAYERS_LAST    1053
+
+// Pause / resume the engine self-play.
+#define IDM_PAUSE           1054
+
+// Button / control IDs
 #define IDC_BTN_NEW_GAME    2001
-#define IDC_BTN_0_PLAYERS   2002
-#define IDC_BTN_1_PLAYER    2003
-#define IDC_BTN_2_PLAYERS   2004
-#define IDC_BTN_PAUSE       2005
 #define IDC_BTN_OUTLINES    2008
 #define IDC_BTN_RESET_VIEW  2009
 #define IDC_BTN_ZOOM_IN     2010
 #define IDC_BTN_ZOOM_OUT    2011
+#define IDC_BTN_VIEW_TOGGLE 2012
+#define IDC_CB_GRID_TYPE    2013
 
 // Custom window messages
 #define WM_APP_ENGINE_MOVE  (WM_APP + 1)

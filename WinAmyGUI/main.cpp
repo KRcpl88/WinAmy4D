@@ -44,10 +44,8 @@ static HWND            g_hWnd       = nullptr;
 static HWND            g_hRender3D  = nullptr; // Child window the D3D swap chain renders into.
 static HWND            g_hStatus    = nullptr;
 static HWND            g_hBtnNew    = nullptr;
-static HWND            g_hBtn0P     = nullptr;
-static HWND            g_hBtn1P     = nullptr;
-static HWND            g_hBtn2P     = nullptr;
-static HWND            g_hBtnPause  = nullptr;
+static HWND            g_hBtnViewToggle = nullptr;
+static HWND            g_hCbGridType    = nullptr;
 static HWND            g_hBtnOutlines  = nullptr;
 static HWND            g_hBtnResetView = nullptr;
 static HWND            g_hBtnZoomIn    = nullptr;
@@ -81,9 +79,17 @@ static void OnEngineMove(LPARAM lParam);
 static void OnSquareClick(POINT pt);
 static void MaybeStartEngine();
 static void UpdateStatusBar();
-static void UpdatePlayerButtons();
+static void UpdatePlayerMenu();
+static void UpdatePauseMenu();
+static void SetPlayerModeAction(PlayerMode mode);
+static void TogglePause();
 static void SetDepthFromMenu(int depth);
 static void SetViewMode(ViewMode mode);
+static void UpdateViewToggleButton();
+static void SetGridType(CUCoord::EOutlineType eType);
+static void SetGridTypeFromMenu(int nMenuId);
+static void UpdateGridMenuEnabled();
+static int MenuIdFromGridType(CUCoord::EOutlineType eType);
 static void CreateControls(HWND hWnd);
 static void UpdateScrollBars(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -280,13 +286,43 @@ static void CreateControls(HWND hWnd) {
         return h;
     };
 
-    g_hBtnNew   = makeBtn(L"New Game", IDC_BTN_NEW_GAME);
+    g_hBtnNew = makeBtn(L"New Game", IDC_BTN_NEW_GAME);
     x += BTN_GAP * 2; // spacer
-    g_hBtn0P    = makeBtn(L"0 Players", IDC_BTN_0_PLAYERS, 90);
-    g_hBtn1P    = makeBtn(L"1 Player",  IDC_BTN_1_PLAYER,  80);
-    g_hBtn2P    = makeBtn(L"2 Players", IDC_BTN_2_PLAYERS, 90);
-    x += BTN_GAP * 2;
-    g_hBtnPause = makeBtn(L"Pause",     IDC_BTN_PAUSE, 70);
+
+    // 2D/3D view toggle — always enabled regardless of current view mode.
+    // Label is kept in sync with g_eViewMode by UpdateViewToggleButton.
+    g_hBtnViewToggle = makeBtn(L"Switch to 3D", IDC_BTN_VIEW_TOGGLE, 110);
+
+    // Grid-type dropdown — only enabled in 3D mode. The list contents map
+    // 1:1 onto CUCoord::EOutlineType in declaration order, so combobox
+    // index N == (EOutlineType)(OT_full + N).
+    {
+        int nCbH = 220; // includes dropdown extent (8 items + decorations).
+        g_hCbGridType = CreateWindowExW(0, L"COMBOBOX", L"",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+                | CBS_DROPDOWNLIST,
+            x, BTN_Y, 160, nCbH, hWnd,
+            (HMENU)(INT_PTR)IDC_CB_GRID_TYPE, hInst, nullptr);
+        x += 160 + BTN_GAP;
+        static const wchar_t* kGridLabels[] = {
+            L"Full Dodecahedron",
+            L"Square Z Slice",
+            L"Square Y Slice",
+            L"Square X Slice",
+            L"Hex 1 (-X,-Y,-Z)",
+            L"Hex 2 (-X,-Y,+Z)",
+            L"Hex 3 (-X,+Y,-Z)",
+            L"Hex 4 (+X,-Y,-Z)",
+        };
+        for (auto* psz : kGridLabels) {
+            SendMessageW(g_hCbGridType, CB_ADDSTRING, 0, (LPARAM)psz);
+        }
+        int nInitial = static_cast<int>(g_D3DRenderer.GetOutlineType())
+                     - static_cast<int>(CUCoord::OT_full);
+        SendMessageW(g_hCbGridType, CB_SETCURSEL, (WPARAM)nInitial, 0);
+        EnableWindow(g_hCbGridType, FALSE); // 2D by default.
+    }
+
     x += BTN_GAP * 2;
 
     // 3D-mode controls. Search depth is configured exclusively via the
@@ -312,9 +348,10 @@ static void CreateControls(HWND hWnd) {
         0, TOOLBAR_H, 10, 10,
         hWnd, nullptr, hInst, nullptr);
 
-    // Set initial button states
-    UpdatePlayerButtons();
-    EnableWindow(g_hBtnPause, FALSE);
+    // Set initial menu / button states.
+    UpdatePlayerMenu();
+    UpdatePauseMenu();
+    UpdateViewToggleButton();
 }
 
 // ---------------------------------------------------------------------------
@@ -328,8 +365,7 @@ static void OnNewGame() {
     g_LegalDests.clear();
     g_Game.NewGame();
     // Preserve the depth previously selected via the Options menu.
-    EnableWindow(g_hBtnPause, FALSE);
-    SetWindowTextW(g_hBtnPause, L"Pause");
+    UpdatePauseMenu();
     InvalidateRect(g_hWnd, nullptr, TRUE);
     if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
@@ -360,10 +396,9 @@ static void MaybeStartEngine() {
     }
 
     if (engineTurn) {
-        SetWindowTextW(g_hBtnPause, L"Pause");
-        EnableWindow(g_hBtnPause, TRUE);
         UpdateStatusBar();
         g_Game.StartEngineSearch(g_hWnd);
+        UpdatePauseMenu();
     }
 }
 
@@ -372,10 +407,9 @@ static void MaybeStartEngine() {
 // ---------------------------------------------------------------------------
 
 static void OnEngineMove(LPARAM /*lParam*/) {
-    EnableWindow(g_hBtnPause, FALSE);
-
     CMove move = g_Game.GetBestMove();
     if (move == M_NONE) {
+        UpdatePauseMenu();
         UpdateStatusBar();
         return;
     }
@@ -388,14 +422,18 @@ static void OnEngineMove(LPARAM /*lParam*/) {
     if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
 
-    if (g_Game.IsGameOver()) return;
+    if (g_Game.IsGameOver()) {
+        UpdatePauseMenu();
+        return;
+    }
 
     // For self-play, immediately start the engine again (other side).
     if (g_Game.GetPlayerMode() == PlayerMode::ZeroPlayers && !g_fPaused) {
-        EnableWindow(g_hBtnPause, TRUE);
         g_Game.StartEngineSearch(g_hWnd);
+        UpdatePauseMenu();
     } else {
         MaybeStartEngine();
+        UpdatePauseMenu();
     }
 }
 
@@ -516,16 +554,60 @@ static void UpdateStatusBar() {
 }
 
 // ---------------------------------------------------------------------------
-// UpdatePlayerButtons — update visual state of 0/1/2 player buttons
+// UpdatePlayerMenu / UpdatePauseMenu / SetPlayerModeAction / TogglePause
+//
+// All player-mode and pause UI now lives on the Options menu (the toolbar
+// only carries view-related controls). The helpers below are the single
+// source of truth for keeping those menu items in sync with engine state.
 // ---------------------------------------------------------------------------
 
-static void UpdatePlayerButtons() {
+static void UpdatePlayerMenu() {
+    HMENU hMenu = GetMenu(g_hWnd);
+    if (!hMenu) return;
     PlayerMode mode = g_Game.GetPlayerMode();
-    // We simulate "checked" state by enabling/disabling differently
-    // A simple approach: bold text via WM_SETFONT is complex; just change button text.
-    SetWindowTextW(g_hBtn0P, mode == PlayerMode::ZeroPlayers ? L"[0 Players]" : L"0 Players");
-    SetWindowTextW(g_hBtn1P, mode == PlayerMode::OnePlayer   ? L"[1 Player]"  : L"1 Player");
-    SetWindowTextW(g_hBtn2P, mode == PlayerMode::TwoPlayers  ? L"[2 Players]" : L"2 Players");
+    int nIdCheck = (mode == PlayerMode::ZeroPlayers) ? IDM_PLAYERS_0
+                 : (mode == PlayerMode::OnePlayer)   ? IDM_PLAYERS_1
+                                                     : IDM_PLAYERS_2;
+    CheckMenuRadioItem(hMenu, IDM_PLAYERS_FIRST, IDM_PLAYERS_LAST,
+                       nIdCheck, MF_BYCOMMAND);
+}
+
+static void UpdatePauseMenu() {
+    HMENU hMenu = GetMenu(g_hWnd);
+    if (!hMenu) return;
+    // Pause is meaningful only while the engine is actively thinking, or
+    // while we have explicitly paused it (so the user can resume).
+    bool bEnabled = g_Game.IsEngineRunning() || g_fPaused;
+    EnableMenuItem(hMenu, IDM_PAUSE,
+        MF_BYCOMMAND | (bEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
+    CheckMenuItem(hMenu, IDM_PAUSE,
+        MF_BYCOMMAND | (g_fPaused ? MF_CHECKED : MF_UNCHECKED));
+}
+
+static void SetPlayerModeAction(PlayerMode mode) {
+    g_Game.SetPlayerMode(mode);
+    UpdatePlayerMenu();
+    if (mode == PlayerMode::TwoPlayers) {
+        g_Game.PauseEngine();
+        g_fPaused = false;
+        UpdatePauseMenu();
+    } else {
+        MaybeStartEngine();
+        UpdatePauseMenu();
+    }
+}
+
+static void TogglePause() {
+    if (g_Game.IsEngineRunning()) {
+        g_fPaused = true;
+        g_Game.PauseEngine();
+        UpdatePauseMenu();
+        UpdateStatusBar();
+    } else if (g_fPaused) {
+        g_fPaused = false;
+        UpdatePauseMenu();
+        MaybeStartEngine();
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -536,6 +618,12 @@ static void UpdateOutlinesButtonText() {
     if (!g_hBtnOutlines) return;
     bool bOn = g_D3DRenderer.IsInitialized() ? g_D3DRenderer.GetShowOutlines() : true;
     SetWindowTextW(g_hBtnOutlines, bOn ? L"Outlines: On" : L"Outlines: Off");
+}
+
+static void UpdateViewToggleButton() {
+    if (!g_hBtnViewToggle) return;
+    SetWindowTextW(g_hBtnViewToggle,
+        g_eViewMode == ViewMode::Mode2D ? L"Switch to 3D" : L"Switch to 2D");
 }
 
 static void SetViewMode(ViewMode mode) {
@@ -559,6 +647,8 @@ static void SetViewMode(ViewMode mode) {
                 g_eViewMode = ViewMode::Mode2D;
                 CheckMenuItem(hMenu, IDM_VIEW_2D, MF_BYCOMMAND | MF_CHECKED);
                 CheckMenuItem(hMenu, IDM_VIEW_3D, MF_BYCOMMAND | MF_UNCHECKED);
+                UpdateViewToggleButton();
+                UpdateGridMenuEnabled();
                 return;
             }
         } else {
@@ -571,6 +661,19 @@ static void SetViewMode(ViewMode mode) {
         EnableWindow(g_hBtnZoomIn,    TRUE);
         EnableWindow(g_hBtnZoomOut,   TRUE);
         UpdateOutlinesButtonText();
+        // Reflect the renderer's actual grid type in the menu checkmark
+        // and combobox selection (the renderer is the source of truth —
+        // the menu and combobox are just UI).
+        {
+            CUCoord::EOutlineType eType = g_D3DRenderer.GetOutlineType();
+            CheckMenuRadioItem(hMenu, IDM_GRID_FIRST, IDM_GRID_LAST,
+                               MenuIdFromGridType(eType), MF_BYCOMMAND);
+            if (g_hCbGridType) {
+                int nIndex = static_cast<int>(eType)
+                           - static_cast<int>(CUCoord::OT_full);
+                SendMessageW(g_hCbGridType, CB_SETCURSEL, (WPARAM)nIndex, 0);
+            }
+        }
     } else {
         ShowWindow(g_hRender3D, SW_HIDE);
         ShowScrollBar(g_hWnd, SB_BOTH, TRUE);
@@ -580,6 +683,8 @@ static void SetViewMode(ViewMode mode) {
         EnableWindow(g_hBtnZoomIn,    FALSE);
         EnableWindow(g_hBtnZoomOut,   FALSE);
     }
+    UpdateGridMenuEnabled();
+    UpdateViewToggleButton();
     InvalidateRect(g_hWnd, nullptr, TRUE);
 }
 
@@ -596,6 +701,64 @@ static void SetDepthFromMenu(int depth) {
     for (int i = 0; i < 9; ++i)
         CheckMenuItem(hDepth, IDM_DEPTH_1 + i, MF_BYCOMMAND | MF_UNCHECKED);
     CheckMenuItem(hDepth, IDM_DEPTH_1 + (depth - 1), MF_BYCOMMAND | MF_CHECKED);
+}
+
+// ---------------------------------------------------------------------------
+// Grid (cell outline) type menu — IDM_GRID_FIRST..IDM_GRID_LAST map 1:1 onto
+// CUCoord::EOutlineType OT_full..OT_hex_4. CheckMenuRadioItem gives proper
+// radio behaviour across the contiguous ID range.
+// ---------------------------------------------------------------------------
+
+static CUCoord::EOutlineType GridTypeFromMenuId(int nMenuId) {
+    int nOffset = nMenuId - IDM_GRID_FIRST;
+    if (nOffset < 0) nOffset = 0;
+    if (nOffset > (IDM_GRID_LAST - IDM_GRID_FIRST)) nOffset = (IDM_GRID_LAST - IDM_GRID_FIRST);
+    return static_cast<CUCoord::EOutlineType>(
+        static_cast<int>(CUCoord::OT_full) + nOffset);
+}
+
+static int MenuIdFromGridType(CUCoord::EOutlineType eType) {
+    return IDM_GRID_FIRST + (static_cast<int>(eType) - static_cast<int>(CUCoord::OT_full));
+}
+
+static void SetGridType(CUCoord::EOutlineType eType) {
+    if (g_D3DRenderer.IsInitialized()) {
+        g_D3DRenderer.SetOutlineType(eType);
+    } else {
+        // Renderer not yet created — we still want subsequent UI to reflect
+        // the chosen type. SetOutlineType is safe pre-init (it just caches).
+        g_D3DRenderer.SetOutlineType(eType);
+    }
+    HMENU hMenu = GetMenu(g_hWnd);
+    if (hMenu) {
+        CheckMenuRadioItem(hMenu, IDM_GRID_FIRST, IDM_GRID_LAST,
+                           MenuIdFromGridType(eType), MF_BYCOMMAND);
+    }
+    if (g_hCbGridType) {
+        int nIndex = static_cast<int>(eType) - static_cast<int>(CUCoord::OT_full);
+        // CB_SETCURSEL does not fire CBN_SELCHANGE, so this is safe to call
+        // even when the change originated from the combobox itself.
+        SendMessageW(g_hCbGridType, CB_SETCURSEL, (WPARAM)nIndex, 0);
+    }
+}
+
+static void SetGridTypeFromMenu(int nMenuId) {
+    if (nMenuId < IDM_GRID_FIRST || nMenuId > IDM_GRID_LAST) return;
+    SetGridType(GridTypeFromMenuId(nMenuId));
+}
+
+static void UpdateGridMenuEnabled() {
+    HMENU hMenu = GetMenu(g_hWnd);
+    BOOL bEnabled = (g_eViewMode == ViewMode::Mode3D) ? TRUE : FALSE;
+    if (hMenu) {
+        UINT uState = bEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED);
+        for (int nId = IDM_GRID_FIRST; nId <= IDM_GRID_LAST; ++nId) {
+            EnableMenuItem(hMenu, nId, MF_BYCOMMAND | uState);
+        }
+    }
+    if (g_hCbGridType) {
+        EnableWindow(g_hCbGridType, bEnabled);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -642,6 +805,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         CreateControls(hWnd);
         SetDepthFromMenu(3);
         UpdateScrollBars(hWnd);
+        UpdateGridMenuEnabled();
         return 0;
 
     case WM_SIZE: {
@@ -740,6 +904,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
     case WM_COMMAND: {
         int id = LOWORD(wParam);
+        int code = HIWORD(wParam);
         switch (id) {
         case IDM_FILE_NEW:
         case IDC_BTN_NEW_GAME:
@@ -755,6 +920,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             break;
         case IDM_VIEW_3D:
             SetViewMode(ViewMode::Mode3D);
+            break;
+
+        case IDC_BTN_VIEW_TOGGLE:
+            SetViewMode(g_eViewMode == ViewMode::Mode2D
+                            ? ViewMode::Mode3D : ViewMode::Mode2D);
             break;
 
         case IDC_BTN_OUTLINES:
@@ -776,41 +946,40 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (g_D3DRenderer.IsInitialized()) g_D3DRenderer.AdjustZoom(1.18f);
             break;
 
+        case IDC_CB_GRID_TYPE:
+            if (code == CBN_SELCHANGE) {
+                int nSel = (int)SendMessageW(g_hCbGridType, CB_GETCURSEL, 0, 0);
+                if (nSel != CB_ERR) {
+                    SetGridType(static_cast<CUCoord::EOutlineType>(
+                        static_cast<int>(CUCoord::OT_full) + nSel));
+                }
+            }
+            break;
+
         case IDM_DEPTH_1: case IDM_DEPTH_2: case IDM_DEPTH_3:
         case IDM_DEPTH_4: case IDM_DEPTH_5: case IDM_DEPTH_6:
         case IDM_DEPTH_7: case IDM_DEPTH_8: case IDM_DEPTH_9:
             SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
             break;
 
-        case IDC_BTN_0_PLAYERS:
-            g_Game.SetPlayerMode(PlayerMode::ZeroPlayers);
-            UpdatePlayerButtons();
-            MaybeStartEngine();
+        case IDM_GRID_FULL: case IDM_GRID_SQUARE_Z: case IDM_GRID_SQUARE_Y:
+        case IDM_GRID_SQUARE_X: case IDM_GRID_HEX_1: case IDM_GRID_HEX_2:
+        case IDM_GRID_HEX_3: case IDM_GRID_HEX_4:
+            SetGridTypeFromMenu(id);
             break;
 
-        case IDC_BTN_1_PLAYER:
-            g_Game.SetPlayerMode(PlayerMode::OnePlayer);
-            UpdatePlayerButtons();
-            MaybeStartEngine();
+        case IDM_PLAYERS_0:
+            SetPlayerModeAction(PlayerMode::ZeroPlayers);
+            break;
+        case IDM_PLAYERS_1:
+            SetPlayerModeAction(PlayerMode::OnePlayer);
+            break;
+        case IDM_PLAYERS_2:
+            SetPlayerModeAction(PlayerMode::TwoPlayers);
             break;
 
-        case IDC_BTN_2_PLAYERS:
-            g_Game.SetPlayerMode(PlayerMode::TwoPlayers);
-            g_Game.PauseEngine();
-            UpdatePlayerButtons();
-            EnableWindow(g_hBtnPause, FALSE);
-            break;
-
-        case IDC_BTN_PAUSE:
-            if (g_Game.IsEngineRunning()) {
-                g_fPaused = true;
-                g_Game.PauseEngine();
-                SetWindowTextW(g_hBtnPause, L"Resume");
-            } else if (g_fPaused) {
-                g_fPaused = false;
-                SetWindowTextW(g_hBtnPause, L"Pause");
-                MaybeStartEngine();
-            }
+        case IDM_PAUSE:
+            TogglePause();
             break;
         }
         return 0;

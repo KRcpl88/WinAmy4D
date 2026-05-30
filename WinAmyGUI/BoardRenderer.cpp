@@ -72,7 +72,13 @@ static int LevelOriginX(int level) {
 /* static */ POINT BoardRenderer::LevelOrigin(int level) {
     POINT pt;
     pt.x = LevelOriginX(level);
-    pt.y = RowOriginY(PLACEMENT[level].row);
+    int row    = PLACEMENT[level].row;
+    int nWidth = CBitBoard::LEVEL_WIDTH[level];
+    // Vertically center-justify each level within its row so the squares
+    // align consistently across stacked levels (much easier to visualise
+    // how squares on one level map onto squares on the next).
+    int nYOffset = ((ROW_MAX_WIDTH[row] - nWidth) * BoardRenderer::SQUARE_SIZE) / 2;
+    pt.y = RowOriginY(row) + nYOffset;
     return pt;
 }
 
