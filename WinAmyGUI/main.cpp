@@ -84,6 +84,9 @@ static void UpdateStatusBar();
 static void UpdatePlayerButtons();
 static void SetDepthFromMenu(int depth);
 static void SetViewMode(ViewMode mode);
+static void SetGridTypeFromMenu(int nMenuId);
+static void UpdateGridMenuEnabled();
+static int MenuIdFromGridType(CUCoord::EOutlineType eType);
 static void CreateControls(HWND hWnd);
 static void UpdateScrollBars(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -571,6 +574,14 @@ static void SetViewMode(ViewMode mode) {
         EnableWindow(g_hBtnZoomIn,    TRUE);
         EnableWindow(g_hBtnZoomOut,   TRUE);
         UpdateOutlinesButtonText();
+        // Reflect the renderer's actual grid type in the menu checkmark
+        // (the renderer is the source of truth — the menu is just UI).
+        {
+            HMENU hMenu = GetMenu(g_hWnd);
+            CheckMenuRadioItem(hMenu, IDM_GRID_FIRST, IDM_GRID_LAST,
+                               MenuIdFromGridType(g_D3DRenderer.GetOutlineType()),
+                               MF_BYCOMMAND);
+        }
     } else {
         ShowWindow(g_hRender3D, SW_HIDE);
         ShowScrollBar(g_hWnd, SB_BOTH, TRUE);
@@ -580,6 +591,7 @@ static void SetViewMode(ViewMode mode) {
         EnableWindow(g_hBtnZoomIn,    FALSE);
         EnableWindow(g_hBtnZoomOut,   FALSE);
     }
+    UpdateGridMenuEnabled();
     InvalidateRect(g_hWnd, nullptr, TRUE);
 }
 
@@ -596,6 +608,45 @@ static void SetDepthFromMenu(int depth) {
     for (int i = 0; i < 9; ++i)
         CheckMenuItem(hDepth, IDM_DEPTH_1 + i, MF_BYCOMMAND | MF_UNCHECKED);
     CheckMenuItem(hDepth, IDM_DEPTH_1 + (depth - 1), MF_BYCOMMAND | MF_CHECKED);
+}
+
+// ---------------------------------------------------------------------------
+// Grid (cell outline) type menu — IDM_GRID_FIRST..IDM_GRID_LAST map 1:1 onto
+// CUCoord::EOutlineType OT_full..OT_hex_4. CheckMenuRadioItem gives proper
+// radio behaviour across the contiguous ID range.
+// ---------------------------------------------------------------------------
+
+static CUCoord::EOutlineType GridTypeFromMenuId(int nMenuId) {
+    int nOffset = nMenuId - IDM_GRID_FIRST;
+    if (nOffset < 0) nOffset = 0;
+    if (nOffset > (IDM_GRID_LAST - IDM_GRID_FIRST)) nOffset = (IDM_GRID_LAST - IDM_GRID_FIRST);
+    return static_cast<CUCoord::EOutlineType>(
+        static_cast<int>(CUCoord::OT_full) + nOffset);
+}
+
+static int MenuIdFromGridType(CUCoord::EOutlineType eType) {
+    return IDM_GRID_FIRST + (static_cast<int>(eType) - static_cast<int>(CUCoord::OT_full));
+}
+
+static void SetGridTypeFromMenu(int nMenuId) {
+    if (nMenuId < IDM_GRID_FIRST || nMenuId > IDM_GRID_LAST) return;
+    CUCoord::EOutlineType eType = GridTypeFromMenuId(nMenuId);
+
+    if (g_D3DRenderer.IsInitialized()) {
+        g_D3DRenderer.SetOutlineType(eType);
+    }
+
+    HMENU hMenu = GetMenu(g_hWnd);
+    CheckMenuRadioItem(hMenu, IDM_GRID_FIRST, IDM_GRID_LAST, nMenuId, MF_BYCOMMAND);
+}
+
+static void UpdateGridMenuEnabled() {
+    HMENU hMenu = GetMenu(g_hWnd);
+    if (!hMenu) return;
+    UINT uState = (g_eViewMode == ViewMode::Mode3D) ? MF_ENABLED : (MF_GRAYED | MF_DISABLED);
+    for (int nId = IDM_GRID_FIRST; nId <= IDM_GRID_LAST; ++nId) {
+        EnableMenuItem(hMenu, nId, MF_BYCOMMAND | uState);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -642,6 +693,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         CreateControls(hWnd);
         SetDepthFromMenu(3);
         UpdateScrollBars(hWnd);
+        UpdateGridMenuEnabled();
         return 0;
 
     case WM_SIZE: {
@@ -780,6 +832,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         case IDM_DEPTH_4: case IDM_DEPTH_5: case IDM_DEPTH_6:
         case IDM_DEPTH_7: case IDM_DEPTH_8: case IDM_DEPTH_9:
             SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
+            break;
+
+        case IDM_GRID_FULL: case IDM_GRID_SQUARE_Z: case IDM_GRID_SQUARE_Y:
+        case IDM_GRID_SQUARE_X: case IDM_GRID_HEX_1: case IDM_GRID_HEX_2:
+        case IDM_GRID_HEX_3: case IDM_GRID_HEX_4:
+            SetGridTypeFromMenu(id);
             break;
 
         case IDC_BTN_0_PLAYERS:

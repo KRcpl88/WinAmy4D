@@ -14,7 +14,12 @@ public:
     {
         OT_full = 0,
         OT_square_z,
-        OT_hex_1
+        OT_square_y,
+        OT_square_x,
+        OT_hex_1,
+        OT_hex_2,
+        OT_hex_3,
+        OT_hex_4
     };
 
     CUCoord() = default;

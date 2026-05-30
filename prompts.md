@@ -291,6 +291,14 @@ Phase 4
 
 
 
+# hex basis
+Given 3 vectors X (-1,0,0), Y (-1,0,0) and Z (0,0,-1) which form an orthnormal basis, and a third vector N (-1, -1, -1) = X + Y + Z which is normal to the plane defined by the three points X, Y, and Z, and 5th vector V (-0.5, -0.5,  0.5).  Please find a scalar multiplier s such that the vector N multilpied by the scalar s when added to a V is coplanar with X, Y, and Z.  Let W = V + s N, please find s such that W lies on the same plane with X, Y, and Z. 
+
+# hex variants
+g_krgHex1CellOutline are the chords for a hexagonal subset of the complete dodecahedron cell outline around the corner points -1,0,0, 0,-1,0, and 0,0,-1.  Please extrapolate from those chords the outline for corresponding hexagonal subsets g_krgHex2CellOutline including -1,0,0, 0,-1,0, and 0,0,1, g_krgHex3CellOutline including -1,0,0, 0,1,0, and 0,0,-1, and g_krgHex4CellOutline including 1,0,0, 0,-1,0, and 0,0,1. 
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
@@ -299,6 +307,14 @@ Add CBitBoard FindSetBitCoord which returns CSCoord
 
 
 
+
+Please create a plan to make these improvements to the program:
+
+1. Add a new menu option to switch to a 3D mode.
+2. The new 3D mode will use direct X to rneder the chessboard in 3D
+3. Instead of rendering the board squares, enumarate all the valid coords in CSCoord, compute the CSCoord center using a CUCoord, and then use GetOutline to get the outline of the coord as a collection of CChord objects.  Render these chords in 3 D as green vector lines on a black background
+4. Render chess prices using unicode chars.  The black pieces must be rendered in a qhite circle to be visible on the black background
+5. The user should be able to rotate the chessboard view to change the point of view to view the board from any angle. 
 
 
 

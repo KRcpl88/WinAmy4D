@@ -15,6 +15,18 @@
 #define IDM_VIEW_2D         1031
 #define IDM_VIEW_3D         1032
 
+// Grid (cell outline) type — contiguous range so CheckMenuRadioItem works.
+#define IDM_GRID_FIRST      1040
+#define IDM_GRID_FULL       1040
+#define IDM_GRID_SQUARE_Z   1041
+#define IDM_GRID_SQUARE_Y   1042
+#define IDM_GRID_SQUARE_X   1043
+#define IDM_GRID_HEX_1      1044
+#define IDM_GRID_HEX_2      1045
+#define IDM_GRID_HEX_3      1046
+#define IDM_GRID_HEX_4      1047
+#define IDM_GRID_LAST       1047
+
 // Button IDs
 #define IDC_BTN_NEW_GAME    2001
 #define IDC_BTN_0_PLAYERS   2002

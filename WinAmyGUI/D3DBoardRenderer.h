@@ -32,6 +32,7 @@
 
 #include "dbase.h"
 #include "scoord.h"
+#include "ucoord.h"
 
 #include "PieceAtlas.h"
 
@@ -76,6 +77,14 @@ public:
     // Show/hide the cell wireframe (pieces and target markers remain).
     void SetShowOutlines(bool bShow);
     bool GetShowOutlines() const { return m_bShowOutlines; }
+
+    // Select which cell outline style is drawn (full dodecahedron,
+    // axial square slice, or one of the four hexagonal subsets). Safe to
+    // call before Initialize — the new selection is applied to the line
+    // buffer at first init or on the next call after the renderer is
+    // initialized.
+    void SetOutlineType(CUCoord::EOutlineType eType);
+    CUCoord::EOutlineType GetOutlineType() const { return m_eOutlineType; }
 
     // Reset orbit yaw/pitch and zoom distance to defaults.
     void ResetView();
@@ -152,6 +161,9 @@ private:
     // Show/hide cell outlines.
     bool  m_bShowOutlines{true};
 
+    // Which outline geometry to render for each cell.
+    CUCoord::EOutlineType m_eOutlineType{CUCoord::OT_hex_1};
+
     int   m_nClientW{1}, m_nClientH{1};
     HWND  m_hWnd{nullptr};
 
@@ -167,6 +179,7 @@ private:
     bool  CreatePipelines();
     bool  CreateTargetMarkerTexture();
     void  BuildCellGeometry();
+    bool  RebuildLineGeometry();
     void  EnsureSpriteCapacity(UINT uNeededVerts);
     void  EnsureHighlightCapacity(UINT uNeededVerts);
 

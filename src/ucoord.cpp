@@ -67,9 +67,25 @@ CChord g_krgSquareZCellOutline[4]
     {{ 0.0, -1.0, -0.25}, {-1.0,  0.0, -0.25}},
     {{-1.0,  0.0, -0.25}, { 0.0,  1.0, -0.25}},
     {{ 0.0,  1.0, -0.25}, { 1.0,  0.0, -0.25}},
+};
+
+CChord g_krgSquareYCellOutline[4]
+{
+    {{ 1.0, -0.25,  0.0}, { 0.0, -0.25, -1.0}},
+    {{ 0.0, -0.25, -1.0}, {-1.0, -0.25,  0.0}},
+    {{-1.0, -0.25,  0.0}, { 0.0, -0.25,  1.0}},
+    {{ 0.0, -0.25,  1.0}, { 1.0, -0.25,  0.0}},
 };  
 
-CChord g_krgHex1CellOutline[6]
+CChord g_krgSquareXCellOutline[4]
+{
+    {{-0.25,  1.0,  0.0}, {-0.25,  0.0, -1.0}},
+    {{-0.25,  0.0, -1.0}, {-0.25, -1.0,  0.0}},
+    {{-0.25, -1.0,  0.0}, {-0.25,  0.0,  1.0}},
+    {{-0.25,  0.0,  1.0}, {-0.25,  1.0,  0.0}},
+};  
+
+CChord g_krgHex1RawCellOutline[6]
 {
     {{-1.0,  0.0,  0.0}, {-0.5, -0.5,  0.5}},
     {{-1.0,  0.0,  0.0}, {-0.5,  0.5, -0.5}},
@@ -79,28 +95,111 @@ CChord g_krgHex1CellOutline[6]
     {{ 0.0,  0.0, -1.0}, { 0.5, -0.5, -0.5}},
 };  
 
-size_t g_cCellOutline[3]
+CChord g_krgHex2RawCellOutline[6]
+{
+{{-1, 0, 0}, {-0.5, -0.5, -0.5}},
+{{-1, 0, 0}, {-0.5, 0.5, 0.5}},
+{{0, -1, 0}, {-0.5, -0.5, -0.5}},
+{{0, -1, 0}, {0.5, -0.5, 0.5}},
+{{0, 0, 1}, {-0.5, 0.5, 0.5}},
+{{0, 0, 1}, {0.5, -0.5, 0.5}},
+};  
+
+CChord g_krgHex3RawCellOutline[6]
+{
+{{-1, 0, 0}, {-0.5, 0.5, 0.5}},
+{{-1, 0, 0}, {-0.5, -0.5, -0.5}},
+{{0, 1, 0}, {-0.5, 0.5, 0.5}},
+{{0, 1, 0}, {0.5, 0.5, -0.5}},
+{{0, 0, -1}, {-0.5, -0.5, -0.5}},
+{{0, 0, -1}, {0.5, 0.5, -0.5}},
+};  
+
+CChord g_krgHex4RawCellOutline[6]
+{
+{{1, 0, 0}, {0.5, -0.5, -0.5}},
+{{1, 0, 0}, {0.5, 0.5, 0.5}},
+{{0, -1, 0}, {0.5, -0.5, -0.5}},
+{{0, -1, 0}, {-0.5, -0.5, 0.5}},
+{{0, 0, 1}, {0.5, 0.5, 0.5}},
+{{0, 0, 1}, {-0.5, -0.5, 0.5}},
+};  
+
+CChord g_krgHex1CellOutline[6]
+{
+{{-0.9, 0.1, 0.1}, {-0.566666, -0.566666, 0.433333}},
+{{-0.9, 0.1, 0.1}, {-0.566666, 0.433333, -0.566666}},
+{{0.1, -0.9, 0.1}, {-0.566666, -0.566666, 0.433333}},
+{{0.1, -0.9, 0.1}, {0.433333, -0.566666, -0.566666}},
+{{0.1, 0.1, -0.9}, {-0.566666, 0.433333, -0.566666}},
+{{0.1, 0.1, -0.9}, {0.433333, -0.566666, -0.566666}},
+};
+
+CChord g_krgHex2CellOutline[6]
+{
+{{-1, 0, 0}, {-0.5, -0.5, -0.5}},
+{{-1, 0, 0}, {-0.5, 0.5, 0.5}},
+{{0, -1, 0}, {-0.5, -0.5, -0.5}},
+{{0, -1, 0}, {0.5, -0.5, 0.5}},
+{{0, 0, 1}, {-0.5, 0.5, 0.5}},
+{{0, 0, 1}, {0.5, -0.5, 0.5}},
+};  
+
+CChord g_krgHex3CellOutline[6]
+{
+{{-1, 0, 0}, {-0.5, 0.5, 0.5}},
+{{-1, 0, 0}, {-0.5, -0.5, -0.5}},
+{{0, 1, 0}, {-0.5, 0.5, 0.5}},
+{{0, 1, 0}, {0.5, 0.5, -0.5}},
+{{0, 0, -1}, {-0.5, -0.5, -0.5}},
+{{0, 0, -1}, {0.5, 0.5, -0.5}},
+};  
+
+CChord g_krgHex4CellOutline[6]
+{
+{{1, 0, 0}, {0.5, -0.5, -0.5}},
+{{1, 0, 0}, {0.5, 0.5, 0.5}},
+{{0, -1, 0}, {0.5, -0.5, -0.5}},
+{{0, -1, 0}, {-0.5, -0.5, 0.5}},
+{{0, 0, 1}, {0.5, 0.5, 0.5}},
+{{0, 0, 1}, {-0.5, -0.5, 0.5}},
+};  
+
+size_t g_cCellOutline[8]
 {
     ARRAYSIZE(g_krgFullCellOutline),
     ARRAYSIZE(g_krgSquareZCellOutline),
-    ARRAYSIZE(g_krgHex1CellOutline)
+    ARRAYSIZE(g_krgSquareYCellOutline),
+    ARRAYSIZE(g_krgSquareXCellOutline),
+    ARRAYSIZE(g_krgHex1CellOutline),
+    ARRAYSIZE(g_krgHex2CellOutline),
+    ARRAYSIZE(g_krgHex3CellOutline),
+    ARRAYSIZE(g_krgHex4CellOutline)
 };
 
-CChord* g_krgpCellOutline[3]
+CChord* g_krgpCellOutline[8]
 {
     g_krgFullCellOutline,
     g_krgSquareZCellOutline,
-    g_krgHex1CellOutline
+    g_krgSquareYCellOutline,
+    g_krgSquareXCellOutline,
+    g_krgHex1CellOutline,
+    g_krgHex2CellOutline,
+    g_krgHex3CellOutline,
+    g_krgHex4CellOutline
 };
 
 bool CUCoord::GetOutline( __inout std::unordered_set<CChord> & Chords, EOutlineType eOutlineType ) const
 {
+    const size_t nIndex = static_cast<size_t>(eOutlineType);
+    if (nIndex >= ARRAYSIZE(g_cCellOutline)) return false;
+
     CUCoordFloat Origin = (CUCoordFloat)(*this);
 
-    for (size_t i = 0; (g_cCellOutline[eOutlineType] > i); ++i)
+    for (size_t i = 0; (g_cCellOutline[nIndex] > i); ++i)
     {
-        Chords.insert( CChord(Origin + g_krgpCellOutline[eOutlineType][i].GetStart(), 
-            Origin + g_krgpCellOutline[eOutlineType][i].GetEnd()));
+        Chords.insert( CChord(Origin + g_krgpCellOutline[nIndex][i].GetStart(), 
+            Origin + g_krgpCellOutline[nIndex][i].GetEnd()));
     }
 
     return true;
