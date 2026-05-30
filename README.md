@@ -1,6 +1,8 @@
 ![main branch](https://github.com/thgreiner/amy/actions/workflows/c-cpp.yml/badge.svg)
 ![License](https://img.shields.io/github/license/thgreiner/amy)
 
+> 🆕 **New to 4D chess?** See **[HOW_TO_PLAY_4D_CHESS.md](HOW_TO_PLAY_4D_CHESS.md)** for a non-technical guide to the rules, the board, and how each piece moves.
+
 What is Amy?
 ============
 
