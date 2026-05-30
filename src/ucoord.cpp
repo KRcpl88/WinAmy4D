@@ -28,8 +28,7 @@ CUCoord::CUCoord(const CSCoord& scoord) {
     SetY(levelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
 }
 
-/*
-CChord g_krgCellOutline[24]
+CChord g_krgFullCellOutline[24]
 {
     // +x/+y quadrant
     {{ 0.0,  0.0, -1.0}, { 0.5,  0.5, -0.5}},
@@ -60,9 +59,9 @@ CChord g_krgCellOutline[24]
     {{-1.0,  0.0,  0.0}, {-0.5,  0.5,  0.5}},
     {{-0.5,  0.5,  0.5}, { 0.0,  0.0,  1.0}},
 };
-*/
 
-CChord g_krgCellOutline[4]
+
+CChord g_krgSquareZCellOutline[4]
 {
     {{ 1.0,  0.0, -0.25}, { 0.0, -1.0, -0.25}},
     {{ 0.0, -1.0, -0.25}, {-1.0,  0.0, -0.25}},
@@ -70,13 +69,38 @@ CChord g_krgCellOutline[4]
     {{ 0.0,  1.0, -0.25}, { 1.0,  0.0, -0.25}},
 };  
 
-    bool CUCoord::GetOutline( __inout std::unordered_set<CChord> & Chords) const
+CChord g_krgHex1CellOutline[6]
+{
+    {{-1.0,  0.0,  0.0}, {-0.5, -0.5,  0.5}},
+    {{-1.0,  0.0,  0.0}, {-0.5,  0.5, -0.5}},
+    {{ 0.0, -1.0,  0.0}, {-0.5, -0.5,  0.5}},
+    {{ 0.0, -1.0,  0.0}, { 0.5, -0.5, -0.5}},
+    {{ 0.0,  0.0, -1.0}, {-0.5,  0.5, -0.5}},
+    {{ 0.0,  0.0, -1.0}, { 0.5, -0.5, -0.5}},
+};  
+
+size_t g_cCellOutline[3]
+{
+    ARRAYSIZE(g_krgFullCellOutline),
+    ARRAYSIZE(g_krgSquareZCellOutline),
+    ARRAYSIZE(g_krgHex1CellOutline)
+};
+
+CChord* g_krgpCellOutline[3]
+{
+    g_krgFullCellOutline,
+    g_krgSquareZCellOutline,
+    g_krgHex1CellOutline
+};
+
+bool CUCoord::GetOutline( __inout std::unordered_set<CChord> & Chords, EOutlineType eOutlineType ) const
 {
     CUCoordFloat Origin = (CUCoordFloat)(*this);
 
-    for (size_t i = 0; (ARRAYSIZE(g_krgCellOutline) > i); ++i)
+    for (size_t i = 0; (g_cCellOutline[eOutlineType] > i); ++i)
     {
-        Chords.insert( CChord(Origin + g_krgCellOutline[i].GetStart(), Origin + g_krgCellOutline[i].GetEnd()));
+        Chords.insert( CChord(Origin + g_krgpCellOutline[eOutlineType][i].GetStart(), 
+            Origin + g_krgpCellOutline[eOutlineType][i].GetEnd()));
     }
 
     return true;
