@@ -162,7 +162,7 @@ private:
     bool  m_bShowOutlines{true};
 
     // Which outline geometry to render for each cell.
-    CUCoord::EOutlineType m_eOutlineType{CUCoord::OT_hex_1};
+    CUCoord::EOutlineType m_eOutlineType{CUCoord::OT_square_z};
 
     int   m_nClientW{1}, m_nClientH{1};
     HWND  m_hWnd{nullptr};
