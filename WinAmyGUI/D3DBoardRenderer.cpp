@@ -806,8 +806,10 @@ void D3DBoardRenderer::RenderHighlights(const XMMATRIX& mViewProj,
         for (const auto& C : Chords) {
             const auto& A = C.GetStart();
             const auto& B = C.GetEnd();
-            Out.push_back({ (float)A.GetX(), (float)A.GetY(), (float)A.GetZ() });
-            Out.push_back({ (float)B.GetX(), (float)B.GetY(), (float)B.GetZ() });
+            XMFLOAT3 vStart = ApplyAxisTransform(UCoordToFloat3(A));
+            XMFLOAT3 vEnd   = ApplyAxisTransform(UCoordToFloat3(B));
+            Out.push_back({ vStart.x, vStart.y, vStart.z });
+            Out.push_back({ vEnd.x,   vEnd.y,   vEnd.z });
         }
     };
 
