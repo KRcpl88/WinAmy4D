@@ -57,6 +57,7 @@ void GameController::NewGame() {
     if (m_pPosition)
         CPosition::Free(m_pPosition);
     m_pPosition = CPosition::Initial();
+    m_BestMove = M_NONE;
 }
 
 bool GameController::LoadFromEPD(const char *pszEPD) {
