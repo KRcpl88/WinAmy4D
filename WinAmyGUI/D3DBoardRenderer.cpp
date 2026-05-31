@@ -806,8 +806,10 @@ void D3DBoardRenderer::RenderHighlights(const XMMATRIX& mViewProj,
         for (const auto& C : Chords) {
             const auto& A = C.GetStart();
             const auto& B = C.GetEnd();
-            Out.push_back({ (float)A.GetX(), (float)A.GetY(), (float)A.GetZ() });
-            Out.push_back({ (float)B.GetX(), (float)B.GetY(), (float)B.GetZ() });
+            XMFLOAT3 vStart = ApplyAxisTransform(UCoordToFloat3(A));
+            XMFLOAT3 vEnd   = ApplyAxisTransform(UCoordToFloat3(B));
+            Out.push_back({ vStart.x, vStart.y, vStart.z });
+            Out.push_back({ vEnd.x,   vEnd.y,   vEnd.z });
         }
     };
 
@@ -845,10 +847,17 @@ void D3DBoardRenderer::RenderHighlights(const XMMATRIX& mViewProj,
         m_pContext->Draw(static_cast<UINT>(Verts.size()), 0);
     };
 
-    // Legal destinations are now shown as filled yellow discs by
-    // RenderTargetMarkers, which reads more clearly than wireframe outlines
-    // and gives a larger pick target. No cyan outline pass needed.
-    (void)LegalDests;
+    // Draw legal-destination outlines in yellow after the base (green)
+    // board outlines so they are not visually overpainted by adjacent cells.
+    if (!LegalDests.empty()) {
+        std::vector<LineVertex> Verts;
+        Verts.reserve(LegalDests.size() * 48);
+        for (const auto& Dest : LegalDests) {
+            if (!Dest.IsValid()) continue;
+            BuildBufferForCell(Dest, Verts);
+        }
+        DrawCellList(Verts, XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f));
+    }
 
     // Selected square (yellow, drawn last so it sits on top).
     if (pSelectedSquare && pSelectedSquare->IsValid()) {
@@ -971,9 +980,8 @@ void D3DBoardRenderer::RenderTargetMarkers(const XMMATRIX& mViewProj,
     XMStoreFloat3(&vRight, mInvView.r[0]);
     XMStoreFloat3(&vUp,    mInvView.r[1]);
 
-    // Slightly larger than the piece quads (0.55) so the disc is visible
-    // around any piece sitting on the target square.
-    const float fHalf = 0.65f;
+    // About 50% smaller than the previous marker size.
+    const float fHalf = 0.325f;
 
     std::vector<SpriteVertex> Verts;
     Verts.reserve(LegalDests.size() * 6);
