@@ -160,6 +160,14 @@ void GameController::SetDepth(int depth) {
 void GameController::MakeMove(CMove move) {
     std::lock_guard<std::mutex> lock(m_PositionMutex);
     if (m_pPosition) {
+        // Defensive guard: a stale or duplicate WM_APP_ENGINE_MOVE can deliver a
+        // move that is no longer valid for the current position (for example after
+        // a New Game, or when the same engine best-move is delivered twice). The
+        // second time, the move's from-square is already empty, so DoMove would
+        // set an occupancy bit on a square whose piece is Neutral, corrupting the
+        // board and making AtkSet/RecalcAttacks panic. Only apply legal moves.
+        if (!m_pPosition->LegalMove(move))
+            return;
         m_pPosition->DoMove(move);
 #ifndef NDEBUG
         // Snapshot the incrementally maintained attack tables before the full
