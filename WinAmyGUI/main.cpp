@@ -462,6 +462,9 @@ static void OnEngineMove(LPARAM /*lParam*/) {
     if (move == M_NONE) {
         UpdatePauseMenu();
         UpdateStatusBar();
+        // The engine returns M_NONE when there is no move (checkmate or
+        // stalemate on its turn); announce the result in that case too.
+        MaybeAnnounceGameOver();
         return;
     }
 
