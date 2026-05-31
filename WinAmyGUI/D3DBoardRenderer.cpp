@@ -600,9 +600,22 @@ void D3DBoardRenderer::SetOutlineType(CUCoord::EOutlineType eType) {
 }
 
 void D3DBoardRenderer::ResetView() {
+    bool bAxisChanged = false;
+    const int rgnDefaultOrder[3]{ AxisX, AxisY, AxisZ };
+    for (int nAxis = 0; nAxis < 3; ++nAxis) {
+        if (m_rgnAxisOrder[nAxis] != rgnDefaultOrder[nAxis]) {
+            m_rgnAxisOrder[nAxis] = rgnDefaultOrder[nAxis];
+            bAxisChanged = true;
+        }
+        if (m_rgbAxisInverted[nAxis]) {
+            m_rgbAxisInverted[nAxis] = false;
+            bAxisChanged = true;
+        }
+    }
     m_fYaw      = kDefaultYaw;
     m_fPitch    = kDefaultPitch;
     m_fDistance = m_fDefaultDistance > 0.0f ? m_fDefaultDistance : (m_BoardRadius * 2.5f);
+    if (bAxisChanged) UpdateAxisGeometry();
     if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
 }
 
@@ -629,21 +642,59 @@ bool D3DBoardRenderer::GetAxisInverted(EAxis eAxis) const {
 }
 
 void D3DBoardRenderer::SwapAxes(EAxisSwap eSwap) {
+    int rgnNewAxisOrder[3]{ AxisX, AxisY, AxisZ };
     switch (eSwap) {
+    case AxisSwapNone:
+        break;
     case AxisSwapXY:
-        std::swap(m_rgnAxisOrder[AxisIndex(AxisX)], m_rgnAxisOrder[AxisIndex(AxisY)]);
+        rgnNewAxisOrder[AxisIndex(AxisX)] = AxisY;
+        rgnNewAxisOrder[AxisIndex(AxisY)] = AxisX;
         break;
     case AxisSwapXZ:
-        std::swap(m_rgnAxisOrder[AxisIndex(AxisX)], m_rgnAxisOrder[AxisIndex(AxisZ)]);
+        rgnNewAxisOrder[AxisIndex(AxisX)] = AxisZ;
+        rgnNewAxisOrder[AxisIndex(AxisZ)] = AxisX;
         break;
     case AxisSwapYZ:
-        std::swap(m_rgnAxisOrder[AxisIndex(AxisY)], m_rgnAxisOrder[AxisIndex(AxisZ)]);
+        rgnNewAxisOrder[AxisIndex(AxisY)] = AxisZ;
+        rgnNewAxisOrder[AxisIndex(AxisZ)] = AxisY;
         break;
     default:
         return;
     }
 
+    bool bChanged = false;
+    for (int nAxis = 0; nAxis < 3; ++nAxis) {
+        if (m_rgnAxisOrder[nAxis] != rgnNewAxisOrder[nAxis]) {
+            m_rgnAxisOrder[nAxis] = rgnNewAxisOrder[nAxis];
+            bChanged = true;
+        }
+    }
+    if (!bChanged) return;
     UpdateAxisGeometry();
+}
+
+D3DBoardRenderer::EAxisSwap D3DBoardRenderer::GetAxisSwap() const {
+    if (m_rgnAxisOrder[AxisIndex(AxisX)] == AxisX &&
+        m_rgnAxisOrder[AxisIndex(AxisY)] == AxisY &&
+        m_rgnAxisOrder[AxisIndex(AxisZ)] == AxisZ) {
+        return AxisSwapNone;
+    }
+    if (m_rgnAxisOrder[AxisIndex(AxisX)] == AxisY &&
+        m_rgnAxisOrder[AxisIndex(AxisY)] == AxisX &&
+        m_rgnAxisOrder[AxisIndex(AxisZ)] == AxisZ) {
+        return AxisSwapXY;
+    }
+    if (m_rgnAxisOrder[AxisIndex(AxisX)] == AxisZ &&
+        m_rgnAxisOrder[AxisIndex(AxisY)] == AxisY &&
+        m_rgnAxisOrder[AxisIndex(AxisZ)] == AxisX) {
+        return AxisSwapXZ;
+    }
+    if (m_rgnAxisOrder[AxisIndex(AxisX)] == AxisX &&
+        m_rgnAxisOrder[AxisIndex(AxisY)] == AxisZ &&
+        m_rgnAxisOrder[AxisIndex(AxisZ)] == AxisY) {
+        return AxisSwapYZ;
+    }
+    return AxisSwapNone;
 }
 
 // ---------------------------------------------------------------------------

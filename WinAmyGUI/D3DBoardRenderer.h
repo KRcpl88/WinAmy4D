@@ -45,7 +45,8 @@ public:
     };
 
     enum EAxisSwap {
-        AxisSwapXY = 0,
+        AxisSwapNone = 0,
+        AxisSwapXY,
         AxisSwapXZ,
         AxisSwapYZ
     };
@@ -98,7 +99,7 @@ public:
     void SetOutlineType(CUCoord::EOutlineType eType);
     CUCoord::EOutlineType GetOutlineType() const { return m_eOutlineType; }
 
-    // Reset orbit yaw/pitch and zoom distance to defaults.
+    // Reset orbit yaw/pitch, zoom, and axis transforms to defaults.
     void ResetView();
 
     // Adjust zoom by a multiplicative factor (>1.0 = zoom out, <1.0 = zoom in).
@@ -108,8 +109,9 @@ public:
     void SetAxisInverted(EAxis eAxis, bool bInverted);
     bool GetAxisInverted(EAxis eAxis) const;
 
-    // Swap two output axes in render space.
+    // Apply a render-space axis swap state.
     void SwapAxes(EAxisSwap eSwap);
+    EAxisSwap GetAxisSwap() const;
 
 private:
     template <typename T>

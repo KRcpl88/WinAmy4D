@@ -356,7 +356,7 @@ static void CreateControls(HWND hWnd) {
             (HMENU)(INT_PTR)IDC_CB_SWAP_AXES, hInst, nullptr);
         x += 128 + BTN_GAP;
         static const wchar_t* kSwapLabels[] = {
-            L"Swap Axes...",
+            L"No Swap",
             L"Swap X/Y",
             L"Swap X/Z",
             L"Swap Y/Z",
@@ -680,7 +680,8 @@ static void UpdateAxisControls() {
             g_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisZ) ? BST_CHECKED : BST_UNCHECKED, 0);
     }
     if (g_hCbSwapAxes) {
-        SendMessageW(g_hCbSwapAxes, CB_SETCURSEL, 0, 0);
+        SendMessageW(g_hCbSwapAxes, CB_SETCURSEL,
+            static_cast<WPARAM>(g_D3DRenderer.GetAxisSwap()), 0);
     }
 }
 
@@ -1002,7 +1003,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             break;
 
         case IDC_BTN_RESET_VIEW:
-            if (g_D3DRenderer.IsInitialized()) g_D3DRenderer.ResetView();
+            if (g_D3DRenderer.IsInitialized()) {
+                g_D3DRenderer.ResetView();
+                UpdateAxisControls();
+            }
             break;
 
         case IDC_BTN_ZOOM_IN:
@@ -1042,6 +1046,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (code == CBN_SELCHANGE) {
                 int nSel = (int)SendMessageW(g_hCbSwapAxes, CB_GETCURSEL, 0, 0);
                 switch (nSel) {
+                case 0:
+                    g_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapNone);
+                    break;
                 case 1:
                     g_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapXY);
                     break;
@@ -1052,7 +1059,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     g_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapYZ);
                     break;
                 }
-                SendMessageW(g_hCbSwapAxes, CB_SETCURSEL, 0, 0);
             }
             break;
 
