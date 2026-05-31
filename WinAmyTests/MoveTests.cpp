@@ -257,10 +257,10 @@ TEST_CLASS(MoveTests) {
     // std::out_of_range from CSCoord::Validate.
     TEST_METHOD(GenFromPawnOnLastRankOfNarrowLevelDoesNotThrow) {
         // White pawn on level g (level 6, 7 wide) at file 0 / rank 6 (top rank).
-        const char *epd =
+        const char *pszEpd =
             "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|P6/7/7/7/7/7/7|"
             "4k3/8/8/8/8/8/8/4K3| w - -";
-        PositionGuard position(CPosition::CreateFromEPD(epd));
+        PositionGuard position(CPosition::CreateFromEPD(pszEpd));
 
         const CSCoord pawnCoord(6, 0, 6);
         Assert::AreEqual((int)Pawn,
