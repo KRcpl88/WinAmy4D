@@ -38,6 +38,18 @@
 
 class D3DBoardRenderer {
 public:
+    enum EAxis {
+        AxisX = 0,
+        AxisY = 1,
+        AxisZ = 2
+    };
+
+    enum EAxisSwap {
+        AxisSwapXY = 0,
+        AxisSwapXZ,
+        AxisSwapYZ
+    };
+
     D3DBoardRenderer();
     ~D3DBoardRenderer();
 
@@ -91,6 +103,13 @@ public:
 
     // Adjust zoom by a multiplicative factor (>1.0 = zoom out, <1.0 = zoom in).
     void AdjustZoom(float fFactor);
+
+    // Invert an output axis in render space.
+    void SetAxisInverted(EAxis eAxis, bool bInverted);
+    bool GetAxisInverted(EAxis eAxis) const;
+
+    // Swap two output axes in render space.
+    void SwapAxes(EAxisSwap eSwap);
 
 private:
     template <typename T>
@@ -164,6 +183,10 @@ private:
     // Which outline geometry to render for each cell.
     CUCoord::EOutlineType m_eOutlineType{CUCoord::OT_square_z};
 
+    // Render-space axis remapping and inversion state.
+    int  m_rgnAxisOrder[3]{ AxisX, AxisY, AxisZ };
+    bool m_rgbAxisInverted[3]{ false, false, false };
+
     int   m_nClientW{1}, m_nClientH{1};
     HWND  m_hWnd{nullptr};
 
@@ -188,6 +211,8 @@ private:
 
     // Returns the cell center for a CSCoord in render space.
     DirectX::XMFLOAT3 CellCenter(const CSCoord& Coord) const;
+    DirectX::XMFLOAT3 ApplyAxisTransform(const DirectX::XMFLOAT3& vPoint) const;
+    void UpdateAxisGeometry();
 
     // Render passes
     void RenderLines(const DirectX::XMMATRIX& mViewProj);

@@ -50,6 +50,10 @@ static HWND            g_hBtnOutlines  = nullptr;
 static HWND            g_hBtnResetView = nullptr;
 static HWND            g_hBtnZoomIn    = nullptr;
 static HWND            g_hBtnZoomOut   = nullptr;
+static HWND            g_hChkInvertX   = nullptr;
+static HWND            g_hChkInvertY   = nullptr;
+static HWND            g_hChkInvertZ   = nullptr;
+static HWND            g_hCbSwapAxes   = nullptr;
 
 static GameController  g_Game;
 static BoardRenderer   g_Renderer;
@@ -89,6 +93,7 @@ static void UpdateViewToggleButton();
 static void SetGridType(CUCoord::EOutlineType eType);
 static void SetGridTypeFromMenu(int nMenuId);
 static void UpdateGridMenuEnabled();
+static void UpdateAxisControls();
 static int MenuIdFromGridType(CUCoord::EOutlineType eType);
 static void CreateControls(HWND hWnd);
 static void UpdateScrollBars(HWND hWnd);
@@ -286,6 +291,14 @@ static void CreateControls(HWND hWnd) {
         return h;
     };
 
+    auto makeCheck = [&](const wchar_t* label, int id, int w) -> HWND {
+        HWND h = CreateWindowExW(0, L"BUTTON", label,
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
+            x, BTN_Y + 6, w, BTN_H - 8, hWnd, (HMENU)(INT_PTR)id, hInst, nullptr);
+        x += w + BTN_GAP;
+        return h;
+    };
+
     g_hBtnNew = makeBtn(L"New Game", IDC_BTN_NEW_GAME);
     x += BTN_GAP * 2; // spacer
 
@@ -331,10 +344,36 @@ static void CreateControls(HWND hWnd) {
     g_hBtnResetView = makeBtn(L"Reset View",   IDC_BTN_RESET_VIEW, 80);
     g_hBtnZoomIn    = makeBtn(L"Zoom +",       IDC_BTN_ZOOM_IN,    60);
     g_hBtnZoomOut   = makeBtn(L"Zoom -",       IDC_BTN_ZOOM_OUT,   60);
+    x += BTN_GAP;
+    g_hChkInvertX   = makeCheck(L"Invert X",   IDC_CHK_INVERT_X,   74);
+    g_hChkInvertY   = makeCheck(L"Invert Y",   IDC_CHK_INVERT_Y,   74);
+    g_hChkInvertZ   = makeCheck(L"Invert Z",   IDC_CHK_INVERT_Z,   74);
+    {
+        int nCbH = 140;
+        g_hCbSwapAxes = CreateWindowExW(0, L"COMBOBOX", L"",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
+            x, BTN_Y, 128, nCbH, hWnd,
+            (HMENU)(INT_PTR)IDC_CB_SWAP_AXES, hInst, nullptr);
+        x += 128 + BTN_GAP;
+        static const wchar_t* kSwapLabels[] = {
+            L"Swap Axes...",
+            L"Swap X/Y",
+            L"Swap X/Z",
+            L"Swap Y/Z",
+        };
+        for (auto* psz : kSwapLabels) {
+            SendMessageW(g_hCbSwapAxes, CB_ADDSTRING, 0, (LPARAM)psz);
+        }
+        SendMessageW(g_hCbSwapAxes, CB_SETCURSEL, 0, 0);
+    }
     EnableWindow(g_hBtnOutlines,  FALSE);
     EnableWindow(g_hBtnResetView, FALSE);
     EnableWindow(g_hBtnZoomIn,    FALSE);
     EnableWindow(g_hBtnZoomOut,   FALSE);
+    EnableWindow(g_hChkInvertX,   FALSE);
+    EnableWindow(g_hChkInvertY,   FALSE);
+    EnableWindow(g_hChkInvertZ,   FALSE);
+    EnableWindow(g_hCbSwapAxes,   FALSE);
 
     // Status bar
     g_hStatus = CreateWindowExW(0, STATUSCLASSNAMEW, nullptr,
@@ -352,6 +391,7 @@ static void CreateControls(HWND hWnd) {
     UpdatePlayerMenu();
     UpdatePauseMenu();
     UpdateViewToggleButton();
+    UpdateAxisControls();
 }
 
 // ---------------------------------------------------------------------------
@@ -626,6 +666,24 @@ static void UpdateViewToggleButton() {
         g_eViewMode == ViewMode::Mode2D ? L"Switch to 3D" : L"Switch to 2D");
 }
 
+static void UpdateAxisControls() {
+    if (g_hChkInvertX) {
+        SendMessageW(g_hChkInvertX, BM_SETCHECK,
+            g_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisX) ? BST_CHECKED : BST_UNCHECKED, 0);
+    }
+    if (g_hChkInvertY) {
+        SendMessageW(g_hChkInvertY, BM_SETCHECK,
+            g_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisY) ? BST_CHECKED : BST_UNCHECKED, 0);
+    }
+    if (g_hChkInvertZ) {
+        SendMessageW(g_hChkInvertZ, BM_SETCHECK,
+            g_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisZ) ? BST_CHECKED : BST_UNCHECKED, 0);
+    }
+    if (g_hCbSwapAxes) {
+        SendMessageW(g_hCbSwapAxes, CB_SETCURSEL, 0, 0);
+    }
+}
+
 static void SetViewMode(ViewMode mode) {
     if (mode == g_eViewMode) return;
     g_eViewMode = mode;
@@ -659,8 +717,13 @@ static void SetViewMode(ViewMode mode) {
         EnableWindow(g_hBtnOutlines,  TRUE);
         EnableWindow(g_hBtnResetView, TRUE);
         EnableWindow(g_hBtnZoomIn,    TRUE);
-        EnableWindow(g_hBtnZoomOut,   TRUE);
+          EnableWindow(g_hBtnZoomOut,   TRUE);
+        EnableWindow(g_hChkInvertX,   TRUE);
+        EnableWindow(g_hChkInvertY,   TRUE);
+        EnableWindow(g_hChkInvertZ,   TRUE);
+        EnableWindow(g_hCbSwapAxes,   TRUE);
         UpdateOutlinesButtonText();
+        UpdateAxisControls();
         // Reflect the renderer's actual grid type in the menu checkmark
         // and combobox selection (the renderer is the source of truth —
         // the menu and combobox are just UI).
@@ -682,6 +745,10 @@ static void SetViewMode(ViewMode mode) {
         EnableWindow(g_hBtnResetView, FALSE);
         EnableWindow(g_hBtnZoomIn,    FALSE);
         EnableWindow(g_hBtnZoomOut,   FALSE);
+        EnableWindow(g_hChkInvertX,   FALSE);
+        EnableWindow(g_hChkInvertY,   FALSE);
+        EnableWindow(g_hChkInvertZ,   FALSE);
+        EnableWindow(g_hCbSwapAxes,   FALSE);
     }
     UpdateGridMenuEnabled();
     UpdateViewToggleButton();
@@ -946,6 +1013,21 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (g_D3DRenderer.IsInitialized()) g_D3DRenderer.AdjustZoom(1.18f);
             break;
 
+        case IDC_CHK_INVERT_X:
+            g_D3DRenderer.SetAxisInverted(D3DBoardRenderer::AxisX,
+                SendMessageW(g_hChkInvertX, BM_GETCHECK, 0, 0) == BST_CHECKED);
+            break;
+
+        case IDC_CHK_INVERT_Y:
+            g_D3DRenderer.SetAxisInverted(D3DBoardRenderer::AxisY,
+                SendMessageW(g_hChkInvertY, BM_GETCHECK, 0, 0) == BST_CHECKED);
+            break;
+
+        case IDC_CHK_INVERT_Z:
+            g_D3DRenderer.SetAxisInverted(D3DBoardRenderer::AxisZ,
+                SendMessageW(g_hChkInvertZ, BM_GETCHECK, 0, 0) == BST_CHECKED);
+            break;
+
         case IDC_CB_GRID_TYPE:
             if (code == CBN_SELCHANGE) {
                 int nSel = (int)SendMessageW(g_hCbGridType, CB_GETCURSEL, 0, 0);
@@ -953,6 +1035,24 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     SetGridType(static_cast<CUCoord::EOutlineType>(
                         static_cast<int>(CUCoord::OT_full) + nSel));
                 }
+            }
+            break;
+
+        case IDC_CB_SWAP_AXES:
+            if (code == CBN_SELCHANGE) {
+                int nSel = (int)SendMessageW(g_hCbSwapAxes, CB_GETCURSEL, 0, 0);
+                switch (nSel) {
+                case 1:
+                    g_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapXY);
+                    break;
+                case 2:
+                    g_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapXZ);
+                    break;
+                case 3:
+                    g_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapYZ);
+                    break;
+                }
+                SendMessageW(g_hCbSwapAxes, CB_SETCURSEL, 0, 0);
             }
             break;
 
