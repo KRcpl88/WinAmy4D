@@ -100,7 +100,7 @@ Typically you will first set a time limit using the `level` as in the
 following example:
 
     White(1): level fixed/1
-    White(1): test EPD/WAC.epd4 
+    White(1): test EPD/WAC.epd 
     …
     solved 295 out of 300  (BT2630 = 2615, LCT2 = 10750, BS2830 = 2814)
     -----------------------------------------------
