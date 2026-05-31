@@ -96,6 +96,10 @@ inline XMFLOAT3 UCoordToFloat3(const CUCoordFloat& v) {
                     static_cast<float>(v.GetY()),
                     static_cast<float>(v.GetZ()));
 }
+
+inline int AxisIndex(D3DBoardRenderer::EAxis eAxis) {
+    return static_cast<int>(eAxis);
+}
 } // namespace
 
 // ---------------------------------------------------------------------------
@@ -386,7 +390,7 @@ void D3DBoardRenderer::BuildCellGeometry() {
 
                 CellInfo Info;
                 Info.Coord  = Coord;
-                Info.Center = UCoordToFloat3(CUCoordFloat(UCoord));
+                Info.Center = ApplyAxisTransform(UCoordToFloat3(CUCoordFloat(UCoord)));
                 m_Cells.push_back(Info);
 
                 fMinX = (std::min)(fMinX, Info.Center.x);
@@ -436,10 +440,10 @@ bool D3DBoardRenderer::RebuildLineGeometry() {
     std::vector<LineVertex> NewVertices;
     NewVertices.reserve(Chords.size() * 2);
     for (const auto& C : Chords) {
-        const CUCoordFloat& A = C.GetStart();
-        const CUCoordFloat& B = C.GetEnd();
-        NewVertices.push_back(LineVertex{ (float)A.GetX(), (float)A.GetY(), (float)A.GetZ() });
-        NewVertices.push_back(LineVertex{ (float)B.GetX(), (float)B.GetY(), (float)B.GetZ() });
+        XMFLOAT3 vStart = ApplyAxisTransform(UCoordToFloat3(C.GetStart()));
+        XMFLOAT3 vEnd   = ApplyAxisTransform(UCoordToFloat3(C.GetEnd()));
+        NewVertices.push_back(LineVertex{ vStart.x, vStart.y, vStart.z });
+        NewVertices.push_back(LineVertex{ vEnd.x,   vEnd.y,   vEnd.z });
     }
 
     if (NewVertices.empty()) {
@@ -472,7 +476,30 @@ XMFLOAT3 D3DBoardRenderer::CellCenter(const CSCoord& Coord) const {
         if (C.Coord == Coord) return C.Center;
     }
     // Fallback: compute on the fly.
-    return UCoordToFloat3(CUCoordFloat(CUCoord(Coord)));
+    return ApplyAxisTransform(UCoordToFloat3(CUCoordFloat(CUCoord(Coord))));
+}
+
+XMFLOAT3 D3DBoardRenderer::ApplyAxisTransform(const XMFLOAT3& vPoint) const {
+    float rgfInput[3]{ vPoint.x, vPoint.y, vPoint.z };
+    float rgfOutput[3]{};
+
+    for (int nAxis = 0; nAxis < 3; ++nAxis) {
+        rgfOutput[nAxis] = rgfInput[m_rgnAxisOrder[nAxis]];
+        if (m_rgbAxisInverted[nAxis]) {
+            rgfOutput[nAxis] = -rgfOutput[nAxis];
+        }
+    }
+
+    return XMFLOAT3(rgfOutput[0], rgfOutput[1], rgfOutput[2]);
+}
+
+void D3DBoardRenderer::UpdateAxisGeometry() {
+    BuildCellGeometry();
+    if (m_pDevice) {
+        RebuildLineGeometry();
+    } else if (m_hWnd) {
+        InvalidateRect(m_hWnd, nullptr, FALSE);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -573,9 +600,22 @@ void D3DBoardRenderer::SetOutlineType(CUCoord::EOutlineType eType) {
 }
 
 void D3DBoardRenderer::ResetView() {
+    bool bAxisChanged = false;
+    const int rgnDefaultOrder[3]{ AxisX, AxisY, AxisZ };
+    for (int nAxis = 0; nAxis < 3; ++nAxis) {
+        if (m_rgnAxisOrder[nAxis] != rgnDefaultOrder[nAxis]) {
+            m_rgnAxisOrder[nAxis] = rgnDefaultOrder[nAxis];
+            bAxisChanged = true;
+        }
+        if (m_rgbAxisInverted[nAxis]) {
+            m_rgbAxisInverted[nAxis] = false;
+            bAxisChanged = true;
+        }
+    }
     m_fYaw      = kDefaultYaw;
     m_fPitch    = kDefaultPitch;
     m_fDistance = m_fDefaultDistance > 0.0f ? m_fDefaultDistance : (m_BoardRadius * 2.5f);
+    if (bAxisChanged) UpdateAxisGeometry();
     if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
 }
 
@@ -585,6 +625,76 @@ void D3DBoardRenderer::AdjustZoom(float fFactor) {
     if (m_fDistance < 1.5f)   m_fDistance = 1.5f;
     if (m_fDistance > 500.0f) m_fDistance = 500.0f;
     if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
+}
+
+void D3DBoardRenderer::SetAxisInverted(EAxis eAxis, bool bInverted) {
+    int nAxis = AxisIndex(eAxis);
+    if (nAxis < 0 || nAxis > 2) return;
+    if (m_rgbAxisInverted[nAxis] == bInverted) return;
+    m_rgbAxisInverted[nAxis] = bInverted;
+    UpdateAxisGeometry();
+}
+
+bool D3DBoardRenderer::GetAxisInverted(EAxis eAxis) const {
+    int nAxis = AxisIndex(eAxis);
+    if (nAxis < 0 || nAxis > 2) return false;
+    return m_rgbAxisInverted[nAxis];
+}
+
+void D3DBoardRenderer::SwapAxes(EAxisSwap eSwap) {
+    int rgnNewAxisOrder[3]{ AxisX, AxisY, AxisZ };
+    switch (eSwap) {
+    case AxisSwapNone:
+        break;
+    case AxisSwapXY:
+        rgnNewAxisOrder[AxisIndex(AxisX)] = AxisY;
+        rgnNewAxisOrder[AxisIndex(AxisY)] = AxisX;
+        break;
+    case AxisSwapXZ:
+        rgnNewAxisOrder[AxisIndex(AxisX)] = AxisZ;
+        rgnNewAxisOrder[AxisIndex(AxisZ)] = AxisX;
+        break;
+    case AxisSwapYZ:
+        rgnNewAxisOrder[AxisIndex(AxisY)] = AxisZ;
+        rgnNewAxisOrder[AxisIndex(AxisZ)] = AxisY;
+        break;
+    default:
+        return;
+    }
+
+    bool bChanged = false;
+    for (int nAxis = 0; nAxis < 3; ++nAxis) {
+        if (m_rgnAxisOrder[nAxis] != rgnNewAxisOrder[nAxis]) {
+            m_rgnAxisOrder[nAxis] = rgnNewAxisOrder[nAxis];
+            bChanged = true;
+        }
+    }
+    if (!bChanged) return;
+    UpdateAxisGeometry();
+}
+
+D3DBoardRenderer::EAxisSwap D3DBoardRenderer::GetAxisSwap() const {
+    if (m_rgnAxisOrder[AxisIndex(AxisX)] == AxisX &&
+        m_rgnAxisOrder[AxisIndex(AxisY)] == AxisY &&
+        m_rgnAxisOrder[AxisIndex(AxisZ)] == AxisZ) {
+        return AxisSwapNone;
+    }
+    if (m_rgnAxisOrder[AxisIndex(AxisX)] == AxisY &&
+        m_rgnAxisOrder[AxisIndex(AxisY)] == AxisX &&
+        m_rgnAxisOrder[AxisIndex(AxisZ)] == AxisZ) {
+        return AxisSwapXY;
+    }
+    if (m_rgnAxisOrder[AxisIndex(AxisX)] == AxisZ &&
+        m_rgnAxisOrder[AxisIndex(AxisY)] == AxisY &&
+        m_rgnAxisOrder[AxisIndex(AxisZ)] == AxisX) {
+        return AxisSwapXZ;
+    }
+    if (m_rgnAxisOrder[AxisIndex(AxisX)] == AxisX &&
+        m_rgnAxisOrder[AxisIndex(AxisY)] == AxisZ &&
+        m_rgnAxisOrder[AxisIndex(AxisZ)] == AxisY) {
+        return AxisSwapYZ;
+    }
+    return AxisSwapNone;
 }
 
 // ---------------------------------------------------------------------------
