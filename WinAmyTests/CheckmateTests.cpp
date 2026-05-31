@@ -10,13 +10,13 @@ TEST_CLASS(CheckmateTests) {
         HashInit();
     }
 
-    // Regression test: after 1.id4 Nhc6 2.hd4 he6 3.hc4 Bhb4, white is in
+    // Regression test: after 1.id3 Nhc6 2.hd4 he6 3.hc4 Bhb4, white is in
     // check but NOT in checkmate. White can block with Nb1-c3 (and other
     // moves), so LegalMoves must return > 0.
     TEST_METHOD(AfterBishopCheckWhiteHasLegalBlockingMoves) {
         PositionGuard position(CPosition::Initial());
 
-        const char *moves[] = {"id4", "Nhc6", "hd4", "he6", "hc4", "Bhb4"};
+        const char *moves[] = {"id3", "Nhc6", "hd4", "he6", "hc4", "Bhb4"};
         for (const char *san : moves) {
             CMove move = position.get()->ParseSAN(san);
             Assert::IsTrue(move != M_NONE,
@@ -38,7 +38,7 @@ TEST_CLASS(CheckmateTests) {
     TEST_METHOD(Nb1c3IsLegalBlockingMoveAfterBishopCheck) {
         PositionGuard position(CPosition::Initial());
 
-        const char *moves[] = {"id4", "Nhc6", "hd4", "he6", "hc4", "Bhb4"};
+        const char *moves[] = {"id3", "Nhc6", "hd4", "he6", "hc4", "Bhb4"};
         for (const char *san : moves) {
             CMove move = position.get()->ParseSAN(san);
             Assert::IsTrue(move != M_NONE,

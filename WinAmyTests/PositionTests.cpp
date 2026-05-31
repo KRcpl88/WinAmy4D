@@ -287,22 +287,24 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CPosition::Initial());
 
         int count = position.get()->LegalMoves(NULL);
-        Assert::AreEqual(63, count);
+        Assert::AreEqual(56, count);
     }
 
     TEST_METHOD(LegalMovesInitialPositionAllPieceMovesPresent) {
         // Verify every expected legal move from the 4D opening position is present
-        // in the output of LegalMoves.  The 63 moves break down as:
+        // in the output of LegalMoves.  The 56 moves break down as:
         //   Main board (h, 8x8)  : 8 pawns × 2 (push+double) + 2 knights × 3 = 22
         //   Level g (6, 7x7)     : 7 pawns × 1 (single push, not at homeRank) = 7
-        //   Level i (8, 7x7)     : 7 pawns × 2 + 2 knights × 7 (incl. cross-level) = 28
+        //   Level i (8, 7x7)     : 7 pawns × 1 (single push; double push is
+        //                          only legal on level h) + 2 knights × 7
+        //                          (incl. cross-level) = 21
         //   Level j (9, 6x6)     : 6 pawns × 1 (single push, not at homeRank) = 6
         PositionGuard position(CPosition::Initial());
 
         // Collect all fully-legal moves into a heap, then index by (from, to) offsets.
         heap_t heap = allocate_heap();
         const int count = position.get()->LegalMoves(heap);
-        Assert::AreEqual(63, count);
+        Assert::AreEqual(56, count);
 
         std::set<std::pair<uint16_t, uint16_t>> legalSet;
         for (unsigned int i = heap->current_section->start;
@@ -345,13 +347,13 @@ TEST_CLASS(PositionTests) {
             AssertPresent(CSCoord(6, file, 0), CSCoord(6, file, 1));
         }
 
-        // --- Level i (index 8, 7x7): 28 moves ---
+        // --- Level i (index 8, 7x7): 21 moves ---
         // 7 white pawns on rank 1 (ia2–ig2).
-        // Rank 1 == homeRank so both single and double push are available.
+        // Rank 1 == homeRank, but the two-square double push is only allowed on
+        // level h, so each of these pawns has a single push only.
         for (uint16_t file = 0; file < 7; file++) {
             CSCoord from(8, file, 1);
             AssertPresent(from, CSCoord(8, file, 2)); // single push to rank 2
-            AssertPresent(from, CSCoord(8, file, 3)); // double push to rank 3 (M_PAWND)
         }
         // Knight ib1 (file=1, rank=0): 2 same-level + 5 cross-level jumps.
         CSCoord ib1(8, 1, 0);

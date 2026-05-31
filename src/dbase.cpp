@@ -1243,9 +1243,12 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
             } else {
                 append_to_heap(heap, make_move(squareCoord, sqCoord, 0));
 
+                /* The two-square double push (and therefore en passant) is
+                 * only allowed on the main board (level h). On every other
+                 * level pawns advance a single square at a time. */
                 const uint16_t homeRank =
                     static_cast<uint16_t>((p->m_nTurn == White) ? 1 : (width - 2));
-                if (squareCoord.m_nRank == homeRank) {
+                if (squareCoord.m_nLevel == MAIN_LEVEL && squareCoord.m_nRank == homeRank) {
                     CSCoord dblCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
                                      squareCoord.m_nRank + 2 * direction);
                     sq = dblCoord.BitOffset();

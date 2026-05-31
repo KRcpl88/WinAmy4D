@@ -391,7 +391,8 @@ CMove CSearchData::NextMove() {
                     continue;
                 append_to_heap(sd->m_hHeap, make_move(fromCoord, toCoord, 0));
                 const int homeRank = (p->m_nTurn == White) ? 1 : (width - 2);
-                if (static_cast<int>(fromCoord.m_nRank) == homeRank) {
+                if (fromCoord.m_nLevel == MAIN_LEVEL &&
+                    static_cast<int>(fromCoord.m_nRank) == homeRank) {
                     const int dblRank = static_cast<int>(fromCoord.m_nRank) + 2 * direction;
                     if (dblRank >= 0 && dblRank < width) {
                         CSCoord dblCoord(fromCoord.m_nLevel, fromCoord.m_nFile,
@@ -699,7 +700,8 @@ CMove CSearchData::NextEvasion() {
                 } else {
                     append_to_heap(sd->m_hHeap, make_move(fromCoord, toCoord, 0));
                     const int homeRank = (p->m_nTurn == White) ? 1 : (width - 2);
-                    if (static_cast<int>(fromCoord.m_nRank) == homeRank) {
+                    if (fromCoord.m_nLevel == MAIN_LEVEL &&
+                        static_cast<int>(fromCoord.m_nRank) == homeRank) {
                         const int dblRank = static_cast<int>(fromCoord.m_nRank) + 2 * direction;
                         if (dblRank >= 0 && dblRank < width) {
                             CSCoord dblCoord(fromCoord.m_nLevel, fromCoord.m_nFile,
