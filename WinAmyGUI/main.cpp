@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
+#include <commdlg.h>
 #include <wchar.h>
 #include <cstring>
 
@@ -83,6 +84,8 @@ static bool            g_fGameOverAnnounced = false;
 // ---------------------------------------------------------------------------
 
 static void OnNewGame();
+static void OnLoadEPDGame();
+static void OnSaveEPDGame();
 static void OnEngineMove(LPARAM lParam);
 static void OnSquareClick(POINT pt);
 static void MaybeStartEngine();
@@ -421,6 +424,59 @@ static void OnNewGame() {
     if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
     MaybeStartEngine();
+}
+
+static void OnLoadEPDGame() {
+    wchar_t rgPath[MAX_PATH] = {};
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = g_hWnd;
+    ofn.lpstrFilter =
+        L"EPD Files (*.epd)\0*.epd\0"
+        L"All Files (*.*)\0*.*\0\0";
+    ofn.lpstrFile = rgPath;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+    ofn.lpstrDefExt = L"epd";
+
+    if (!GetOpenFileNameW(&ofn))
+        return;
+
+    if (!g_Game.LoadFromEPDFile(rgPath)) {
+        MessageBoxW(g_hWnd, L"Failed to load EPD file.", APP_TITLE, MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    g_fPaused = false;
+    g_fHaveSelection = false;
+    g_fGameOverAnnounced = false;
+    g_LegalDests.clear();
+    UpdatePauseMenu();
+    InvalidateRect(g_hWnd, nullptr, TRUE);
+    if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
+    UpdateStatusBar();
+    MaybeStartEngine();
+}
+
+static void OnSaveEPDGame() {
+    wchar_t rgPath[MAX_PATH] = {};
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = g_hWnd;
+    ofn.lpstrFilter =
+        L"EPD Files (*.epd)\0*.epd\0"
+        L"All Files (*.*)\0*.*\0\0";
+    ofn.lpstrFile = rgPath;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+    ofn.lpstrDefExt = L"epd";
+
+    if (!GetSaveFileNameW(&ofn))
+        return;
+
+    if (!g_Game.SaveToEPDFile(rgPath)) {
+        MessageBoxW(g_hWnd, L"Failed to save EPD file.", APP_TITLE, MB_OK | MB_ICONERROR);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1067,6 +1123,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         case IDM_FILE_NEW:
         case IDC_BTN_NEW_GAME:
             OnNewGame();
+            break;
+
+        case IDM_FILE_LOAD_EPD:
+            OnLoadEPDGame();
+            break;
+
+        case IDM_FILE_SAVE_EPD:
+            OnSaveEPDGame();
             break;
 
         case IDM_FILE_EXIT:

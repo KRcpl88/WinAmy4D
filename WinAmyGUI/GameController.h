@@ -37,6 +37,9 @@ public:
 
     // Start a new game from the initial position.
     void NewGame();
+    bool LoadFromEPD(const char *pszEPD);
+    bool LoadFromEPDFile(const wchar_t *pszPath);
+    bool SaveToEPDFile(const wchar_t *pszPath);
 
     // Set the engine search depth (1–9).
     void SetDepth(int depth);

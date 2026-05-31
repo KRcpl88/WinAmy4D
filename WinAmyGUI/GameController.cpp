@@ -6,6 +6,8 @@
 #include "GameController.h"
 
 #include <cassert>
+#include <cctype>
+#include <cstdio>
 
 // ---------------------------------------------------------------------------
 // Static engine initialisation
@@ -55,6 +57,96 @@ void GameController::NewGame() {
     if (m_pPosition)
         CPosition::Free(m_pPosition);
     m_pPosition = CPosition::Initial();
+}
+
+bool GameController::LoadFromEPD(const char *pszEPD) {
+    if (!pszEPD || !*pszEPD)
+        return false;
+
+    PauseEngine();
+    if (m_EngineThread.joinable())
+        m_EngineThread.join();
+
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    CPosition *pNewPosition = CPosition::CreateFromEPD(pszEPD);
+    if (!pNewPosition)
+        return false;
+
+    if (m_pPosition)
+        CPosition::Free(m_pPosition);
+    m_pPosition = pNewPosition;
+    m_BestMove = M_NONE;
+    return true;
+}
+
+bool GameController::LoadFromEPDFile(const wchar_t *pszPath) {
+    if (!pszPath || !*pszPath)
+        return false;
+
+    FILE *pFile = nullptr;
+    if (_wfopen_s(&pFile, pszPath, L"rb") != 0 || !pFile)
+        return false;
+
+    if (fseek(pFile, 0, SEEK_END) != 0) {
+        fclose(pFile);
+        return false;
+    }
+    long nSize = ftell(pFile);
+    if (nSize < 0) {
+        fclose(pFile);
+        return false;
+    }
+    rewind(pFile);
+
+    std::string strEPD;
+    strEPD.resize(static_cast<size_t>(nSize));
+    if (nSize > 0) {
+        size_t nRead = fread(strEPD.data(), 1, strEPD.size(), pFile);
+        if (nRead != strEPD.size()) {
+            fclose(pFile);
+            return false;
+        }
+    }
+    fclose(pFile);
+
+    size_t nNewline = strEPD.find_first_of("\r\n");
+    if (nNewline != std::string::npos)
+        strEPD.erase(nNewline);
+
+    size_t nStart = 0;
+    while (nStart < strEPD.size() && std::isspace(static_cast<unsigned char>(strEPD[nStart])))
+        ++nStart;
+    if (nStart > 0)
+        strEPD.erase(0, nStart);
+
+    while (!strEPD.empty() && std::isspace(static_cast<unsigned char>(strEPD.back())))
+        strEPD.pop_back();
+
+    return LoadFromEPD(strEPD.c_str());
+}
+
+bool GameController::SaveToEPDFile(const wchar_t *pszPath) {
+    if (!pszPath || !*pszPath)
+        return false;
+
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    if (!m_pPosition)
+        return false;
+
+    const char *pszEPD = m_pPosition->MakeEPD();
+    if (!pszEPD)
+        return false;
+
+    FILE *pFile = nullptr;
+    if (_wfopen_s(&pFile, pszPath, L"wb") != 0 || !pFile)
+        return false;
+
+    size_t nLength = strlen(pszEPD);
+    size_t nWritten = fwrite(pszEPD, 1, nLength, pFile);
+    fwrite("\n", 1, 1, pFile);
+    fclose(pFile);
+
+    return nWritten == nLength;
 }
 
 void GameController::SetDepth(int depth) {

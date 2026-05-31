@@ -6,6 +6,8 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&New Game\tCtrl+N",   IDM_FILE_NEW
+        MENUITEM "&Load Game from EPD...", IDM_FILE_LOAD_EPD
+        MENUITEM "&Save Game to EPD...",   IDM_FILE_SAVE_EPD
         MENUITEM SEPARATOR
         MENUITEM "E&xit",               IDM_FILE_EXIT
     END
