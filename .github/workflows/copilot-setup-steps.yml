@@ -12,6 +12,7 @@ on:
 jobs:
     copilot-setup-steps:
         runs-on: windows-latest
+        model: claude-opus-4.8
         permissions:
             contents: read
         steps:
