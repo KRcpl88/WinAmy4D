@@ -5,6 +5,8 @@
 
 #include "GameController.h"
 
+#include <cassert>
+
 // ---------------------------------------------------------------------------
 // Static engine initialisation
 // ---------------------------------------------------------------------------
@@ -66,12 +68,37 @@ void GameController::MakeMove(CMove move) {
     std::lock_guard<std::mutex> lock(m_PositionMutex);
     if (m_pPosition) {
         m_pPosition->DoMove(move);
+#ifndef NDEBUG
+        // Snapshot the incrementally maintained attack tables before the full
+        // recompute below.  At this point m_pPosition already holds the correct
+        // attacks (DoMove updated them via the gain/lose-attack path), so a
+        // subsequent RecalcAttacks() must reproduce them exactly.  Verify both
+        // the count and the actual attack squares are unchanged; any mismatch
+        // signals a bug in the incremental gain/lose-attack updates.
+        CBitBoard rgAtkToBefore[CBitBoard::SIZE];
+        CBitBoard rgAtkFrBefore[CBitBoard::SIZE];
+        for (unsigned int nSquare = 0; nSquare < CBitBoard::SIZE; ++nSquare) {
+            rgAtkToBefore[nSquare] = m_pPosition->m_rgAtkTo[nSquare];
+            rgAtkFrBefore[nSquare] = m_pPosition->m_rgAtkFr[nSquare];
+        }
+        const CBitBoard SlidingBefore = m_pPosition->m_SlidingPieces;
+#endif
         // Safety net: the engine maintains attack tables incrementally via
         // gain/lose-attack updates inside DoMove.  The GUI applies only one
         // move per call, so a full recompute here is cheap and guarantees the
         // valid-move highlighting is always derived from a fully consistent
         // attack state, independent of the incremental path.
         m_pPosition->RecalcAttacks();
+#ifndef NDEBUG
+        for (unsigned int nSquare = 0; nSquare < CBitBoard::SIZE; ++nSquare) {
+            assert(rgAtkToBefore[nSquare] == m_pPosition->m_rgAtkTo[nSquare] &&
+                   "RecalcAttacks changed AtkTo: incremental attack update bug");
+            assert(rgAtkFrBefore[nSquare] == m_pPosition->m_rgAtkFr[nSquare] &&
+                   "RecalcAttacks changed AtkFr: incremental attack update bug");
+        }
+        assert(SlidingBefore == m_pPosition->m_SlidingPieces &&
+               "RecalcAttacks changed SlidingPieces: incremental attack update bug");
+#endif
     }
 }
 

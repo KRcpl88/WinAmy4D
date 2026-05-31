@@ -382,21 +382,22 @@ CMove CSearchData::NextMove() {
                 CSCoord fromCoord = pawns.FindSetBitCoord();
                 pawns.ClearLowestBit();
                 const int width = static_cast<int>(CBitBoard::LEVEL_WIDTH[fromCoord.m_nLevel]);
-                const int newRank = static_cast<int>(fromCoord.m_nRank) + direction;
-                if (newRank < 0 || newRank >= width)
+                const uint16_t nNewRank =
+                    static_cast<uint16_t>(static_cast<int>(fromCoord.m_nRank) + direction);
+                if (nNewRank >= width)
                     continue;
-                CSCoord toCoord(fromCoord.m_nLevel, fromCoord.m_nFile,
-                                static_cast<uint16_t>(newRank));
+                CSCoord toCoord(fromCoord.m_nLevel, fromCoord.m_nFile, nNewRank);
                 if (is_promo_square(toCoord) || p->m_rgPiece[toCoord.BitOffset()] != Neutral)
                     continue;
                 append_to_heap(sd->m_hHeap, make_move(fromCoord, toCoord, 0));
-                const int homeRank = (p->m_nTurn == White) ? 1 : (width - 2);
+                const uint16_t nHomeRank =
+                    static_cast<uint16_t>((p->m_nTurn == White) ? 1 : (width - 2));
                 if (fromCoord.m_nLevel == MAIN_LEVEL &&
-                    static_cast<int>(fromCoord.m_nRank) == homeRank) {
-                    const int dblRank = static_cast<int>(fromCoord.m_nRank) + 2 * direction;
-                    if (dblRank >= 0 && dblRank < width) {
-                        CSCoord dblCoord(fromCoord.m_nLevel, fromCoord.m_nFile,
-                                        static_cast<uint16_t>(dblRank));
+                    fromCoord.m_nRank == nHomeRank) {
+                    const uint16_t nDblRank =
+                        static_cast<uint16_t>(static_cast<int>(fromCoord.m_nRank) + 2 * direction);
+                    if (nDblRank < width) {
+                        CSCoord dblCoord(fromCoord.m_nLevel, fromCoord.m_nFile, nDblRank);
                         if (!is_promo_square(dblCoord) &&
                             p->m_rgPiece[dblCoord.BitOffset()] == Neutral) {
                             append_to_heap(sd->m_hHeap, make_move(fromCoord, dblCoord, M_PAWND));

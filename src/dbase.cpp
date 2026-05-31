@@ -1230,11 +1230,11 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
     } else {
         const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[squareCoord.m_nLevel]);
         const int direction = (p->m_nTurn == White) ? 1 : -1;
-        const int nNewRank = static_cast<int>(squareCoord.m_nRank) + direction;
-        if (nNewRank < 0 || nNewRank >= width)
+        const uint16_t nNewRank =
+            static_cast<uint16_t>(static_cast<int>(squareCoord.m_nRank) + direction);
+        if (nNewRank >= width)
             return;
-        CSCoord sqCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
-                        static_cast<uint16_t>(nNewRank));
+        CSCoord sqCoord(squareCoord.m_nLevel, squareCoord.m_nFile, nNewRank);
         uint16_t sq = sqCoord.BitOffset();
 
         if (p->m_rgPiece[sq] == Neutral) {
@@ -1249,13 +1249,13 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
                 /* The two-square double push (and therefore en passant) is
                  * only allowed on the main board (level h). On every other
                  * level pawns advance a single square at a time. */
-                const uint16_t homeRank =
+                const uint16_t nHomeRank =
                     static_cast<uint16_t>((p->m_nTurn == White) ? 1 : (width - 2));
-                if (squareCoord.m_nLevel == MAIN_LEVEL && squareCoord.m_nRank == homeRank) {
-                    const int nDblRank = static_cast<int>(squareCoord.m_nRank) + 2 * direction;
-                    if (nDblRank >= 0 && nDblRank < width) {
-                        CSCoord dblCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
-                                         static_cast<uint16_t>(nDblRank));
+                if (squareCoord.m_nLevel == MAIN_LEVEL && squareCoord.m_nRank == nHomeRank) {
+                    const uint16_t nDblRank =
+                        static_cast<uint16_t>(static_cast<int>(squareCoord.m_nRank) + 2 * direction);
+                    if (nDblRank < width) {
+                        CSCoord dblCoord(squareCoord.m_nLevel, squareCoord.m_nFile, nDblRank);
                         sq = dblCoord.BitOffset();
                         if (p->m_rgPiece[sq] == Neutral) {
                             append_to_heap(heap, make_move(squareCoord, dblCoord, M_PAWND));
