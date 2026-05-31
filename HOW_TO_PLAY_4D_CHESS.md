@@ -183,12 +183,11 @@ here is the conceptual description for each piece.
 - **Forward move.** A pawn pushes one square *forward* (toward the
   opponent's side) on its own level. As in regular chess, it never moves
   backward and never captures with this forward push.
-- **Double first move.** From its starting rank, a pawn may push two
-  squares forward on its own level instead of one — provided both
-  squares are empty. The "starting rank" is the second rank of the
-  pawn's side on whichever level it's on (so on a 7-wide level, Black's
-  starting rank is rank 5; on the main 8-wide level it's rank 6, just
-  like normal).
+- **Double first move.** The two-square first move is allowed **only on
+  the main 8-wide level `h`**. From its starting rank on level `h`, a pawn
+  may push two squares forward instead of one — provided both squares are
+  empty — exactly like a regular chess pawn. On every other level a pawn
+  always advances a single square at a time, even from its starting rank.
 - **Diagonal capture.** A pawn captures diagonally forward — and it has
   *two kinds* of diagonal:
   1. The standard forward-left / forward-right diagonal **on its own
@@ -198,9 +197,11 @@ here is the conceptual description for each piece.
 
   In both cases the destination must contain an enemy piece (or be the
   en-passant square — see below).
-- **En passant.** Just as in regular chess, if a pawn double-pushes past
-  a square that an enemy pawn could have captured it on, that enemy pawn
-  may capture *en passant* on its very next move.
+- **En passant.** Because the two-square double push only happens on
+  level `h`, *en passant* captures are likewise only possible on level
+  `h`. Just as in regular chess, if a pawn double-pushes past a square
+  that an enemy pawn could have captured it on, that enemy pawn may
+  capture *en passant* on its very next move.
 - **Promotion.** When a pawn reaches the **far rank** of one of the
   central levels (levels `f`, `g`, `h`, `i`, or `j`), it must promote
   to a Queen, Rook, Bishop, or Knight, as in regular chess.
@@ -283,8 +284,9 @@ castling can happen).
   and the king does not pass through or land on a square attacked by
   the opponent). **Castling is only available on the main board (level
   `h`)** — that is, between the king and his original level-`h` rooks.
-- **En passant.** Identical to regular chess. If a pawn makes a
-  two-square push past a square that an enemy pawn could have captured
+- **En passant.** Identical to regular chess and, like the two-square
+  push, **only possible on the main board (level `h`)**. If a pawn makes
+  a two-square push past a square that an enemy pawn could have captured
   it on, the enemy pawn may capture it *en passant* — but only on the
   very next move.
 - **Check and checkmate.** A king is **in check** when any enemy piece
@@ -342,7 +344,7 @@ stalemate, insufficient material, agreed draw, and so on.
 | Starting position occupies levels | `g`, `h`, `i`, `j` |
 | Kings | one per side, on level `h` only |
 | Pieces | same as standard chess (pawn, knight, bishop, rook, queen, king) |
-| Special rules | promotion, castling (level `h` only), en passant — all identical to regular chess |
+| Special rules | promotion, castling (level `h` only), en passant (level `h` only), two-square pawn first move (level `h` only) — otherwise identical to regular chess |
 | Objective | checkmate the opposing king |
 
 Enjoy the game!

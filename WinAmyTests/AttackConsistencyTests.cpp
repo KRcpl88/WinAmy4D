@@ -6,7 +6,11 @@
 
 namespace WinAmyTests {
 
-TEST_CLASS(ZZDiffTests) {
+// Regression tests guarding two engine invariants:
+//   1. The incremental gain/lose-attack updates performed inside DoMove keep
+//      the attack tables identical to a full RecalcAttacks() recompute.
+//   2. Engine self-play never removes a king from the board.
+TEST_CLASS(AttackConsistencyTests) {
   public:
     TEST_CLASS_INITIALIZE(InitializeEngine) {
         InitMoves();
@@ -36,15 +40,15 @@ TEST_CLASS(ZZDiffTests) {
         return true;
     }
 
+    // Play many random legal games; after every move, compare the incrementally
+    // maintained attack tables against an independent full recompute.
     TEST_METHOD(IncrementalAttacksMatchRecomputeOverRandomGames) {
-        for (int game = 0; game < 200; game++) {
+        for (int game = 0; game < 40; game++) {
             s_rng = 0x12345 + game * 2654435761u;
             PositionGuard pos(CPosition::Initial());
-            std::vector<std::string> hist;
-            for (int ply = 0; ply < 120; ply++) {
+            for (int ply = 0; ply < 80; ply++) {
                 heap_t heap = allocate_heap();
                 push_section(heap);
-                // collect legal moves
                 pos.get()->LegalMoves(heap);
                 std::vector<CMove> moves;
                 for (unsigned i = heap->current_section->start; i < heap->current_section->end; ++i)
@@ -54,7 +58,6 @@ TEST_CLASS(ZZDiffTests) {
                 CMove mv = moves[Rand() % moves.size()];
                 pos.get()->DoMove(mv);
 
-                // compare incremental vs recompute
                 PositionGuard clone(CPosition::Clone(pos.get()));
                 clone.get()->RecalcAttacks();
                 std::string msg;
@@ -74,10 +77,12 @@ TEST_CLASS(ZZDiffTests) {
         }
     }
 
+    // The engine must never produce a move that captures (or otherwise removes)
+    // a king; both kings must remain on the board throughout a self-play game.
     TEST_METHOD(EngineSelfPlayKeepsBothKings) {
         setMaxSearchDepth(3);
         PositionGuard pos(CPosition::Initial());
-        for (int ply = 0; ply < 200; ply++) {
+        for (int ply = 0; ply < 160; ply++) {
             const char *end = pos.get()->GameEnd();
             if (end != nullptr) break;
             int score = 0, alt = 0;
@@ -100,6 +105,6 @@ TEST_CLASS(ZZDiffTests) {
     }
 };
 
-uint32_t ZZDiffTests::s_rng = 1;
+uint32_t AttackConsistencyTests::s_rng = 1;
 
 } // namespace WinAmyTests

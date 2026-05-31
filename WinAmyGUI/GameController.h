@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <string>
 #include <thread>
 
 // Posted to the main window when the engine finishes a search.
@@ -69,6 +70,11 @@ public:
 
     // Returns the game-end string or nullptr if game is still in progress.
     const char* GetGameEndMessage() const;
+
+    // Returns a human-friendly description of the game result (outcome, which
+    // side won, and in how many moves), or an empty string if the game is
+    // still in progress.
+    std::string GetGameResultText() const;
 
     // Retrieve the best move found by the last engine search.
     CMove GetBestMove() const { return m_BestMove; }
