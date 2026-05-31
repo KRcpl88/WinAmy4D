@@ -251,7 +251,7 @@ static void Test(char *fname) {
         return;
     }
 
-    fout = fopen("nsolved.epd", "w");
+    fout = fopen("nsolved.epd4", "w");
 
     for (i = 1;; i++) {
         CMove move;
@@ -338,7 +338,7 @@ static void TestScore(char *fname) {
         return;
     }
 
-    fout = fopen("test_score.epd", "w");
+    fout = fopen("test_score.epd4", "w");
 
     for (;;) {
 
@@ -860,4 +860,3 @@ static void SetSearchDepth(char *args) {
 
     setMaxSearchDepth(atoi(args));
 }
-

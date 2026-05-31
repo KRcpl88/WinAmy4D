@@ -432,12 +432,12 @@ static void OnLoadEPDGame() {
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = g_hWnd;
     ofn.lpstrFilter =
-        L"EPD Files (*.epd)\0*.epd\0"
+        L"EPD4 Files (*.epd4)\0*.epd4\0"
         L"All Files (*.*)\0*.*\0\0";
     ofn.lpstrFile = rgPath;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
-    ofn.lpstrDefExt = L"epd";
+    ofn.lpstrDefExt = L"epd4";
 
     if (!GetOpenFileNameW(&ofn))
         return;
@@ -464,12 +464,12 @@ static void OnSaveEPDGame() {
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = g_hWnd;
     ofn.lpstrFilter =
-        L"EPD Files (*.epd)\0*.epd\0"
+        L"EPD4 Files (*.epd4)\0*.epd4\0"
         L"All Files (*.*)\0*.*\0\0";
     ofn.lpstrFile = rgPath;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
-    ofn.lpstrDefExt = L"epd";
+    ofn.lpstrDefExt = L"epd4";
 
     if (!GetSaveFileNameW(&ofn))
         return;
