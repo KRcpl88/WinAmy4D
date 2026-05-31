@@ -1230,8 +1230,11 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
     } else {
         const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[squareCoord.m_nLevel]);
         const int direction = (p->m_nTurn == White) ? 1 : -1;
+        const int newRank = static_cast<int>(squareCoord.m_nRank) + direction;
+        if (newRank < 0 || newRank >= width)
+            return;
         CSCoord sqCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
-                        squareCoord.m_nRank + direction);
+                        static_cast<uint16_t>(newRank));
         uint16_t sq = sqCoord.BitOffset();
 
         if (p->m_rgPiece[sq] == Neutral) {
@@ -1249,11 +1252,14 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
                 const uint16_t homeRank =
                     static_cast<uint16_t>((p->m_nTurn == White) ? 1 : (width - 2));
                 if (squareCoord.m_nLevel == MAIN_LEVEL && squareCoord.m_nRank == homeRank) {
-                    CSCoord dblCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
-                                     squareCoord.m_nRank + 2 * direction);
-                    sq = dblCoord.BitOffset();
-                    if (p->m_rgPiece[sq] == Neutral) {
-                        append_to_heap(heap, make_move(squareCoord, dblCoord, M_PAWND));
+                    const int dblRank = static_cast<int>(squareCoord.m_nRank) + 2 * direction;
+                    if (dblRank >= 0 && dblRank < width) {
+                        CSCoord dblCoord(squareCoord.m_nLevel, squareCoord.m_nFile,
+                                         static_cast<uint16_t>(dblRank));
+                        sq = dblCoord.BitOffset();
+                        if (p->m_rgPiece[sq] == Neutral) {
+                            append_to_heap(heap, make_move(squareCoord, dblCoord, M_PAWND));
+                        }
                     }
                 }
             }
