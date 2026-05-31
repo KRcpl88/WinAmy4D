@@ -166,6 +166,7 @@
     <ClCompile Include="PolyTests.cpp" />
     <ClCompile Include="SearchDataTests.cpp" />
     <ClCompile Include="CheckmateTests.cpp" />
+    <ClCompile Include="ZZDiffTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectCapability Include="TestContainer" />
