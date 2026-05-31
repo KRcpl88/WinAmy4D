@@ -74,6 +74,10 @@ static int             g_scrollY = 0;
 // Self-play pause state.
 static bool            g_fPaused = false;
 
+// Tracks whether the end-of-game result has already been announced (so the
+// MessageBox is shown only once per game). Reset on each new game.
+static bool            g_fGameOverAnnounced = false;
+
 // ---------------------------------------------------------------------------
 // Forward declarations
 // ---------------------------------------------------------------------------
@@ -83,6 +87,7 @@ static void OnEngineMove(LPARAM lParam);
 static void OnSquareClick(POINT pt);
 static void MaybeStartEngine();
 static void UpdateStatusBar();
+static void MaybeAnnounceGameOver();
 static void UpdatePlayerMenu();
 static void UpdatePauseMenu();
 static void SetPlayerModeAction(PlayerMode mode);
@@ -224,6 +229,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
     // Initialise chess engine.
     GameController::InitEngine();
+
+    // Start the initial game now that the engine attack tables are ready.
+    // (The GameController constructor intentionally does NOT do this, because
+    // it runs during static initialisation before InitEngine().)
+    g_Game.NewGame();
 
     // Register window class.
     WNDCLASSEXW wc{};
@@ -402,6 +412,7 @@ static void OnNewGame() {
     g_Game.PauseEngine();
     g_fPaused = false;
     g_fHaveSelection = false;
+    g_fGameOverAnnounced = false;
     g_LegalDests.clear();
     g_Game.NewGame();
     // Preserve the depth previously selected via the Options menu.
@@ -451,6 +462,9 @@ static void OnEngineMove(LPARAM /*lParam*/) {
     if (move == M_NONE) {
         UpdatePauseMenu();
         UpdateStatusBar();
+        // The engine returns M_NONE when there is no move (checkmate or
+        // stalemate on its turn); announce the result in that case too.
+        MaybeAnnounceGameOver();
         return;
     }
 
@@ -464,6 +478,7 @@ static void OnEngineMove(LPARAM /*lParam*/) {
 
     if (g_Game.IsGameOver()) {
         UpdatePauseMenu();
+        MaybeAnnounceGameOver();
         return;
     }
 
@@ -560,6 +575,8 @@ static void OnSquareClick(POINT pt) {
             UpdateStatusBar();
             if (!g_Game.IsGameOver())
                 MaybeStartEngine();
+            else
+                MaybeAnnounceGameOver();
         }
     }
 }
@@ -573,9 +590,12 @@ static void UpdateStatusBar() {
 
     const char* gameEnd = g_Game.GetGameEndMessage();
     if (gameEnd) {
-        // Convert narrow to wide
-        wchar_t wide[128]{};
-        MultiByteToWideChar(CP_ACP, 0, gameEnd, -1, wide, 128);
+        // Show the friendly result text (outcome, winner, move count).
+        std::string strResult = g_Game.GetGameResultText();
+        if (strResult.empty())
+            strResult = gameEnd;
+        wchar_t wide[256]{};
+        MultiByteToWideChar(CP_UTF8, 0, strResult.c_str(), -1, wide, 256);
         SendMessageW(g_hStatus, WM_SETTEXT, 0, (LPARAM)wide);
         return;
     }
@@ -591,6 +611,30 @@ static void UpdateStatusBar() {
         swprintf_s(buf, 128, L"%s", turn);
     }
     SendMessageW(g_hStatus, WM_SETTEXT, 0, (LPARAM)buf);
+}
+
+// ---------------------------------------------------------------------------
+// MaybeAnnounceGameOver — show a one-time result dialog when the game ends
+// ---------------------------------------------------------------------------
+
+static void MaybeAnnounceGameOver() {
+    if (g_fGameOverAnnounced) return;
+    if (!g_Game.IsGameOver()) return;
+
+    g_fGameOverAnnounced = true;
+
+    // Make sure the final position (and result banner) is on screen before the
+    // modal dialog appears.
+    InvalidateRect(g_hWnd, nullptr, TRUE);
+    if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
+    UpdateWindow(g_hWnd);
+
+    std::string strResult = g_Game.GetGameResultText();
+    if (strResult.empty()) return;
+
+    wchar_t wide[256]{};
+    MultiByteToWideChar(CP_UTF8, 0, strResult.c_str(), -1, wide, 256);
+    MessageBoxW(g_hWnd, wide, L"Game Over", MB_OK | MB_ICONINFORMATION);
 }
 
 // ---------------------------------------------------------------------------
@@ -948,6 +992,52 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             g_Renderer.DrawBoard(hdc, g_Game.GetPosition(), sel, g_LegalDests);
 
             SetViewportOrgEx(hdc, 0, 0, nullptr);
+
+            // When the game is over, draw a centred result banner across the
+            // top of the board so the outcome is always visible on the board.
+            if (g_Game.IsGameOver()) {
+                std::string strResult = g_Game.GetGameResultText();
+                if (!strResult.empty()) {
+                    wchar_t wide[256]{};
+                    MultiByteToWideChar(CP_UTF8, 0, strResult.c_str(), -1, wide, 256);
+
+                    RECT rcClient;
+                    GetClientRect(hWnd, &rcClient);
+
+                    HFONT hFont = CreateFontW(
+                        -20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+                        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+                    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+
+                    RECT rcText = rcClient;
+                    rcText.top = TOOLBAR_H + 8;
+                    rcText.bottom = rcText.top + 36;
+                    DrawTextW(hdc, wide, -1, &rcText,
+                              DT_CENTER | DT_CALCRECT | DT_SINGLELINE);
+
+                    // Centre horizontally within the client area.
+                    int nWidth = rcText.right - rcText.left;
+                    int nCx = (rcClient.right - rcClient.left) / 2;
+                    RECT rcBanner;
+                    rcBanner.left = nCx - nWidth / 2 - 16;
+                    rcBanner.right = nCx + nWidth / 2 + 16;
+                    rcBanner.top = TOOLBAR_H + 6;
+                    rcBanner.bottom = rcBanner.top + (rcText.bottom - rcText.top) + 8;
+
+                    HBRUSH hBrush = CreateSolidBrush(RGB(32, 32, 32));
+                    FillRect(hdc, &rcBanner, hBrush);
+                    DeleteObject(hBrush);
+
+                    SetBkMode(hdc, TRANSPARENT);
+                    SetTextColor(hdc, RGB(255, 215, 0));
+                    DrawTextW(hdc, wide, -1, &rcBanner,
+                              DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+                    SelectObject(hdc, hOldFont);
+                    DeleteObject(hFont);
+                }
+            }
         }
         // In 3D mode the child render window covers the render area and
         // owns the painting; nothing to do here.

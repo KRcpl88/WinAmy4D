@@ -249,6 +249,36 @@ TEST_CLASS(MoveTests) {
         Assert::AreEqual(toSquare.m_nFile, move.GetToCoord().m_nFile);
         Assert::AreEqual(toSquare.m_nRank, move.GetToCoord().m_nRank);
     }
+
+    // Regression: a pawn sitting on the last rank of a narrow (non-main) level
+    // must not push forward, because the square one rank ahead does not exist
+    // on that level.  Previously GenFrom constructed an out-of-range CSCoord
+    // (e.g. level 6 / file 0 / rank 7 on a 7-wide level), throwing
+    // std::out_of_range from CSCoord::Validate.
+    TEST_METHOD(GenFromPawnOnLastRankOfNarrowLevelDoesNotThrow) {
+        // White pawn on level g (level 6, 7 wide) at file 0 / rank 6 (top rank).
+        const char *pszEpd =
+            "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|P6/7/7/7/7/7/7|"
+            "4k3/8/8/8/8/8/8/4K3| w - -";
+        PositionGuard position(CPosition::CreateFromEPD(pszEpd));
+
+        const CSCoord pawnCoord(6, 0, 6);
+        Assert::AreEqual((int)Pawn,
+                         (int)position.get()->m_rgPiece[pawnCoord.BitOffset()]);
+
+        // Generating all pseudo-legal moves must not throw and must not produce
+        // any move originating from the stranded pawn.
+        heap_t heap = allocate_heap();
+        position.get()->PLegalMoves(heap);
+
+        for (unsigned int i = heap->current_section->start;
+             i < heap->current_section->end; i++) {
+            Assert::AreNotEqual(pawnCoord.BitOffset(),
+                                heap->data[i].GetFromCoord().BitOffset(),
+                                L"Pawn on last rank of narrow level must not move forward");
+        }
+        free_heap(heap);
+    }
 };
 
 } // namespace WinAmyTests

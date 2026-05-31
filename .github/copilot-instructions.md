@@ -89,6 +89,7 @@ extern "C" {
   - `m_` — member variable prefix (e.g., `m_nLevel`, `m_rgdData`)
   - `g_` — global variable prefix (e.g., `g_nCount`)
   - `s_` — static variable prefix (e.g., `s_nInstances`)
+- **This rule is mandatory and has no exceptions.** Every variable name — including local variables, loop indices, temporaries, function parameters, and variables in test code — must carry the correct Hungarian type prefix combined with PascalCase. For example, use `nNewRank` (not `newRank`), `nDblRank` (not `dblRank`), `nDirection` (not `direction`), and `nWidth` (not `width`). New or modified code must follow this convention even when adjacent legacy code does not.
 
 ### Test Naming
 
