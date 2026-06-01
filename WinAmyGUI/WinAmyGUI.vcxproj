@@ -91,6 +91,7 @@
     <ClCompile Include="GameController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PieceAtlas.cpp" />
+    <ClCompile Include="WinAmy4dWnd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BoardRenderer.h" />
@@ -98,6 +99,7 @@
     <ClInclude Include="GameController.h" />
     <ClInclude Include="PieceAtlas.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="WinAmy4dWnd.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinAmyGUI.rc" />
