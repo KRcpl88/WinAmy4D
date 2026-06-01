@@ -119,6 +119,26 @@ static SIZE GetRenderAreaSize(HWND hWnd) {
     return SIZE{ w, h };
 }
 
+// Returns the extra top-left offset (within the 2D render area) needed to
+// center the board whenever the client area is larger than the board itself.
+static POINT Get2DBoardOffset(HWND hWnd) {
+    RECT rcClient{};
+    GetClientRect(hWnd, &rcClient);
+    int nClientW = rcClient.right - rcClient.left;
+    int nClientH = rcClient.bottom - rcClient.top - TOOLBAR_H - STATUSBAR_H;
+    if (nClientH < 0) nClientH = 0;
+
+    SIZE boardSz = BoardRenderer::GetBoardAreaSize();
+    POINT ptOffset{ 0, 0 };
+    if (nClientW > boardSz.cx) {
+        ptOffset.x = (nClientW - boardSz.cx) / 2;
+    }
+    if (nClientH > boardSz.cy) {
+        ptOffset.y = (nClientH - boardSz.cy) / 2;
+    }
+    return ptOffset;
+}
+
 // Handles a click on a CSCoord that came from the 3D pick. Mirrors the
 // selection/move logic in OnSquareClick but skips the 2D hit-test.
 static void OnSquareClick3D(const CSCoord& sq) {
@@ -1041,8 +1061,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         HDC hdc = BeginPaint(hWnd, &ps);
 
         if (g_eViewMode != ViewMode::Mode3D) {
+            POINT ptOffset = Get2DBoardOffset(hWnd);
             // Offset by toolbar height and current scroll position.
-            SetViewportOrgEx(hdc, -g_scrollX, TOOLBAR_H - g_scrollY, nullptr);
+            SetViewportOrgEx(hdc, ptOffset.x - g_scrollX, TOOLBAR_H + ptOffset.y - g_scrollY, nullptr);
 
             const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
             g_Renderer.DrawBoard(hdc, g_Game.GetPosition(), sel, g_LegalDests);
@@ -1103,10 +1124,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
     case WM_LBUTTONDOWN: {
         if (g_eViewMode == ViewMode::Mode3D) return 0; // handled by child
+        POINT ptOffset = Get2DBoardOffset(hWnd);
         // Adjust click coordinates for scroll offset and toolbar.
         POINT pt{
-            GET_X_LPARAM(lParam) + g_scrollX,
-            GET_Y_LPARAM(lParam) - TOOLBAR_H + g_scrollY
+            GET_X_LPARAM(lParam) + g_scrollX - ptOffset.x,
+            GET_Y_LPARAM(lParam) - TOOLBAR_H + g_scrollY - ptOffset.y
         };
         OnSquareClick(pt);
         return 0;
