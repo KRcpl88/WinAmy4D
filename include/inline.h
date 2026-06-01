@@ -140,6 +140,22 @@ static inline bool is_promo_square(CSCoord sq) {
     return sq.m_nRank == 0 || sq.m_nRank == (width - 1);
 }
 
+/**
+ * Returns whether a pawn may legally occupy the given square.
+ *
+ * A pawn can only land on the first or last rank of a level by promoting, and
+ * promotion is permitted only on the central levels f–j (see is_promo_square).
+ * On every other level the edge ranks are unreachable for a pawn, so a move that
+ * would place a pawn there is illegal.  CPosition::LegalMove already rejects such
+ * moves; move generators use this helper to avoid emitting them, keeping move
+ * generation consistent with move legality.
+ */
+static inline bool pawn_may_move_to(CSCoord sq) {
+    const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
+    const bool edgeRank = (sq.m_nRank == 0) || (sq.m_nRank == (width - 1));
+    return !edgeRank || is_promo_square(sq);
+}
+
 /*
  * Determine type of promotion from move
  */

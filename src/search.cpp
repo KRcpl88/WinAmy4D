@@ -292,10 +292,10 @@ void CSearchData::StoreResult(int score, int alpha, int beta,
     CPosition *p = sd->m_pPosition;
 
     if (!(move.IsTactical()) && score > alpha) {
-        sd->m_rguHistoryTab[p->m_nTurn][move.GetFromCoord().BitOffset()][move.GetToCoord().BitOffset()] += depth * depth;
+        sd->m_rguHistoryTab[p->GetTurn()][move.GetFromCoord().BitOffset()][move.GetToCoord().BitOffset()] += depth * depth;
     }
 
-    StoreHT(p->m_ullHKey, score, alpha, beta, move, depth, threat, sd->m_wPly
+    StoreHT(p->GetHashKey(), score, alpha, beta, move, depth, threat, sd->m_wPly
 #if MP
             ,
             sd->m_pLocalHashTable
@@ -366,7 +366,7 @@ int CSearchData::Quies(int alpha, int beta, int depth) {
 
     while ((move = sd->NextMoveQ(alpha)) != M_NONE) {
         p->DoMove(move);
-        if (p->InCheck(OPP(p->m_nTurn)))
+        if (p->InCheck(OPP(p->GetTurn())))
             p->UndoMove(move);
         else {
             tmp = -sd->Quies(-beta, -talpha, depth - 1);
@@ -458,8 +458,8 @@ int CSearchData::NegaScout(int alpha, int beta,
      * check extension
      */
 
-    incheck = p->InCheck(p->m_nTurn);
-    if (incheck && p->m_rgnMaterial[p->m_nTurn] > 0) {
+    incheck = p->InCheck(p->GetTurn());
+    if (incheck && p->GetMaterial(p->GetTurn()) > 0) {
         extend += p->CheckExtend();
         ChkExt++;
     }
@@ -472,10 +472,10 @@ int CSearchData::NegaScout(int alpha, int beta,
 
     HTry++;
 #if MP
-    switch (ProbeHT(p->m_ullHKey, &tmp, depth, &(st->st_hashmove), &threat, sd->m_wPly,
+    switch (ProbeHT(p->GetHashKey(), &tmp, depth, &(st->st_hashmove), &threat, sd->m_wPly,
                     exclusiveP, sd->m_pLocalHashTable))
 #else
-    switch (ProbeHT(p->m_ullHKey, &tmp, depth, &(st->st_hashmove), &threat, sd->m_wPly))
+    switch (ProbeHT(p->GetHashKey(), &tmp, depth, &(st->st_hashmove), &threat, sd->m_wPly))
 #endif /* MP */
     {
     case ExactScore:
@@ -497,7 +497,7 @@ int CSearchData::NegaScout(int alpha, int beta,
         }
         break;
     case Useless:
-        threat = !incheck && MateThreat(p, OPP(p->m_nTurn));
+        threat = !incheck && MateThreat(p, OPP(p->GetTurn()));
         break;
 #if MP
     case OnEvaluation:
@@ -572,7 +572,7 @@ int CSearchData::NegaScout(int alpha, int beta,
         if (AbortSearch)
             goto EXIT;
         if (nms >= beta) {
-            if (p->m_rgnNonPawn[p->m_nTurn] >= Value[Queen]) {
+            if (p->GetNonPawn(p->GetTurn()) >= Value[Queen]) {
                 best = nms;
                 goto EXIT;
             } else {
@@ -602,7 +602,7 @@ int CSearchData::NegaScout(int alpha, int beta,
     }
 #endif /* NULLMOVE */
 
-    lmove = (p->m_pActLog - 1)->gl_Move;
+    lmove = (p->GetActLog() - 1)->gl_Move;
     reduce_extensions = (sd->m_wPly > 2 * sd->m_wDepth);
     talpha = alpha;
 
@@ -622,7 +622,7 @@ int CSearchData::NegaScout(int alpha, int beta,
 #if FUTILITY
     is_futile = !incheck && !threat && alpha < CMLIMIT && alpha > -CMLIMIT;
     if (is_futile) {
-        if (p->m_nTurn == White) {
+        if (p->GetTurn() == White) {
             optimistic = MaterialBalance(p) + MaxPos;
         } else {
             optimistic = -MaterialBalance(p) + MaxPos;
@@ -661,23 +661,23 @@ int CSearchData::NegaScout(int alpha, int beta,
 
         if ((move.IsCapture()) && (lmove.IsCapture()) &&
             move.GetToCoord().BitOffset() == lmove.GetToCoord().BitOffset() &&
-            IsRecapture(p->m_rgPiece[move.GetToCoord().BitOffset()], (p->m_pActLog - 1)->gl_Piece)) {
+            IsRecapture(p->GetPiece(move.GetToCoord().BitOffset()), (p->GetActLog() - 1)->gl_Piece)) {
             RCExt += 1;
-            next_depth += ExtendRecapture[TYPE(p->m_rgPiece[move.GetToCoord().BitOffset()])];
+            next_depth += ExtendRecapture[TYPE(p->GetPiece(move.GetToCoord().BitOffset()))];
         }
 
         /*
          * passed pawn push extension
          */
 
-        if (TYPE(p->m_rgPiece[move.GetFromCoord().BitOffset()]) == Pawn &&
-            p->m_rgnNonPawn[OPP(p->m_nTurn)] <= Value[Queen]) {
+        if (TYPE(p->GetPiece(move.GetFromCoord().BitOffset())) == Pawn &&
+            p->GetNonPawn(OPP(p->GetTurn())) <= Value[Queen]) {
             const CSCoord& toCoord = move.GetToCoord();
             const int width = CBitBoard::LEVEL_WIDTH[toCoord.m_nLevel];
 
-            if (((p->m_nTurn == White && toCoord.m_nRank >= width - 2) ||
-                 (p->m_nTurn == Black && toCoord.m_nRank <= 1)) &&
-                p->IsPassed(toCoord, p->m_nTurn) && SwapOff(p, move) >= 0) {
+            if (((p->GetTurn() == White && toCoord.m_nRank >= width - 2) ||
+                 (p->GetTurn() == Black && toCoord.m_nRank <= 1)) &&
+                p->IsPassed(toCoord, p->GetTurn()) && SwapOff(p, move) >= 0) {
                 next_depth += ExtendPassedPawn;
                 PPExt += 1;
             }
@@ -745,14 +745,14 @@ int CSearchData::NegaScout(int alpha, int beta,
 #endif /* FUTILITY */
 
         p->DoMove(move);
-        if (p->InCheck(OPP(p->m_nTurn))) {
+        if (p->InCheck(OPP(p->GetTurn()))) {
             p->UndoMove(move);
         } else {
             /*
              * Check extension
              */
 
-            if (p->m_rgnMaterial[p->m_nTurn] > 0 && p->InCheck(p->m_nTurn)) {
+            if (p->GetMaterial(p->GetTurn()) > 0 && p->InCheck(p->GetTurn())) {
                 next_depth +=
                     (reduce_extensions) ? ExtendInCheck >> 1 : ExtendInCheck;
             }
@@ -814,7 +814,7 @@ int CSearchData::NegaScout(int alpha, int beta,
                 if (tmp >= beta) {
                     if (!(move.IsTactical())) {
                         sd->PutKiller(move);
-                        sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()] = move;
+                        sd->m_rgCounterTab[p->GetTurn()][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()] = move;
                     }
                     sd->StoreResult(tmp, alpha, beta, move, depth, threat);
                     best = tmp;
@@ -878,7 +878,7 @@ int CSearchData::NegaScout(int alpha, int beta,
         if (tmp >= beta) {
             if (!(move.IsTactical())) {
                 sd->PutKiller(move);
-                sd->m_rgCounterTab[p->m_nTurn][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()] = move;
+                sd->m_rgCounterTab[p->GetTurn()][lmove.GetFromCoord().BitOffset()][lmove.GetToCoord().BitOffset()] = move;
             }
             sd->StoreResult(tmp, alpha, beta, move, depth, threat);
             best = tmp;
@@ -1008,7 +1008,7 @@ void *IterateInt(void *x) {
 
     CMove *mvs = sd->m_hHeap->data + sd->m_hHeap->current_section->start;
 
-    sd->m_nBestScore = p->m_rgnMaterial[p->m_nTurn] - p->m_rgnMaterial[OPP(p->m_nTurn)];
+    sd->m_nBestScore = p->GetMaterial(p->GetTurn()) - p->GetMaterial(OPP(p->GetTurn()));
 
     if (!mvs[0].IsTactical())
         sd->PutKiller(mvs[0]);
@@ -1042,7 +1042,7 @@ void *IterateInt(void *x) {
             }
 
             p->DoMove(move);
-            if (p->InCheck(p->m_nTurn))
+            if (p->InCheck(p->GetTurn()))
                 next_depth += ExtendInCheck;
 
             if (next_depth >= 0) {
@@ -1217,7 +1217,7 @@ void *IterateInt(void *x) {
 
                     if (PrintOK) {
                         SearchOutput(sd->m_wDepth, CurTime - StartTime,
-                                     (p->m_nTurn) ? -sd->m_nBestScore
+                                     (p->GetTurn()) ? -sd->m_nBestScore
                                                : sd->m_nBestScore,
                                      BestLine, sd->m_ulNodesCount + sd->m_ulQNodesCount);
 
@@ -1245,7 +1245,7 @@ void *IterateInt(void *x) {
                                        (sd->m_nBestScore < -CMLIMIT ||
                                         sd->m_nBestScore > CMLIMIT)))) {
             SearchOutput(sd->m_wDepth, CurTime - StartTime,
-                         (p->m_nTurn) ? -sd->m_nBestScore : sd->m_nBestScore, BestLine,
+                         (p->GetTurn()) ? -sd->m_nBestScore : sd->m_nBestScore, BestLine,
                          sd->m_ulNodesCount + sd->m_ulQNodesCount);
 
             any_pv_printed = true;
@@ -1329,7 +1329,7 @@ final:
         if (pv_valid && !any_pv_printed) {
             // Make sure there is a PV printed
             SearchOutput(sd->m_wDepth, CurTime - StartTime,
-                         (p->m_nTurn) ? -sd->m_nBestScore : sd->m_nBestScore, BestLine,
+                         (p->GetTurn()) ? -sd->m_nBestScore : sd->m_nBestScore, BestLine,
                          sd->m_ulNodesCount + sd->m_ulQNodesCount);
         }
 

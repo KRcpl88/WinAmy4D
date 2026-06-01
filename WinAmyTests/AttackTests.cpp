@@ -5,10 +5,10 @@ namespace WinAmyTests {
 TEST_CLASS(AttackTests) {
     static void AssertAttackFromIsReflectedInAttackTo(const CPosition *position) {
         for (unsigned int from = 0; from < CBitBoard::SIZE; from++) {
-            CBitBoard attacks = position->m_rgAtkTo[from];
+            CBitBoard attacks = position->GetAtkTo(from);
             while (attacks.IsNotEmpty()) {
                 const uint16_t to = attacks.FindSetBit();
-                Assert::IsTrue(position->m_rgAtkFr[to].TstBit(static_cast<uint16_t>(from)));
+                Assert::IsTrue(position->GetAtkFr(to).TstBit(static_cast<uint16_t>(from)));
                 attacks.ClrBit(to);
             }
         }
@@ -27,7 +27,7 @@ TEST_CLASS(AttackTests) {
         const uint16_t source = MainBoardOffset(hd5);
         const CBitBoard expected = ComputeLeapAttacks(MainBoardCoord(hd5), Pawn);
 
-        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+        Assert::IsTrue(position.get()->GetAtkTo(source) == expected);
     }
 
     TEST_METHOD(AtkSetPawnBlackAttacksCorrectSquares) {
@@ -36,7 +36,7 @@ TEST_CLASS(AttackTests) {
         const uint16_t source = MainBoardOffset(he4);
         const CBitBoard expected = ComputeLeapAttacks(MainBoardCoord(he4), BPawn);
 
-        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+        Assert::IsTrue(position.get()->GetAtkTo(source) == expected);
     }
 
     TEST_METHOD(AtkSetKnightAttacksAllEightSquares) {
@@ -45,7 +45,7 @@ TEST_CLASS(AttackTests) {
         const uint16_t source = MainBoardOffset(hd4);
         const CBitBoard expected = ComputeLeapAttacks(MainBoardCoord(hd4), Knight);
 
-        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+        Assert::IsTrue(position.get()->GetAtkTo(source) == expected);
         Assert::IsTrue(expected.IsNotEmpty());
     }
 
@@ -55,7 +55,7 @@ TEST_CLASS(AttackTests) {
         const uint16_t source = MainBoardOffset(he4);
         const CBitBoard expected = ComputeLeapAttacks(MainBoardCoord(he4), King);
 
-        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+        Assert::IsTrue(position.get()->GetAtkTo(source) == expected);
         Assert::IsTrue(expected.IsNotEmpty());
     }
 
@@ -63,9 +63,9 @@ TEST_CLASS(AttackTests) {
         char epd[] = "4k3/8/3p4/8/1p1R1p2/8/3P4/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         const uint16_t source = MainBoardOffset(hd4);
-        const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
+        const CBitBoard occupied = position.get()->GetMask(White, 0) | position.get()->GetMask(Black, 0);
 
-        Assert::IsTrue(position.get()->m_rgAtkTo[source] ==
+        Assert::IsTrue(position.get()->GetAtkTo(source) ==
                        ReferenceRookAttacks(source, occupied));
     }
 
@@ -73,9 +73,9 @@ TEST_CLASS(AttackTests) {
         char epd[] = "4k3/8/2p2p2/8/3B4/8/2p2p2/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         const uint16_t source = MainBoardOffset(hd4);
-        const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
+        const CBitBoard occupied = position.get()->GetMask(White, 0) | position.get()->GetMask(Black, 0);
 
-        Assert::IsTrue(position.get()->m_rgAtkTo[source] ==
+        Assert::IsTrue(position.get()->GetAtkTo(source) ==
                        ReferenceBishopAttacks(source, occupied));
     }
 
@@ -83,10 +83,10 @@ TEST_CLASS(AttackTests) {
         char epd[] = "4k3/8/2p1p3/8/3Q4/8/2p1p3/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         const uint16_t source = MainBoardOffset(hd4);
-        const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
+        const CBitBoard occupied = position.get()->GetMask(White, 0) | position.get()->GetMask(Black, 0);
         const CBitBoard expected = ReferenceRookAttacks(source, occupied) | ReferenceBishopAttacks(source, occupied);
 
-        Assert::IsTrue(position.get()->m_rgAtkTo[source] == expected);
+        Assert::IsTrue(position.get()->GetAtkTo(source) == expected);
     }
 
     TEST_METHOD(AtkFrReflectsAtkTo) {
@@ -98,12 +98,12 @@ TEST_CLASS(AttackTests) {
         char epd[] = "4k3/8/8/8/3N4/8/8/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         const uint16_t from = MainBoardOffset(hd4);
-        Assert::IsTrue(position.get()->m_rgAtkTo[from].IsNotEmpty());
+        Assert::IsTrue(position.get()->GetAtkTo(from).IsNotEmpty());
 
         const CMove move = MakeMainBoardMove(hd4, hf5, 0);
         position.get()->DoMove(move);
 
-        Assert::IsTrue(position.get()->m_rgAtkTo[from].IsEmpty());
+        Assert::IsTrue(position.get()->GetAtkTo(from).IsEmpty());
     }
 
     TEST_METHOD(AtkClrViaUndoMoveRestoresAttacks) {
@@ -134,9 +134,9 @@ TEST_CLASS(AttackTests) {
 
         position.get()->DoMove(capture);
 
-        Assert::AreEqual((int)Rook, (int)position.get()->m_rgPiece[MainBoardOffset(hd6)]);
-        Assert::AreEqual((int)Neutral, (int)position.get()->m_rgPiece[MainBoardOffset(hd4)]);
-        Assert::IsTrue(position.get()->m_rgAtkTo[MainBoardOffset(hd4)].IsEmpty());
+        Assert::AreEqual((int)Rook, (int)position.get()->GetPiece(MainBoardOffset(hd6)));
+        Assert::AreEqual((int)Neutral, (int)position.get()->GetPiece(MainBoardOffset(hd4)));
+        Assert::IsTrue(position.get()->GetAtkTo(MainBoardOffset(hd4)).IsEmpty());
         AssertAttackFromIsReflectedInAttackTo(position.get());
     }
 
