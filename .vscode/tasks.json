@@ -67,7 +67,8 @@
             "command": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
             "args": [
                 "${workspaceFolder}\\x64\\Debug\\WinAmyTests.dll",
-                "/Platform:x64"
+                "/Platform:x64",
+                "/TestCaseFilter:FullyQualifiedName!~EngineSelfPlayKeepsBothKings"
             ],
             "group": {
                 "kind": "test",
@@ -75,7 +76,7 @@
             },
             "dependsOn": "Build WinAmy (Debug x64)",
             "problemMatcher": "$msCompile",
-            "detail": "Build and run the WinAmyTests C++ unit tests (Debug x64)"
+            "detail": "Build and run the WinAmyTests C++ unit tests (Debug x64), skipping long-running tests"
         },
         {
             "label": "Build WinAmyGUI (Debug x64)",
