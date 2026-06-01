@@ -155,7 +155,7 @@ TEST_CLASS(AttackDeltaTests) {
         char epd[] = "4k3/8/3p1p2/8/3Q4/8/3P1P2/4K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
         const uint16_t source = MainBoardOffset(hd4);
-        const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
+        const CBitBoard occupied = position.get()->GetMask(White, 0) | position.get()->GetMask(Black, 0);
 
         const CBitBoard rookExpected = ReferenceRookAttacks(source, occupied);
         const CBitBoard bishopExpected = ReferenceBishopAttacks(source, occupied);
@@ -169,7 +169,7 @@ TEST_CLASS(AttackDeltaTests) {
     TEST_METHOD(ComputeSlidingAttacksMatchesReferenceMidgamePosition) {
         char epd[] = "r3k2r/ppp2ppp/2npbn2/3qp3/3P4/2N1PN2/PPP2PPP/R2QKB1R w KQkq -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
-        const CBitBoard occupied = position.get()->m_rgMask[White][0] | position.get()->m_rgMask[Black][0];
+        const CBitBoard occupied = position.get()->GetMask(White, 0) | position.get()->GetMask(Black, 0);
         const uint16_t whiteQueen = MainBoardOffset(hd1);
         const uint16_t blackQueen = MainBoardOffset(hd5);
 

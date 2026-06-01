@@ -160,97 +160,10 @@ struct SGameLog {
     hash_t gl_PawnKey;
 };
 
-class CPosition {
-  public:
-    // Data members (public for direct access from engine code)
-    CBitBoard m_rgAtkTo[CBitBoard::SIZE];
-    CBitBoard m_rgAtkFr[CBitBoard::SIZE];
-    CBitBoard m_rgMask[2][7];
-    CBitBoard m_SlidingPieces;
-    hash_t m_ullHKey;
-    hash_t m_ullPKey;
-    SGameLog *m_pGameLog;
-    SGameLog *m_pActLog;
-    unsigned int m_cGameLog;
-    int m_rgnMaterial[2], m_rgnNonPawn[2];
-    uint16_t m_rgwOutOfBookCnt[2];
-    uint16_t m_wPly;
-    int8_t m_rgPiece[CBitBoard::SIZE];
-    int8_t m_bCastle;
-    CSCoord m_EnPassant;
-    int8_t m_nTurn; /* 0 == white, 1 == black */
-    CSCoord m_rgKingSq[2];
-    int8_t m_rgbMaterialSignature[2];
-
-    // Move making/unmaking
-    void DoMove(CMove move);
-    void UndoMove(CMove move);
-    bool Undo();
-    void DoNull();
-    void UndoNull();
-
-    // Move generation
-    void GenTo(const CSCoord& square, heap_t heap);
-    void GenEnpas(heap_t heap);
-    void GenFrom(const CSCoord& square, heap_t heap);
-    void GenChecks(heap_t heap);
-    bool MayCastle(CMove move);
-    bool LegalMove(CMove move);
-    bool IsCheckingMove(CMove move);
-    int LegalMoves(heap_t heap);
-    void PLegalMoves(heap_t heap);
-
-    // Position queries
-    int Repeated(int mode);
-    bool InCheck(int side) const;
-    void RecalcAttacks();
-    const char *GameEnd();
-    bool CheckDraw() const;
-    bool IsPassed(const CSCoord& sq, int color) const;
-
-    // Attack map maintenance
-    void AtkSet(int piece, int side, const CSCoord& sq);
-    void AtkClr(const CSCoord& sq);
-    void GainAttack(const CSCoord& from, const CSCoord& to);
-    void LooseAttack(const CSCoord& from, const CSCoord& to);
-    void GainAttacks(const CSCoord& to);
-    void LooseAttacks(const CSCoord& to);
-
-    // Notation
-    char *SAN(CMove move, char *buffer);
-    CMove ParseSAN(const char *san);
-    CMove ParseGSAN(char *san);
-    char *MakeEPD();
-
-    // Display
-    void ShowPosition();
-    void ShowMoves();
-    void TestNextGenerators();
-
-    // Search entry points
-    CMove Iterate(int *score_ptr, CMove alternate_move, int *alternate_score_ptr);
-    void SearchRoot();
-    void AnalysisMode();
-    int PermanentBrain();
-    int QuiescenceSearch();
-    int CheckExtend();
-    int ScoreMove(CMove move);
-    char *NumberedSAN(CMove move, char *buffer, size_t len);
-    void AnaLoop(int depth);
-    void AnalyzeHT(CMove move);
-#if MP
-    void StartHelpers();
-#endif
-
-    // Static factory methods
-    static CPosition *CreateFromEPD(const char *epd);
-    static CPosition *Initial();
-    static CPosition *Clone(const CPosition *src);
-    static void Free(CPosition *p);
-};
-
-// Backward compatibility typedef
-typedef CPosition Position;
+// The CPosition class declaration lives in position.h.  It is included here
+// (after the types CPosition depends on, such as Piece/Color/SGameLog) so that
+// translation units which only include "dbase.h" continue to see CPosition.
+#include "position.h"
 
 extern int Value[];
 extern CMove goodmove[MAX_EPD_MOVES];

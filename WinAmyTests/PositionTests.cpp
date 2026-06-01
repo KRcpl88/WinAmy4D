@@ -9,7 +9,7 @@ TEST_CLASS(PositionTests) {
     static void AssertCheckingMoveMatchesResultingCheck(CPosition *position, CMove move) {
         const bool reportsCheck = position->IsCheckingMove(move);
         position->DoMove(move);
-        const bool expected = position->InCheck(position->m_nTurn);
+        const bool expected = position->InCheck(position->GetTurn());
         position->UndoMove(move);
         Assert::AreEqual(expected, reportsCheck);
     }

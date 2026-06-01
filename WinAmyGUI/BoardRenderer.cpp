@@ -196,7 +196,7 @@ void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
             DeleteObject(hbr);
 
             if (pos) {
-                int8_t piece = pos->m_rgPiece[offset];
+                int8_t piece = pos->GetPiece(offset);
                 if (piece != 0) {
                     wchar_t glyph[2] = { PieceGlyph(piece), L'\0' };
                     HFONT hOldFont = (HFONT)SelectObject(hdc, m_hPieceFont);

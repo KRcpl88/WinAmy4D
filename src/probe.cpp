@@ -103,20 +103,20 @@ int ProbeEGTB(const CPosition *p, int *score, int ply) {
     int value;
     int result;
 
-    if ((p->m_rgMask[White][0] | p->m_rgMask[Black][0]).CountBits() > EGTBMenCount)
+    if ((p->GetMask(White, 0) | p->GetMask(Black, 0)).CountBits() > EGTBMenCount)
         return 0;
 
     EGTBProbe++;
-    InitializeCounters(pcCount, wSquares, 0, p->m_rgMask[White][Pawn]);
-    InitializeCounters(pcCount + 1, wSquares, 1, p->m_rgMask[White][Knight]);
-    InitializeCounters(pcCount + 2, wSquares, 2, p->m_rgMask[White][Bishop]);
-    InitializeCounters(pcCount + 3, wSquares, 3, p->m_rgMask[White][Rook]);
-    InitializeCounters(pcCount + 4, wSquares, 4, p->m_rgMask[White][Queen]);
-    InitializeCounters(pcCount + 5, bSquares, 0, p->m_rgMask[Black][Pawn]);
-    InitializeCounters(pcCount + 6, bSquares, 1, p->m_rgMask[Black][Knight]);
-    InitializeCounters(pcCount + 7, bSquares, 2, p->m_rgMask[Black][Bishop]);
-    InitializeCounters(pcCount + 8, bSquares, 3, p->m_rgMask[Black][Rook]);
-    InitializeCounters(pcCount + 9, bSquares, 4, p->m_rgMask[Black][Queen]);
+    InitializeCounters(pcCount, wSquares, 0, p->GetMask(White, Pawn));
+    InitializeCounters(pcCount + 1, wSquares, 1, p->GetMask(White, Knight));
+    InitializeCounters(pcCount + 2, wSquares, 2, p->GetMask(White, Bishop));
+    InitializeCounters(pcCount + 3, wSquares, 3, p->GetMask(White, Rook));
+    InitializeCounters(pcCount + 4, wSquares, 4, p->GetMask(White, Queen));
+    InitializeCounters(pcCount + 5, bSquares, 0, p->GetMask(Black, Pawn));
+    InitializeCounters(pcCount + 6, bSquares, 1, p->GetMask(Black, Knight));
+    InitializeCounters(pcCount + 7, bSquares, 2, p->GetMask(Black, Bishop));
+    InitializeCounters(pcCount + 8, bSquares, 3, p->GetMask(Black, Rook));
+    InitializeCounters(pcCount + 9, bSquares, 4, p->GetMask(Black, Queen));
 
 #if MP && HAVE_LIBPTHREAD
     pthread_mutex_lock(&EGTBMutex);
@@ -129,16 +129,16 @@ int ProbeEGTB(const CPosition *p, int *score, int ply) {
             break;
         }
 
-        wSquares[15] = p->m_rgKingSq[White].BitOffset();
-        bSquares[15] = p->m_rgKingSq[Black].BitOffset();
+        wSquares[15] = p->GetKingSq(White).BitOffset();
+        bSquares[15] = p->GetKingSq(Black).BitOffset();
 
         if (iTB > 0) {
-            color = (p->m_nTurn == White) ? 0 : 1;
+            color = (p->GetTurn() == White) ? 0 : 1;
             invert = 0;
             wp = wSquares;
             bp = bSquares;
         } else {
-            color = (p->m_nTurn == White) ? 1 : 0;
+            color = (p->GetTurn() == White) ? 1 : 0;
             invert = 1;
             wp = bSquares;
             bp = wSquares;
@@ -150,7 +150,7 @@ int ProbeEGTB(const CPosition *p, int *score, int ply) {
             break;
         }
 
-        ep = p->m_EnPassant.IsValid() ? p->m_EnPassant.BitOffset() : XX;
+        ep = p->GetEnPassant().IsValid() ? p->GetEnPassant().BitOffset() : XX;
         index = PfnIndCalcFun(iTB, color)(wp, bp, ep, invert);
         value = L_TbtProbeTable(iTB, color, index);
         if (value == bev_broken) {

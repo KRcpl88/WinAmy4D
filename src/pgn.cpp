@@ -91,11 +91,11 @@ static const char *getBlackName(void) {
 
 void SaveGame(CPosition *p, char *file_name) {
     /* Do not save if no move made yet. */
-    if (p->m_wPly > 0) {
+    if (p->GetPly() > 0) {
         FILE *fout = fopen(file_name, "w");
         if (fout) {
             int i;
-            int ply = p->m_wPly;
+            int ply = p->GetPly();
             int width = 0;
             const char *gameend;
             char shortgameend[8] = "1/2-1/2";
@@ -127,7 +127,7 @@ void SaveGame(CPosition *p, char *file_name) {
             fprintf(fout, "[Result \"%s\"]\n\n", shortgameend);
 
             for (i = ply; i > 0; i--) {
-                CMove move = (p->m_pActLog - 1)->gl_Move;
+                CMove move = (p->GetActLog() - 1)->gl_Move;
                 PGNMoveHistory[i - 1] = move;
                 p->UndoMove(move);
             }

@@ -27,16 +27,16 @@ TEST_CLASS(AttackConsistencyTests) {
 
     static bool AttacksMatch(const CPosition *a, const CPosition *b, std::string &msg) {
         for (unsigned int i = 0; i < CBitBoard::SIZE; i++) {
-            if (!(a->m_rgAtkTo[i] == b->m_rgAtkTo[i])) {
+            if (!(a->GetAtkTo(i) == b->GetAtkTo(i))) {
                 std::ostringstream os; os << "AtkTo mismatch at sq " << i;
                 msg = os.str(); return false;
             }
-            if (!(a->m_rgAtkFr[i] == b->m_rgAtkFr[i])) {
+            if (!(a->GetAtkFr(i) == b->GetAtkFr(i))) {
                 std::ostringstream os; os << "AtkFr mismatch at sq " << i;
                 msg = os.str(); return false;
             }
         }
-        if (!(a->m_SlidingPieces == b->m_SlidingPieces)) { msg = "SlidingPieces mismatch"; return false; }
+        if (!(a->GetSlidingPieces() == b->GetSlidingPieces())) { msg = "SlidingPieces mismatch"; return false; }
         return true;
     }
 
@@ -102,8 +102,8 @@ TEST_CLASS(AttackConsistencyTests) {
 
             int wk = 0, bk = 0;
             for (unsigned int i = 0; i < CBitBoard::SIZE; i++) {
-                if (pos.get()->m_rgPiece[i] == King) wk++;
-                if (pos.get()->m_rgPiece[i] == -King) bk++;
+                if (pos.get()->GetPiece(i) == King) wk++;
+                if (pos.get()->GetPiece(i) == -King) bk++;
             }
             if (wk != 1 || bk != 1) {
                 std::ostringstream os;
