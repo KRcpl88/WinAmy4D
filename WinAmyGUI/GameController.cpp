@@ -208,6 +208,14 @@ void GameController::MakeMove(CMove move) {
 // ---------------------------------------------------------------------------
 
 void GameController::StartEngineSearch(HWND hwndTarget) {
+    StartSearchInternal(hwndTarget, WM_APP_ENGINE_MOVE);
+}
+
+void GameController::StartHintSearch(HWND hwndTarget) {
+    StartSearchInternal(hwndTarget, WM_APP_ENGINE_HINT);
+}
+
+void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     if (m_fEngineRunning.load())
         return;
 
@@ -218,7 +226,7 @@ void GameController::StartEngineSearch(HWND hwndTarget) {
     if (m_EngineThread.joinable())
         m_EngineThread.join();
 
-    m_EngineThread = std::thread([this, hwndTarget]() {
+    m_EngineThread = std::thread([this, hwndTarget, uCompletionMsg]() {
         CMove bestMove = M_NONE;
 
         // CPosition::Iterate runs the search on the object it is called on,
@@ -247,7 +255,7 @@ void GameController::StartEngineSearch(HWND hwndTarget) {
         m_fEngineRunning.store(false);
 
         // Notify the window — no move data in the message, caller uses GetBestMove().
-        PostMessage(hwndTarget, WM_APP_ENGINE_MOVE, 0, 0);
+        PostMessage(hwndTarget, uCompletionMsg, 0, 0);
     });
 }
 

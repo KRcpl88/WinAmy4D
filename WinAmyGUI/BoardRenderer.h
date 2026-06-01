@@ -37,6 +37,9 @@ public:
     // Highlight and label colours.
     static constexpr COLORREF CLR_SELECTED   = RGB( 20, 180,  20);
     static constexpr COLORREF CLR_LEGAL_MOVE = RGB(120, 200, 120);
+    // Cyan highlight for an engine move suggestion (both the piece to move and
+    // the recommended destination).
+    static constexpr COLORREF CLR_HINT       = RGB(  0, 220, 220);
     static constexpr COLORREF CLR_LABEL_BG   = RGB( 50,  50,  50);
     static constexpr COLORREF CLR_LABEL_FG   = RGB(230, 230, 230);
     static constexpr COLORREF CLR_BORDER     = RGB( 80,  80,  80);
@@ -44,10 +47,13 @@ public:
     BoardRenderer();
     ~BoardRenderer();
 
-    // Draw the entire board onto the given HDC.
+    // Draw the entire board onto the given HDC. hintFrom/hintTo, when non-null
+    // and valid, mark an engine move suggestion and are highlighted in cyan.
     void DrawBoard(HDC hdc, const CPosition* pos,
                    const CSCoord* selectedSquare,
-                   const std::vector<CSCoord>& legalDests) const;
+                   const std::vector<CSCoord>& legalDests,
+                   const CSCoord* hintFrom = nullptr,
+                   const CSCoord* hintTo = nullptr) const;
 
     // Return the board square under the given client-area pixel, or an
     // invalid coord if no square is there.
@@ -67,7 +73,9 @@ private:
     // Draw a single level.
     void DrawLevel(HDC hdc, int level, const CPosition* pos,
                    const CSCoord* selectedSquare,
-                   const std::vector<CSCoord>& legalDests) const;
+                   const std::vector<CSCoord>& legalDests,
+                   const CSCoord* hintFrom,
+                   const CSCoord* hintTo) const;
 
     // Return the Unicode chess piece glyph for the given piece value.
     static wchar_t PieceGlyph(int8_t piece);
