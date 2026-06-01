@@ -219,13 +219,13 @@ bool GameController::UndoLastHumanMove() {
     //   * If it is currently Black's turn, only the human's move needs undoing.
     //   * If it is currently White's turn, undo the engine's reply and the
     //     human's preceding move (two plies).
-    int nPlies = (m_pPosition->m_nTurn == 1) ? 1 : 2;
-    if (static_cast<unsigned int>(nPlies) > m_pPosition->m_wPly)
-        nPlies = static_cast<int>(m_pPosition->m_wPly);
-    if (nPlies == 0)
+    uint16_t wPlies = (m_pPosition->m_nTurn == 1) ? 1 : 2;
+    if (wPlies > m_pPosition->m_wPly)
+        wPlies = m_pPosition->m_wPly;
+    if (wPlies == 0)
         return false;
 
-    for (int nPly = 0; nPly < nPlies; ++nPly)
+    for (uint16_t wPly = 0; wPly < wPlies; ++wPly)
         m_pPosition->Undo();
 
     // Mirror MakeMove: keep the highlighting/attack state fully consistent.
