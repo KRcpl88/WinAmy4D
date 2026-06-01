@@ -58,4 +58,8 @@ jobs:
         if (-not $vsTestConsole) {
           throw "Unable to locate vstest.console.exe under Visual Studio installation: $vsInstallPath"
         }
-        & $vsTestConsole x64\Debug\WinAmyTests.dll /Platform:x64
+        # Base regression pass: skip long-running tests (run those in deeper scenarios).
+        # The native C++ test adapter only filters on Name/FullyQualifiedName, so the
+        # long-running tests are excluded by name (they also carry a TestCategory
+        # "LongRunning" trait for grouping in Visual Studio Test Explorer).
+        & $vsTestConsole x64\Debug\WinAmyTests.dll /Platform:x64 /TestCaseFilter:"FullyQualifiedName!~EngineSelfPlayKeepsBothKings"

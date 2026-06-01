@@ -79,6 +79,16 @@ TEST_CLASS(AttackConsistencyTests) {
 
     // The engine must never produce a move that captures (or otherwise removes)
     // a king; both kings must remain on the board throughout a self-play game.
+    //
+    // This runs a full 160-ply self-play game at search depth 3, which is slow,
+    // so it is tagged TestCategory "LongRunning" (for grouping in Visual Studio
+    // Test Explorer) and excluded from the base regression pass. The native C++
+    // adapter does not filter on TestCategory from the command line, so run it
+    // by name for deeper scenarios:
+    //   vstest.console.exe ... /Tests:EngineSelfPlayKeepsBothKings
+    BEGIN_TEST_METHOD_ATTRIBUTE(EngineSelfPlayKeepsBothKings)
+        TEST_METHOD_ATTRIBUTE(L"TestCategory", L"LongRunning")
+    END_TEST_METHOD_ATTRIBUTE()
     TEST_METHOD(EngineSelfPlayKeepsBothKings) {
         setMaxSearchDepth(3);
         PositionGuard pos(CPosition::Initial());
