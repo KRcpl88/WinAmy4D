@@ -577,18 +577,18 @@ void D3DBoardRenderer::Render(const CPosition* pPosition,
     // An opponent's piece (one whose colour is not the side to move) cannot be
     // moved, so when its moves are shown only the destination outlines are
     // drawn — the target selection circles are suppressed.
-    bool bShowTargetMarkers = true;
+    bool fShowTargetMarkers = true;
     if (pSelectedSquare && pSelectedSquare->IsValid() && pPosition) {
         int8_t nSelPiece = pPosition->m_rgPiece[pSelectedSquare->BitOffset()];
         if (nSelPiece != 0) {
-            bool bSelIsWhite = (nSelPiece > 0);
-            bool bWhiteTurn  = (pPosition->m_nTurn == 0);
-            if (bSelIsWhite != bWhiteTurn)
-                bShowTargetMarkers = false;
+            bool fSelIsWhite = (nSelPiece > 0);
+            bool fWhiteTurn  = (pPosition->m_nTurn == 0);
+            if (fSelIsWhite != fWhiteTurn)
+                fShowTargetMarkers = false;
         }
     }
 
-    if (bShowTargetMarkers)
+    if (fShowTargetMarkers)
         RenderTargetMarkers(mViewProj, LegalDests);
     RenderHighlights(mViewProj, pPosition, pSelectedSquare, LegalDests);
     RenderPieces(mViewProj, pPosition);
