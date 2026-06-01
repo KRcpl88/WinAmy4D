@@ -66,7 +66,7 @@ public:
     void Resize(int nWidth, int nHeight);
 
     // Render a single frame of the given position + selection state.
-    // hintFrom/hintTo, when non-null and valid, mark an engine move suggestion
+    // pHintFrom/pHintTo, when non-null and valid, mark an engine move suggestion
     // and are highlighted in cyan.
     void Render(const CPosition* pPosition,
                 const CSCoord* pSelectedSquare,

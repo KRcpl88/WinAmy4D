@@ -47,13 +47,13 @@ public:
     BoardRenderer();
     ~BoardRenderer();
 
-    // Draw the entire board onto the given HDC. hintFrom/hintTo, when non-null
+    // Draw the entire board onto the given HDC. HintFrom/HintTo, when non-null
     // and valid, mark an engine move suggestion and are highlighted in cyan.
     void DrawBoard(HDC hdc, const CPosition* pos,
                    const CSCoord* selectedSquare,
                    const std::vector<CSCoord>& legalDests,
-                   const CSCoord* hintFrom = nullptr,
-                   const CSCoord* hintTo = nullptr) const;
+                   const CSCoord* HintFrom = nullptr,
+                   const CSCoord* HintTo = nullptr) const;
 
     // Return the board square under the given client-area pixel, or an
     // invalid coord if no square is there.
@@ -74,8 +74,8 @@ private:
     void DrawLevel(HDC hdc, int level, const CPosition* pos,
                    const CSCoord* selectedSquare,
                    const std::vector<CSCoord>& legalDests,
-                   const CSCoord* hintFrom,
-                   const CSCoord* hintTo) const;
+                   const CSCoord* HintFrom,
+                   const CSCoord* HintTo) const;
 
     // Return the Unicode chess piece glyph for the given piece value.
     static wchar_t PieceGlyph(int8_t piece);

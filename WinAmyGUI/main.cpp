@@ -201,10 +201,10 @@ static LRESULT CALLBACK Render3DProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         BeginPaint(hWnd, &ps);
         if (g_D3DRenderer.IsInitialized()) {
             const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
-            const CSCoord* hintFrom = g_fHaveHint ? &g_HintFrom : nullptr;
-            const CSCoord* hintTo   = g_fHaveHint ? &g_HintTo   : nullptr;
+            const CSCoord* HintFrom = g_fHaveHint ? &g_HintFrom : nullptr;
+            const CSCoord* HintTo   = g_fHaveHint ? &g_HintTo   : nullptr;
             g_D3DRenderer.Render(g_Game.GetPosition(), sel, g_LegalDests,
-                                 hintFrom, hintTo);
+                                 HintFrom, HintTo);
         }
         EndPaint(hWnd, &ps);
         return 0;
@@ -1128,10 +1128,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             SetViewportOrgEx(hdc, -g_scrollX, TOOLBAR_H - g_scrollY, nullptr);
 
             const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
-            const CSCoord* hintFrom = g_fHaveHint ? &g_HintFrom : nullptr;
-            const CSCoord* hintTo   = g_fHaveHint ? &g_HintTo   : nullptr;
+            const CSCoord* HintFrom = g_fHaveHint ? &g_HintFrom : nullptr;
+            const CSCoord* HintTo   = g_fHaveHint ? &g_HintTo   : nullptr;
             g_Renderer.DrawBoard(hdc, g_Game.GetPosition(), sel, g_LegalDests,
-                                 hintFrom, hintTo);
+                                 HintFrom, HintTo);
 
             SetViewportOrgEx(hdc, 0, 0, nullptr);
 
