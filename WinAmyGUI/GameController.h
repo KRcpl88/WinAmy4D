@@ -21,6 +21,11 @@
 // LPARAM: CMove encoded as int32_t (cast to LPARAM)
 #define WM_APP_ENGINE_MOVE  (WM_APP + 1)
 
+// Posted to the main window when a move-suggestion (hint) search finishes.
+// The engine does NOT apply the move; the host highlights it as a
+// recommendation. WPARAM/LPARAM unused; the move is read via GetBestMove().
+#define WM_APP_ENGINE_HINT  (WM_APP + 2)
+
 enum class PlayerMode {
     ZeroPlayers = 0, // self-play
     OnePlayer   = 1, // human vs engine
@@ -58,6 +63,12 @@ public:
     // WM_APP_ENGINE_MOVE to hwndTarget when the search completes.
     void StartEngineSearch(HWND hwndTarget);
 
+    // Start a move-suggestion (hint) search asynchronously. Identical to
+    // StartEngineSearch except the completion is posted as WM_APP_ENGINE_HINT
+    // so the host can highlight the move as a recommendation without applying
+    // it. The best move is retrieved via GetBestMove().
+    void StartHintSearch(HWND hwndTarget);
+
     // Request the engine to stop searching (sets AbortSearch).
     void PauseEngine();
 
@@ -83,6 +94,11 @@ public:
     CMove GetBestMove() const { return m_BestMove; }
 
 private:
+    // Shared implementation for StartEngineSearch / StartHintSearch. Clones the
+    // current position, searches the clone on a background thread, stores the
+    // result in m_BestMove, and posts uCompletionMsg to hwndTarget.
+    void StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg);
+
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
     PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};

@@ -114,9 +114,11 @@ BoardRenderer::~BoardRenderer() {
 
 void BoardRenderer::DrawBoard(HDC hdc, const CPosition* pos,
                               const CSCoord* selectedSquare,
-                              const std::vector<CSCoord>& legalDests) const {
+                              const std::vector<CSCoord>& legalDests,
+                              const CSCoord* HintFrom,
+                              const CSCoord* HintTo) const {
     for (int lvl = 0; lvl < CBitBoard::NUM_LEVELS; ++lvl)
-        DrawLevel(hdc, lvl, pos, selectedSquare, legalDests);
+        DrawLevel(hdc, lvl, pos, selectedSquare, legalDests, HintFrom, HintTo);
 }
 
 // ---------------------------------------------------------------------------
@@ -125,7 +127,9 @@ void BoardRenderer::DrawBoard(HDC hdc, const CPosition* pos,
 
 void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
                                const CSCoord* selectedSquare,
-                               const std::vector<CSCoord>& legalDests) const {
+                               const std::vector<CSCoord>& legalDests,
+                               const CSCoord* HintFrom,
+                               const CSCoord* HintTo) const {
     const int w = CBitBoard::LEVEL_WIDTH[level];
     POINT origin = LevelOrigin(level);
     bool isOdd = (level % 2) != 0;
@@ -170,6 +174,13 @@ void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
             if (selectedSquare && selectedSquare->IsValid()
                     && selectedSquare->BitOffset() == offset) {
                 bg = CLR_SELECTED;
+            } else if ((HintFrom && HintFrom->IsValid()
+                            && HintFrom->BitOffset() == offset)
+                    || (HintTo && HintTo->IsValid()
+                            && HintTo->BitOffset() == offset)) {
+                // Engine move suggestion: highlight both the piece to move and
+                // the recommended destination in cyan.
+                bg = CLR_HINT;
             } else {
                 for (const auto& dest : legalDests) {
                     if (dest.IsValid() && dest.BitOffset() == offset) {

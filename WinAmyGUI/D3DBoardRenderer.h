@@ -66,9 +66,13 @@ public:
     void Resize(int nWidth, int nHeight);
 
     // Render a single frame of the given position + selection state.
+    // pHintFrom/pHintTo, when non-null and valid, mark an engine move suggestion
+    // and are highlighted in cyan.
     void Render(const CPosition* pPosition,
                 const CSCoord* pSelectedSquare,
-                const std::vector<CSCoord>& LegalDests);
+                const std::vector<CSCoord>& LegalDests,
+                const CSCoord* pHintFrom = nullptr,
+                const CSCoord* pHintTo = nullptr);
 
     // Mouse input. Coordinates are in client-area pixels relative to the
     // top-left of the render area (the host applies any toolbar offset).
@@ -221,7 +225,9 @@ private:
     void RenderHighlights(const DirectX::XMMATRIX& mViewProj,
                           const CPosition* pPosition,
                           const CSCoord* pSelectedSquare,
-                          const std::vector<CSCoord>& LegalDests);
+                          const std::vector<CSCoord>& LegalDests,
+                          const CSCoord* pHintFrom,
+                          const CSCoord* pHintTo);
     void RenderPieces(const DirectX::XMMATRIX& mViewProj,
                       const CPosition* pPosition);
     void RenderTargetMarkers(const DirectX::XMMATRIX& mViewProj,

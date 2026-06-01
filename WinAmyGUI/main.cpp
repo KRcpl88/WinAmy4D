@@ -45,6 +45,7 @@ static HWND            g_hWnd       = nullptr;
 static HWND            g_hRender3D  = nullptr; // Child window the D3D swap chain renders into.
 static HWND            g_hStatus    = nullptr;
 static HWND            g_hBtnNew    = nullptr;
+static HWND            g_hBtnHint   = nullptr;
 static HWND            g_hBtnViewToggle = nullptr;
 static HWND            g_hCbGridType    = nullptr;
 static HWND            g_hBtnOutlines  = nullptr;
@@ -68,6 +69,13 @@ static bool            g_fHaveSelection = false;
 static CSCoord         g_SelectedSquare;
 static std::vector<CSCoord> g_LegalDests;
 
+// Engine move-suggestion (hint) state. When g_fHaveHint is set, the suggested
+// move's from-square (g_HintFrom) and to-square (g_HintTo) are highlighted in
+// cyan as a recommendation; the engine does NOT make the move.
+static bool            g_fHaveHint = false;
+static CSCoord         g_HintFrom;
+static CSCoord         g_HintTo;
+
 // Scroll state (pixels scrolled from origin).
 static int             g_scrollX = 0;
 static int             g_scrollY = 0;
@@ -87,6 +95,9 @@ static void OnNewGame();
 static void OnLoadEPDGame();
 static void OnSaveEPDGame();
 static void OnEngineMove(LPARAM lParam);
+static void OnEngineHint(LPARAM lParam);
+static void OnSuggestMove();
+static void ClearHint();
 static void OnSquareClick(POINT pt);
 static void MaybeStartEngine();
 static void UpdateStatusBar();
@@ -233,6 +244,7 @@ static void OnSquareClick3D(const CSCoord& sq) {
         g_LegalDests.clear();
         InvalidateRect(g_hRender3D ? g_hRender3D : g_hWnd, nullptr, FALSE);
         if (madeMove) {
+            g_fHaveHint = false;
             UpdateStatusBar();
             if (!g_Game.IsGameOver()) MaybeStartEngine();
         }
@@ -249,7 +261,10 @@ static LRESULT CALLBACK Render3DProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         BeginPaint(hWnd, &ps);
         if (g_D3DRenderer.IsInitialized()) {
             const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
-            g_D3DRenderer.Render(g_Game.GetPosition(), sel, g_LegalDests);
+            const CSCoord* HintFrom = g_fHaveHint ? &g_HintFrom : nullptr;
+            const CSCoord* HintTo   = g_fHaveHint ? &g_HintTo   : nullptr;
+            g_D3DRenderer.Render(g_Game.GetPosition(), sel, g_LegalDests,
+                                 HintFrom, HintTo);
         }
         EndPaint(hWnd, &ps);
         return 0;
@@ -373,6 +388,8 @@ static void CreateControls(HWND hWnd) {
     };
 
     g_hBtnNew = makeBtn(L"New Game", IDC_BTN_NEW_GAME);
+    // Ask the engine to suggest a move for the human player (highlight only).
+    g_hBtnHint = makeBtn(L"Suggest Move", IDC_BTN_HINT, 110);
     x += BTN_GAP * 2; // spacer
 
     // 2D/3D view toggle — always enabled regardless of current view mode.
@@ -475,6 +492,7 @@ static void OnNewGame() {
     g_Game.PauseEngine();
     g_fPaused = false;
     g_fHaveSelection = false;
+    g_fHaveHint = false;
     g_fGameOverAnnounced = false;
     g_LegalDests.clear();
     g_Game.NewGame();
@@ -509,6 +527,7 @@ static void OnLoadEPDGame() {
 
     g_fPaused = false;
     g_fHaveSelection = false;
+    g_fHaveHint = false;
     g_fGameOverAnnounced = false;
     g_LegalDests.clear();
     UpdatePauseMenu();
@@ -587,6 +606,7 @@ static void OnEngineMove(LPARAM /*lParam*/) {
     g_Game.MakeMove(move);
     g_fHaveSelection = false;
     g_LegalDests.clear();
+    g_fHaveHint = false;
 
     InvalidateRect(g_hWnd, nullptr, TRUE);
     if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
@@ -606,6 +626,68 @@ static void OnEngineMove(LPARAM /*lParam*/) {
         MaybeStartEngine();
         UpdatePauseMenu();
     }
+}
+
+// ---------------------------------------------------------------------------
+// ClearHint — drop any active move suggestion highlight
+// ---------------------------------------------------------------------------
+
+static void ClearHint() {
+    if (!g_fHaveHint) return;
+    g_fHaveHint = false;
+    g_HintFrom = InvalidSquareCoord();
+    g_HintTo   = InvalidSquareCoord();
+    InvalidateRect(g_hWnd, nullptr, TRUE);
+    if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
+}
+
+// ---------------------------------------------------------------------------
+// OnSuggestMove — ask the engine to recommend a move for the human player
+// ---------------------------------------------------------------------------
+
+static void OnSuggestMove() {
+    if (g_Game.IsEngineRunning()) return;
+    if (g_Game.IsGameOver()) return;
+    // A suggestion only makes sense when a human is to move.
+    if (g_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
+
+    const CPosition* pos = g_Game.GetPosition();
+    if (!pos) return;
+
+    // In 1-player mode the human plays White (turn 0); don't suggest a move
+    // while it is the engine's turn.
+    if (g_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->m_nTurn == 1)
+        return;
+
+    // Clear any stale suggestion and current selection, then run the search.
+    ClearHint();
+    g_fHaveSelection = false;
+    g_LegalDests.clear();
+    InvalidateRect(g_hWnd, nullptr, TRUE);
+    if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
+
+    g_Game.StartHintSearch(g_hWnd);
+    UpdateStatusBar();
+}
+
+// ---------------------------------------------------------------------------
+// OnEngineHint — handle WM_APP_ENGINE_HINT (suggestion search completed)
+// ---------------------------------------------------------------------------
+
+static void OnEngineHint(LPARAM /*lParam*/) {
+    CMove move = g_Game.GetBestMove();
+    UpdateStatusBar();
+    if (move == M_NONE) {
+        // No legal move to suggest (checkmate/stalemate) — nothing to show.
+        return;
+    }
+
+    g_HintFrom = move.GetFromCoord();
+    g_HintTo   = move.GetToCoord();
+    g_fHaveHint = true;
+
+    InvalidateRect(g_hWnd, nullptr, TRUE);
+    if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
 }
 
 // ---------------------------------------------------------------------------
@@ -656,6 +738,7 @@ static void OnSquareClick(POINT pt) {
         InvalidateRect(g_hWnd, nullptr, TRUE);
 
         if (madeMove) {
+            g_fHaveHint = false;
             UpdateStatusBar();
             if (!g_Game.IsGameOver())
                 MaybeStartEngine();
@@ -1074,7 +1157,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             SetViewportOrgEx(hdc, ptOffset.x - g_scrollX, TOOLBAR_H + ptOffset.y - g_scrollY, nullptr);
 
             const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
-            g_Renderer.DrawBoard(hdc, g_Game.GetPosition(), sel, g_LegalDests);
+            const CSCoord* HintFrom = g_fHaveHint ? &g_HintFrom : nullptr;
+            const CSCoord* HintTo   = g_fHaveHint ? &g_HintTo   : nullptr;
+            g_Renderer.DrawBoard(hdc, g_Game.GetPosition(), sel, g_LegalDests,
+                                 HintFrom, HintTo);
 
             SetViewportOrgEx(hdc, 0, 0, nullptr);
 
@@ -1146,6 +1232,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         OnEngineMove(lParam);
         return 0;
 
+    case WM_APP_ENGINE_HINT:
+        OnEngineHint(lParam);
+        return 0;
+
     case WM_COMMAND: {
         int id = LOWORD(wParam);
         int code = HIWORD(wParam);
@@ -1153,6 +1243,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         case IDM_FILE_NEW:
         case IDC_BTN_NEW_GAME:
             OnNewGame();
+            break;
+
+        case IDC_BTN_HINT:
+            OnSuggestMove();
             break;
 
         case IDM_FILE_LOAD_EPD:

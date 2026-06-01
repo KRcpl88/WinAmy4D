@@ -41,6 +41,7 @@
 
 // Button / control IDs
 #define IDC_BTN_NEW_GAME    2001
+#define IDC_BTN_HINT        2002
 #define IDC_BTN_OUTLINES    2008
 #define IDC_BTN_RESET_VIEW  2009
 #define IDC_BTN_ZOOM_IN     2010
