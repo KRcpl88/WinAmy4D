@@ -503,9 +503,7 @@ void Edit(char *args) {
 
 static void Undo(char *args) {
     (void)args;
-    if (CurrentPosition->m_wPly > 0) {
-        CurrentPosition->UndoMove((CurrentPosition->m_pActLog - 1)->gl_Move);
-    }
+    CurrentPosition->Undo();
 }
 
 static void Book(char *args) {

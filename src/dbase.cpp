@@ -1002,6 +1002,23 @@ void CPosition::UndoMove(CMove move) {
 }
 
 /*
+ * Undo the last move that was played in this position.
+ *
+ * This is the public, encapsulated entry point for the "undo" feature: callers
+ * (such as the GUI or command interface) do not need to reach into the internal
+ * game log to retrieve the last move.  Returns true if a move was undone, or
+ * false if the position is already at the start of the game (nothing to undo).
+ */
+
+bool CPosition::Undo() {
+    CPosition *p = this;
+    if (p->m_wPly == 0)
+        return false;
+    p->UndoMove((p->m_pActLog - 1)->gl_Move);
+    return true;
+}
+
+/*
  * Make a null move, i.e. swap the p->m_nTurn on the move
  */
 
