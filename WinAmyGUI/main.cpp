@@ -104,6 +104,8 @@ static void UpdateStatusBar();
 static void MaybeAnnounceGameOver();
 static void UpdatePlayerMenu();
 static void UpdatePauseMenu();
+static void UpdateUndoMenu();
+static void OnUndoMove();
 static void SetPlayerModeAction(PlayerMode mode);
 static void TogglePause();
 static void SetDepthFromMenu(int depth);
@@ -833,6 +835,39 @@ static void UpdatePauseMenu() {
         MF_BYCOMMAND | (bEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
     CheckMenuItem(hMenu, IDM_PAUSE,
         MF_BYCOMMAND | (g_fPaused ? MF_CHECKED : MF_UNCHECKED));
+    UpdateUndoMenu();
+}
+
+// Undo is offered only in 1-player mode (human vs engine), when the engine is
+// not thinking and there is at least one played move to take back.
+static void UpdateUndoMenu() {
+    HMENU hMenu = GetMenu(g_hWnd);
+    if (!hMenu) return;
+    CPosition* pPos = g_Game.GetPosition();
+    bool fEnabled = g_Game.GetPlayerMode() == PlayerMode::OnePlayer
+                 && !g_Game.IsEngineRunning()
+                 && pPos != nullptr
+                 && pPos->m_wPly > 0;
+    EnableMenuItem(hMenu, IDM_UNDO,
+        MF_BYCOMMAND | (fEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
+}
+
+// Take back the engine's reply and the human player's preceding move so the
+// human may move again. Only valid in 1-player mode while the engine is idle.
+static void OnUndoMove() {
+    if (g_Game.GetPlayerMode() != PlayerMode::OnePlayer) return;
+    if (g_Game.IsEngineRunning()) return;
+
+    if (!g_Game.UndoLastHumanMove()) return;
+
+    g_fHaveSelection = false;
+    g_fGameOverAnnounced = false;
+    g_LegalDests.clear();
+
+    InvalidateRect(g_hWnd, nullptr, TRUE);
+    if (g_hRender3D) InvalidateRect(g_hRender3D, nullptr, FALSE);
+    UpdateStatusBar();
+    UpdatePauseMenu();
 }
 
 static void SetPlayerModeAction(PlayerMode mode) {
@@ -1364,6 +1399,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         case IDM_PAUSE:
             TogglePause();
+            break;
+
+        case IDM_UNDO:
+            OnUndoMove();
             break;
         }
         return 0;

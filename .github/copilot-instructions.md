@@ -27,6 +27,40 @@ Run tests in a single class:
 vstest.console.exe x64\Debug\WinAmyTests.dll /Platform:x64 /Tests:ClassName
 ```
 
+### Test Categories (scenarios)
+
+Tests can be grouped into scenarios (e.g. a fast base regression pass vs. a deeper
+full pass). Slow tests are tagged with a `TestCategory` trait, which groups them
+under **Traits** in Visual Studio Test Explorer (right-click → group/filter by trait):
+```cpp
+BEGIN_TEST_METHOD_ATTRIBUTE(MethodName)
+    TEST_METHOD_ATTRIBUTE(L"TestCategory", L"LongRunning")
+END_TEST_METHOD_ATTRIBUTE()
+TEST_METHOD(MethodName) { ... }
+```
+
+Note: the native C++ test adapter (`cppunittestexecutor`) only supports `Name` and
+`FullyQualifiedName` in `/TestCaseFilter` — it does **not** filter on `TestCategory`
+from the command line. So on the command line, select scenarios by test name.
+
+Base regression pass (default; excludes the slow tests by name):
+```
+vstest.console.exe x64\Debug\WinAmyTests.dll /Platform:x64 /TestCaseFilter:"FullyQualifiedName!~EngineSelfPlayKeepsBothKings"
+```
+
+Deeper / full pass (run everything, including the slow tests):
+```
+vstest.console.exe x64\Debug\WinAmyTests.dll /Platform:x64
+```
+
+Run only the slow test for a deeper scenario:
+```
+vstest.console.exe x64\Debug\WinAmyTests.dll /Platform:x64 /Tests:EngineSelfPlayKeepsBothKings
+```
+
+`EngineSelfPlayKeepsBothKings` is tagged `LongRunning` and is excluded from the
+default CI pass; run it explicitly (or via the full pass) for deeper scenarios.
+
 ## Architecture
 
 WinAmy is a chess engine (fork of "Amy") built as a Windows C application with a C++ test harness.
@@ -80,16 +114,16 @@ extern "C" {
   - `n` — integer (e.g., `nIndex`, `nCount`)
   - `dw` — DWORD / unsigned 32-bit (e.g., `dwFlags`)
   - `w` — WORD / unsigned 16-bit (e.g., `wOffset`)
-  - `b` — BYTE / unsigned 8-bit or bool (e.g., `bValid`)
+  - `b` — BYTE / unsigned 8-bit (e.g., `bValid`)
   - `d` — double (e.g., `dRotation`)
-  - `f` — float (e.g., `fScale`)
+  - `f` — float or bool (e.g., `fScale`, `fEnabled`)
   - `sz` / `psz` — null-terminated string / pointer to string (e.g., `szName`)
   - `p` — pointer (e.g., `pNode`)
   - `rg` — array (e.g., `rgAxes`, `rgnData`)
   - `m_` — member variable prefix (e.g., `m_nLevel`, `m_rgdData`)
   - `g_` — global variable prefix (e.g., `g_nCount`)
   - `s_` — static variable prefix (e.g., `s_nInstances`)
-- **This rule is mandatory and has no exceptions.** Every variable name — including local variables, loop indices, temporaries, function parameters, and variables in test code — must carry the correct Hungarian type prefix combined with PascalCase. For example, use `nNewRank` (not `newRank`), `nDblRank` (not `dblRank`), `nDirection` (not `direction`), and `nWidth` (not `width`). New or modified code must follow this convention even when adjacent legacy code does not.
+- **This rule is mandatory and has no exceptions.** Every variable name — including local variables, loop indices, temporaries, function parameters, and variables in test code — must carry the correct Hungarian type prefix combined with PascalCase. For example, use `nNewRank` (not `newRank`), `nDblRank` (not `dblRank`), `nDirection` (not `direction`), and `nWidth` (not `width`). The prefix for a `bool` is `f` (e.g., `fEnabled`), not `b` — `b` is reserved for `BYTE`. New or modified code must follow this convention even when adjacent legacy code does not.
 
 ### Test Naming
 

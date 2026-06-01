@@ -185,6 +185,7 @@ class CPosition {
     // Move making/unmaking
     void DoMove(CMove move);
     void UndoMove(CMove move);
+    bool Undo();
     void DoNull();
     void UndoNull();
 
