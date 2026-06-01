@@ -37,8 +37,8 @@
 #define SIGNATURE_BIT(x) (1 << ((x) - 1))
 #define CALCULATE_INDEX(a, b) (((a) | (b)) + 32 * ((a) != 0 && (b) != 0))
 #define RECOGNIZER_INDEX(p)                                                    \
-    CALCULATE_INDEX((p)->m_rgbMaterialSignature[White],                            \
-                    (p)->m_rgbMaterialSignature[Black])
+    CALCULATE_INDEX((p)->GetMaterialSignature(White),                            \
+                    (p)->GetMaterialSignature(Black))
 
 void RecogInit(void);
 int ProbeRecognizer(const CPosition *p, int *score);

@@ -96,7 +96,7 @@ bool CWinAmy4dWnd::IsHumanAllowedToMove(const CPosition* pPos) const {
     if (!pPos) return false;
     PlayerMode eMode = m_Game.GetPlayerMode();
     if (eMode == PlayerMode::TwoPlayers) return true;
-    if (eMode == PlayerMode::OnePlayer) return (pPos->m_nTurn == 0);
+    if (eMode == PlayerMode::OnePlayer) return (pPos->GetTurn() == 0);
     return false;
 }
 
@@ -108,13 +108,13 @@ void CWinAmy4dWnd::CollectLegalDestinationsForSquare(
     if (!pPos || !From.IsValid()) return;
 
     uint16_t wOff = From.BitOffset();
-    int8_t nPiece = pPos->m_rgPiece[wOff];
+    int8_t nPiece = pPos->GetPiece(wOff);
     if (nPiece == 0) return;
 
     CPosition* pMovePos = CPosition::Clone(pPos);
     if (!pMovePos) return;
 
-    pMovePos->m_nTurn = (nPiece > 0) ? 0 : 1;
+    pMovePos->SetTurn((nPiece > 0) ? 0 : 1);
 
     heap_t pHeap = allocate_heap();
     push_section(pHeap);
@@ -134,11 +134,11 @@ bool CWinAmy4dWnd::TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqT
     if (!pPos || !IsHumanAllowedToMove(pPos)) return false;
 
     uint16_t wSelOff = m_SelectedSquare.BitOffset();
-    int8_t nSelPiece = pPos->m_rgPiece[wSelOff];
+    int8_t nSelPiece = pPos->GetPiece(wSelOff);
     if (nSelPiece == 0) return false;
 
     bool fSelIsWhite = (nSelPiece > 0);
-    bool fWhiteTurn = (pPos->m_nTurn == 0);
+    bool fWhiteTurn = (pPos->GetTurn() == 0);
     if (fSelIsWhite != fWhiteTurn) return false;
 
     heap_t pHeap = allocate_heap();
@@ -204,7 +204,7 @@ void CWinAmy4dWnd::OnSquareClick3D(const CSCoord& sq) {
 
     if (!m_fHaveSelection) {
         uint16_t off = sq.BitOffset();
-        int8_t piece = pos->m_rgPiece[off];
+        int8_t piece = pos->GetPiece(off);
         if (piece == 0) return;
         m_fHaveSelection = true;
         m_SelectedSquare = sq;
@@ -556,7 +556,7 @@ void CWinAmy4dWnd::MaybeStartEngine() {
         engineTurn = true;
     } else if (mode == PlayerMode::OnePlayer) {
         // Engine plays Black (turn 1).
-        engineTurn = (pos->m_nTurn == 1);
+        engineTurn = (pos->GetTurn() == 1);
     }
 
     if (engineTurn) {
@@ -634,7 +634,7 @@ void CWinAmy4dWnd::OnSuggestMove() {
 
     // In 1-player mode the human plays White (turn 0); don't suggest a move
     // while it is the engine's turn.
-    if (m_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->m_nTurn == 1)
+    if (m_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->GetTurn() == 1)
         return;
 
     // Clear any stale suggestion and current selection, then run the search.
@@ -693,7 +693,7 @@ void CWinAmy4dWnd::OnSquareClick(POINT pt) {
     if (!m_fHaveSelection) {
         // Select any occupied square to inspect legal moves for that side.
         uint16_t off = sq.BitOffset();
-        int8_t piece = pos->m_rgPiece[off];
+        int8_t piece = pos->GetPiece(off);
         if (piece == 0) return;
 
         m_fHaveSelection = true;
@@ -749,7 +749,7 @@ void CWinAmy4dWnd::UpdateStatusBar() {
     if (!pos) return;
 
     wchar_t buf[128];
-    const wchar_t* turn = (pos->m_nTurn == 0) ? L"White to move" : L"Black to move";
+    const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
     if (m_Game.IsEngineRunning()) {
         swprintf_s(buf, 128, L"%s  [Engine thinking...]", turn);
     } else {
@@ -823,7 +823,7 @@ void CWinAmy4dWnd::UpdateUndoMenu() {
     bool fEnabled = m_Game.GetPlayerMode() == PlayerMode::OnePlayer
                  && !m_Game.IsEngineRunning()
                  && pPos != nullptr
-                 && pPos->m_wPly > 0;
+                 && pPos->GetPly() > 0;
     EnableMenuItem(hMenu, IDM_UNDO,
         MF_BYCOMMAND | (fEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
 }

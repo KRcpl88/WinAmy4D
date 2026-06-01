@@ -179,10 +179,10 @@ void GameController::MakeMove(CMove move) {
         CBitBoard rgAtkToBefore[CBitBoard::SIZE];
         CBitBoard rgAtkFrBefore[CBitBoard::SIZE];
         for (unsigned int nSquare = 0; nSquare < CBitBoard::SIZE; ++nSquare) {
-            rgAtkToBefore[nSquare] = m_pPosition->m_rgAtkTo[nSquare];
-            rgAtkFrBefore[nSquare] = m_pPosition->m_rgAtkFr[nSquare];
+            rgAtkToBefore[nSquare] = m_pPosition->GetAtkTo(nSquare);
+            rgAtkFrBefore[nSquare] = m_pPosition->GetAtkFr(nSquare);
         }
-        const CBitBoard SlidingBefore = m_pPosition->m_SlidingPieces;
+        const CBitBoard SlidingBefore = m_pPosition->GetSlidingPieces();
 #endif
         // Safety net: the engine maintains attack tables incrementally via
         // gain/lose-attack updates inside DoMove.  The GUI applies only one
@@ -192,12 +192,12 @@ void GameController::MakeMove(CMove move) {
         m_pPosition->RecalcAttacks();
 #ifndef NDEBUG
         for (unsigned int nSquare = 0; nSquare < CBitBoard::SIZE; ++nSquare) {
-            assert(rgAtkToBefore[nSquare] == m_pPosition->m_rgAtkTo[nSquare] &&
+            assert(rgAtkToBefore[nSquare] == m_pPosition->GetAtkTo(nSquare) &&
                    "RecalcAttacks changed AtkTo: incremental attack update bug");
-            assert(rgAtkFrBefore[nSquare] == m_pPosition->m_rgAtkFr[nSquare] &&
+            assert(rgAtkFrBefore[nSquare] == m_pPosition->GetAtkFr(nSquare) &&
                    "RecalcAttacks changed AtkFr: incremental attack update bug");
         }
-        assert(SlidingBefore == m_pPosition->m_SlidingPieces &&
+        assert(SlidingBefore == m_pPosition->GetSlidingPieces() &&
                "RecalcAttacks changed SlidingPieces: incremental attack update bug");
 #endif
     }
@@ -219,9 +219,9 @@ bool GameController::UndoLastHumanMove() {
     //   * If it is currently Black's turn, only the human's move needs undoing.
     //   * If it is currently White's turn, undo the engine's reply and the
     //     human's preceding move (two plies).
-    uint16_t wPlies = (m_pPosition->m_nTurn == 1) ? 1 : 2;
-    if (wPlies > m_pPosition->m_wPly)
-        wPlies = m_pPosition->m_wPly;
+    uint16_t wPlies = (m_pPosition->GetTurn() == 1) ? 1 : 2;
+    if (wPlies > m_pPosition->GetPly())
+        wPlies = m_pPosition->GetPly();
     if (wPlies == 0)
         return false;
 
@@ -317,7 +317,7 @@ std::string GameController::GetGameResultText() const {
 
     // m_wPly counts half-moves (plies) played.  The number of full moves the
     // game lasted is therefore ceil(plies / 2).
-    const int nMoves = (static_cast<int>(m_pPosition->m_wPly) + 1) / 2;
+    const int nMoves = (static_cast<int>(m_pPosition->GetPly()) + 1) / 2;
 
     std::string strResult(pszEnd);
     std::string strText;

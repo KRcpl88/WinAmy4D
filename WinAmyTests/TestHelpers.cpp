@@ -41,33 +41,33 @@ CBitBoard ReferenceBishopAttacks(int sq, CBitBoard occupied) {
 
 void AssertPositionsEqual(const CPosition *lhs, const CPosition *rhs) {
     for (unsigned int i = 0; i < CBitBoard::SIZE; i++) {
-        Assert::IsTrue(lhs->m_rgAtkTo[i] == rhs->m_rgAtkTo[i]);
-        Assert::IsTrue(lhs->m_rgAtkFr[i] == rhs->m_rgAtkFr[i]);
-        Assert::AreEqual((int)lhs->m_rgPiece[i], (int)rhs->m_rgPiece[i]);
+        Assert::IsTrue(lhs->GetAtkTo(i) == rhs->GetAtkTo(i));
+        Assert::IsTrue(lhs->GetAtkFr(i) == rhs->GetAtkFr(i));
+        Assert::AreEqual((int)lhs->GetPiece(i), (int)rhs->GetPiece(i));
     }
 
     for (int c = 0; c < 2; c++) {
         for (int p = 0; p < 7; p++) {
-            Assert::IsTrue(lhs->m_rgMask[c][p] == rhs->m_rgMask[c][p]);
+            Assert::IsTrue(lhs->GetMask(c, p) == rhs->GetMask(c, p));
         }
 
-        Assert::AreEqual(lhs->m_rgnMaterial[c], rhs->m_rgnMaterial[c]);
-        Assert::AreEqual(lhs->m_rgnNonPawn[c], rhs->m_rgnNonPawn[c]);
-        Assert::AreEqual((int)lhs->m_rgKingSq[c], (int)rhs->m_rgKingSq[c]);
-        Assert::AreEqual((int)lhs->m_rgbMaterialSignature[c],
-                         (int)rhs->m_rgbMaterialSignature[c]);
+        Assert::AreEqual(lhs->GetMaterial(c), rhs->GetMaterial(c));
+        Assert::AreEqual(lhs->GetNonPawn(c), rhs->GetNonPawn(c));
+        Assert::AreEqual((int)lhs->GetKingSq(c), (int)rhs->GetKingSq(c));
+        Assert::AreEqual((int)lhs->GetMaterialSignature(c),
+                         (int)rhs->GetMaterialSignature(c));
     }
 
-    Assert::IsTrue(lhs->m_SlidingPieces == rhs->m_SlidingPieces);
-    Assert::AreEqual((unsigned long long)lhs->m_ullHKey, (unsigned long long)rhs->m_ullHKey);
-    Assert::AreEqual((unsigned long long)lhs->m_ullPKey, (unsigned long long)rhs->m_ullPKey);
-    Assert::AreEqual((int)lhs->m_bCastle, (int)rhs->m_bCastle);
-    Assert::AreEqual(lhs->m_EnPassant.IsValid(), rhs->m_EnPassant.IsValid());
-    if (lhs->m_EnPassant.IsValid() && rhs->m_EnPassant.IsValid()) {
-        Assert::AreEqual(lhs->m_EnPassant.BitOffset(), rhs->m_EnPassant.BitOffset());
+    Assert::IsTrue(lhs->GetSlidingPieces() == rhs->GetSlidingPieces());
+    Assert::AreEqual((unsigned long long)lhs->GetHashKey(), (unsigned long long)rhs->GetHashKey());
+    Assert::AreEqual((unsigned long long)lhs->GetPawnKey(), (unsigned long long)rhs->GetPawnKey());
+    Assert::AreEqual((int)lhs->GetCastle(), (int)rhs->GetCastle());
+    Assert::AreEqual(lhs->GetEnPassant().IsValid(), rhs->GetEnPassant().IsValid());
+    if (lhs->GetEnPassant().IsValid() && rhs->GetEnPassant().IsValid()) {
+        Assert::AreEqual(lhs->GetEnPassant().BitOffset(), rhs->GetEnPassant().BitOffset());
     }
-    Assert::AreEqual((int)lhs->m_nTurn, (int)rhs->m_nTurn);
-    Assert::AreEqual((int)lhs->m_wPly, (int)rhs->m_wPly);
+    Assert::AreEqual((int)lhs->GetTurn(), (int)rhs->GetTurn());
+    Assert::AreEqual((int)lhs->GetPly(), (int)rhs->GetPly());
 }
 
 uint16_t MainBoardOffset(int square) {
@@ -112,7 +112,7 @@ CPosition *CreatePositionFromLegacyMainEPD(const char *legacyMainBoardEpd) {
     if (hasEnPassant) {
         const int file = ep[0] - 'a';
         const int rank = ep[1] - '1';
-        position->m_EnPassant = CSCoord(MAIN_LEVEL, file, rank);
+        position->SetEnPassant(CSCoord(MAIN_LEVEL, file, rank));
     }
     return position;
 }

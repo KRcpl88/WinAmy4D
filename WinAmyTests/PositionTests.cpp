@@ -9,7 +9,7 @@ TEST_CLASS(PositionTests) {
     static void AssertCheckingMoveMatchesResultingCheck(CPosition *position, CMove move) {
         const bool reportsCheck = position->IsCheckingMove(move);
         position->DoMove(move);
-        const bool expected = position->InCheck(position->m_nTurn);
+        const bool expected = position->InCheck(position->GetTurn());
         position->UndoMove(move);
         Assert::AreEqual(expected, reportsCheck);
     }
@@ -390,6 +390,53 @@ TEST_CLASS(PositionTests) {
 
         int count = position.get()->LegalMoves(NULL);
         Assert::AreEqual(5, count);
+    }
+
+    // --- Generator / validator consistency ---
+
+    TEST_METHOD(LegalMovesAreAcceptedByLegalMove) {
+        // Regression for a self-play stall: the bulk generator (LegalMoves)
+        // emitted a black pawn capture gc6xeb5, but the single-move validator
+        // (LegalMove) rejected it, because eb5 is the last rank of level e
+        // (index 4, width 5) and level e is not a promotion level.  A pawn may
+        // only land on an edge rank by promoting, which is allowed only on
+        // levels f–j.  The generator/validator disagreement made the engine
+        // pick a move the GUI's LegalMove guard refused to apply, stalling play.
+        const char *epd =
+            "1|2/2|3/3/3|2R1/4/4/4|1R3/5/5/5/5|6/6/6/6/6/6|1p1pppp/p1p4/7/7/7/4P2/1PPP1P1|"
+            "1r2r1k1/ppp2ppp/3pn3/8/8/4P1P1/PPP2P2/2K5|3r3/pR4R/3pp2/7/3PP2/P1P4/7|"
+            "pppp1p/6/6/6/6/PPP1P1|5/5/5/5/5|4/4/3q/4|3/3/3|2/2|1 b - -";
+        PositionGuard position(CPosition::CreateFromEPD(epd));
+        CPosition *p = position.get();
+
+        const CSCoord gc6(6, 2, 5);
+        const CSCoord eb5(4, 1, 4);
+        const uint16_t gc6off = gc6.BitOffset();
+        const uint16_t eb5off = eb5.BitOffset();
+
+        heap_t heap = allocate_heap();
+        p->LegalMoves(heap);
+
+        bool foundIllegalPawnCapture = false;
+        for (unsigned int i = heap->current_section->start;
+             i < heap->current_section->end; i++) {
+            CMove move = heap->data[i];
+
+            // Every move the bulk generator produces must also pass the
+            // single-move validator; otherwise the engine can select a move
+            // that cannot actually be applied.
+            Assert::IsTrue(p->LegalMove(move) != 0,
+                L"LegalMoves produced a move rejected by LegalMove");
+
+            if (move.GetFromCoord().BitOffset() == gc6off &&
+                move.GetToCoord().BitOffset() == eb5off) {
+                foundIllegalPawnCapture = true;
+            }
+        }
+        free_heap(heap);
+
+        Assert::IsFalse(foundIllegalPawnCapture,
+            L"Pawn capture onto a non-promotion edge rank must not be generated");
     }
 
     // --- Repeated tests ---

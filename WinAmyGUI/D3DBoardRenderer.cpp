@@ -581,10 +581,10 @@ void D3DBoardRenderer::Render(const CPosition* pPosition,
     // drawn — the target selection circles are suppressed.
     bool fShowTargetMarkers = true;
     if (pSelectedSquare && pSelectedSquare->IsValid() && pPosition) {
-        int8_t nSelPiece = pPosition->m_rgPiece[pSelectedSquare->BitOffset()];
+        int8_t nSelPiece = pPosition->GetPiece(pSelectedSquare->BitOffset());
         if (nSelPiece != 0) {
             bool fSelIsWhite = (nSelPiece > 0);
-            bool fWhiteTurn  = (pPosition->m_nTurn == 0);
+            bool fWhiteTurn  = (pPosition->GetTurn() == 0);
             if (fSelIsWhite != fWhiteTurn)
                 fShowTargetMarkers = false;
         }
@@ -935,7 +935,7 @@ void D3DBoardRenderer::RenderPieces(const XMMATRIX& mViewProj, const CPosition* 
     Verts.reserve(64);
 
     for (const auto& Cell : m_Cells) {
-        int8_t nPiece = pPosition->m_rgPiece[Cell.Coord.BitOffset()];
+        int8_t nPiece = pPosition->GetPiece(Cell.Coord.BitOffset());
         if (nPiece == 0) continue;
 
         float u0, v0, u1, v1;
