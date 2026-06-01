@@ -6,6 +6,8 @@
 #include "GameController.h"
 
 #include <cassert>
+#include <cctype>
+#include <cstdio>
 
 // ---------------------------------------------------------------------------
 // Static engine initialisation
@@ -55,6 +57,97 @@ void GameController::NewGame() {
     if (m_pPosition)
         CPosition::Free(m_pPosition);
     m_pPosition = CPosition::Initial();
+    m_BestMove = M_NONE;
+}
+
+bool GameController::LoadFromEPD(const char *pszEPD) {
+    if (!pszEPD || !*pszEPD)
+        return false;
+
+    PauseEngine();
+    if (m_EngineThread.joinable())
+        m_EngineThread.join();
+
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    CPosition *pNewPosition = CPosition::CreateFromEPD(pszEPD);
+    if (!pNewPosition)
+        return false;
+
+    if (m_pPosition)
+        CPosition::Free(m_pPosition);
+    m_pPosition = pNewPosition;
+    m_BestMove = M_NONE;
+    return true;
+}
+
+bool GameController::LoadFromEPDFile(const wchar_t *pszPath) {
+    if (!pszPath || !*pszPath)
+        return false;
+
+    FILE *pFile = nullptr;
+    if (_wfopen_s(&pFile, pszPath, L"rb") != 0 || !pFile)
+        return false;
+
+    if (fseek(pFile, 0, SEEK_END) != 0) {
+        fclose(pFile);
+        return false;
+    }
+    long nSize = ftell(pFile);
+    if (nSize < 0) {
+        fclose(pFile);
+        return false;
+    }
+    rewind(pFile);
+
+    std::string strEPD;
+    strEPD.resize(static_cast<size_t>(nSize));
+    if (nSize > 0) {
+        size_t nRead = fread(strEPD.data(), 1, strEPD.size(), pFile);
+        if (nRead != strEPD.size()) {
+            fclose(pFile);
+            return false;
+        }
+    }
+    fclose(pFile);
+
+    size_t nNewline = strEPD.find_first_of("\r\n");
+    if (nNewline != std::string::npos)
+        strEPD.erase(nNewline);
+
+    size_t nStart = 0;
+    while (nStart < strEPD.size() && std::isspace(static_cast<unsigned char>(strEPD[nStart])))
+        ++nStart;
+    if (nStart > 0)
+        strEPD.erase(0, nStart);
+
+    while (!strEPD.empty() && std::isspace(static_cast<unsigned char>(strEPD.back())))
+        strEPD.pop_back();
+
+    return LoadFromEPD(strEPD.c_str());
+}
+
+bool GameController::SaveToEPDFile(const wchar_t *pszPath) {
+    if (!pszPath || !*pszPath)
+        return false;
+
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    if (!m_pPosition)
+        return false;
+
+    const char *pszEPD = m_pPosition->MakeEPD();
+    if (!pszEPD)
+        return false;
+
+    FILE *pFile = nullptr;
+    if (_wfopen_s(&pFile, pszPath, L"wb") != 0 || !pFile)
+        return false;
+
+    size_t nLength = strlen(pszEPD);
+    size_t nWritten = fwrite(pszEPD, 1, nLength, pFile);
+    fwrite("\n", 1, 1, pFile);
+    fclose(pFile);
+
+    return nWritten == nLength;
 }
 
 void GameController::SetDepth(int depth) {
@@ -67,6 +160,14 @@ void GameController::SetDepth(int depth) {
 void GameController::MakeMove(CMove move) {
     std::lock_guard<std::mutex> lock(m_PositionMutex);
     if (m_pPosition) {
+        // Defensive guard: a stale or duplicate WM_APP_ENGINE_MOVE can deliver a
+        // move that is no longer valid for the current position (for example after
+        // a New Game, or when the same engine best-move is delivered twice). The
+        // second time, the move's from-square is already empty, so DoMove would
+        // set an occupancy bit on a square whose piece is Neutral, corrupting the
+        // board and making AtkSet/RecalcAttacks panic. Only apply legal moves.
+        if (!m_pPosition->LegalMove(move))
+            return;
         m_pPosition->DoMove(move);
 #ifndef NDEBUG
         // Snapshot the incrementally maintained attack tables before the full
@@ -119,13 +220,29 @@ void GameController::StartEngineSearch(HWND hwndTarget) {
 
     m_EngineThread = std::thread([this, hwndTarget]() {
         CMove bestMove = M_NONE;
+
+        // CPosition::Iterate runs the search on the object it is called on,
+        // mutating it via DoMove/UndoMove throughout iterative deepening.  The
+        // engine's own callers (SearchRoot, PermanentBrain) therefore clone the
+        // position, search the clone, and free it — never searching the live
+        // board.  The GUI must do the same: searching m_pPosition directly would
+        // leave its incremental state (attack tables, hash keys, game log) in an
+        // inconsistent state if anything is not perfectly restored, which can
+        // produce an invalid best move.  Clone under the lock to take a
+        // consistent snapshot, then search the clone without holding the lock.
+        CPosition *pSearchPosition = nullptr;
         {
             std::lock_guard<std::mutex> lock(m_PositionMutex);
-            if (m_pPosition) {
-                int score = 0, altScore = 0;
-                bestMove = m_pPosition->Iterate(&score, M_NONE, &altScore);
-            }
+            if (m_pPosition)
+                pSearchPosition = CPosition::Clone(m_pPosition);
         }
+
+        if (pSearchPosition) {
+            int score = 0, altScore = 0;
+            bestMove = pSearchPosition->Iterate(&score, M_NONE, &altScore);
+            CPosition::Free(pSearchPosition);
+        }
+
         m_BestMove = bestMove;
         m_fEngineRunning.store(false);
 

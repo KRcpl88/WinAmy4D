@@ -3,6 +3,8 @@
 // Menu IDs
 #define IDM_FILE_NEW        1001
 #define IDM_FILE_EXIT       1002
+#define IDM_FILE_LOAD_EPD   1003
+#define IDM_FILE_SAVE_EPD   1004
 #define IDM_DEPTH_1         1011
 #define IDM_DEPTH_2         1012
 #define IDM_DEPTH_3         1013
