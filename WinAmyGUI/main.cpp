@@ -732,13 +732,13 @@ static void UpdatePauseMenu() {
 static void UpdateUndoMenu() {
     HMENU hMenu = GetMenu(g_hWnd);
     if (!hMenu) return;
-    const CPosition* pos = g_Game.GetPosition();
-    bool bEnabled = g_Game.GetPlayerMode() == PlayerMode::OnePlayer
+    CPosition* pPos = g_Game.GetPosition();
+    bool fEnabled = g_Game.GetPlayerMode() == PlayerMode::OnePlayer
                  && !g_Game.IsEngineRunning()
-                 && pos != nullptr
-                 && pos->m_wPly > 0;
+                 && pPos != nullptr
+                 && pPos->m_wPly > 0;
     EnableMenuItem(hMenu, IDM_UNDO,
-        MF_BYCOMMAND | (bEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
+        MF_BYCOMMAND | (fEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
 }
 
 // Take back the engine's reply and the human player's preceding move so the

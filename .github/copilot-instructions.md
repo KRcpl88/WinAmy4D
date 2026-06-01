@@ -80,16 +80,16 @@ extern "C" {
   - `n` — integer (e.g., `nIndex`, `nCount`)
   - `dw` — DWORD / unsigned 32-bit (e.g., `dwFlags`)
   - `w` — WORD / unsigned 16-bit (e.g., `wOffset`)
-  - `b` — BYTE / unsigned 8-bit or bool (e.g., `bValid`)
+  - `b` — BYTE / unsigned 8-bit (e.g., `bValid`)
   - `d` — double (e.g., `dRotation`)
-  - `f` — float (e.g., `fScale`)
+  - `f` — float or bool (e.g., `fScale`, `fEnabled`)
   - `sz` / `psz` — null-terminated string / pointer to string (e.g., `szName`)
   - `p` — pointer (e.g., `pNode`)
   - `rg` — array (e.g., `rgAxes`, `rgnData`)
   - `m_` — member variable prefix (e.g., `m_nLevel`, `m_rgdData`)
   - `g_` — global variable prefix (e.g., `g_nCount`)
   - `s_` — static variable prefix (e.g., `s_nInstances`)
-- **This rule is mandatory and has no exceptions.** Every variable name — including local variables, loop indices, temporaries, function parameters, and variables in test code — must carry the correct Hungarian type prefix combined with PascalCase. For example, use `nNewRank` (not `newRank`), `nDblRank` (not `dblRank`), `nDirection` (not `direction`), and `nWidth` (not `width`). New or modified code must follow this convention even when adjacent legacy code does not.
+- **This rule is mandatory and has no exceptions.** Every variable name — including local variables, loop indices, temporaries, function parameters, and variables in test code — must carry the correct Hungarian type prefix combined with PascalCase. For example, use `nNewRank` (not `newRank`), `nDblRank` (not `dblRank`), `nDirection` (not `direction`), and `nWidth` (not `width`). The prefix for a `bool` is `f` (e.g., `fEnabled`), not `b` — `b` is reserved for `BYTE`. New or modified code must follow this convention even when adjacent legacy code does not.
 
 ### Test Naming
 
