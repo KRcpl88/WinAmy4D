@@ -1,0 +1,1392 @@
+/*
+    WinAmyGUI — WinAmy4dWnd.cpp
+
+    Implementation of CWinAmy4dWnd: window class registration, message loop,
+    main-window and 3D child-window procedures, and all command/event handlers
+    for the WinAmy 4D chess GUI. This is a pure encapsulation of the logic that
+    previously lived as file-scope globals and free functions in main.cpp.
+*/
+
+#include "WinAmy4dWnd.h"
+
+#include <windowsx.h>
+#include <commctrl.h>
+#include <commdlg.h>
+#include <wchar.h>
+#include <cstring>
+#include <string>
+
+#include "resource.h"
+
+#include "dbase.h"
+#include "heap.h"
+#include "move.h"
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+static const wchar_t* APP_CLASS = L"WinAmyGUI_Window";
+static const wchar_t* APP_TITLE = L"WinAmy 4D Chess";
+static const wchar_t* RENDER_CLASS = L"WinAmyGUI_Render3D";
+
+// Toolbar / control layout
+static constexpr int TOOLBAR_H   = 36;   // pixel height of the button panel
+static constexpr int STATUSBAR_H = 22;
+static constexpr int BTN_W       = 100;
+static constexpr int BTN_H       = 28;
+static constexpr int BTN_Y       = (TOOLBAR_H - BTN_H) / 2;
+static constexpr int BTN_GAP     = 6;
+
+// ---------------------------------------------------------------------------
+// Construction / destruction
+// ---------------------------------------------------------------------------
+
+CWinAmy4dWnd::CWinAmy4dWnd() = default;
+CWinAmy4dWnd::~CWinAmy4dWnd() = default;
+
+// ---------------------------------------------------------------------------
+// Static window-procedure thunks
+//
+// The instance pointer is supplied via CreateWindowExW's lpParam and stashed
+// in GWLP_USERDATA on WM_NCCREATE, then retrieved on every subsequent message
+// so the static callback can forward to the matching instance method.
+// ---------------------------------------------------------------------------
+
+LRESULT CALLBACK CWinAmy4dWnd::StaticWndProc(HWND hWnd, UINT uMsg,
+                                             WPARAM wParam, LPARAM lParam) {
+    CWinAmy4dWnd* pThis = nullptr;
+    if (uMsg == WM_NCCREATE) {
+        auto* pcs = reinterpret_cast<CREATESTRUCTW*>(lParam);
+        pThis = reinterpret_cast<CWinAmy4dWnd*>(pcs->lpCreateParams);
+        SetWindowLongPtrW(hWnd, GWLP_USERDATA,
+                          reinterpret_cast<LONG_PTR>(pThis));
+        pThis->m_hWnd = hWnd;
+    } else {
+        pThis = reinterpret_cast<CWinAmy4dWnd*>(
+            GetWindowLongPtrW(hWnd, GWLP_USERDATA));
+    }
+    if (pThis)
+        return pThis->WndProc(hWnd, uMsg, wParam, lParam);
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK CWinAmy4dWnd::StaticRender3DProc(HWND hWnd, UINT uMsg,
+                                                  WPARAM wParam, LPARAM lParam) {
+    CWinAmy4dWnd* pThis = nullptr;
+    if (uMsg == WM_NCCREATE) {
+        auto* pcs = reinterpret_cast<CREATESTRUCTW*>(lParam);
+        pThis = reinterpret_cast<CWinAmy4dWnd*>(pcs->lpCreateParams);
+        SetWindowLongPtrW(hWnd, GWLP_USERDATA,
+                          reinterpret_cast<LONG_PTR>(pThis));
+    } else {
+        pThis = reinterpret_cast<CWinAmy4dWnd*>(
+            GetWindowLongPtrW(hWnd, GWLP_USERDATA));
+    }
+    if (pThis)
+        return pThis->Render3DProc(hWnd, uMsg, wParam, lParam);
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
+
+// ---------------------------------------------------------------------------
+// Game / move helpers
+// ---------------------------------------------------------------------------
+
+bool CWinAmy4dWnd::IsHumanAllowedToMove(const CPosition* pPos) const {
+    if (!pPos) return false;
+    PlayerMode eMode = m_Game.GetPlayerMode();
+    if (eMode == PlayerMode::TwoPlayers) return true;
+    if (eMode == PlayerMode::OnePlayer) return (pPos->GetTurn() == 0);
+    return false;
+}
+
+void CWinAmy4dWnd::CollectLegalDestinationsForSquare(
+    const CPosition* pPos,
+    const CSCoord& From,
+    std::vector<CSCoord>& rgDests) {
+    rgDests.clear();
+    if (!pPos || !From.IsValid()) return;
+
+    uint16_t wOff = From.BitOffset();
+    int8_t nPiece = pPos->GetPiece(wOff);
+    if (nPiece == 0) return;
+
+    CPosition* pMovePos = CPosition::Clone(pPos);
+    if (!pMovePos) return;
+
+    pMovePos->SetTurn((nPiece > 0) ? 0 : 1);
+
+    heap_t pHeap = allocate_heap();
+    push_section(pHeap);
+    pMovePos->LegalMoves(pHeap);
+    for (unsigned int nIndex = pHeap->current_section->start;
+         nIndex < pHeap->current_section->end; ++nIndex) {
+        CMove mv = pHeap->data[nIndex];
+        if (mv.GetFromCoord() == From) {
+            rgDests.push_back(mv.GetToCoord());
+        }
+    }
+    free_heap(pHeap);
+    CPosition::Free(pMovePos);
+}
+
+bool CWinAmy4dWnd::TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqTo) {
+    if (!pPos || !IsHumanAllowedToMove(pPos)) return false;
+
+    uint16_t wSelOff = m_SelectedSquare.BitOffset();
+    int8_t nSelPiece = pPos->GetPiece(wSelOff);
+    if (nSelPiece == 0) return false;
+
+    bool fSelIsWhite = (nSelPiece > 0);
+    bool fWhiteTurn = (pPos->GetTurn() == 0);
+    if (fSelIsWhite != fWhiteTurn) return false;
+
+    heap_t pHeap = allocate_heap();
+    push_section(pHeap);
+    const_cast<CPosition*>(pPos)->LegalMoves(pHeap);
+    for (unsigned int nIndex = pHeap->current_section->start;
+         nIndex < pHeap->current_section->end; ++nIndex) {
+        CMove mv = pHeap->data[nIndex];
+        if (mv.GetFromCoord() == m_SelectedSquare && mv.GetToCoord() == sqTo) {
+            m_Game.MakeMove(mv);
+            free_heap(pHeap);
+            return true;
+        }
+    }
+
+    free_heap(pHeap);
+    return false;
+}
+
+// ---------------------------------------------------------------------------
+// Layout helpers
+// ---------------------------------------------------------------------------
+
+// Returns the size of the renderable client area (below the toolbar,
+// above the status bar). Used by the D3D renderer to size its swap chain.
+SIZE CWinAmy4dWnd::GetRenderAreaSize(HWND hWnd) const {
+    RECT rc;
+    GetClientRect(hWnd, &rc);
+    int w = rc.right - rc.left;
+    int h = rc.bottom - rc.top - TOOLBAR_H - STATUSBAR_H;
+    if (w < 1) w = 1;
+    if (h < 1) h = 1;
+    return SIZE{ w, h };
+}
+
+// Returns the extra top-left offset (within the 2D render area) needed to
+// center the board whenever the client area is larger than the board itself.
+POINT CWinAmy4dWnd::Get2DBoardOffset(HWND hWnd) const {
+    RECT rcClient{};
+    GetClientRect(hWnd, &rcClient);
+    int nClientW = rcClient.right - rcClient.left;
+    int nClientH = rcClient.bottom - rcClient.top - TOOLBAR_H - STATUSBAR_H;
+    if (nClientH < 0) nClientH = 0;
+
+    SIZE boardSz = BoardRenderer::GetBoardAreaSize();
+    POINT ptOffset{ 0, 0 };
+    if (nClientW > boardSz.cx) {
+        ptOffset.x = (nClientW - boardSz.cx) / 2;
+    }
+    if (nClientH > boardSz.cy) {
+        ptOffset.y = (nClientH - boardSz.cy) / 2;
+    }
+    return ptOffset;
+}
+
+// Handles a click on a CSCoord that came from the 3D pick. Mirrors the
+// selection/move logic in OnSquareClick but skips the 2D hit-test.
+void CWinAmy4dWnd::OnSquareClick3D(const CSCoord& sq) {
+    if (m_Game.IsEngineRunning() || m_Game.IsGameOver()
+        || m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
+    const CPosition* pos = m_Game.GetPosition();
+    if (!pos) return;
+
+    if (!m_fHaveSelection) {
+        uint16_t off = sq.BitOffset();
+        int8_t piece = pos->GetPiece(off);
+        if (piece == 0) return;
+        m_fHaveSelection = true;
+        m_SelectedSquare = sq;
+        CollectLegalDestinationsForSquare(pos, sq, m_rgLegalDests);
+        InvalidateRect(m_hRender3D ? m_hRender3D : m_hWnd, nullptr, FALSE);
+    } else {
+        bool madeMove = false;
+        for (const auto& dest : m_rgLegalDests) {
+            if (dest == sq) {
+                madeMove = TryMakeSelectedMove(pos, sq);
+                break;
+            }
+        }
+        m_fHaveSelection = false;
+        m_rgLegalDests.clear();
+        InvalidateRect(m_hRender3D ? m_hRender3D : m_hWnd, nullptr, FALSE);
+        if (madeMove) {
+            m_fHaveHint = false;
+            UpdateStatusBar();
+            if (!m_Game.IsGameOver()) MaybeStartEngine();
+        }
+    }
+}
+
+// Render3D child window proc — handles mouse for orbit/zoom and paint via D3D.
+LRESULT CWinAmy4dWnd::Render3DProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+    case WM_ERASEBKGND:
+        return 1; // suppress flicker; the swap chain owns the surface
+    case WM_PAINT: {
+        PAINTSTRUCT ps;
+        BeginPaint(hWnd, &ps);
+        if (m_D3DRenderer.IsInitialized()) {
+            const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
+            const CSCoord* HintFrom = m_fHaveHint ? &m_HintFrom : nullptr;
+            const CSCoord* HintTo   = m_fHaveHint ? &m_HintTo   : nullptr;
+            m_D3DRenderer.Render(m_Game.GetPosition(), sel, m_rgLegalDests,
+                                 HintFrom, HintTo);
+        }
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
+    case WM_LBUTTONDOWN:
+        if (m_D3DRenderer.IsInitialized())
+            m_D3DRenderer.OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
+    case WM_MOUSEMOVE:
+        if (m_D3DRenderer.IsInitialized())
+            m_D3DRenderer.OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
+    case WM_LBUTTONUP:
+        if (m_D3DRenderer.IsInitialized()) {
+            int x = GET_X_LPARAM(lParam);
+            int y = GET_Y_LPARAM(lParam);
+            m_D3DRenderer.OnMouseUp(x, y);
+            if (m_D3DRenderer.LastInteractionWasClick()) {
+                CSCoord sq = m_D3DRenderer.HitTest3D(x, y);
+                if (sq.IsValid()) OnSquareClick3D(sq);
+            }
+        }
+        return 0;
+    case WM_MOUSEWHEEL:
+        if (m_D3DRenderer.IsInitialized())
+            m_D3DRenderer.OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
+        return 0;
+    }
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
+
+// ---------------------------------------------------------------------------
+// Run — register classes, create the window, pump messages
+// ---------------------------------------------------------------------------
+
+int CWinAmy4dWnd::Run(HINSTANCE hInstance, int /*nCmdShow*/) {
+    // Initialise common controls (needed for spin/status bar).
+    INITCOMMONCONTROLSEX icce{sizeof(icce), ICC_WIN95_CLASSES};
+    InitCommonControlsEx(&icce);
+
+    // Initialise chess engine.
+    GameController::InitEngine();
+
+    // Start the initial game now that the engine attack tables are ready.
+    // (The GameController constructor intentionally does NOT do this, because
+    // it runs during construction before InitEngine().)
+    m_Game.NewGame();
+
+    // Register window class.
+    WNDCLASSEXW wc{};
+    wc.cbSize        = sizeof(wc);
+    wc.style         = CS_HREDRAW | CS_VREDRAW;
+    wc.lpfnWndProc   = StaticWndProc;
+    wc.hInstance     = hInstance;
+    wc.hCursor       = LoadCursor(nullptr, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.lpszMenuName  = MAKEINTRESOURCEW(IDR_MAINMENU);
+    wc.lpszClassName = APP_CLASS;
+    wc.hIcon         = LoadIcon(nullptr, IDI_APPLICATION);
+    wc.hIconSm       = LoadIcon(nullptr, IDI_APPLICATION);
+    RegisterClassExW(&wc);
+
+    // Register the child render window class used for 3D mode.
+    WNDCLASSEXW rwc{};
+    rwc.cbSize        = sizeof(rwc);
+    rwc.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    rwc.lpfnWndProc   = StaticRender3DProc;
+    rwc.hInstance     = hInstance;
+    rwc.hCursor       = LoadCursor(nullptr, IDC_ARROW);
+    rwc.hbrBackground = nullptr; // we own the surface via the swap chain
+    rwc.lpszClassName = RENDER_CLASS;
+    RegisterClassExW(&rwc);
+
+    SIZE boardSz = BoardRenderer::GetBoardAreaSize();
+    int winW = boardSz.cx + 16;
+    int winH = boardSz.cy + TOOLBAR_H + STATUSBAR_H + 60;
+
+    HWND hWnd = CreateWindowExW(
+        0, APP_CLASS, APP_TITLE,
+        WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL,
+        CW_USEDEFAULT, CW_USEDEFAULT, winW, winH,
+        nullptr, nullptr, hInstance, this
+    );
+
+    ShowWindow(hWnd, SW_SHOWMAXIMIZED);
+    UpdateWindow(hWnd);
+
+    // Start the first engine move if in auto mode.
+    MaybeStartEngine();
+
+    MSG msg{};
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    return (int)msg.wParam;
+}
+
+// ---------------------------------------------------------------------------
+// CreateControls — called once on WM_CREATE
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::CreateControls(HWND hWnd) {
+    HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
+    int x = BTN_GAP;
+
+    auto makeBtn = [&](const wchar_t* label, int id, int w = BTN_W) -> HWND {
+        HWND h = CreateWindowExW(0, L"BUTTON", label,
+            WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            x, BTN_Y, w, BTN_H, hWnd, (HMENU)(INT_PTR)id, hInst, nullptr);
+        x += w + BTN_GAP;
+        return h;
+    };
+
+    auto makeCheck = [&](const wchar_t* label, int id, int w) -> HWND {
+        HWND h = CreateWindowExW(0, L"BUTTON", label,
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
+            x, BTN_Y + 6, w, BTN_H - 8, hWnd, (HMENU)(INT_PTR)id, hInst, nullptr);
+        x += w + BTN_GAP;
+        return h;
+    };
+
+    m_hBtnNew = makeBtn(L"New Game", IDC_BTN_NEW_GAME);
+    // Ask the engine to suggest a move for the human player (highlight only).
+    m_hBtnHint = makeBtn(L"Suggest Move", IDC_BTN_HINT, 110);
+    x += BTN_GAP * 2; // spacer
+
+    // 2D/3D view toggle — always enabled regardless of current view mode.
+    // Label is kept in sync with m_eViewMode by UpdateViewToggleButton.
+    m_hBtnViewToggle = makeBtn(L"Switch to 3D", IDC_BTN_VIEW_TOGGLE, 110);
+
+    // Grid-type dropdown — only enabled in 3D mode. The list contents map
+    // 1:1 onto CUCoord::EOutlineType in declaration order, so combobox
+    // index N == (EOutlineType)(OT_full + N).
+    {
+        int nCbH = 220; // includes dropdown extent (8 items + decorations).
+        m_hCbGridType = CreateWindowExW(0, L"COMBOBOX", L"",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+                | CBS_DROPDOWNLIST,
+            x, BTN_Y, 160, nCbH, hWnd,
+            (HMENU)(INT_PTR)IDC_CB_GRID_TYPE, hInst, nullptr);
+        x += 160 + BTN_GAP;
+        static const wchar_t* kGridLabels[] = {
+            L"Full Dodecahedron",
+            L"Square Z Slice",
+            L"Square Y Slice",
+            L"Square X Slice",
+            L"Hex 1 (-X,-Y,-Z)",
+            L"Hex 2 (-X,-Y,+Z)",
+            L"Hex 3 (-X,+Y,-Z)",
+            L"Hex 4 (+X,-Y,-Z)",
+        };
+        for (auto* psz : kGridLabels) {
+            SendMessageW(m_hCbGridType, CB_ADDSTRING, 0, (LPARAM)psz);
+        }
+        int nInitial = static_cast<int>(m_D3DRenderer.GetOutlineType())
+                     - static_cast<int>(CUCoord::OT_full);
+        SendMessageW(m_hCbGridType, CB_SETCURSEL, (WPARAM)nInitial, 0);
+        EnableWindow(m_hCbGridType, FALSE); // 2D by default.
+    }
+
+    x += BTN_GAP * 2;
+
+    // 3D-mode controls. Search depth is configured exclusively via the
+    // Options > Search Depth menu; there are no toolbar depth controls.
+    m_hBtnOutlines  = makeBtn(L"Outlines: On", IDC_BTN_OUTLINES,   90);
+    m_hBtnResetView = makeBtn(L"Reset View",   IDC_BTN_RESET_VIEW, 80);
+    m_hBtnZoomIn    = makeBtn(L"Zoom +",       IDC_BTN_ZOOM_IN,    60);
+    m_hBtnZoomOut   = makeBtn(L"Zoom -",       IDC_BTN_ZOOM_OUT,   60);
+    x += BTN_GAP;
+    m_hChkInvertX   = makeCheck(L"Invert X",   IDC_CHK_INVERT_X,   74);
+    m_hChkInvertY   = makeCheck(L"Invert Y",   IDC_CHK_INVERT_Y,   74);
+    m_hChkInvertZ   = makeCheck(L"Invert Z",   IDC_CHK_INVERT_Z,   74);
+    {
+        int nCbH = 140;
+        m_hCbSwapAxes = CreateWindowExW(0, L"COMBOBOX", L"",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
+            x, BTN_Y, 128, nCbH, hWnd,
+            (HMENU)(INT_PTR)IDC_CB_SWAP_AXES, hInst, nullptr);
+        x += 128 + BTN_GAP;
+        static const wchar_t* kSwapLabels[] = {
+            L"No Swap",
+            L"Swap X/Y",
+            L"Swap X/Z",
+            L"Swap Y/Z",
+        };
+        for (auto* psz : kSwapLabels) {
+            SendMessageW(m_hCbSwapAxes, CB_ADDSTRING, 0, (LPARAM)psz);
+        }
+        SendMessageW(m_hCbSwapAxes, CB_SETCURSEL, 0, 0);
+    }
+    EnableWindow(m_hBtnOutlines,  FALSE);
+    EnableWindow(m_hBtnResetView, FALSE);
+    EnableWindow(m_hBtnZoomIn,    FALSE);
+    EnableWindow(m_hBtnZoomOut,   FALSE);
+    EnableWindow(m_hChkInvertX,   FALSE);
+    EnableWindow(m_hChkInvertY,   FALSE);
+    EnableWindow(m_hChkInvertZ,   FALSE);
+    EnableWindow(m_hCbSwapAxes,   FALSE);
+
+    // Status bar
+    m_hStatus = CreateWindowExW(0, STATUSCLASSNAMEW, nullptr,
+        WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
+        0, 0, 0, 0, hWnd, nullptr, hInst, nullptr);
+
+    // 3D render child window — covers the area between the toolbar and the
+    // status bar. Initially hidden; SetViewMode toggles visibility.
+    m_hRender3D = CreateWindowExW(0, RENDER_CLASS, nullptr,
+        WS_CHILD,
+        0, TOOLBAR_H, 10, 10,
+        hWnd, nullptr, hInst, this);
+
+    // Set initial menu / button states.
+    UpdatePlayerMenu();
+    UpdatePauseMenu();
+    UpdateViewToggleButton();
+    UpdateAxisControls();
+}
+
+// ---------------------------------------------------------------------------
+// OnNewGame
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::OnNewGame() {
+    m_Game.PauseEngine();
+    m_fPaused = false;
+    m_fHaveSelection = false;
+    m_fHaveHint = false;
+    m_fGameOverAnnounced = false;
+    m_rgLegalDests.clear();
+    m_Game.NewGame();
+    // Preserve the depth previously selected via the Options menu.
+    UpdatePauseMenu();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+    UpdateStatusBar();
+    MaybeStartEngine();
+}
+
+void CWinAmy4dWnd::OnLoadEPDGame() {
+    wchar_t rgPath[MAX_PATH] = {};
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = m_hWnd;
+    ofn.lpstrFilter =
+        L"EPD4 Files (*.epd4)\0*.epd4\0"
+        L"All Files (*.*)\0*.*\0\0";
+    ofn.lpstrFile = rgPath;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+    ofn.lpstrDefExt = L"epd4";
+
+    if (!GetOpenFileNameW(&ofn))
+        return;
+
+    if (!m_Game.LoadFromEPDFile(rgPath)) {
+        MessageBoxW(m_hWnd, L"Failed to load EPD file.", APP_TITLE, MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    m_fPaused = false;
+    m_fHaveSelection = false;
+    m_fHaveHint = false;
+    m_fGameOverAnnounced = false;
+    m_rgLegalDests.clear();
+    UpdatePauseMenu();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+    UpdateStatusBar();
+    MaybeStartEngine();
+}
+
+void CWinAmy4dWnd::OnSaveEPDGame() {
+    wchar_t rgPath[MAX_PATH] = {};
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = m_hWnd;
+    ofn.lpstrFilter =
+        L"EPD4 Files (*.epd4)\0*.epd4\0"
+        L"All Files (*.*)\0*.*\0\0";
+    ofn.lpstrFile = rgPath;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+    ofn.lpstrDefExt = L"epd4";
+
+    if (!GetSaveFileNameW(&ofn))
+        return;
+
+    if (!m_Game.SaveToEPDFile(rgPath)) {
+        MessageBoxW(m_hWnd, L"Failed to save EPD file.", APP_TITLE, MB_OK | MB_ICONERROR);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// MaybeStartEngine — trigger engine search if it is the engine's turn
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::MaybeStartEngine() {
+    if (m_Game.IsGameOver()) return;
+    if (m_Game.IsEngineRunning()) return;
+    if (m_fPaused) return;
+
+    const CPosition* pos = m_Game.GetPosition();
+    if (!pos) return;
+
+    PlayerMode mode = m_Game.GetPlayerMode();
+    if (mode == PlayerMode::TwoPlayers) return;
+
+    bool engineTurn = false;
+    if (mode == PlayerMode::ZeroPlayers) {
+        engineTurn = true;
+    } else if (mode == PlayerMode::OnePlayer) {
+        // Engine plays Black (turn 1).
+        engineTurn = (pos->GetTurn() == 1);
+    }
+
+    if (engineTurn) {
+        UpdateStatusBar();
+        m_Game.StartEngineSearch(m_hWnd);
+        UpdatePauseMenu();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// OnEngineMove — handle WM_APP_ENGINE_MOVE
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
+    CMove move = m_Game.GetBestMove();
+    if (move == M_NONE) {
+        UpdatePauseMenu();
+        UpdateStatusBar();
+        // The engine returns M_NONE when there is no move (checkmate or
+        // stalemate on its turn); announce the result in that case too.
+        MaybeAnnounceGameOver();
+        return;
+    }
+
+    m_Game.MakeMove(move);
+    m_fHaveSelection = false;
+    m_rgLegalDests.clear();
+    m_fHaveHint = false;
+
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+    UpdateStatusBar();
+
+    if (m_Game.IsGameOver()) {
+        UpdatePauseMenu();
+        MaybeAnnounceGameOver();
+        return;
+    }
+
+    // For self-play, immediately start the engine again (other side).
+    if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers && !m_fPaused) {
+        m_Game.StartEngineSearch(m_hWnd);
+        UpdatePauseMenu();
+    } else {
+        MaybeStartEngine();
+        UpdatePauseMenu();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ClearHint — drop any active move suggestion highlight
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::ClearHint() {
+    if (!m_fHaveHint) return;
+    m_fHaveHint = false;
+    m_HintFrom = InvalidSquareCoord();
+    m_HintTo   = InvalidSquareCoord();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+}
+
+// ---------------------------------------------------------------------------
+// OnSuggestMove — ask the engine to recommend a move for the human player
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::OnSuggestMove() {
+    if (m_Game.IsEngineRunning()) return;
+    if (m_Game.IsGameOver()) return;
+    // A suggestion only makes sense when a human is to move.
+    if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
+
+    const CPosition* pos = m_Game.GetPosition();
+    if (!pos) return;
+
+    // In 1-player mode the human plays White (turn 0); don't suggest a move
+    // while it is the engine's turn.
+    if (m_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->GetTurn() == 1)
+        return;
+
+    // Clear any stale suggestion and current selection, then run the search.
+    ClearHint();
+    m_fHaveSelection = false;
+    m_rgLegalDests.clear();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+
+    m_Game.StartHintSearch(m_hWnd);
+    UpdateStatusBar();
+}
+
+// ---------------------------------------------------------------------------
+// OnEngineHint — handle WM_APP_ENGINE_HINT (suggestion search completed)
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::OnEngineHint(LPARAM /*lParam*/) {
+    CMove move = m_Game.GetBestMove();
+    UpdateStatusBar();
+    if (move == M_NONE) {
+        // No legal move to suggest (checkmate/stalemate) — nothing to show.
+        return;
+    }
+
+    m_HintFrom = move.GetFromCoord();
+    m_HintTo   = move.GetToCoord();
+    m_fHaveHint = true;
+
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+}
+
+// ---------------------------------------------------------------------------
+// OnSquareClick — handle a left-click on the board area
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::OnSquareClick(POINT pt) {
+    if (m_Game.IsEngineRunning()) return;
+    if (m_Game.IsGameOver()) return;
+    if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
+
+    const CPosition* pos = m_Game.GetPosition();
+    if (!pos) return;
+
+    // pt is already in board coordinates (scroll + toolbar applied by caller).
+    CSCoord sq = m_Renderer.HitTest(pt);
+
+    if (!sq.IsValid()) {
+        m_fHaveSelection = false;
+        m_rgLegalDests.clear();
+        InvalidateRect(m_hWnd, nullptr, TRUE);
+        return;
+    }
+
+    if (!m_fHaveSelection) {
+        // Select any occupied square to inspect legal moves for that side.
+        uint16_t off = sq.BitOffset();
+        int8_t piece = pos->GetPiece(off);
+        if (piece == 0) return;
+
+        m_fHaveSelection = true;
+        m_SelectedSquare = sq;
+        CollectLegalDestinationsForSquare(pos, sq, m_rgLegalDests);
+
+        InvalidateRect(m_hWnd, nullptr, TRUE);
+    } else {
+        // Attempt to make a move to the clicked destination.
+        bool madeMove = false;
+        for (const auto& dest : m_rgLegalDests) {
+            if (dest == sq) {
+                madeMove = TryMakeSelectedMove(pos, sq);
+                break;
+            }
+        }
+
+        m_fHaveSelection = false;
+        m_rgLegalDests.clear();
+        InvalidateRect(m_hWnd, nullptr, TRUE);
+
+        if (madeMove) {
+            m_fHaveHint = false;
+            UpdateStatusBar();
+            if (!m_Game.IsGameOver())
+                MaybeStartEngine();
+            else
+                MaybeAnnounceGameOver();
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateStatusBar
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::UpdateStatusBar() {
+    if (!m_hStatus) return;
+
+    const char* gameEnd = m_Game.GetGameEndMessage();
+    if (gameEnd) {
+        // Show the friendly result text (outcome, winner, move count).
+        std::string strResult = m_Game.GetGameResultText();
+        if (strResult.empty())
+            strResult = gameEnd;
+        wchar_t wide[256]{};
+        MultiByteToWideChar(CP_UTF8, 0, strResult.c_str(), -1, wide, 256);
+        SendMessageW(m_hStatus, WM_SETTEXT, 0, (LPARAM)wide);
+        return;
+    }
+
+    const CPosition* pos = m_Game.GetPosition();
+    if (!pos) return;
+
+    wchar_t buf[128];
+    const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
+    if (m_Game.IsEngineRunning()) {
+        swprintf_s(buf, 128, L"%s  [Engine thinking...]", turn);
+    } else {
+        swprintf_s(buf, 128, L"%s", turn);
+    }
+    SendMessageW(m_hStatus, WM_SETTEXT, 0, (LPARAM)buf);
+}
+
+// ---------------------------------------------------------------------------
+// MaybeAnnounceGameOver — show a one-time result dialog when the game ends
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::MaybeAnnounceGameOver() {
+    if (m_fGameOverAnnounced) return;
+    if (!m_Game.IsGameOver()) return;
+
+    m_fGameOverAnnounced = true;
+
+    // Make sure the final position (and result banner) is on screen before the
+    // modal dialog appears.
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+    UpdateWindow(m_hWnd);
+
+    std::string strResult = m_Game.GetGameResultText();
+    if (strResult.empty()) return;
+
+    wchar_t wide[256]{};
+    MultiByteToWideChar(CP_UTF8, 0, strResult.c_str(), -1, wide, 256);
+    MessageBoxW(m_hWnd, wide, L"Game Over", MB_OK | MB_ICONINFORMATION);
+}
+
+// ---------------------------------------------------------------------------
+// UpdatePlayerMenu / UpdatePauseMenu / SetPlayerModeAction / TogglePause
+//
+// All player-mode and pause UI now lives on the Options menu (the toolbar
+// only carries view-related controls). The helpers below are the single
+// source of truth for keeping those menu items in sync with engine state.
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::UpdatePlayerMenu() {
+    HMENU hMenu = GetMenu(m_hWnd);
+    if (!hMenu) return;
+    PlayerMode mode = m_Game.GetPlayerMode();
+    int nIdCheck = (mode == PlayerMode::ZeroPlayers) ? IDM_PLAYERS_0
+                 : (mode == PlayerMode::OnePlayer)   ? IDM_PLAYERS_1
+                                                     : IDM_PLAYERS_2;
+    CheckMenuRadioItem(hMenu, IDM_PLAYERS_FIRST, IDM_PLAYERS_LAST,
+                       nIdCheck, MF_BYCOMMAND);
+}
+
+void CWinAmy4dWnd::UpdatePauseMenu() {
+    HMENU hMenu = GetMenu(m_hWnd);
+    if (!hMenu) return;
+    // Pause is meaningful only while the engine is actively thinking, or
+    // while we have explicitly paused it (so the user can resume).
+    bool bEnabled = m_Game.IsEngineRunning() || m_fPaused;
+    EnableMenuItem(hMenu, IDM_PAUSE,
+        MF_BYCOMMAND | (bEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
+    CheckMenuItem(hMenu, IDM_PAUSE,
+        MF_BYCOMMAND | (m_fPaused ? MF_CHECKED : MF_UNCHECKED));
+    UpdateUndoMenu();
+}
+
+// Undo is offered only in 1-player mode (human vs engine), when the engine is
+// not thinking and there is at least one played move to take back.
+void CWinAmy4dWnd::UpdateUndoMenu() {
+    HMENU hMenu = GetMenu(m_hWnd);
+    if (!hMenu) return;
+    CPosition* pPos = m_Game.GetPosition();
+    bool fEnabled = m_Game.GetPlayerMode() == PlayerMode::OnePlayer
+                 && !m_Game.IsEngineRunning()
+                 && pPos != nullptr
+                 && pPos->GetPly() > 0;
+    EnableMenuItem(hMenu, IDM_UNDO,
+        MF_BYCOMMAND | (fEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
+}
+
+// Take back the engine's reply and the human player's preceding move so the
+// human may move again. Only valid in 1-player mode while the engine is idle.
+void CWinAmy4dWnd::OnUndoMove() {
+    if (m_Game.GetPlayerMode() != PlayerMode::OnePlayer) return;
+    if (m_Game.IsEngineRunning()) return;
+
+    if (!m_Game.UndoLastHumanMove()) return;
+
+    m_fHaveSelection = false;
+    m_fGameOverAnnounced = false;
+    m_rgLegalDests.clear();
+
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+    UpdateStatusBar();
+    UpdatePauseMenu();
+}
+
+void CWinAmy4dWnd::SetPlayerModeAction(PlayerMode mode) {
+    m_Game.SetPlayerMode(mode);
+    UpdatePlayerMenu();
+    if (mode == PlayerMode::TwoPlayers) {
+        m_Game.PauseEngine();
+        m_fPaused = false;
+        UpdatePauseMenu();
+    } else {
+        MaybeStartEngine();
+        UpdatePauseMenu();
+    }
+}
+
+void CWinAmy4dWnd::TogglePause() {
+    if (m_Game.IsEngineRunning()) {
+        m_fPaused = true;
+        m_Game.PauseEngine();
+        UpdatePauseMenu();
+        UpdateStatusBar();
+    } else if (m_fPaused) {
+        m_fPaused = false;
+        UpdatePauseMenu();
+        MaybeStartEngine();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SetViewMode — toggle between 2D GDI rendering and 3D Direct3D 11 rendering
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::UpdateOutlinesButtonText() {
+    if (!m_hBtnOutlines) return;
+    bool bOn = m_D3DRenderer.IsInitialized() ? m_D3DRenderer.GetShowOutlines() : true;
+    SetWindowTextW(m_hBtnOutlines, bOn ? L"Outlines: On" : L"Outlines: Off");
+}
+
+void CWinAmy4dWnd::UpdateViewToggleButton() {
+    if (!m_hBtnViewToggle) return;
+    SetWindowTextW(m_hBtnViewToggle,
+        m_eViewMode == ViewMode::Mode2D ? L"Switch to 3D" : L"Switch to 2D");
+}
+
+void CWinAmy4dWnd::UpdateAxisControls() {
+    if (m_hChkInvertX) {
+        SendMessageW(m_hChkInvertX, BM_SETCHECK,
+            m_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisX) ? BST_CHECKED : BST_UNCHECKED, 0);
+    }
+    if (m_hChkInvertY) {
+        SendMessageW(m_hChkInvertY, BM_SETCHECK,
+            m_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisY) ? BST_CHECKED : BST_UNCHECKED, 0);
+    }
+    if (m_hChkInvertZ) {
+        SendMessageW(m_hChkInvertZ, BM_SETCHECK,
+            m_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisZ) ? BST_CHECKED : BST_UNCHECKED, 0);
+    }
+    if (m_hCbSwapAxes) {
+        SendMessageW(m_hCbSwapAxes, CB_SETCURSEL,
+            static_cast<WPARAM>(m_D3DRenderer.GetAxisSwap()), 0);
+    }
+}
+
+void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
+    if (mode == m_eViewMode) return;
+    m_eViewMode = mode;
+
+    HMENU hMenu = GetMenu(m_hWnd);
+    CheckMenuItem(hMenu, IDM_VIEW_2D, MF_BYCOMMAND | (mode == ViewMode::Mode2D ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hMenu, IDM_VIEW_3D, MF_BYCOMMAND | (mode == ViewMode::Mode3D ? MF_CHECKED : MF_UNCHECKED));
+
+    if (mode == ViewMode::Mode3D) {
+        // Position the child render window over the render area.
+        SIZE sz = GetRenderAreaSize(m_hWnd);
+        SetWindowPos(m_hRender3D, nullptr, 0, TOOLBAR_H, sz.cx, sz.cy,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+        // Lazy-create the D3D renderer the first time the user enters 3D.
+        if (!m_D3DRenderer.IsInitialized()) {
+            if (!m_D3DRenderer.Initialize(m_hRender3D)) {
+                MessageBoxW(m_hWnd, L"Failed to initialise Direct3D 11. Reverting to 2D view.",
+                            L"WinAmy 4D", MB_OK | MB_ICONERROR);
+                m_eViewMode = ViewMode::Mode2D;
+                CheckMenuItem(hMenu, IDM_VIEW_2D, MF_BYCOMMAND | MF_CHECKED);
+                CheckMenuItem(hMenu, IDM_VIEW_3D, MF_BYCOMMAND | MF_UNCHECKED);
+                UpdateViewToggleButton();
+                UpdateGridMenuEnabled();
+                return;
+            }
+        } else {
+            m_D3DRenderer.Resize(sz.cx, sz.cy);
+        }
+        ShowWindow(m_hRender3D, SW_SHOW);
+        ShowScrollBar(m_hWnd, SB_BOTH, FALSE);
+        EnableWindow(m_hBtnOutlines,  TRUE);
+        EnableWindow(m_hBtnResetView, TRUE);
+        EnableWindow(m_hBtnZoomIn,    TRUE);
+          EnableWindow(m_hBtnZoomOut,   TRUE);
+        EnableWindow(m_hChkInvertX,   TRUE);
+        EnableWindow(m_hChkInvertY,   TRUE);
+        EnableWindow(m_hChkInvertZ,   TRUE);
+        EnableWindow(m_hCbSwapAxes,   TRUE);
+        UpdateOutlinesButtonText();
+        UpdateAxisControls();
+        // Reflect the renderer's actual grid type in the menu checkmark
+        // and combobox selection (the renderer is the source of truth —
+        // the menu and combobox are just UI).
+        {
+            CUCoord::EOutlineType eType = m_D3DRenderer.GetOutlineType();
+            CheckMenuRadioItem(hMenu, IDM_GRID_FIRST, IDM_GRID_LAST,
+                               MenuIdFromGridType(eType), MF_BYCOMMAND);
+            if (m_hCbGridType) {
+                int nIndex = static_cast<int>(eType)
+                           - static_cast<int>(CUCoord::OT_full);
+                SendMessageW(m_hCbGridType, CB_SETCURSEL, (WPARAM)nIndex, 0);
+            }
+        }
+    } else {
+        ShowWindow(m_hRender3D, SW_HIDE);
+        ShowScrollBar(m_hWnd, SB_BOTH, TRUE);
+        UpdateScrollBars(m_hWnd);
+        EnableWindow(m_hBtnOutlines,  FALSE);
+        EnableWindow(m_hBtnResetView, FALSE);
+        EnableWindow(m_hBtnZoomIn,    FALSE);
+        EnableWindow(m_hBtnZoomOut,   FALSE);
+        EnableWindow(m_hChkInvertX,   FALSE);
+        EnableWindow(m_hChkInvertY,   FALSE);
+        EnableWindow(m_hChkInvertZ,   FALSE);
+        EnableWindow(m_hCbSwapAxes,   FALSE);
+    }
+    UpdateGridMenuEnabled();
+    UpdateViewToggleButton();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+}
+
+// ---------------------------------------------------------------------------
+// SetDepthFromMenu — set depth via menu checkmark
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::SetDepthFromMenu(int nDepth) {
+    m_Game.SetDepth(nDepth);
+
+    HMENU hMenu  = GetMenu(m_hWnd);
+    HMENU hOpts  = GetSubMenu(hMenu, 1);
+    HMENU hDepth = GetSubMenu(hOpts, 0);
+    for (int i = 0; i < 9; ++i)
+        CheckMenuItem(hDepth, IDM_DEPTH_1 + i, MF_BYCOMMAND | MF_UNCHECKED);
+    CheckMenuItem(hDepth, IDM_DEPTH_1 + (nDepth - 1), MF_BYCOMMAND | MF_CHECKED);
+}
+
+// ---------------------------------------------------------------------------
+// Grid (cell outline) type menu — IDM_GRID_FIRST..IDM_GRID_LAST map 1:1 onto
+// CUCoord::EOutlineType OT_full..OT_hex_4. CheckMenuRadioItem gives proper
+// radio behaviour across the contiguous ID range.
+// ---------------------------------------------------------------------------
+
+CUCoord::EOutlineType CWinAmy4dWnd::GridTypeFromMenuId(int nMenuId) {
+    int nOffset = nMenuId - IDM_GRID_FIRST;
+    if (nOffset < 0) nOffset = 0;
+    if (nOffset > (IDM_GRID_LAST - IDM_GRID_FIRST)) nOffset = (IDM_GRID_LAST - IDM_GRID_FIRST);
+    return static_cast<CUCoord::EOutlineType>(
+        static_cast<int>(CUCoord::OT_full) + nOffset);
+}
+
+int CWinAmy4dWnd::MenuIdFromGridType(CUCoord::EOutlineType eType) {
+    return IDM_GRID_FIRST + (static_cast<int>(eType) - static_cast<int>(CUCoord::OT_full));
+}
+
+void CWinAmy4dWnd::SetGridType(CUCoord::EOutlineType eType) {
+    if (m_D3DRenderer.IsInitialized()) {
+        m_D3DRenderer.SetOutlineType(eType);
+    } else {
+        // Renderer not yet created — we still want subsequent UI to reflect
+        // the chosen type. SetOutlineType is safe pre-init (it just caches).
+        m_D3DRenderer.SetOutlineType(eType);
+    }
+    HMENU hMenu = GetMenu(m_hWnd);
+    if (hMenu) {
+        CheckMenuRadioItem(hMenu, IDM_GRID_FIRST, IDM_GRID_LAST,
+                           MenuIdFromGridType(eType), MF_BYCOMMAND);
+    }
+    if (m_hCbGridType) {
+        int nIndex = static_cast<int>(eType) - static_cast<int>(CUCoord::OT_full);
+        // CB_SETCURSEL does not fire CBN_SELCHANGE, so this is safe to call
+        // even when the change originated from the combobox itself.
+        SendMessageW(m_hCbGridType, CB_SETCURSEL, (WPARAM)nIndex, 0);
+    }
+}
+
+void CWinAmy4dWnd::SetGridTypeFromMenu(int nMenuId) {
+    if (nMenuId < IDM_GRID_FIRST || nMenuId > IDM_GRID_LAST) return;
+    SetGridType(GridTypeFromMenuId(nMenuId));
+}
+
+void CWinAmy4dWnd::UpdateGridMenuEnabled() {
+    HMENU hMenu = GetMenu(m_hWnd);
+    BOOL bEnabled = (m_eViewMode == ViewMode::Mode3D) ? TRUE : FALSE;
+    if (hMenu) {
+        UINT uState = bEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED);
+        for (int nId = IDM_GRID_FIRST; nId <= IDM_GRID_LAST; ++nId) {
+            EnableMenuItem(hMenu, nId, MF_BYCOMMAND | uState);
+        }
+    }
+    if (m_hCbGridType) {
+        EnableWindow(m_hCbGridType, bEnabled);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateScrollBars — recompute scroll range from board and client sizes
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::UpdateScrollBars(HWND hWnd) {
+    RECT clientRect;
+    GetClientRect(hWnd, &clientRect);
+    int clientW = clientRect.right  - clientRect.left;
+    int clientH = clientRect.bottom - clientRect.top - TOOLBAR_H - STATUSBAR_H;
+    if (clientH < 0) clientH = 0;
+
+    SIZE boardSz = BoardRenderer::GetBoardAreaSize();
+
+    SCROLLINFO si{};
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
+
+    // Horizontal
+    si.nMin  = 0;
+    si.nMax  = boardSz.cx;
+    si.nPage = clientW;
+    if (m_nScrollX > boardSz.cx - (int)si.nPage) m_nScrollX = max(0, boardSz.cx - (int)si.nPage);
+    si.nPos  = m_nScrollX;
+    SetScrollInfo(hWnd, SB_HORZ, &si, TRUE);
+
+    // Vertical
+    si.nMin  = 0;
+    si.nMax  = boardSz.cy;
+    si.nPage = (UINT)clientH;
+    if (m_nScrollY > boardSz.cy - (int)si.nPage) m_nScrollY = max(0, boardSz.cy - (int)si.nPage);
+    si.nPos  = m_nScrollY;
+    SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
+}
+
+// ---------------------------------------------------------------------------
+// Window Procedure
+// ---------------------------------------------------------------------------
+
+LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+    case WM_CREATE:
+        CreateControls(hWnd);
+        SetDepthFromMenu(3);
+        UpdateScrollBars(hWnd);
+        UpdateGridMenuEnabled();
+        return 0;
+
+    case WM_SIZE: {
+        if (m_hStatus) SendMessage(m_hStatus, WM_SIZE, 0, 0);
+        UpdateScrollBars(hWnd);
+        if (m_hRender3D) {
+            SIZE sz = GetRenderAreaSize(hWnd);
+            SetWindowPos(m_hRender3D, nullptr, 0, TOOLBAR_H, sz.cx, sz.cy,
+                         SWP_NOZORDER | SWP_NOACTIVATE);
+            if (m_eViewMode == ViewMode::Mode3D && m_D3DRenderer.IsInitialized()) {
+                m_D3DRenderer.Resize(sz.cx, sz.cy);
+            }
+        }
+        return 0;
+    }
+
+    case WM_HSCROLL: {
+        if (m_eViewMode != ViewMode::Mode2D) return 0;
+        SCROLLINFO si{ sizeof(si), SIF_ALL };
+        GetScrollInfo(hWnd, SB_HORZ, &si);
+        int oldX = m_nScrollX;
+        switch (LOWORD(wParam)) {
+        case SB_LINELEFT:      m_nScrollX -= BoardRenderer::SQUARE_SIZE; break;
+        case SB_LINERIGHT:     m_nScrollX += BoardRenderer::SQUARE_SIZE; break;
+        case SB_PAGELEFT:      m_nScrollX -= si.nPage; break;
+        case SB_PAGERIGHT:     m_nScrollX += si.nPage; break;
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION: m_nScrollX  = HIWORD(wParam); break;
+        }
+        m_nScrollX = max(0, min(m_nScrollX, si.nMax - (int)si.nPage));
+        if (m_nScrollX != oldX) {
+            SetScrollPos(hWnd, SB_HORZ, m_nScrollX, TRUE);
+            ScrollWindowEx(hWnd, oldX - m_nScrollX, 0,
+                           nullptr, nullptr, nullptr, nullptr, SW_INVALIDATE);
+            UpdateWindow(hWnd);
+        }
+        return 0;
+    }
+
+    case WM_VSCROLL: {
+        if (m_eViewMode != ViewMode::Mode2D) return 0;
+        SCROLLINFO si{ sizeof(si), SIF_ALL };
+        GetScrollInfo(hWnd, SB_VERT, &si);
+        int oldY = m_nScrollY;
+        switch (LOWORD(wParam)) {
+        case SB_LINEUP:        m_nScrollY -= BoardRenderer::SQUARE_SIZE; break;
+        case SB_LINEDOWN:      m_nScrollY += BoardRenderer::SQUARE_SIZE; break;
+        case SB_PAGEUP:        m_nScrollY -= si.nPage; break;
+        case SB_PAGEDOWN:      m_nScrollY += si.nPage; break;
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION: m_nScrollY  = HIWORD(wParam); break;
+        }
+        m_nScrollY = max(0, min(m_nScrollY, si.nMax - (int)si.nPage));
+        if (m_nScrollY != oldY) {
+            SetScrollPos(hWnd, SB_VERT, m_nScrollY, TRUE);
+            ScrollWindowEx(hWnd, 0, oldY - m_nScrollY,
+                           nullptr, nullptr, nullptr, nullptr, SW_INVALIDATE);
+            UpdateWindow(hWnd);
+        }
+        return 0;
+    }
+
+    case WM_PAINT: {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+
+        if (m_eViewMode != ViewMode::Mode3D) {
+            POINT ptOffset = Get2DBoardOffset(hWnd);
+            // Offset by toolbar height and current scroll position.
+            SetViewportOrgEx(hdc, ptOffset.x - m_nScrollX, TOOLBAR_H + ptOffset.y - m_nScrollY, nullptr);
+
+            const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
+            const CSCoord* HintFrom = m_fHaveHint ? &m_HintFrom : nullptr;
+            const CSCoord* HintTo   = m_fHaveHint ? &m_HintTo   : nullptr;
+            m_Renderer.DrawBoard(hdc, m_Game.GetPosition(), sel, m_rgLegalDests,
+                                 HintFrom, HintTo);
+
+            SetViewportOrgEx(hdc, 0, 0, nullptr);
+
+            // When the game is over, draw a centred result banner across the
+            // top of the board so the outcome is always visible on the board.
+            if (m_Game.IsGameOver()) {
+                std::string strResult = m_Game.GetGameResultText();
+                if (!strResult.empty()) {
+                    wchar_t wide[256]{};
+                    MultiByteToWideChar(CP_UTF8, 0, strResult.c_str(), -1, wide, 256);
+
+                    RECT rcClient;
+                    GetClientRect(hWnd, &rcClient);
+
+                    HFONT hFont = CreateFontW(
+                        -20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+                        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+                    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+
+                    RECT rcText = rcClient;
+                    rcText.top = TOOLBAR_H + 8;
+                    rcText.bottom = rcText.top + 36;
+                    DrawTextW(hdc, wide, -1, &rcText,
+                              DT_CENTER | DT_CALCRECT | DT_SINGLELINE);
+
+                    // Centre horizontally within the client area.
+                    int nWidth = rcText.right - rcText.left;
+                    int nCx = (rcClient.right - rcClient.left) / 2;
+                    RECT rcBanner;
+                    rcBanner.left = nCx - nWidth / 2 - 16;
+                    rcBanner.right = nCx + nWidth / 2 + 16;
+                    rcBanner.top = TOOLBAR_H + 6;
+                    rcBanner.bottom = rcBanner.top + (rcText.bottom - rcText.top) + 8;
+
+                    HBRUSH hBrush = CreateSolidBrush(RGB(32, 32, 32));
+                    FillRect(hdc, &rcBanner, hBrush);
+                    DeleteObject(hBrush);
+                    SetBkMode(hdc, TRANSPARENT);
+                    SetTextColor(hdc, RGB(255, 215, 0));
+                    DrawTextW(hdc, wide, -1, &rcBanner,
+                              DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                    SelectObject(hdc, hOldFont);
+                    DeleteObject(hFont);
+                }
+            }
+        }
+        // In 3D mode the child render window covers the render area and
+        // owns the painting; nothing to do here.
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
+
+    case WM_LBUTTONDOWN: {
+        if (m_eViewMode == ViewMode::Mode3D) return 0; // handled by child
+        POINT ptOffset = Get2DBoardOffset(hWnd);
+        // Adjust click coordinates for scroll offset and toolbar.
+        POINT pt{
+            GET_X_LPARAM(lParam) + m_nScrollX - ptOffset.x,
+            GET_Y_LPARAM(lParam) - TOOLBAR_H + m_nScrollY - ptOffset.y
+        };
+        OnSquareClick(pt);
+        return 0;
+    }
+
+    case WM_APP_ENGINE_MOVE:
+        OnEngineMove(lParam);
+        return 0;
+
+    case WM_APP_ENGINE_HINT:
+        OnEngineHint(lParam);
+        return 0;
+
+    case WM_COMMAND: {
+        int id = LOWORD(wParam);
+        int code = HIWORD(wParam);
+        switch (id) {
+        case IDM_FILE_NEW:
+        case IDC_BTN_NEW_GAME:
+            OnNewGame();
+            break;
+
+        case IDC_BTN_HINT:
+            OnSuggestMove();
+            break;
+
+        case IDM_FILE_LOAD_EPD:
+            OnLoadEPDGame();
+            break;
+
+        case IDM_FILE_SAVE_EPD:
+            OnSaveEPDGame();
+            break;
+
+        case IDM_FILE_EXIT:
+            DestroyWindow(hWnd);
+            break;
+
+        case IDM_VIEW_2D:
+            SetViewMode(ViewMode::Mode2D);
+            break;
+        case IDM_VIEW_3D:
+            SetViewMode(ViewMode::Mode3D);
+            break;
+
+        case IDC_BTN_VIEW_TOGGLE:
+            SetViewMode(m_eViewMode == ViewMode::Mode2D
+                            ? ViewMode::Mode3D : ViewMode::Mode2D);
+            break;
+
+        case IDC_BTN_OUTLINES:
+            if (m_D3DRenderer.IsInitialized()) {
+                m_D3DRenderer.SetShowOutlines(!m_D3DRenderer.GetShowOutlines());
+                UpdateOutlinesButtonText();
+            }
+            break;
+
+        case IDC_BTN_RESET_VIEW:
+            if (m_D3DRenderer.IsInitialized()) {
+                m_D3DRenderer.ResetView();
+                UpdateAxisControls();
+            }
+            break;
+
+        case IDC_BTN_ZOOM_IN:
+            if (m_D3DRenderer.IsInitialized()) m_D3DRenderer.AdjustZoom(0.85f);
+            break;
+
+        case IDC_BTN_ZOOM_OUT:
+            if (m_D3DRenderer.IsInitialized()) m_D3DRenderer.AdjustZoom(1.18f);
+            break;
+
+        case IDC_CHK_INVERT_X:
+            m_D3DRenderer.SetAxisInverted(D3DBoardRenderer::AxisX,
+                SendMessageW(m_hChkInvertX, BM_GETCHECK, 0, 0) == BST_CHECKED);
+            break;
+
+        case IDC_CHK_INVERT_Y:
+            m_D3DRenderer.SetAxisInverted(D3DBoardRenderer::AxisY,
+                SendMessageW(m_hChkInvertY, BM_GETCHECK, 0, 0) == BST_CHECKED);
+            break;
+
+        case IDC_CHK_INVERT_Z:
+            m_D3DRenderer.SetAxisInverted(D3DBoardRenderer::AxisZ,
+                SendMessageW(m_hChkInvertZ, BM_GETCHECK, 0, 0) == BST_CHECKED);
+            break;
+
+        case IDC_CB_GRID_TYPE:
+            if (code == CBN_SELCHANGE) {
+                int nSel = (int)SendMessageW(m_hCbGridType, CB_GETCURSEL, 0, 0);
+                if (nSel != CB_ERR) {
+                    SetGridType(static_cast<CUCoord::EOutlineType>(
+                        static_cast<int>(CUCoord::OT_full) + nSel));
+                }
+            }
+            break;
+
+        case IDC_CB_SWAP_AXES:
+            if (code == CBN_SELCHANGE) {
+                int nSel = (int)SendMessageW(m_hCbSwapAxes, CB_GETCURSEL, 0, 0);
+                switch (nSel) {
+                case 0:
+                    m_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapNone);
+                    break;
+                case 1:
+                    m_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapXY);
+                    break;
+                case 2:
+                    m_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapXZ);
+                    break;
+                case 3:
+                    m_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapYZ);
+                    break;
+                }
+            }
+            break;
+
+        case IDM_DEPTH_1: case IDM_DEPTH_2: case IDM_DEPTH_3:
+        case IDM_DEPTH_4: case IDM_DEPTH_5: case IDM_DEPTH_6:
+        case IDM_DEPTH_7: case IDM_DEPTH_8: case IDM_DEPTH_9:
+            SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
+            break;
+
+        case IDM_GRID_FULL: case IDM_GRID_SQUARE_Z: case IDM_GRID_SQUARE_Y:
+        case IDM_GRID_SQUARE_X: case IDM_GRID_HEX_1: case IDM_GRID_HEX_2:
+        case IDM_GRID_HEX_3: case IDM_GRID_HEX_4:
+            SetGridTypeFromMenu(id);
+            break;
+
+        case IDM_PLAYERS_0:
+            SetPlayerModeAction(PlayerMode::ZeroPlayers);
+            break;
+        case IDM_PLAYERS_1:
+            SetPlayerModeAction(PlayerMode::OnePlayer);
+            break;
+        case IDM_PLAYERS_2:
+            SetPlayerModeAction(PlayerMode::TwoPlayers);
+            break;
+
+        case IDM_PAUSE:
+            TogglePause();
+            break;
+
+        case IDM_UNDO:
+            OnUndoMove();
+            break;
+        }
+        return 0;
+    }
+
+    case WM_DESTROY:
+        m_Game.PauseEngine();
+        m_D3DRenderer.Shutdown();
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
