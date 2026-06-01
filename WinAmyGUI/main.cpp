@@ -118,6 +118,72 @@ static void CreateControls(HWND hWnd);
 static void UpdateScrollBars(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+static bool IsHumanAllowedToMove(const CPosition* pPos) {
+    if (!pPos) return false;
+    PlayerMode eMode = g_Game.GetPlayerMode();
+    if (eMode == PlayerMode::TwoPlayers) return true;
+    if (eMode == PlayerMode::OnePlayer) return (pPos->m_nTurn == 0);
+    return false;
+}
+
+static void CollectLegalDestinationsForSquare(
+    const CPosition* pPos,
+    const CSCoord& From,
+    std::vector<CSCoord>& rgDests) {
+    rgDests.clear();
+    if (!pPos || !From.IsValid()) return;
+
+    uint16_t wOff = From.BitOffset();
+    int8_t nPiece = pPos->m_rgPiece[wOff];
+    if (nPiece == 0) return;
+
+    CPosition* pMovePos = CPosition::Clone(pPos);
+    if (!pMovePos) return;
+
+    pMovePos->m_nTurn = (nPiece > 0) ? 0 : 1;
+
+    heap_t pHeap = allocate_heap();
+    push_section(pHeap);
+    pMovePos->LegalMoves(pHeap);
+    for (unsigned int nIndex = pHeap->current_section->start;
+         nIndex < pHeap->current_section->end; ++nIndex) {
+        CMove mv = pHeap->data[nIndex];
+        if (mv.GetFromCoord() == From) {
+            rgDests.push_back(mv.GetToCoord());
+        }
+    }
+    free_heap(pHeap);
+    CPosition::Free(pMovePos);
+}
+
+static bool TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqTo) {
+    if (!pPos || !IsHumanAllowedToMove(pPos)) return false;
+
+    uint16_t wSelOff = g_SelectedSquare.BitOffset();
+    int8_t nSelPiece = pPos->m_rgPiece[wSelOff];
+    if (nSelPiece == 0) return false;
+
+    bool fSelIsWhite = (nSelPiece > 0);
+    bool fWhiteTurn = (pPos->m_nTurn == 0);
+    if (fSelIsWhite != fWhiteTurn) return false;
+
+    heap_t pHeap = allocate_heap();
+    push_section(pHeap);
+    const_cast<CPosition*>(pPos)->LegalMoves(pHeap);
+    for (unsigned int nIndex = pHeap->current_section->start;
+         nIndex < pHeap->current_section->end; ++nIndex) {
+        CMove mv = pHeap->data[nIndex];
+        if (mv.GetFromCoord() == g_SelectedSquare && mv.GetToCoord() == sqTo) {
+            g_Game.MakeMove(mv);
+            free_heap(pHeap);
+            return true;
+        }
+    }
+
+    free_heap(pHeap);
+    return false;
+}
+
 // Returns the size of the renderable client area (below the toolbar,
 // above the status bar). Used by the D3D renderer to size its swap chain.
 static SIZE GetRenderAreaSize(HWND hWnd) {
@@ -130,6 +196,26 @@ static SIZE GetRenderAreaSize(HWND hWnd) {
     return SIZE{ w, h };
 }
 
+// Returns the extra top-left offset (within the 2D render area) needed to
+// center the board whenever the client area is larger than the board itself.
+static POINT Get2DBoardOffset(HWND hWnd) {
+    RECT rcClient{};
+    GetClientRect(hWnd, &rcClient);
+    int nClientW = rcClient.right - rcClient.left;
+    int nClientH = rcClient.bottom - rcClient.top - TOOLBAR_H - STATUSBAR_H;
+    if (nClientH < 0) nClientH = 0;
+
+    SIZE boardSz = BoardRenderer::GetBoardAreaSize();
+    POINT ptOffset{ 0, 0 };
+    if (nClientW > boardSz.cx) {
+        ptOffset.x = (nClientW - boardSz.cx) / 2;
+    }
+    if (nClientH > boardSz.cy) {
+        ptOffset.y = (nClientH - boardSz.cy) / 2;
+    }
+    return ptOffset;
+}
+
 // Handles a click on a CSCoord that came from the 3D pick. Mirrors the
 // selection/move logic in OnSquareClick but skips the 2D hit-test.
 static void OnSquareClick3D(const CSCoord& sq) {
@@ -137,46 +223,20 @@ static void OnSquareClick3D(const CSCoord& sq) {
         || g_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
     const CPosition* pos = g_Game.GetPosition();
     if (!pos) return;
-    if (g_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->m_nTurn == 1) return;
 
     if (!g_fHaveSelection) {
         uint16_t off = sq.BitOffset();
         int8_t piece = pos->m_rgPiece[off];
-        bool isWhitePiece = (piece > 0);
-        bool isWhiteTurn  = (pos->m_nTurn == 0);
-        if (piece == 0 || isWhitePiece != isWhiteTurn) return;
+        if (piece == 0) return;
         g_fHaveSelection = true;
         g_SelectedSquare = sq;
-        g_LegalDests.clear();
-        heap_t heap = allocate_heap();
-        push_section(heap);
-        const_cast<CPosition*>(pos)->LegalMoves(heap);
-        for (unsigned i = heap->current_section->start;
-             i < heap->current_section->end; ++i) {
-            CMove mv = heap->data[i];
-            if (mv.GetFromCoord() == sq) {
-                g_LegalDests.push_back(mv.GetToCoord());
-            }
-        }
-        free_heap(heap);
+        CollectLegalDestinationsForSquare(pos, sq, g_LegalDests);
         InvalidateRect(g_hRender3D ? g_hRender3D : g_hWnd, nullptr, FALSE);
     } else {
         bool madeMove = false;
         for (const auto& dest : g_LegalDests) {
             if (dest == sq) {
-                heap_t heap = allocate_heap();
-                push_section(heap);
-                const_cast<CPosition*>(pos)->LegalMoves(heap);
-                for (unsigned i = heap->current_section->start;
-                     i < heap->current_section->end; ++i) {
-                    CMove mv = heap->data[i];
-                    if (mv.GetFromCoord() == g_SelectedSquare && mv.GetToCoord() == sq) {
-                        g_Game.MakeMove(mv);
-                        madeMove = true;
-                        break;
-                    }
-                }
-                free_heap(heap);
+                madeMove = TryMakeSelectedMove(pos, sq);
                 break;
             }
         }
@@ -642,9 +702,6 @@ static void OnSquareClick(POINT pt) {
     const CPosition* pos = g_Game.GetPosition();
     if (!pos) return;
 
-    // In 1-player mode, human plays White (turn 0).
-    if (g_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->m_nTurn == 1) return;
-
     // pt is already in board coordinates (scroll + toolbar applied by caller).
     CSCoord sq = g_Renderer.HitTest(pt);
 
@@ -656,29 +713,14 @@ static void OnSquareClick(POINT pt) {
     }
 
     if (!g_fHaveSelection) {
-        // Select a piece if it belongs to the current player.
+        // Select any occupied square to inspect legal moves for that side.
         uint16_t off = sq.BitOffset();
         int8_t piece = pos->m_rgPiece[off];
-        bool isWhitePiece = (piece > 0);
-        bool isWhiteTurn  = (pos->m_nTurn == 0);
-        if (piece == 0 || isWhitePiece != isWhiteTurn) return;
+        if (piece == 0) return;
 
         g_fHaveSelection = true;
         g_SelectedSquare = sq;
-
-        // Generate all strictly legal moves, then collect destinations from this square.
-        g_LegalDests.clear();
-        heap_t heap = allocate_heap();
-        push_section(heap);
-        const_cast<CPosition*>(pos)->LegalMoves(heap);
-        for (unsigned i = heap->current_section->start;
-             i < heap->current_section->end; ++i) {
-            CMove mv = heap->data[i];
-            if (mv.GetFromCoord() == sq) {
-                g_LegalDests.push_back(mv.GetToCoord());
-            }
-        }
-        free_heap(heap);
+        CollectLegalDestinationsForSquare(pos, sq, g_LegalDests);
 
         InvalidateRect(g_hWnd, nullptr, TRUE);
     } else {
@@ -686,21 +728,7 @@ static void OnSquareClick(POINT pt) {
         bool madeMove = false;
         for (const auto& dest : g_LegalDests) {
             if (dest == sq) {
-                // Re-generate legal moves and pick the first legal move to this square.
-                heap_t heap = allocate_heap();
-                push_section(heap);
-                const_cast<CPosition*>(pos)->LegalMoves(heap);
-                for (unsigned i = heap->current_section->start;
-                     i < heap->current_section->end; ++i) {
-                    CMove mv = heap->data[i];
-                    if (mv.GetFromCoord() == g_SelectedSquare
-                            && mv.GetToCoord() == sq) {
-                        g_Game.MakeMove(mv);
-                        madeMove = true;
-                        break;
-                    }
-                }
-                free_heap(heap);
+                madeMove = TryMakeSelectedMove(pos, sq);
                 break;
             }
         }
@@ -1124,8 +1152,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         HDC hdc = BeginPaint(hWnd, &ps);
 
         if (g_eViewMode != ViewMode::Mode3D) {
+            POINT ptOffset = Get2DBoardOffset(hWnd);
             // Offset by toolbar height and current scroll position.
-            SetViewportOrgEx(hdc, -g_scrollX, TOOLBAR_H - g_scrollY, nullptr);
+            SetViewportOrgEx(hdc, ptOffset.x - g_scrollX, TOOLBAR_H + ptOffset.y - g_scrollY, nullptr);
 
             const CSCoord* sel = g_fHaveSelection ? &g_SelectedSquare : nullptr;
             const CSCoord* HintFrom = g_fHaveHint ? &g_HintFrom : nullptr;
@@ -1189,10 +1218,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
     case WM_LBUTTONDOWN: {
         if (g_eViewMode == ViewMode::Mode3D) return 0; // handled by child
+        POINT ptOffset = Get2DBoardOffset(hWnd);
         // Adjust click coordinates for scroll offset and toolbar.
         POINT pt{
-            GET_X_LPARAM(lParam) + g_scrollX,
-            GET_Y_LPARAM(lParam) - TOOLBAR_H + g_scrollY
+            GET_X_LPARAM(lParam) + g_scrollX - ptOffset.x,
+            GET_Y_LPARAM(lParam) - TOOLBAR_H + g_scrollY - ptOffset.y
         };
         OnSquareClick(pt);
         return 0;
