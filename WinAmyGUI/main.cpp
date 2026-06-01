@@ -117,12 +117,12 @@ static bool IsHumanAllowedToMove(const CPosition* pPos) {
 
 static void CollectLegalDestinationsForSquare(
     const CPosition* pPos,
-    const CSCoord& sqFrom,
+    const CSCoord& From,
     std::vector<CSCoord>& rgDests) {
     rgDests.clear();
-    if (!pPos || !sqFrom.IsValid()) return;
+    if (!pPos || !From.IsValid()) return;
 
-    uint16_t wOff = sqFrom.BitOffset();
+    uint16_t wOff = From.BitOffset();
     int8_t nPiece = pPos->m_rgPiece[wOff];
     if (nPiece == 0) return;
 
@@ -137,7 +137,7 @@ static void CollectLegalDestinationsForSquare(
     for (unsigned int nIndex = pHeap->current_section->start;
          nIndex < pHeap->current_section->end; ++nIndex) {
         CMove mv = pHeap->data[nIndex];
-        if (mv.GetFromCoord() == sqFrom) {
+        if (mv.GetFromCoord() == From) {
             rgDests.push_back(mv.GetToCoord());
         }
     }
@@ -152,9 +152,9 @@ static bool TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqTo) {
     int8_t nSelPiece = pPos->m_rgPiece[wSelOff];
     if (nSelPiece == 0) return false;
 
-    bool bSelIsWhite = (nSelPiece > 0);
-    bool bWhiteTurn = (pPos->m_nTurn == 0);
-    if (bSelIsWhite != bWhiteTurn) return false;
+    bool fSelIsWhite = (nSelPiece > 0);
+    bool fWhiteTurn = (pPos->m_nTurn == 0);
+    if (fSelIsWhite != fWhiteTurn) return false;
 
     heap_t pHeap = allocate_heap();
     push_section(pHeap);
