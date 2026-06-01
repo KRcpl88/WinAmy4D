@@ -54,6 +54,11 @@ public:
     // Apply a move to the current position. Must NOT be called while engine is thinking.
     void MakeMove(CMove move);
 
+    // Undo the last full move in 1-player mode: reverts the engine's reply and
+    // the human player's preceding move so the human may move again. Returns true
+    // if any move was undone. Must NOT be called while the engine is thinking.
+    bool UndoLastHumanMove();
+
     // Start the engine search asynchronously. The result is posted as
     // WM_APP_ENGINE_MOVE to hwndTarget when the search completes.
     void StartEngineSearch(HWND hwndTarget);

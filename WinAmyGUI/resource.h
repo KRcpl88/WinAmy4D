@@ -39,6 +39,9 @@
 // Pause / resume the engine self-play.
 #define IDM_PAUSE           1054
 
+// Undo the last full move (engine reply + human move) — 1-player mode only.
+#define IDM_UNDO            1055
+
 // Button / control IDs
 #define IDC_BTN_NEW_GAME    2001
 #define IDC_BTN_OUTLINES    2008

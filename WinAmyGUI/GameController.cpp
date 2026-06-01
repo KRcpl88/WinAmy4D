@@ -203,6 +203,36 @@ void GameController::MakeMove(CMove move) {
     }
 }
 
+bool GameController::UndoLastHumanMove() {
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    if (!m_pPosition)
+        return false;
+
+    // Undo is only meaningful in 1-player mode (human vs engine). In 0-player
+    // self-play and 2-player modes there is no single "human move" to take back.
+    if (m_PlayerMode != PlayerMode::OnePlayer)
+        return false;
+
+    // The human plays White (turn 0); the engine plays Black (turn 1). To return
+    // control to the human with their previous move reverted, undo back to a
+    // White-to-move position:
+    //   * If it is currently Black's turn, only the human's move needs undoing.
+    //   * If it is currently White's turn, undo the engine's reply and the
+    //     human's preceding move (two plies).
+    int nPlies = (m_pPosition->m_nTurn == 1) ? 1 : 2;
+    if (static_cast<unsigned int>(nPlies) > m_pPosition->m_wPly)
+        nPlies = static_cast<int>(m_pPosition->m_wPly);
+    if (nPlies == 0)
+        return false;
+
+    for (int nPly = 0; nPly < nPlies; ++nPly)
+        m_pPosition->Undo();
+
+    // Mirror MakeMove: keep the highlighting/attack state fully consistent.
+    m_pPosition->RecalcAttacks();
+    return true;
+}
+
 // ---------------------------------------------------------------------------
 // Engine thread
 // ---------------------------------------------------------------------------

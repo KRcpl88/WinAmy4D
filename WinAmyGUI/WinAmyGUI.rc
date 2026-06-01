@@ -32,6 +32,7 @@ BEGIN
             MENUITEM "&2 Players (Human vs Human)",   IDM_PLAYERS_2
         END
         MENUITEM SEPARATOR
+        MENUITEM "&Undo Move\tCtrl+Z",               IDM_UNDO, GRAYED
         MENUITEM "&Pause Engine\tCtrl+P",             IDM_PAUSE, GRAYED
     END
     POPUP "&View"
