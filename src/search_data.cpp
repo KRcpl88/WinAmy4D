@@ -387,7 +387,8 @@ CMove CSearchData::NextMove() {
                 if (nNewRank >= width)
                     continue;
                 CSCoord toCoord(fromCoord.m_nLevel, fromCoord.m_nFile, nNewRank);
-                if (is_promo_square(toCoord) || p->GetPiece(toCoord.BitOffset()) != Neutral)
+                if (is_promo_square(toCoord) || p->GetPiece(toCoord.BitOffset()) != Neutral ||
+                    !pawn_may_move_to(toCoord))
                     continue;
                 append_to_heap(sd->m_hHeap, make_move(fromCoord, toCoord, 0));
                 const uint16_t nHomeRank =
@@ -698,7 +699,7 @@ CMove CSearchData::NextEvasion() {
                     append_to_heap(sd->m_hHeap, make_promotion(fromCoord, toCoord, Knight, 0));
                     append_to_heap(sd->m_hHeap, make_promotion(fromCoord, toCoord, Rook, 0));
                     append_to_heap(sd->m_hHeap, make_promotion(fromCoord, toCoord, Bishop, 0));
-                } else {
+                } else if (pawn_may_move_to(toCoord)) {
                     append_to_heap(sd->m_hHeap, make_move(fromCoord, toCoord, 0));
                     const int homeRank = (p->GetTurn() == White) ? 1 : (width - 2);
                     if (fromCoord.m_nLevel == MAIN_LEVEL &&
@@ -825,6 +826,9 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
+            if (TYPE(p->GetPiece(static_cast<uint16_t>(j))) == Pawn &&
+                !pawn_may_move_to(CSCoord(static_cast<uint16_t>(i))))
+                continue;
             CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
@@ -846,6 +850,9 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
+            if (TYPE(p->GetPiece(static_cast<uint16_t>(j))) == Pawn &&
+                !pawn_may_move_to(CSCoord(static_cast<uint16_t>(i))))
+                continue;
             CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
@@ -867,6 +874,9 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
+            if (TYPE(p->GetPiece(static_cast<uint16_t>(j))) == Pawn &&
+                !pawn_may_move_to(CSCoord(static_cast<uint16_t>(i))))
+                continue;
             CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
@@ -888,6 +898,9 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
+            if (TYPE(p->GetPiece(static_cast<uint16_t>(j))) == Pawn &&
+                !pawn_may_move_to(CSCoord(static_cast<uint16_t>(i))))
+                continue;
             CMove move = make_move(j, i, M_CAPTURE);
             int sw = SwapOff(p, move);
             if (sw >= 0) {
@@ -988,3 +1001,4 @@ void CSearchData::PutKiller(CMove m) {
         }
     }
 }
+

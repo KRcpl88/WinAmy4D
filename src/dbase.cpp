@@ -1182,12 +1182,16 @@ void CPosition::GenTo(const CSCoord& squareCoord, heap_t heap) {
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        if (TYPE(p->m_rgPiece[coord.BitOffset()]) == Pawn &&
-            is_promo_square(squareCoord)) {
-            append_to_heap(heap, make_promotion(coord, squareCoord, Queen, M_CAPTURE));
-            append_to_heap(heap, make_promotion(coord, squareCoord, Knight, M_CAPTURE));
-            append_to_heap(heap, make_promotion(coord, squareCoord, Rook, M_CAPTURE));
-            append_to_heap(heap, make_promotion(coord, squareCoord, Bishop, M_CAPTURE));
+        if (TYPE(p->m_rgPiece[coord.BitOffset()]) == Pawn) {
+            if (is_promo_square(squareCoord)) {
+                append_to_heap(heap, make_promotion(coord, squareCoord, Queen, M_CAPTURE));
+                append_to_heap(heap, make_promotion(coord, squareCoord, Knight, M_CAPTURE));
+                append_to_heap(heap, make_promotion(coord, squareCoord, Rook, M_CAPTURE));
+                append_to_heap(heap, make_promotion(coord, squareCoord, Bishop, M_CAPTURE));
+            } else if (pawn_may_move_to(squareCoord)) {
+                append_to_heap(heap, make_move(coord, squareCoord, M_CAPTURE));
+            }
+            /* else: edge rank of a non-promotion level — illegal pawn target */
         } else {
             append_to_heap(heap, make_move(coord, squareCoord, M_CAPTURE));
         }
@@ -1261,7 +1265,7 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
                 append_to_heap(heap, make_promotion(squareCoord, sqCoord, Knight, 0));
                 append_to_heap(heap, make_promotion(squareCoord, sqCoord, Rook, 0));
                 append_to_heap(heap, make_promotion(squareCoord, sqCoord, Bishop, 0));
-            } else {
+            } else if (pawn_may_move_to(sqCoord)) {
                 append_to_heap(heap, make_move(squareCoord, sqCoord, 0));
 
                 /* The two-square double push (and therefore en passant) is
