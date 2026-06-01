@@ -220,13 +220,29 @@ void GameController::StartEngineSearch(HWND hwndTarget) {
 
     m_EngineThread = std::thread([this, hwndTarget]() {
         CMove bestMove = M_NONE;
+
+        // CPosition::Iterate runs the search on the object it is called on,
+        // mutating it via DoMove/UndoMove throughout iterative deepening.  The
+        // engine's own callers (SearchRoot, PermanentBrain) therefore clone the
+        // position, search the clone, and free it — never searching the live
+        // board.  The GUI must do the same: searching m_pPosition directly would
+        // leave its incremental state (attack tables, hash keys, game log) in an
+        // inconsistent state if anything is not perfectly restored, which can
+        // produce an invalid best move.  Clone under the lock to take a
+        // consistent snapshot, then search the clone without holding the lock.
+        CPosition *pSearchPosition = nullptr;
         {
             std::lock_guard<std::mutex> lock(m_PositionMutex);
-            if (m_pPosition) {
-                int score = 0, altScore = 0;
-                bestMove = m_pPosition->Iterate(&score, M_NONE, &altScore);
-            }
+            if (m_pPosition)
+                pSearchPosition = CPosition::Clone(m_pPosition);
         }
+
+        if (pSearchPosition) {
+            int score = 0, altScore = 0;
+            bestMove = pSearchPosition->Iterate(&score, M_NONE, &altScore);
+            CPosition::Free(pSearchPosition);
+        }
+
         m_BestMove = bestMove;
         m_fEngineRunning.store(false);
 
