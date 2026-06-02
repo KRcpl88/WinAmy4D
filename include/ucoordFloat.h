@@ -44,3 +44,7 @@ public:
     CUCoordFloat Rotate(const CUCoordFloat& axisVec, double dAngleRad) const;
     double AngleTo(const CUCoordFloat& other) const;
 };
+
+// Up vector (in unrotated CUCoord lattice space) for each
+// CUCoord::EOutlineType value, indexed by the enum. Defined in ucoord.cpp.
+extern CUCoordFloat g_rgUpVector[8];
