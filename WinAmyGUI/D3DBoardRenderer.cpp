@@ -551,16 +551,16 @@ XMMATRIX D3DBoardRenderer::MakeView() const {
     XMVECTOR vRight   = XMVector3Normalize(XMVector3Cross(vUp, vRef));
     XMVECTOR vForward = XMVector3Cross(vRight, vUp);
 
-    float fCp = std::cos(m_fPitch);
-    float fSp = std::sin(m_fPitch);
-    float fCy = std::cos(m_fYaw);
-    float fSy = std::sin(m_fYaw);
+    float dCp = std::cos(m_fPitch);
+    float dSp = std::sin(m_fPitch);
+    float dCy = std::cos(m_fYaw);
+    float dSy = std::sin(m_fYaw);
 
     // Direction from the board center to the eye: orbit in-plane via yaw, then
     // lift above (or below) the plane via pitch. The eye stays a constant
     // m_fDistance from the center for any yaw/pitch.
-    XMVECTOR vInPlane = XMVectorAdd(XMVectorScale(vForward, fCy), XMVectorScale(vRight, fSy));
-    XMVECTOR vEyeDir  = XMVectorAdd(XMVectorScale(vInPlane, fCp), XMVectorScale(vUp, fSp));
+    XMVECTOR vInPlane = XMVectorAdd(XMVectorScale(vForward, dCy), XMVectorScale(vRight, dSy));
+    XMVECTOR vEyeDir  = XMVectorAdd(XMVectorScale(vInPlane, dCp), XMVectorScale(vUp, dSp));
     XMVECTOR vEye     = XMVectorAdd(vCenter, XMVectorScale(vEyeDir, m_fDistance));
 
     return XMMatrixLookAtLH(vEye, vCenter, vUp);
