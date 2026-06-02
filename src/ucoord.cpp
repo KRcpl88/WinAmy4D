@@ -165,6 +165,28 @@ CChord g_krgHex4CellOutline[6]
 {{-0.1,  0.1, -0.9}, {-0.433333, -0.566666, -0.566666}},
 };
 
+// Up vector for each EOutlineType, in unrotated CUCoord (lattice) space.
+//
+//   * Square outlines lie in a plane perpendicular to one axis, so "up" is a
+//     unit vector along that axis (x, y or z).
+//   * Each hex outline has three primary endpoints (the axis points that bound
+//     it) which define the hex plane. "Up" is normal to that plane and is found
+//     by summing those three endpoints and inverting the result. For OT_hex_1
+//     the points are (-1,0,0), (0,-1,0) and (0,0,-1), summing to (-1,-1,-1) so
+//     up is (1,1,1). The remaining hex up vectors are derived the same way from
+//     each hex's outline chords.
+CUCoordFloat g_rgUpVector[8]
+{
+    {  0.0,  0.0,  1.0 },   // OT_full      (default: +z)
+    {  0.0,  0.0,  1.0 },   // OT_square_z  (+z)
+    {  0.0,  1.0,  0.0 },   // OT_square_y  (+y)
+    {  1.0,  0.0,  0.0 },   // OT_square_x  (+x)
+    {  1.0,  1.0,  1.0 },   // OT_hex_1     -((-1,0,0)+(0,-1,0)+(0,0,-1))
+    {  1.0,  1.0, -1.0 },   // OT_hex_2     -((-1,0,0)+(0,-1,0)+(0,0, 1))
+    {  1.0, -1.0,  1.0 },   // OT_hex_3     -((-1,0,0)+(0, 1,0)+(0,0,-1))
+    { -1.0,  1.0,  1.0 },   // OT_hex_4     -(( 1,0,0)+(0,-1,0)+(0,0,-1))
+};
+
 size_t g_cCellOutline[8]
 {
     ARRAYSIZE(g_krgFullCellOutline),

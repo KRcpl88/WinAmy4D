@@ -540,7 +540,14 @@ XMMATRIX D3DBoardRenderer::MakeView() const {
         m_BoardCenter.z + m_fDistance * fSp,
         1.0f);
     XMVECTOR vCenter = XMVectorSet(m_BoardCenter.x, m_BoardCenter.y, m_BoardCenter.z, 1.0f);
-    XMVECTOR vUp     = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+
+    // Point "up" along the up vector for the currently selected outline type,
+    // transformed through the same axis order/inversion as the cell geometry so
+    // the camera stays aligned with the board after swaps or inversions.
+    size_t nOutline = static_cast<size_t>(m_eOutlineType);
+    if (nOutline >= ARRAYSIZE(g_rgUpVector)) nOutline = 0;
+    XMFLOAT3 vUpDir = ApplyAxisTransform(UCoordToFloat3(g_rgUpVector[nOutline]));
+    XMVECTOR vUp     = XMVectorSet(vUpDir.x, vUpDir.y, vUpDir.z, 0.0f);
     return XMMatrixLookAtLH(vEye, vCenter, vUp);
 }
 
