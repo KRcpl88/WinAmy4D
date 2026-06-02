@@ -548,6 +548,32 @@ XMMATRIX D3DBoardRenderer::MakeView() const {
     if (nOutline >= ARRAYSIZE(g_rgUpVector)) nOutline = 0;
     XMFLOAT3 vUpDir = ApplyAxisTransform(UCoordToFloat3(g_rgUpVector[nOutline]));
     XMVECTOR vUp     = XMVectorSet(vUpDir.x, vUpDir.y, vUpDir.z, 0.0f);
+
+    // Tilt the eye so it looks slightly down on the board for the selected
+    // outline type. Keep the eye-to-center distance unchanged: place the eye on
+    // the ray from the center that is orthogonal to vUp, then add a small amount
+    // along vUp so it sits slightly above the plane of the middle-most cell.
+    XMVECTOR vUpN    = XMVector3Normalize(vUp);
+    XMVECTOR vOffset = XMVectorSubtract(vEye, vCenter);
+    float    fDist   = XMVectorGetX(XMVector3Length(vOffset));
+    if (fDist > 1e-4f) {
+        // Component of the current offset that lies in the board plane
+        // (orthogonal to vUp).
+        XMVECTOR vAlongUp = XMVectorScale(vUpN, XMVectorGetX(XMVector3Dot(vOffset, vUpN)));
+        XMVECTOR vPerp    = XMVectorSubtract(vOffset, vAlongUp);
+        if (XMVectorGetX(XMVector3Length(vPerp)) > 1e-4f) {
+            XMVECTOR vPerpN = XMVector3Normalize(vPerp);
+            // Blend a small upward component with the in-plane direction, then
+            // renormalize and rescale to the original distance so the eye stays
+            // the same distance from the center but is lifted slightly above the
+            // middle plane (looking down on the board).
+            const float fUpAmount = 0.2f; // small tilt above the plane
+            XMVECTOR vNewDir = XMVectorAdd(vPerpN, XMVectorScale(vUpN, fUpAmount));
+            vNewDir = XMVector3Normalize(vNewDir);
+            vEye    = XMVectorAdd(vCenter, XMVectorScale(vNewDir, fDist));
+        }
+    }
+
     return XMMatrixLookAtLH(vEye, vCenter, vUp);
 }
 
