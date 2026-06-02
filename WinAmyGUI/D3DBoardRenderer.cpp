@@ -530,15 +530,6 @@ void D3DBoardRenderer::Resize(int nWidth, int nHeight) {
 // ---------------------------------------------------------------------------
 
 XMMATRIX D3DBoardRenderer::MakeView() const {
-    float fCp = std::cos(m_fPitch);
-    float fSp = std::sin(m_fPitch);
-    float fCy = std::cos(m_fYaw);
-    float fSy = std::sin(m_fYaw);
-    XMVECTOR vEye = XMVectorSet(
-        m_BoardCenter.x + m_fDistance * fCp * fCy,
-        m_BoardCenter.y + m_fDistance * fCp * fSy,
-        m_BoardCenter.z + m_fDistance * fSp,
-        1.0f);
     XMVECTOR vCenter = XMVectorSet(m_BoardCenter.x, m_BoardCenter.y, m_BoardCenter.z, 1.0f);
 
     // Point "up" along the up vector for the currently selected outline type,
@@ -547,32 +538,30 @@ XMMATRIX D3DBoardRenderer::MakeView() const {
     size_t nOutline = static_cast<size_t>(m_eOutlineType);
     if (nOutline >= ARRAYSIZE(g_rgUpVector)) nOutline = 0;
     XMFLOAT3 vUpDir = ApplyAxisTransform(UCoordToFloat3(g_rgUpVector[nOutline]));
-    XMVECTOR vUp     = XMVectorSet(vUpDir.x, vUpDir.y, vUpDir.z, 0.0f);
+    XMVECTOR vUp    = XMVector3Normalize(XMVectorSet(vUpDir.x, vUpDir.y, vUpDir.z, 0.0f));
 
-    // Tilt the eye so it looks slightly down on the board for the selected
-    // outline type. Keep the eye-to-center distance unchanged: place the eye on
-    // the ray from the center that is orthogonal to vUp, then add a small amount
-    // along vUp so it sits slightly above the plane of the middle-most cell.
-    XMVECTOR vUpN    = XMVector3Normalize(vUp);
-    XMVECTOR vOffset = XMVectorSubtract(vEye, vCenter);
-    float    fDist   = XMVectorGetX(XMVector3Length(vOffset));
-    if (fDist > 1e-4f) {
-        // Component of the current offset that lies in the board plane
-        // (orthogonal to vUp).
-        XMVECTOR vAlongUp = XMVectorScale(vUpN, XMVectorGetX(XMVector3Dot(vOffset, vUpN)));
-        XMVECTOR vPerp    = XMVectorSubtract(vOffset, vAlongUp);
-        if (XMVectorGetX(XMVector3Length(vPerp)) > 1e-4f) {
-            XMVECTOR vPerpN = XMVector3Normalize(vPerp);
-            // Blend a small upward component with the in-plane direction, then
-            // renormalize and rescale to the original distance so the eye stays
-            // the same distance from the center but is lifted slightly above the
-            // middle plane (looking down on the board).
-            const float fUpAmount = 0.2f; // small tilt above the plane
-            XMVECTOR vNewDir = XMVectorAdd(vPerpN, XMVectorScale(vUpN, fUpAmount));
-            vNewDir = XMVector3Normalize(vNewDir);
-            vEye    = XMVectorAdd(vCenter, XMVectorScale(vNewDir, fDist));
-        }
-    }
+    // Build an orthonormal basis in the board plane (perpendicular to vUp) so
+    // that yaw orbits the eye horizontally around the board while pitch raises
+    // or lowers it above/below that plane. Defining the basis relative to vUp
+    // keeps both rotation axes working for every outline orientation, and a
+    // positive default pitch makes the eye look slightly down on the board.
+    XMVECTOR vRef = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+    if (fabsf(XMVectorGetX(XMVector3Dot(vRef, vUp))) > 0.99f)
+        vRef = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+    XMVECTOR vRight   = XMVector3Normalize(XMVector3Cross(vUp, vRef));
+    XMVECTOR vForward = XMVector3Cross(vRight, vUp);
+
+    float fCp = std::cos(m_fPitch);
+    float fSp = std::sin(m_fPitch);
+    float fCy = std::cos(m_fYaw);
+    float fSy = std::sin(m_fYaw);
+
+    // Direction from the board center to the eye: orbit in-plane via yaw, then
+    // lift above (or below) the plane via pitch. The eye stays a constant
+    // m_fDistance from the center for any yaw/pitch.
+    XMVECTOR vInPlane = XMVectorAdd(XMVectorScale(vForward, fCy), XMVectorScale(vRight, fSy));
+    XMVECTOR vEyeDir  = XMVectorAdd(XMVectorScale(vInPlane, fCp), XMVectorScale(vUp, fSp));
+    XMVECTOR vEye     = XMVectorAdd(vCenter, XMVectorScale(vEyeDir, m_fDistance));
 
     return XMMatrixLookAtLH(vEye, vCenter, vUp);
 }

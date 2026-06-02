@@ -176,8 +176,11 @@ private:
     float                           m_BoardRadius{1.0f};
 
     // ---- Camera ----
+    // Positive pitch lifts the eye above the board plane so the default view
+    // looks slightly down on the board; both yaw and pitch can be freely
+    // rotated by dragging (see MakeView / OnMouseMove).
     static constexpr float kDefaultYaw   =  0.6f;
-    static constexpr float kDefaultPitch = -0.4f;
+    static constexpr float kDefaultPitch =  0.3f;
     float m_fYaw{kDefaultYaw};
     float m_fPitch{kDefaultPitch};
     float m_fDistance{0.0f};
