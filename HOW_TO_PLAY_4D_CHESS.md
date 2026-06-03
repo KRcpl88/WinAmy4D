@@ -86,7 +86,7 @@ A toolbar button toggles between the two views. **Most players find the
 A traditional 2D chess board is made up of 64 squares, each with four squares that are edge adjacent (because they share the same edge) and 4 that are diagonally adjacent (because they only touch at the corners).
 
 
-In 4D chess, each chessboard location is a 3D shape.  Although it might seem obvious the "square" chess squares would become cubes in 3D, in 4D chess, a 4 dimensional geometry is used, which results in a  12 sided polyhedron calla  rhombic dodecahedron, which is a 4 dimensional hypercube projected into 3 dimensions, but its not as complicated as it sounds.
+In 4D chess, each chessboard location is a 3D shape.  Although it might seem obvious the "square" chess squares would become cubes in 3D, in 4D chess, a 4 dimensional geometry is used, which results in a  12 sided polyhedron called a  rhombic dodecahedron, which is a 4 dimensional hypercube projected into 3 dimensions, but its not as complicated as it sounds.
 
 
 In 4D chess, on every level is a has either 8x8, 7x7, 6x6, down to 1x1 grid of chess spaces.  They aren’t technically squares (because they are 3 dimensional), but when you look at them on a single level they appear 2 dimensionally as a square.  The is because the board is a slice through the middle of the dodecahedron at an angle that is an exact square.
