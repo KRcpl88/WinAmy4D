@@ -61,8 +61,6 @@ A side-on silhouette of the stack:
 
 ![chess board 3D](4d_board.JPG)
 
-### Relationship to standard 2D chess
-
 **Level `h` is the standard chessboard.** If you played a game that used
 only level `h`, you would be playing regular chess: the same eight files
 (a–h), the same eight ranks (1–8), the same starting position, the same
@@ -88,39 +86,16 @@ The app offers two views of the board:
 A toolbar button toggles between the two views. **Most players find the
 3D view essential once pieces start moving between levels.**
 
----
+### 2D vs 4D chessboard
 
-## 2. Why is it called 4D chess?
+A traditional 2D chess board is made up of 64 squares, each with four squares that are edge adjacent (because they share the same edge) and 4 that are diagonally adjacent (because they only touch at the corners).
 
-The straightforward answer is: the 344 squares are arranged as the
-**three-dimensional shadow of a four-dimensional shape**. The stepped
-pyramid you see on screen is what that 4D shape looks like when it's
-projected down into the 3D world where we can actually look at it — much
-the same way that the shadow of a 3D cube on a 2D wall is a flat
-hexagon.
+In 4D chess, each chessboard location is a 3D shape.  Although it might seem obvious the "square" chess squares would become cubes in 3D, in 4D chess, a 4 dimensional geometry is used, which results in a  12 sided polyhedron calla  rhombic dodecahedron, which is a 4 dimensional hypercube projected into 3 dimensions, but its not as complicated as it sounds.
 
-You don't have to think in four dimensions to play, but two clues that
-4D structure is "hiding behind" the board are useful to know:
+In 4 D chess, on every level is a has either 8x8, 7x7, 6x6, down to 1x1 grid of chess spaces.  They aren’t technically squares (because they are 3 dimensional), but when you look at them on a single level they appear 2 dimensionally as a square.  The is because the board is a slice through the middle of the dodecahedron at an angle that is an exact square.
 
-1. **The pyramid is symmetrical in more than one way.** It isn't just
-   symmetric top-to-bottom; if you turn it in 3D space, the same kind
-   of stepped pyramid appears looking down each of several different
-   directions. That extra symmetry is a fingerprint of the 4D shape it
-   came from.
+From this perspective, each "square" again has four squares that are edge adjacent (because they share the same edge) and 4 that are diagonally adjacent (because they only touch at the corners, exactly like a normal 2D chess board.  But, if you go up one level or down one level, there are another 4 "squares" that are immediately above or below the current "square".  Because each board level is either one square bigger or smaller, the center of each level on the starting board is immediately above or below the corner of the 4 "squares" above or below it.  When you looks at this in 3 dimensions, the 4 edge adjacent squares on the first board are actually face adjacent to the other 4 "squares" in 3 dimensions, but are also face adjacent to the 4 "squares" above or below.  In other words, each "square" in 3 dimensions has 12 faces, 4 "face" adjacent to other "squares" on the same level, 4 face adjacent  to the 4 "squares" above, and 4 face adjacent to the "squares" on the level below.  Because the "square" actually has 12 faces, it is a 3 dimensional dodecahedron, a polyhedron with 12 faces.  So, from  now one we will just call this a board location, but you should remember it is a 3 dimensional rhombic dodecahedron.
 
-2. **The 3D view offers four "Hex" grid orientations.** In the 3D view's
-   grid menu you'll see **Hex 1**, **Hex 2**, **Hex 3**, and **Hex 4** as
-   alternatives to the square grid. Each Hex view lines the squares up
-   along one of the **four main diagonals** of the underlying 4D shape.
-   Each gives you a different "honest" way to see the cells lined up.
-   Together, they're the easiest way to *feel* the fourth dimension
-   without having to do any math.
-
-By way of analogy: 3D chess takes flat (2D) chess and stacks boards into
-a third dimension. 4D chess goes one step further — it adds another
-diagonal direction that ties cells together across the pyramid, which is
-why pieces can move between levels in more ways than a single "up/down"
-axis would allow.
 
 For purposes of actually playing, you only need to remember:
 
@@ -131,40 +106,12 @@ For purposes of actually playing, you only need to remember:
 
 ---
 
-## 3. Setting Up the Pieces
 
-Both sides start with a familiar standard-chess army (eight pawns and the
-usual king, queen, two rooks, two bishops, two knights) **plus** a number
-of additional pieces and pawns spread over the middle levels of the
-pyramid.
+## 3. How the Pieces Move
 
-The initial setup occupies only **four of the fifteen levels**, with
-levels `a`–`f` and `k`–`o` starting empty:
+Looking at how each location on the board is face adjacent to 12 other locations, the movement of the rook follows those same face adjacent paths.  So, on the starting 2D board, there are 4 face adjacent locations (squares) where the rook can move along the rank or file (rows and columns) of the starting board, EXACTLY like a normal 2D chess rook.  But, to move up or down between levels, since all 4 locations on the boards above or below the starting board are all centered exactly above or below the starting location, the rook can move into any one of those 4 space directly above or below the starting location.  In other words, it can move into any of the 12 locations which are face adjacent to the original location, and obviously continue moving along that direction until it reaches the edge of the board or is blocked by another piece.  This is because, again, the board location in 3D is really a 12 sided rhombic dodecahedron.   You can see this if you select the “Full Dodecahedron” mode in 3D view, although there are a lot of vertices to render so you will need to zoom in and rotate the board back and forth to be able to distinguish each cell.  Also, selecting a single piece will highlight just that one dodecahedron to make it stand out
 
-| Level | Size  | White's back rank → forward                       | What's on it                                |
-|:-----:|:-----:|--------------------------------------------------|---------------------------------------------|
-|  `g`  | 7 × 7 | (none — pawns only)                              | One row of **7 pawns** for each side       |
-| **`h`** | **8 × 8** | **R N B Q K B N R**                            | **Full standard chess starting position**   |
-|  `i`  | 7 × 7 | **R N B Q B N R** (no king)                      | Pieces plus one row of 7 pawns each side    |
-|  `j`  | 6 × 6 | (none — pawns only)                              | One row of **6 pawns** for each side       |
 
-A few important things to notice:
-
-- The **kings live only on level `h`**, and there is exactly one king per
-  side, just like in standard chess. There are no extra kings on any
-  other level.
-- White's pieces begin on the side of each level closest to White (the
-  "first rank" of that level); Black's pieces begin on the opposite
-  side, mirroring White.
-- White moves first.
-
-If you ignore everything except level `h`, the starting position **is
-the starting position of regular chess**. The other three levels (g, i,
-j) are extra forces stacked above and below the main board.
-
----
-
-## 4. How Each Piece Moves
 
 Every piece keeps the move it has in regular chess. In 4D chess, each of
 those moves is **extended** in a natural way so that the piece can also
@@ -265,6 +212,39 @@ here is the conceptual description for each piece.
 
 > On level `h` only, the king behaves exactly like a regular king (eight
 > possible single-square moves, plus castling).
+
+---
+
+## 4. Setting Up the Pieces
+
+Both sides start with a familiar standard-chess army (eight pawns and the
+usual king, queen, two rooks, two bishops, two knights) **plus** a number
+of additional pieces and pawns spread over the middle levels of the
+pyramid.
+
+The initial setup occupies only **four of the fifteen levels**, with
+levels `a`–`f` and `k`–`o` starting empty:
+
+| Level | Size  | White's back rank → forward                       | What's on it                                |
+|:-----:|:-----:|--------------------------------------------------|---------------------------------------------|
+|  `g`  | 7 × 7 | (none — pawns only)                              | One row of **7 pawns** for each side       |
+| **`h`** | **8 × 8** | **R N B Q K B N R**                            | **Full standard chess starting position**   |
+|  `i`  | 7 × 7 | **R N B Q B N R** (no king)                      | Pieces plus one row of 7 pawns each side    |
+|  `j`  | 6 × 6 | (none — pawns only)                              | One row of **6 pawns** for each side       |
+
+A few important things to notice:
+
+- The **kings live only on level `h`**, and there is exactly one king per
+  side, just like in standard chess. There are no extra kings on any
+  other level.
+- White's pieces begin on the side of each level closest to White (the
+  "first rank" of that level); Black's pieces begin on the opposite
+  side, mirroring White.
+- White moves first.
+
+If you ignore everything except level `h`, the starting position **is
+the starting position of regular chess**. The other three levels (g, i,
+j) are extra forces stacked above and below the main board.
 
 ---
 
