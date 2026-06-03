@@ -48,13 +48,7 @@ back down to a single square at the very top:
 |  `n`  | 2 × 2 |                                                     |
 |  `o`  | 1 × 1 | the top point of the pyramid                        |
 
-That's **344 squares** in total. The widths of the levels are:
-
-```
-   level: a  b  c  d  e  f  g  h  i  j  k  l  m  n  o
-   width: 1  2  3  4  5  6  7  8  7  6  5  4  3  2  1
-                              ^^^
-                              main 8x8 board
+That's **344 squares** in total. 
 ```
 
 A side-on silhouette of the stack:
