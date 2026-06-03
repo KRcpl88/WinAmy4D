@@ -49,7 +49,8 @@ back down to a single square at the very top:
 |  `o`  | 1 × 1 | the top point of the pyramid                        |
 
 That's **344 squares** in total. 
-```
+
+
 
 A side-on silhouette of the stack:
 
