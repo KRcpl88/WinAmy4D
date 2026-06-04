@@ -165,14 +165,9 @@ But, to move up or down between levels, since all 4 locations on the boards abov
 
 In other words, it can move into any of the 12 locations which are face adjacent to the original location, and obviously continue moving along that direction until it reaches the edge of the board or is blocked by another piece.  This is because, again, the board location in 3D is really a 12 sided rhombic dodecahedron.   You can see this if you select the “Full Dodecahedron” mode in 3D view, although there are a lot of vertices to render so you will need to zoom in and rotate the board back and forth to be able to distinguish each cell.  Also, selecting a single piece will highlight just that one dodecahedron to make it stand out.
 
-- **On its own level.** Slides any distance along a rank or a file, just
-  as in regular chess.
-- **Between levels.** Also slides in directions that combine a step
-  along the level with a step into the next level above or below. As
-  with the bishop, the slide continues until it meets a piece or runs
-  off the edge of the playing space.
 
-> On level `h` only, the rook behaves exactly like a regular rook.
+Another way to visualize the moves for each piece on the 2D view is by changing the perspective.  If you look at all 15 boards together, they make an 8 sided double pyramid shape, also called an octahedron.  This board shape is aligned with x, y, and z coordinates in the direction of the 6 corners of the board.  Plus and minus z points to the top and bottom squares of the board.  On the main 8x8 board, level h, the plus x axis points to the top right corner of the board and minus x points to bottom left.  Plus y points to the top left and minus y points to bottom right.  Because of this, you can spin the board on any one of the x, y, and z axis, and look at it along the x/z plane or the y/z plane.  When you do this, all the rook moves that would be up or down across levels now are all aligned on the same board, so you can more easily see how the rook moves attack different squares on different levels just by changing the perspective you view the board from.
+
 
 ### The Bishop ♗ ♝
 
