@@ -313,6 +313,8 @@ stalemate, insufficient material, agreed draw, and so on.
 - **Click your pieces.** When you click on any of your pieces, every
   legal destination lights up. Use this freely — there is no penalty
   for clicking around to learn the moves.
+  **Click opponents pieces.** When you click on any of your opponet's pieces, you can easily see what locations those pieces are attacking
+  **Rotate the board.** Select different x, y, and z planes to see the board from different angles.  Although some of the pieces may seem to move, you are just looking at the same board from a different perspective, and all the pieces move the same way regardless of which way you look at it.  This can let you see how pieces will move when they start moving up and down accross levels in the z dimension.
 
 ---
 
