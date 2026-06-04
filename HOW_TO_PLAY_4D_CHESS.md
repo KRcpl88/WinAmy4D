@@ -32,21 +32,21 @@ back down to a single square at the very top:
 
 | Level | Size  | Notes                                               |
 |:-----:|:-----:|-----------------------------------------------------|
-|  `a`  | 1 × 1 | the bottom point of the pyramid                     |
-|  `b`  | 2 × 2 |                                                     |
-|  `c`  | 3 × 3 |                                                     |
-|  `d`  | 4 × 4 |                                                     |
-|  `e`  | 5 × 5 |                                                     |
-|  `f`  | 6 × 6 |                                                     |
-|  `g`  | 7 × 7 |                                                     |
-| **`h`** | **8 × 8** | **the main board — standard chess board**       |
-|  `i`  | 7 × 7 |                                                     |
-|  `j`  | 6 × 6 |                                                     |
-|  `k`  | 5 × 5 |                                                     |
-|  `l`  | 4 × 4 |                                                     |
-|  `m`  | 3 × 3 |                                                     |
-|  `n`  | 2 × 2 |                                                     |
 |  `o`  | 1 × 1 | the top point of the pyramid                        |
+|  `n`  | 2 × 2 |                                                     |
+|  `m`  | 3 × 3 |                                                     |
+|  `l`  | 4 × 4 |                                                     |
+|  `k`  | 5 × 5 |                                                     |
+|  `j`  | 6 × 6 |                                                     |
+|  `i`  | 7 × 7 |                                                     |
+| **`h`** | **8 × 8** | **the main board — standard chess board**       |
+|  `g`  | 7 × 7 |                                                     |
+|  `f`  | 6 × 6 |                                                     |
+|  `e`  | 5 × 5 |                                                     |
+|  `d`  | 4 × 4 |                                                     |
+|  `c`  | 3 × 3 |                                                     |
+|  `b`  | 2 × 2 |                                                     |
+|  `a`  | 1 × 1 | the bottom point of the pyramid                     |
 
 That's **344 squares** in total. 
 
