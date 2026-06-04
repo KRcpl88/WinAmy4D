@@ -46,6 +46,14 @@ public:
     bool LoadFromEPDFile(const wchar_t *pszPath);
     bool SaveToEPDFile(const wchar_t *pszPath);
 
+    // Load / save the full game (move list) in PGN format. The 4D board is
+    // represented using the level-aware SAN notation (a destination square is
+    // written as <level><file><rank>, e.g. "ea2a3"), so the on-disk format is
+    // standard PGN whose move text encodes the extra (3D/4D) dimension. The
+    // conventional extension for these files is ".pgn4".
+    bool LoadFromPGNFile(const wchar_t *pszPath);
+    bool SaveToPGNFile(const wchar_t *pszPath);
+
     // Set the engine search depth (1–9).
     void SetDepth(int depth);
 

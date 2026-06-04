@@ -531,6 +531,62 @@ void CWinAmy4dWnd::OnSaveEPDGame() {
     }
 }
 
+void CWinAmy4dWnd::OnLoadPGNGame() {
+    wchar_t rgPath[MAX_PATH] = {};
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = m_hWnd;
+    ofn.lpstrFilter =
+        L"PGN4 Files (*.pgn4)\0*.pgn4\0"
+        L"PGN Files (*.pgn)\0*.pgn\0"
+        L"All Files (*.*)\0*.*\0\0";
+    ofn.lpstrFile = rgPath;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+    ofn.lpstrDefExt = L"pgn4";
+
+    if (!GetOpenFileNameW(&ofn))
+        return;
+
+    if (!m_Game.LoadFromPGNFile(rgPath)) {
+        MessageBoxW(m_hWnd, L"Failed to load PGN file.", APP_TITLE, MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    m_fPaused = false;
+    m_fHaveSelection = false;
+    m_fHaveHint = false;
+    m_fGameOverAnnounced = false;
+    m_rgLegalDests.clear();
+    UpdatePauseMenu();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+    UpdateStatusBar();
+    MaybeStartEngine();
+}
+
+void CWinAmy4dWnd::OnSavePGNGame() {
+    wchar_t rgPath[MAX_PATH] = {};
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = m_hWnd;
+    ofn.lpstrFilter =
+        L"PGN4 Files (*.pgn4)\0*.pgn4\0"
+        L"PGN Files (*.pgn)\0*.pgn\0"
+        L"All Files (*.*)\0*.*\0\0";
+    ofn.lpstrFile = rgPath;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+    ofn.lpstrDefExt = L"pgn4";
+
+    if (!GetSaveFileNameW(&ofn))
+        return;
+
+    if (!m_Game.SaveToPGNFile(rgPath)) {
+        MessageBoxW(m_hWnd, L"Failed to save PGN file.", APP_TITLE, MB_OK | MB_ICONERROR);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // MaybeStartEngine — trigger engine search if it is the engine's turn
 // ---------------------------------------------------------------------------
@@ -1254,6 +1310,14 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
         case IDM_FILE_SAVE_EPD:
             OnSaveEPDGame();
+            break;
+
+        case IDM_FILE_LOAD_PGN:
+            OnLoadPGNGame();
+            break;
+
+        case IDM_FILE_SAVE_PGN:
+            OnSavePGNGame();
             break;
 
         case IDM_FILE_EXIT:
