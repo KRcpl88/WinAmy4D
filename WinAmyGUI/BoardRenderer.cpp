@@ -13,6 +13,7 @@
 
 #include "BoardRenderer.h"
 #include <cstring>
+#include <utility>
 
 // ---------------------------------------------------------------------------
 // Level → row/col mapping
@@ -109,6 +110,33 @@ BoardRenderer::~BoardRenderer() {
 }
 
 // ---------------------------------------------------------------------------
+// MapRenderToOriginal — translate a swapped 2D-render slot back to the
+// original board square. The transform follows the documented recipe: take the
+// (swapped) render location, convert to a CUCoord lattice point, swap the axis
+// pair for the active plane, then convert back to an ordinary board CSCoord.
+// The swap is its own inverse, so the same operation maps original→render too.
+// ---------------------------------------------------------------------------
+
+CSCoord BoardRenderer::MapRenderToOriginal(const CSCoordBase& SwappedRenderCoord) const {
+    if (m_eViewPlane == ViewPlane::PlaneXY) {
+        return CSCoord(SwappedRenderCoord.m_nLevel,
+                       SwappedRenderCoord.m_nFile,
+                       SwappedRenderCoord.m_nRank);
+    }
+
+    CUCoord Lattice(SwappedRenderCoord);
+    int nX = Lattice.GetX();
+    int nY = Lattice.GetY();
+    int nZ = Lattice.GetZ();
+    if (m_eViewPlane == ViewPlane::PlaneXZ) {
+        std::swap(nY, nZ); // x/z plane → swap lattice Y/Z
+    } else {
+        std::swap(nX, nZ); // y/z plane → swap lattice X/Z
+    }
+    return static_cast<CSCoord>(CUCoord(nX, nY, nZ));
+}
+
+// ---------------------------------------------------------------------------
 // Public drawing entry point
 // ---------------------------------------------------------------------------
 
@@ -139,6 +167,9 @@ void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
     COLORREF clrDark  = isOdd ? CLR_DARK_ALT  : CLR_DARK;
 
     // --- Draw level label ---
+    // In a swapped view plane the rendered "levels" no longer correspond to
+    // the board levels a–o (those letters are only correct on the x/y plane),
+    // so the label bar is drawn empty to avoid showing a misleading letter.
     {
         RECT labelRect{
             origin.x,
@@ -150,12 +181,14 @@ void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
         FillRect(hdc, &labelRect, hbr);
         DeleteObject(hbr);
 
-        HFONT hOldFont = (HFONT)SelectObject(hdc, m_hLabelFont);
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, CLR_LABEL_FG);
-        wchar_t label[2] = { LEVEL_NAMES[level], L'\0' };
-        DrawTextW(hdc, label, 1, &labelRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-        SelectObject(hdc, hOldFont);
+        if (m_eViewPlane == ViewPlane::PlaneXY) {
+            HFONT hOldFont = (HFONT)SelectObject(hdc, m_hLabelFont);
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, CLR_LABEL_FG);
+            wchar_t label[2] = { LEVEL_NAMES[level], L'\0' };
+            DrawTextW(hdc, label, 1, &labelRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            SelectObject(hdc, hOldFont);
+        }
     }
 
     int boardY = origin.y + LABEL_HEIGHT;
@@ -166,8 +199,9 @@ void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
             int px = origin.x + file * SQUARE_SIZE;
             int py = boardY + (w - 1 - rank) * SQUARE_SIZE;
 
-            CSCoord sq((uint16_t)level, (uint16_t)file, (uint16_t)rank);
-            uint16_t offset = sq.BitOffset();
+            CSCoordBase SwappedRenderCoord((uint16_t)level, (uint16_t)file, (uint16_t)rank);
+            CSCoord OriginalCoord = MapRenderToOriginal(SwappedRenderCoord);
+            uint16_t offset = OriginalCoord.BitOffset();
 
             COLORREF bg = ((file + rank) % 2 == 0) ? clrDark : clrLight;
 
@@ -236,8 +270,10 @@ CSCoord BoardRenderer::HitTest(POINT pt) const {
             int file       = (pt.x - origin.x) / SQUARE_SIZE;
             int rankFromTop = (pt.y - boardY)   / SQUARE_SIZE;
             int rank       = (w - 1) - rankFromTop;
-            if (file >= 0 && file < w && rank >= 0 && rank < w)
-                return CSCoord((uint16_t)lvl, (uint16_t)file, (uint16_t)rank);
+            if (file >= 0 && file < w && rank >= 0 && rank < w) {
+                CSCoordBase SwappedRenderCoord((uint16_t)lvl, (uint16_t)file, (uint16_t)rank);
+                return MapRenderToOriginal(SwappedRenderCoord);
+            }
         }
     }
     return InvalidSquareCoord();

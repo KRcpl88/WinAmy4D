@@ -5,9 +5,13 @@
 
 #include "bitboard.h"
 
-CSCoord::CSCoord(std::uint16_t level, std::uint16_t file, std::uint16_t rank)
+CSCoordBase::CSCoordBase(std::uint16_t level, std::uint16_t file, std::uint16_t rank)
     : m_nLevel(level), m_nRank(rank), m_nFile(file) {
     Validate();
+}
+
+CSCoord::CSCoord(std::uint16_t level, std::uint16_t file, std::uint16_t rank)
+    : CSCoordBase(level, file, rank) {
 }
 
 CSCoord::CSCoord(std::uint16_t offset) {
@@ -32,9 +36,9 @@ CSCoord::CSCoord(scoord_bitfield_t bitfield) {
     Validate();
 }
 
-void CSCoord::Validate() const {
+void CSCoordBase::Validate() const {
     if (!IsValid()) {
-        throw std::out_of_range("CSCoord::Validate()");
+        throw std::out_of_range("CSCoordBase::Validate()");
     }
 }
 
@@ -44,11 +48,11 @@ void CSCoord::ValidateOffset(std::uint16_t offset) {
     }
 }
 
-bool CSCoord::IsValid() const {
+bool CSCoordBase::IsValid() const {
     return IsValid(m_nLevel, m_nFile, m_nRank);
 }
 
-bool CSCoord::IsValid(std::uint16_t level, std::uint16_t file, std::uint16_t rank) {
+bool CSCoordBase::IsValid(std::uint16_t level, std::uint16_t file, std::uint16_t rank) {
     if (level >= CBitBoard::NUM_LEVELS) {
         return false;
     }
@@ -99,12 +103,12 @@ CSCoord::operator int() const {
     return BitOffset();
 }
 
-bool CSCoord::operator==(const CSCoord& other) const {
+bool CSCoordBase::operator==(const CSCoordBase& other) const {
     return m_nLevel == other.m_nLevel
         && m_nFile  == other.m_nFile
         && m_nRank  == other.m_nRank;
 }
 
-bool CSCoord::operator!=(const CSCoord& other) const {
+bool CSCoordBase::operator!=(const CSCoordBase& other) const {
     return !(*this == other);
 }

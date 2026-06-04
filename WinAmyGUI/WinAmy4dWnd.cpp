@@ -37,6 +37,9 @@ static constexpr int BTN_W       = 100;
 static constexpr int BTN_H       = 28;
 static constexpr int BTN_Y       = (TOOLBAR_H - BTN_H) / 2;
 static constexpr int BTN_GAP     = 6;
+// Shared width for the 2D plane selector and the 3D grid-type selector so the
+// two dropdowns line up in the same toolbar slot when switching view modes.
+static constexpr int DROPDOWN_W  = 160;
 
 // ---------------------------------------------------------------------------
 // Construction / destruction
@@ -357,14 +360,6 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
         return h;
     };
 
-    auto makeCheck = [&](const wchar_t* label, int id, int w) -> HWND {
-        HWND h = CreateWindowExW(0, L"BUTTON", label,
-            WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
-            x, BTN_Y + 6, w, BTN_H - 8, hWnd, (HMENU)(INT_PTR)id, hInst, nullptr);
-        x += w + BTN_GAP;
-        return h;
-    };
-
     m_hBtnNew = makeBtn(L"New Game", IDC_BTN_NEW_GAME);
     // Ask the engine to suggest a move for the human player (highlight only).
     m_hBtnHint = makeBtn(L"Suggest Move", IDC_BTN_HINT, 110);
@@ -379,17 +374,18 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
     // index N == (EOutlineType)(OT_full + N).
     {
         int nCbH = 220; // includes dropdown extent (8 items + decorations).
+        m_nDropdownX = x; // shared origin for the 2D/3D mode dropdowns.
         m_hCbGridType = CreateWindowExW(0, L"COMBOBOX", L"",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
                 | CBS_DROPDOWNLIST,
-            x, BTN_Y, 160, nCbH, hWnd,
+            x, BTN_Y, DROPDOWN_W, nCbH, hWnd,
             (HMENU)(INT_PTR)IDC_CB_GRID_TYPE, hInst, nullptr);
-        x += 160 + BTN_GAP;
+        x += DROPDOWN_W + BTN_GAP;
         static const wchar_t* kGridLabels[] = {
             L"Full Dodecahedron",
-            L"Square Z Slice",
-            L"Square Y Slice",
-            L"Square X Slice",
+            L"Square (x/y plane)",
+            L"Square (x/z plane)",
+            L"Square (y/z plane)",
             L"Hex 1 (-X,-Y,-Z)",
             L"Hex 2 (-X,-Y,+Z)",
             L"Hex 3 (-X,+Y,-Z)",
@@ -413,35 +409,34 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
     m_hBtnZoomIn    = makeBtn(L"Zoom +",       IDC_BTN_ZOOM_IN,    60);
     m_hBtnZoomOut   = makeBtn(L"Zoom -",       IDC_BTN_ZOOM_OUT,   60);
     x += BTN_GAP;
-    m_hChkInvertX   = makeCheck(L"Invert X",   IDC_CHK_INVERT_X,   74);
-    m_hChkInvertY   = makeCheck(L"Invert Y",   IDC_CHK_INVERT_Y,   74);
-    m_hChkInvertZ   = makeCheck(L"Invert Z",   IDC_CHK_INVERT_Z,   74);
+    // 2D-mode control: selects which plane of the 4D board the flat view shows
+    // (an axis swap applied purely for rendering). Hidden in 3D mode.
     {
         int nCbH = 140;
         m_hCbSwapAxes = CreateWindowExW(0, L"COMBOBOX", L"",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
-            x, BTN_Y, 128, nCbH, hWnd,
+            m_nDropdownX, BTN_Y, DROPDOWN_W, nCbH, hWnd,
             (HMENU)(INT_PTR)IDC_CB_SWAP_AXES, hInst, nullptr);
-        x += 128 + BTN_GAP;
+        // Index order matches the switch in OnCommand: 0=x/y, 1=x/z, 2=y/z.
         static const wchar_t* kSwapLabels[] = {
-            L"No Swap",
-            L"Swap X/Y",
-            L"Swap X/Z",
-            L"Swap Y/Z",
+            L"x/y plane",
+            L"x/z plane",
+            L"y/z plane",
         };
         for (auto* psz : kSwapLabels) {
             SendMessageW(m_hCbSwapAxes, CB_ADDSTRING, 0, (LPARAM)psz);
         }
         SendMessageW(m_hCbSwapAxes, CB_SETCURSEL, 0, 0);
     }
-    EnableWindow(m_hBtnOutlines,  FALSE);
-    EnableWindow(m_hBtnResetView, FALSE);
-    EnableWindow(m_hBtnZoomIn,    FALSE);
-    EnableWindow(m_hBtnZoomOut,   FALSE);
-    EnableWindow(m_hChkInvertX,   FALSE);
-    EnableWindow(m_hChkInvertY,   FALSE);
-    EnableWindow(m_hChkInvertZ,   FALSE);
-    EnableWindow(m_hCbSwapAxes,   FALSE);
+
+    // Initial visibility for the current (2D) view mode: the 3D-only view
+    // controls are hidden, while the 2D-only plane selector stays visible.
+    ShowWindow(m_hCbGridType,   SW_HIDE);
+    ShowWindow(m_hBtnOutlines,  SW_HIDE);
+    ShowWindow(m_hBtnResetView, SW_HIDE);
+    ShowWindow(m_hBtnZoomIn,    SW_HIDE);
+    ShowWindow(m_hBtnZoomOut,   SW_HIDE);
+    ShowWindow(m_hCbSwapAxes,   SW_SHOW);
 
     // Status bar
     m_hStatus = CreateWindowExW(0, STATUSCLASSNAMEW, nullptr,
@@ -889,21 +884,17 @@ void CWinAmy4dWnd::UpdateViewToggleButton() {
 }
 
 void CWinAmy4dWnd::UpdateAxisControls() {
-    if (m_hChkInvertX) {
-        SendMessageW(m_hChkInvertX, BM_SETCHECK,
-            m_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisX) ? BST_CHECKED : BST_UNCHECKED, 0);
-    }
-    if (m_hChkInvertY) {
-        SendMessageW(m_hChkInvertY, BM_SETCHECK,
-            m_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisY) ? BST_CHECKED : BST_UNCHECKED, 0);
-    }
-    if (m_hChkInvertZ) {
-        SendMessageW(m_hChkInvertZ, BM_SETCHECK,
-            m_D3DRenderer.GetAxisInverted(D3DBoardRenderer::AxisZ) ? BST_CHECKED : BST_UNCHECKED, 0);
-    }
+    // The axis-swap dropdown is a 2D-view control selecting which plane of the
+    // 4D board the flat view renders. Keep its selection in sync with the
+    // renderer's current view plane (indices: 0=x/y, 1=x/z, 2=y/z).
     if (m_hCbSwapAxes) {
-        SendMessageW(m_hCbSwapAxes, CB_SETCURSEL,
-            static_cast<WPARAM>(m_D3DRenderer.GetAxisSwap()), 0);
+        int nIndex = 0;
+        switch (m_Renderer.GetViewPlane()) {
+        case BoardRenderer::ViewPlane::PlaneXY: nIndex = 0; break;
+        case BoardRenderer::ViewPlane::PlaneXZ: nIndex = 1; break;
+        case BoardRenderer::ViewPlane::PlaneYZ: nIndex = 2; break;
+        }
+        SendMessageW(m_hCbSwapAxes, CB_SETCURSEL, (WPARAM)nIndex, 0);
     }
 }
 
@@ -937,14 +928,13 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         }
         ShowWindow(m_hRender3D, SW_SHOW);
         ShowScrollBar(m_hWnd, SB_BOTH, FALSE);
-        EnableWindow(m_hBtnOutlines,  TRUE);
-        EnableWindow(m_hBtnResetView, TRUE);
-        EnableWindow(m_hBtnZoomIn,    TRUE);
-          EnableWindow(m_hBtnZoomOut,   TRUE);
-        EnableWindow(m_hChkInvertX,   TRUE);
-        EnableWindow(m_hChkInvertY,   TRUE);
-        EnableWindow(m_hChkInvertZ,   TRUE);
-        EnableWindow(m_hCbSwapAxes,   TRUE);
+        // 3D-only view controls become visible; the 2D plane selector hides.
+        ShowWindow(m_hCbGridType,   SW_SHOW);
+        ShowWindow(m_hBtnOutlines,  SW_SHOW);
+        ShowWindow(m_hBtnResetView, SW_SHOW);
+        ShowWindow(m_hBtnZoomIn,    SW_SHOW);
+        ShowWindow(m_hBtnZoomOut,   SW_SHOW);
+        ShowWindow(m_hCbSwapAxes,   SW_HIDE);
         UpdateOutlinesButtonText();
         UpdateAxisControls();
         // Reflect the renderer's actual grid type in the menu checkmark
@@ -964,14 +954,14 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         ShowWindow(m_hRender3D, SW_HIDE);
         ShowScrollBar(m_hWnd, SB_BOTH, TRUE);
         UpdateScrollBars(m_hWnd);
-        EnableWindow(m_hBtnOutlines,  FALSE);
-        EnableWindow(m_hBtnResetView, FALSE);
-        EnableWindow(m_hBtnZoomIn,    FALSE);
-        EnableWindow(m_hBtnZoomOut,   FALSE);
-        EnableWindow(m_hChkInvertX,   FALSE);
-        EnableWindow(m_hChkInvertY,   FALSE);
-        EnableWindow(m_hChkInvertZ,   FALSE);
-        EnableWindow(m_hCbSwapAxes,   FALSE);
+        // 3D-only view controls hide; the 2D plane selector becomes visible.
+        ShowWindow(m_hCbGridType,   SW_HIDE);
+        ShowWindow(m_hBtnOutlines,  SW_HIDE);
+        ShowWindow(m_hBtnResetView, SW_HIDE);
+        ShowWindow(m_hBtnZoomIn,    SW_HIDE);
+        ShowWindow(m_hBtnZoomOut,   SW_HIDE);
+        ShowWindow(m_hCbSwapAxes,   SW_SHOW);
+        UpdateAxisControls();
     }
     UpdateGridMenuEnabled();
     UpdateViewToggleButton();
@@ -1292,7 +1282,6 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         case IDC_BTN_RESET_VIEW:
             if (m_D3DRenderer.IsInitialized()) {
                 m_D3DRenderer.ResetView();
-                UpdateAxisControls();
             }
             break;
 
@@ -1302,21 +1291,6 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
         case IDC_BTN_ZOOM_OUT:
             if (m_D3DRenderer.IsInitialized()) m_D3DRenderer.AdjustZoom(1.18f);
-            break;
-
-        case IDC_CHK_INVERT_X:
-            m_D3DRenderer.SetAxisInverted(D3DBoardRenderer::AxisX,
-                SendMessageW(m_hChkInvertX, BM_GETCHECK, 0, 0) == BST_CHECKED);
-            break;
-
-        case IDC_CHK_INVERT_Y:
-            m_D3DRenderer.SetAxisInverted(D3DBoardRenderer::AxisY,
-                SendMessageW(m_hChkInvertY, BM_GETCHECK, 0, 0) == BST_CHECKED);
-            break;
-
-        case IDC_CHK_INVERT_Z:
-            m_D3DRenderer.SetAxisInverted(D3DBoardRenderer::AxisZ,
-                SendMessageW(m_hChkInvertZ, BM_GETCHECK, 0, 0) == BST_CHECKED);
             break;
 
         case IDC_CB_GRID_TYPE:
@@ -1330,22 +1304,23 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             break;
 
         case IDC_CB_SWAP_AXES:
+            // 2D-view plane selector: choose which plane of the 4D board the
+            // flat view renders. The swap is applied purely for rendering; all
+            // board state stays in ordinary (unswapped) coordinates.
             if (code == CBN_SELCHANGE) {
                 int nSel = (int)SendMessageW(m_hCbSwapAxes, CB_GETCURSEL, 0, 0);
+                BoardRenderer::ViewPlane ePlane = BoardRenderer::ViewPlane::PlaneXY;
                 switch (nSel) {
-                case 0:
-                    m_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapNone);
-                    break;
-                case 1:
-                    m_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapXY);
-                    break;
-                case 2:
-                    m_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapXZ);
-                    break;
-                case 3:
-                    m_D3DRenderer.SwapAxes(D3DBoardRenderer::AxisSwapYZ);
-                    break;
+                case 0: ePlane = BoardRenderer::ViewPlane::PlaneXY; break; // x/y, no swap
+                case 1: ePlane = BoardRenderer::ViewPlane::PlaneXZ; break; // x/z, swap Y/Z
+                case 2: ePlane = BoardRenderer::ViewPlane::PlaneYZ; break; // y/z, swap X/Z
                 }
+                m_Renderer.SetViewPlane(ePlane);
+                // The selected location is stored in canonical (unswapped)
+                // board coordinates and matched for rendering by bit offset,
+                // so it survives a plane change unchanged — keep the current
+                // selection and its legal destinations instead of clearing.
+                InvalidateRect(m_hWnd, nullptr, TRUE);
             }
             break;
 

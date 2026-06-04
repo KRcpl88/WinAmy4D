@@ -44,9 +44,9 @@ BEGIN
         BEGIN
             MENUITEM "&Full Dodecahedron",  IDM_GRID_FULL
             MENUITEM SEPARATOR
-            MENUITEM "Square &Z Slice",     IDM_GRID_SQUARE_Z, CHECKED
-            MENUITEM "Square &Y Slice",     IDM_GRID_SQUARE_Y
-            MENUITEM "Square &X Slice",     IDM_GRID_SQUARE_X
+            MENUITEM "Square (&x/y plane)", IDM_GRID_SQUARE_Z, CHECKED
+            MENUITEM "Square (&z/x plane)", IDM_GRID_SQUARE_Y
+            MENUITEM "Square (&y/z plane)", IDM_GRID_SQUARE_X
             MENUITEM SEPARATOR
             MENUITEM "Hex &1 (-X,-Y,-Z)",   IDM_GRID_HEX_1
             MENUITEM "Hex &2 (-X,-Y,+Z)",   IDM_GRID_HEX_2

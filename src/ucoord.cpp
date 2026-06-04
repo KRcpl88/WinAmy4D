@@ -17,7 +17,7 @@ CUCoord::CUCoord(const int rgnData[3]) {
     SetZ(rgnData[2]);
 }
 
-CUCoord::CUCoord(const CSCoord& scoord) {
+CUCoord::CUCoord(const CSCoordBase& scoord) {
     scoord.Validate();
 
     SetZ(scoord.m_nLevel);

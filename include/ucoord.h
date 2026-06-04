@@ -25,7 +25,7 @@ public:
     CUCoord() = default;
     CUCoord(int nX, int nY, int nZ);
     CUCoord(const int rgnData[3]);
-    explicit CUCoord(const CSCoord& scoord);
+    explicit CUCoord(const CSCoordBase& scoord);
 
     bool GetOutline( __inout std::unordered_set<CChord> & Chords, EOutlineType eOutlineType = OT_hex_1) const;
 
