@@ -40,11 +40,11 @@ public:
     static constexpr int NUM_ROWS = 3;
 
     // Colours for even-indexed levels (warm brown).
-    static constexpr COLORREF CLR_LIGHT      = RGB(240, 217, 181);
+    static constexpr COLORREF CLR_LIGHT      = RGB(120, 109,  91);
     static constexpr COLORREF CLR_DARK       = RGB(181, 136,  99);
 
     // Colours for odd-indexed levels (cool blue-slate).
-    static constexpr COLORREF CLR_LIGHT_ALT  = RGB(195, 215, 235);
+    static constexpr COLORREF CLR_LIGHT_ALT  = RGB( 98, 108, 118);
     static constexpr COLORREF CLR_DARK_ALT   = RGB( 90, 130, 170);
 
     // Highlight and label colours.
@@ -113,4 +113,3 @@ private:
     // Currently selected view plane (defaults to the natural x/y board).
     ViewPlane m_eViewPlane{ViewPlane::PlaneXY};
 };
-
