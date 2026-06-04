@@ -179,30 +179,21 @@ This means the bishop can move diagonally in 6 directions.  On the normal 2D che
 
 Again, and easy way to see this is by changing the x/y plane on the 2D board, because again, when you spin the board on its axes, the moves of all the pieces are exactly the same regardless of which perspective you view it from.  So, when viewing from the x/z plane, the moves up or down along the z axis are simply a diagonal move between squares on the 2D board.
 
+In normal 2D chess, because the bishop only moves along a diagonal, each bishop always stay on their starting color.  But this also includes moving vertically.  Because they always skip a level when moving vertically, a bishop that starts on an odd numbered level always stays on an odd numbered level, and vice versa.  This also means that for each of the 4 bishops on each side, there are two that start on an odd level and two on an even level, so that for each side no two bishops can ever land on the same square of another bishop.  Each is confined to its own color and its own odd or even numbered levels.
+
 
 ### The Queen ♕ ♛
 
-- **All of the above.** The queen combines the moves of the bishop and
-  the rook, with no exceptions. Whatever the bishop or rook can do, the
-  queen can do.
-
-> On level `h` only, the queen behaves exactly like a regular queen.
+Just like in 2D chess, the queen combines the moves of the bishop and the rook.  That's all.  This makes the queen, just like in 2D chess, the most powerful piece on the board.  But compared to 2D chess, the 2D queen has only 8 directions to move in, in 3D it is 18, arguably even more powerful than the same piece in 2D.
 
 
 ### The Knight ♘ ♞
 
-- **Standard L-shape.** Within level `h`, the knight moves to the same
-  eight squares it always has (two squares in one direction and one in
-  a perpendicular direction).
-- **Extended L-shape.** When other levels are in play, the knight also
-  jumps to L-shaped destinations that involve travelling between levels
-  — for example, jumping "two levels up and one square sideways," or
-  "one level up and two squares forward." There are several such
-  destinations in 3D space.
-- **Jumps over pieces.** Just like in regular chess, the knight is the
-  only piece that can leap over intervening pieces of either colour.
+Just like in 2D chess, the knight can be the most complicated piece to understand how it moves.  But, like the other pieces, the knight moves in the same L shape, but in 3D.
+There are 2 ways to look at the L, either 3 moves out (like the rook) and then a right angle turn and another 2 squares, or you can look at it as moving one square out (like a rook) followed by 1 in a diagonal direction (like a bishop).  The problem is, in 3D, a 90 degree turn can be in any direction, up down left or right.  But for the knight, the right (or left) had turn must only be along the plane of the original move.  So, counting 12 directions for the first move, then turning either left or right, this makes a total of 24 possible locations the knight can jump to from their current location.   
+This can be very difficult to visualize and even harder to plan in 3D, so the best way to look at the knight’s moves is on the 2D board view.
 
-> On level `h` only, the knight behaves exactly like a regular knight.
+![Knight moves between levels](knight.PNG)
 
 ### The King ♔ ♚
 
