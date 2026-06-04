@@ -190,7 +190,9 @@ Just like in 2D chess, the queen combines the moves of the bishop and the rook. 
 ### The Knight ♘ ♞
 
 Just like in 2D chess, the knight can be the most complicated piece to understand how it moves.  But, like the other pieces, the knight moves in the same L shape, but in 3D.
-There are 2 ways to look at the L, either 3 moves out (like the rook) and then a right angle turn and another 2 squares, or you can look at it as moving one square out (like a rook) followed by 1 in a diagonal direction (like a bishop).  The problem is, in 3D, a 90 degree turn can be in any direction, up down left or right.  But for the knight, the right (or left) had turn must only be along the plane of the original move.  So, counting 12 directions for the first move, then turning either left or right, this makes a total of 24 possible locations the knight can jump to from their current location.   
+
+There are 2 ways to look at the L, either 3 moves out (like the rook) and then a right angle turn and another 2 squares, or you can look at it as moving one square out (like a rook) followed by 1 in a diagonal direction (like a bishop).  The problem is, in 3D, a 90 degree turn can be in any direction, up down left or right.  But for the knight, the right (or left) had turn must only be along the plane of the original move.  So, counting 12 directions for the first move, then turning either left or right, this makes a total of 24 possible locations the knight can jump to from their current location.  
+
 This can be very difficult to visualize and even harder to plan in 3D, so the best way to look at the knight’s moves is on the 2D board view.
 
 ![Knight moves between levels](knight.PNG)
