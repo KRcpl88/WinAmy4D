@@ -171,16 +171,14 @@ Another way to visualize the moves for each piece on the 2D view is by changing 
 
 ### The Bishop ♗ ♝
 
-- **On its own level.** Slides any distance along the diagonals, just as
-  in regular chess: blocked by the first piece it meets, capturing if
-  that piece is an enemy.
-- **Between levels.** Also slides straight "up" or "down" through the
-  levels of the pyramid in a direction that is diagonal in the 4D sense.
-  A bishop's slide can carry it across many levels in a single move,
-  again stopping at the first piece in its path.
+While the rook follows moves along the 12 faces of the dodecahedron, the bishop can move along the corners.  This is directly similar to how it moves in 2D chess, from the corner of one square to the corner of the next square, moving in between two other squares.  In 3D, the rhombic dodecahedron has 6 corners where the acute or “pointy” ends of the faces meet.  There are also 8 corners where 3 the obtuse corners of adjacent faces meet, but those don’t count for the bishop.  The 6 acute or “pointy” corners align with the x, y and z axes in plus and minus directions, so you can think of the bishop as moving along those 3 cardinal directions in 3D.  
 
-> On level `h` only, the bishop behaves exactly like a regular bishop —
-> alternating-colour bishops included.
+
+This means the bishop can move diagonally in 6 directions.  On the normal 2D chess board, these are the usual 4 diagonals on the chessboard.  But, when moving up or down between levels, the bishop moves “between” the corners of the four “squares” (board locations) directly above the current location, to the next location directly above or below that location.  In other words, when moving up or down along the z direction, the bishop skips a level and moves 2 levels up or down with each move.  
+
+
+Again, and easy way to see this is by changing the x/y plane on the 2D board, because again, when you spin the board on its axes, the moves of all the pieces are exactly the same regardless of which perspective you view it from.  So, when viewing from the x/z plane, the moves up or down along the z axis are simply a diagonal move between squares on the 2D board.
+
 
 ### The Queen ♕ ♛
 
