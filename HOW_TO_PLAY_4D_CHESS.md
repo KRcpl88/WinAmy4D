@@ -197,6 +197,13 @@ This can be very difficult to visualize and even harder to plan in 3D, so the be
 
 ![Knight moves between levels](knight.PNG)
 
+Again, starting with moves on the same level, the knight moves one “square” out like a rook, followed by on “square” along a diagonal like a bishop, which is the familiar L shaped pattern for the knight.  When moving up or down one level, it’s the same.  The knight can move to one of the 4 “squares” directly above or below the current location, like a rook, followed by one square diagonally, but the diagonal move must continue along the same direction as the original move.  So, looking at the possible moves one level above the starting level, this will include the corners of a 4x4 square directly above the starting location, and each corner of that square again is a diagonal move one square out from the 4 legal rook moves all one level above the current location.
+
+There are also 4 legal diagonal moves going “up” (or down) from those 4 initial rook moves, but like a bishop, those diagonal moves skip a level and go up (or down)  and additional 2 levels.  So, the result is 4 legal moves in a 2x2 square 3 levels above (or below) the starting location.
+
+Although this can be difficult to visualize, again it gets simpler if you just rotate the board on its side to look at the x/z or y/z planes.   In each of these planes, you have the same familiar L shaped knight moves, but they are actually moving up or down across levels, you are just looking at them from the side.  It is much easier to plan moves this way, because its easier to see the L shaped moves when they are on the same 2 board, even then that board is just a rotation of the “real” board on its side.
+
+
 ### The King ♔ ♚
 
 - **One square in any direction.** The king moves exactly one square in
