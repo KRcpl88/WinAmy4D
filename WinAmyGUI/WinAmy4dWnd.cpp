@@ -37,6 +37,9 @@ static constexpr int BTN_W       = 100;
 static constexpr int BTN_H       = 28;
 static constexpr int BTN_Y       = (TOOLBAR_H - BTN_H) / 2;
 static constexpr int BTN_GAP     = 6;
+// Shared width for the 2D plane selector and the 3D grid-type selector so the
+// two dropdowns line up in the same toolbar slot when switching view modes.
+static constexpr int DROPDOWN_W  = 160;
 
 // ---------------------------------------------------------------------------
 // Construction / destruction
@@ -371,16 +374,17 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
     // index N == (EOutlineType)(OT_full + N).
     {
         int nCbH = 220; // includes dropdown extent (8 items + decorations).
+        m_nDropdownX = x; // shared origin for the 2D/3D mode dropdowns.
         m_hCbGridType = CreateWindowExW(0, L"COMBOBOX", L"",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
                 | CBS_DROPDOWNLIST,
-            x, BTN_Y, 160, nCbH, hWnd,
+            x, BTN_Y, DROPDOWN_W, nCbH, hWnd,
             (HMENU)(INT_PTR)IDC_CB_GRID_TYPE, hInst, nullptr);
-        x += 160 + BTN_GAP;
+        x += DROPDOWN_W + BTN_GAP;
         static const wchar_t* kGridLabels[] = {
             L"Full Dodecahedron",
             L"Square (x/y plane)",
-            L"Square (z/x plane)",
+            L"Square (x/z plane)",
             L"Square (y/z plane)",
             L"Hex 1 (-X,-Y,-Z)",
             L"Hex 2 (-X,-Y,+Z)",
@@ -411,9 +415,8 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
         int nCbH = 140;
         m_hCbSwapAxes = CreateWindowExW(0, L"COMBOBOX", L"",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
-            x, BTN_Y, 128, nCbH, hWnd,
+            m_nDropdownX, BTN_Y, DROPDOWN_W, nCbH, hWnd,
             (HMENU)(INT_PTR)IDC_CB_SWAP_AXES, hInst, nullptr);
-        x += 128 + BTN_GAP;
         // Index order matches the switch in OnCommand: 0=x/y, 1=x/z, 2=y/z.
         static const wchar_t* kSwapLabels[] = {
             L"x/y plane",
@@ -1313,10 +1316,10 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                 case 2: ePlane = BoardRenderer::ViewPlane::PlaneYZ; break; // y/z, swap X/Z
                 }
                 m_Renderer.SetViewPlane(ePlane);
-                // Selecting a different plane re-lays out the board, so any
-                // pending click selection no longer matches what is shown.
-                m_fHaveSelection = false;
-                m_rgLegalDests.clear();
+                // The selected location is stored in canonical (unswapped)
+                // board coordinates and matched for rendering by bit offset,
+                // so it survives a plane change unchanged — keep the current
+                // selection and its legal destinations instead of clearing.
                 InvalidateRect(m_hWnd, nullptr, TRUE);
             }
             break;

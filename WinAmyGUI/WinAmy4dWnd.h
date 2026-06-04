@@ -106,6 +106,10 @@ private:
     HWND m_hBtnZoomOut    = nullptr;
     HWND m_hCbSwapAxes   = nullptr;
 
+    // Shared toolbar x-origin for the grid-type (3D) and swap-axes (2D)
+    // dropdowns so they occupy the same slot when the view mode changes.
+    int  m_nDropdownX    = 0;
+
     // ---- Owned subsystems (group B) ------------------------------------
     GameController   m_Game;
     BoardRenderer    m_Renderer;
