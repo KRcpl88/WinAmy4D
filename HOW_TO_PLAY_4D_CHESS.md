@@ -94,6 +94,7 @@ In 4D chess, on every level is a has either 8x8, 7x7, 6x6, down to 1x1 grid of c
 
 From this perspective, each "square" again has four squares that are edge adjacent (because they share the same edge) and 4 that are diagonally adjacent (because they only touch at the corners, exactly like a normal 2D chess board.  But, if you go up one level or down one level, there are another 4 "squares" that are immediately above or below the current "square".  Because each board level is either one square bigger or smaller, the center of each level on the starting board is immediately above or below the corner of the 4 "squares" above or below it.  When you looks at this in 3 dimensions, the 4 edge adjacent squares on the first board are actually face adjacent to the other 4 "squares" in 3 dimensions, but are also face adjacent to the 4 "squares" above or below.  In other words, each "square" in 3 dimensions has 12 faces, 4 "face" adjacent to other "squares" on the same level, 4 face adjacent  to the 4 "squares" above, and 4 face adjacent to the "squares" on the level below.  Because the "square" actually has 12 faces, it is a 3 dimensional dodecahedron, a polyhedron with 12 faces.  So, from  now one we will just call this a board location, but you should remember it is a 3 dimensional rhombic dodecahedron.
 
+![Dodecahedron chess locations](dodecahedron.png)
 
 For purposes of actually playing, you only need to remember:
 
@@ -107,9 +108,7 @@ For purposes of actually playing, you only need to remember:
 
 ## 3. How the Pieces Move
 
-Looking at how each location on the board is face adjacent to 12 other locations, the movement of the rook follows those same face adjacent paths.  So, on the starting 2D board, there are 4 face adjacent locations (squares) where the rook can move along the rank or file (rows and columns) of the starting board, EXACTLY like a normal 2D chess rook.  But, to move up or down between levels, since all 4 locations on the boards above or below the starting board are all centered exactly above or below the starting location, the rook can move into any one of those 4 space directly above or below the starting location.  In other words, it can move into any of the 12 locations which are face adjacent to the original location, and obviously continue moving along that direction until it reaches the edge of the board or is blocked by another piece.  This is because, again, the board location in 3D is really a 12 sided rhombic dodecahedron.   You can see this if you select the “Full Dodecahedron” mode in 3D view, although there are a lot of vertices to render so you will need to zoom in and rotate the board back and forth to be able to distinguish each cell.  Also, selecting a single piece will highlight just that one dodecahedron to make it stand out
 
-![Dodecahedron chess locations](dodecahedron.png)
 
 
 Every piece keeps the move it has in regular chess. In 4D chess, each of
@@ -154,20 +153,21 @@ here is the conceptual description for each piece.
 
 > On level `h` only, the pawn behaves *exactly* like a regular chess pawn.
 
-### The Knight ♘ ♞
+### The Rook ♖ ♜
 
-- **Standard L-shape.** Within level `h`, the knight moves to the same
-  eight squares it always has (two squares in one direction and one in
-  a perpendicular direction).
-- **Extended L-shape.** When other levels are in play, the knight also
-  jumps to L-shaped destinations that involve travelling between levels
-  — for example, jumping "two levels up and one square sideways," or
-  "one level up and two squares forward." There are several such
-  destinations in 3D space.
-- **Jumps over pieces.** Just like in regular chess, the knight is the
-  only piece that can leap over intervening pieces of either colour.
+Looking at how each location on the board is face adjacent to 12 other locations, the movement of the rook follows those same face adjacent paths.  So, on the starting 2D board, there are 4 face adjacent locations (squares) where the rook can move along the rank or file (rows and columns) of the starting board, EXACTLY like a normal 2D chess rook.  
 
-> On level `h` only, the knight behaves exactly like a regular knight.
+
+But, to move up or down between levels, since all 4 locations on the boards above or below the starting board are all centered exactly above or below the starting location, the rook can move into any one of those 4 space directly above or below the starting location.  In other words, it can move into any of the 12 locations which are face adjacent to the original location, and obviously continue moving along that direction until it reaches the edge of the board or is blocked by another piece.  This is because, again, the board location in 3D is really a 12 sided rhombic dodecahedron.   You can see this if you select the “Full Dodecahedron” mode in 3D view, although there are a lot of vertices to render so you will need to zoom in and rotate the board back and forth to be able to distinguish each cell.  Also, selecting a single piece will highlight just that one dodecahedron to make it stand out.
+
+- **On its own level.** Slides any distance along a rank or a file, just
+  as in regular chess.
+- **Between levels.** Also slides in directions that combine a step
+  along the level with a step into the next level above or below. As
+  with the bishop, the slide continues until it meets a piece or runs
+  off the edge of the playing space.
+
+> On level `h` only, the rook behaves exactly like a regular rook.
 
 ### The Bishop ♗ ♝
 
@@ -182,17 +182,6 @@ here is the conceptual description for each piece.
 > On level `h` only, the bishop behaves exactly like a regular bishop —
 > alternating-colour bishops included.
 
-### The Rook ♖ ♜
-
-- **On its own level.** Slides any distance along a rank or a file, just
-  as in regular chess.
-- **Between levels.** Also slides in directions that combine a step
-  along the level with a step into the next level above or below. As
-  with the bishop, the slide continues until it meets a piece or runs
-  off the edge of the playing space.
-
-> On level `h` only, the rook behaves exactly like a regular rook.
-
 ### The Queen ♕ ♛
 
 - **All of the above.** The queen combines the moves of the bishop and
@@ -200,6 +189,22 @@ here is the conceptual description for each piece.
   queen can do.
 
 > On level `h` only, the queen behaves exactly like a regular queen.
+
+
+### The Knight ♘ ♞
+
+- **Standard L-shape.** Within level `h`, the knight moves to the same
+  eight squares it always has (two squares in one direction and one in
+  a perpendicular direction).
+- **Extended L-shape.** When other levels are in play, the knight also
+  jumps to L-shaped destinations that involve travelling between levels
+  — for example, jumping "two levels up and one square sideways," or
+  "one level up and two squares forward." There are several such
+  destinations in 3D space.
+- **Jumps over pieces.** Just like in regular chess, the knight is the
+  only piece that can leap over intervening pieces of either colour.
+
+> On level `h` only, the knight behaves exactly like a regular knight.
 
 ### The King ♔ ♚
 
