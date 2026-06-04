@@ -63,6 +63,8 @@ private:
     void OnNewGame();
     void OnLoadEPDGame();
     void OnSaveEPDGame();
+    void OnLoadPGNGame();
+    void OnSavePGNGame();
     void OnEngineMove(LPARAM lParam);
     void OnEngineHint(LPARAM lParam);
     void OnSuggestMove();

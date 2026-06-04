@@ -8,6 +8,9 @@
 #include <cassert>
 #include <cctype>
 #include <cstdio>
+#include <cstring>
+#include <string>
+#include <vector>
 
 // ---------------------------------------------------------------------------
 // Static engine initialisation
@@ -148,6 +151,241 @@ bool GameController::SaveToEPDFile(const wchar_t *pszPath) {
     fclose(pFile);
 
     return nWritten == nLength;
+}
+
+// ---------------------------------------------------------------------------
+// PGN (3D/4D) game load / save
+//
+// The move text uses the engine's level-aware SAN (CPosition::SAN /
+// CPosition::ParseSAN), so a move's destination square is written as
+// <level><file><rank> (e.g. "ea2a3"). A game therefore round-trips through a
+// standard-looking PGN file that fully describes the 3D/4D moves. Files use the
+// ".pgn4" extension. Games always start from the 4D initial position, so no
+// FEN/SetUp tag is written or required.
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// A token is a game-result marker rather than a move.
+bool IsPGNResultToken(const std::string &strToken) {
+    return strToken == "1-0" || strToken == "0-1" ||
+           strToken == "1/2-1/2" || strToken == "*";
+}
+
+// Split PGN movetext into bare move tokens, skipping tag pairs, comments
+// ({...} and ;-to-end-of-line), recursive variations ((...)), NAGs ($n),
+// move numbers and result markers. The returned tokens are SAN move strings.
+std::vector<std::string> ExtractPGNMoveTokens(const std::string &strContent) {
+    // Drop tag-pair lines (those whose first non-blank character is '[') and
+    // keep the remaining movetext, preserving newlines for ';' comments.
+    std::string strMoveText;
+    size_t nPos = 0;
+    while (nPos < strContent.size()) {
+        size_t nEol = strContent.find('\n', nPos);
+        size_t nLen = (nEol == std::string::npos) ? std::string::npos : nEol - nPos;
+        std::string strLine = strContent.substr(nPos, nLen);
+        nPos = (nEol == std::string::npos) ? strContent.size() : nEol + 1;
+
+        size_t nFirst = strLine.find_first_not_of(" \t\r");
+        if (nFirst != std::string::npos && strLine[nFirst] == '[')
+            continue; // tag-pair line
+        strMoveText += strLine;
+        strMoveText += '\n';
+    }
+
+    std::vector<std::string> rgTokens;
+    size_t i = 0;
+    while (i < strMoveText.size()) {
+        char c = strMoveText[i];
+        if (c == '{') { // brace comment to matching '}'
+            size_t nEnd = strMoveText.find('}', i);
+            i = (nEnd == std::string::npos) ? strMoveText.size() : nEnd + 1;
+        } else if (c == ';') { // line comment to end of line
+            size_t nEnd = strMoveText.find('\n', i);
+            i = (nEnd == std::string::npos) ? strMoveText.size() : nEnd + 1;
+        } else if (c == '(') { // recursive variation — skip balanced parens
+            int nDepth = 1;
+            ++i;
+            while (i < strMoveText.size() && nDepth > 0) {
+                if (strMoveText[i] == '(') ++nDepth;
+                else if (strMoveText[i] == ')') --nDepth;
+                ++i;
+            }
+        } else if (std::isspace(static_cast<unsigned char>(c))) {
+            ++i;
+        } else {
+            size_t k = i;
+            while (k < strMoveText.size()) {
+                char d = strMoveText[k];
+                if (std::isspace(static_cast<unsigned char>(d)) ||
+                    d == '{' || d == '(' || d == ';')
+                    break;
+                ++k;
+            }
+            rgTokens.push_back(strMoveText.substr(i, k - i));
+            i = k;
+        }
+    }
+    return rgTokens;
+}
+
+} // namespace
+
+bool GameController::LoadFromPGNFile(const wchar_t *pszPath) {
+    if (!pszPath || !*pszPath)
+        return false;
+
+    FILE *pFile = nullptr;
+    if (_wfopen_s(&pFile, pszPath, L"rb") != 0 || !pFile)
+        return false;
+
+    if (fseek(pFile, 0, SEEK_END) != 0) {
+        fclose(pFile);
+        return false;
+    }
+    long nSize = ftell(pFile);
+    if (nSize < 0) {
+        fclose(pFile);
+        return false;
+    }
+    rewind(pFile);
+
+    std::string strContent;
+    strContent.resize(static_cast<size_t>(nSize));
+    if (nSize > 0) {
+        size_t nRead = fread(strContent.data(), 1, strContent.size(), pFile);
+        if (nRead != strContent.size()) {
+            fclose(pFile);
+            return false;
+        }
+    }
+    fclose(pFile);
+
+    std::vector<std::string> rgTokens = ExtractPGNMoveTokens(strContent);
+
+    // Build the game on a fresh position so a parse failure leaves the current
+    // game untouched.
+    CPosition *pNewPosition = CPosition::Initial();
+    if (!pNewPosition)
+        return false;
+
+    for (const std::string &strRaw : rgTokens) {
+        if (IsPGNResultToken(strRaw))
+            break;
+
+        // Strip a leading move number / dots (e.g. "12." or "12...").
+        size_t nStart = 0;
+        while (nStart < strRaw.size() &&
+               (std::isdigit(static_cast<unsigned char>(strRaw[nStart])) ||
+                strRaw[nStart] == '.'))
+            ++nStart;
+        std::string strMove = strRaw.substr(nStart);
+
+        // Strip trailing annotation glyphs ('!' / '?'); ParseSAN already
+        // tolerates trailing '+' / '#'.
+        while (!strMove.empty() &&
+               (strMove.back() == '!' || strMove.back() == '?'))
+            strMove.pop_back();
+
+        if (strMove.empty())
+            continue; // pure move-number token
+
+        CMove themove = pNewPosition->ParseSAN(strMove.c_str());
+        if (themove == M_NONE) {
+            // Could not interpret a move — treat the file as invalid.
+            CPosition::Free(pNewPosition);
+            return false;
+        }
+        pNewPosition->DoMove(themove);
+    }
+
+    PauseEngine();
+    if (m_EngineThread.joinable())
+        m_EngineThread.join();
+
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    if (m_pPosition)
+        CPosition::Free(m_pPosition);
+    m_pPosition = pNewPosition;
+    m_BestMove = M_NONE;
+    return true;
+}
+
+bool GameController::SaveToPGNFile(const wchar_t *pszPath) {
+    if (!pszPath || !*pszPath)
+        return false;
+
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    if (!m_pPosition)
+        return false;
+
+    // Operate on a clone so the live game position is never mutated.
+    CPosition *p = CPosition::Clone(m_pPosition);
+    if (!p)
+        return false;
+
+    int nPly = p->GetPly();
+
+    // Determine the result before unwinding the move list.
+    const char *pszGameEnd = p->GameEnd();
+    std::string strResult = pszGameEnd ? std::string(pszGameEnd) : std::string("*");
+    // The header [Result] tag uses the short form (no trailing reason text).
+    std::string strShortResult = strResult;
+    {
+        size_t nSpace = strShortResult.find(' ');
+        if (nSpace != std::string::npos)
+            strShortResult.erase(nSpace);
+    }
+    if (strShortResult.empty())
+        strShortResult = "*";
+
+    // Unwind to the initial position, recording the moves in play order.
+    std::vector<CMove> rgMoves(static_cast<size_t>(nPly));
+    for (int i = nPly; i > 0; --i) {
+        CMove move = (p->GetActLog() - 1)->gl_Move;
+        rgMoves[static_cast<size_t>(i - 1)] = move;
+        p->UndoMove(move);
+    }
+
+    FILE *pFile = nullptr;
+    if (_wfopen_s(&pFile, pszPath, L"w") != 0 || !pFile) {
+        CPosition::Free(p);
+        return false;
+    }
+
+    fprintf(pFile, "[Event \"WinAmy 4D game\"]\n");
+    fprintf(pFile, "[Site \"?\"]\n");
+    fprintf(pFile, "[Date \"????.??.??\"]\n");
+    fprintf(pFile, "[Round \"?\"]\n");
+    fprintf(pFile, "[White \"White\"]\n");
+    fprintf(pFile, "[Black \"Black\"]\n");
+    fprintf(pFile, "[Result \"%s\"]\n", strShortResult.c_str());
+    fprintf(pFile, "[Variant \"4D\"]\n\n");
+
+    int nWidth = 0;
+    for (int i = 0; i < nPly; ++i) {
+        CMove move = rgMoves[static_cast<size_t>(i)];
+        if ((i & 1) == 0) {
+            int nWritten = fprintf(pFile, "%d. ", (i / 2) + 1);
+            if (nWritten > 0)
+                nWidth += nWritten;
+        }
+
+        char san_buffer[32];
+        char *san = p->SAN(move, san_buffer);
+        fprintf(pFile, "%s ", san);
+        nWidth += static_cast<int>(strlen(san)) + 1;
+        if (nWidth > 67) {
+            nWidth = 0;
+            fprintf(pFile, "\n");
+        }
+        p->DoMove(move);
+    }
+    fprintf(pFile, "\n%s\n\n", strResult.c_str());
+    fclose(pFile);
+
+    CPosition::Free(p);
+    return true;
 }
 
 void GameController::SetDepth(int depth) {
