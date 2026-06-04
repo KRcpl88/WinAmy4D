@@ -71,7 +71,7 @@ The app offers two views of the board:
   in three rows so they fit on your screen. Easiest for reading exact
   positions.
   
-![chess board 2D](2D.PNG)
+![chess board 2D](2D.png)
 
 - **3D view**: shows the levels as a true stack in three-dimensional
   space, which makes vertical (cross-level) relationships much easier
