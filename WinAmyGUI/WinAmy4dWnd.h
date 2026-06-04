@@ -103,10 +103,7 @@ private:
     HWND m_hBtnOutlines  = nullptr;
     HWND m_hBtnResetView = nullptr;
     HWND m_hBtnZoomIn    = nullptr;
-    HWND m_hBtnZoomOut   = nullptr;
-    HWND m_hChkInvertX   = nullptr;
-    HWND m_hChkInvertY   = nullptr;
-    HWND m_hChkInvertZ   = nullptr;
+    HWND m_hBtnZoomOut    = nullptr;
     HWND m_hCbSwapAxes   = nullptr;
 
     // ---- Owned subsystems (group B) ------------------------------------

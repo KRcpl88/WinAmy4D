@@ -5,12 +5,25 @@
 #include "dbase.h"
 #include "bitboard.h"
 #include "scoord.h"
+#include "ucoord.h"
 #include "move.h"
 
 #include <vector>
 
 class BoardRenderer {
 public:
+    // Which plane of the 4D board the flat 2D view is showing. The default
+    // (PlaneXY) is the natural board with no axis swap; the other two planes
+    // are produced by swapping a pair of lattice axes (see SetViewPlane).
+    //
+    //   PlaneXY — x/y plane: no swap (each rendered level is a true board level a–o)
+    //   PlaneXZ — x/z plane: swap lattice Y/Z
+    //   PlaneYZ — y/z plane: swap lattice X/Z
+    //
+    // In the swapped planes the rendered "levels" no longer correspond to the
+    // board levels a–o, so their labels are hidden.
+    enum class ViewPlane { PlaneXY, PlaneXZ, PlaneYZ };
+
     // Square size in pixels (all levels share the same cell size).
     static constexpr int SQUARE_SIZE = 36;
 
@@ -56,8 +69,17 @@ public:
                    const CSCoord* HintTo = nullptr) const;
 
     // Return the board square under the given client-area pixel, or an
-    // invalid coord if no square is there.
+    // invalid coord if no square is there. In a swapped view plane the
+    // returned coordinate is the *original* board square (with a valid bit
+    // offset), so all click / move logic continues to work in board space.
     CSCoord HitTest(POINT pt) const;
+
+    // Select which plane of the 4D board the flat 2D view renders. Changing
+    // the plane only affects how cells are laid out / which original square
+    // is drawn in each slot; the engine and all board state stay in ordinary
+    // (unswapped) board coordinates.
+    void SetViewPlane(ViewPlane eViewPlane) { m_eViewPlane = eViewPlane; }
+    ViewPlane GetViewPlane() const { return m_eViewPlane; }
 
     // Return the total width and height required for the board area.
     static SIZE GetBoardAreaSize();
@@ -79,5 +101,16 @@ private:
 
     // Return the Unicode chess piece glyph for the given piece value.
     static wchar_t PieceGlyph(int8_t piece);
+
+    // Map a swapped 2D-render location (a cell slot in the currently rendered
+    // grid) back to the original board square whose piece / highlight state
+    // should be displayed there. For PlaneXY this is the identity. The input
+    // is a CSCoordBase precisely because, in a swapped plane, that location's
+    // bit offset is meaningless and must never be used; only the returned
+    // original CSCoord carries a valid bit offset.
+    CSCoord MapRenderToOriginal(const CSCoordBase& SwappedRenderCoord) const;
+
+    // Currently selected view plane (defaults to the natural x/y board).
+    ViewPlane m_eViewPlane{ViewPlane::PlaneXY};
 };
 

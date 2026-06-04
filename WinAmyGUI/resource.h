@@ -51,9 +51,6 @@
 #define IDC_BTN_ZOOM_OUT    2011
 #define IDC_BTN_VIEW_TOGGLE 2012
 #define IDC_CB_GRID_TYPE    2013
-#define IDC_CHK_INVERT_X    2014
-#define IDC_CHK_INVERT_Y    2015
-#define IDC_CHK_INVERT_Z    2016
 #define IDC_CB_SWAP_AXES    2017
 
 // Custom window messages
