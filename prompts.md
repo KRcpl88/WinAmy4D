@@ -311,6 +311,33 @@ These changes are looking really good.  The game is much easier to play now beca
 4. for 2D mode, please fix the alignment of the different board levels to be vertically center justified in each row, whihc makes it easier to visualize how the squares aligne from one level to the next.
 
 
+
+
+
+# New coordinate swap UI:
+
+1) Please remove the 3 buttons to invert the X, Y and Z axis, those are not needed.  Remove the buttons, but keep all the internal helpr functions in case we need to use them later
+2) Please change the outline type Enum selection labels in the UI drop down selection box for Square Z Slice, X Slice and Y Slice to be Square x/y plane, y/z plane, and z/x plane.  The labels for those outline types should correspond the axes for the plane of the main board, so for example Z slice is showing the main board in the x/y plain, therefore the UI label will be Square (x/y plane)
+3) Please hide the outline type selection, outlines on/off button, reset view button, and Zoom buttons when in 2D mode.
+4) Please hide the axis swap selection in 3D mode, but enable it in 2D mode with the following instructions:
+- Instead of Swap, Swap X/Y, Swap X/Z and  Swap Y/Z, the options will defined by which plane is being displayed on the board:
+
+| UI Label  | Axis swap | 
+|:---------:|:---------:|
+| x/y plane | no swap   |
+| x/z plane | swap Y/Z  |
+| y/z plane | swap X/Z  |
+
+- One way to implement the coordinate transformation is to begin with the original CSCoord of each board location, convert to a CUCoord, do the axis swap, then convert back to CSCoord.  That will display the regular 2D chess board with swapped axes
+- This will make the code in the UI very confusing, because the bit offset for the swapped CSCoord values will be wrong and must not be used.  To compensate for this and prevent future coding errors:
+    * Create a new base class for  CSCoord that does not include the implementation of BitOffset, GetBitField, ValidateOffset, or any of the copy constructors that take a std::uint16_t or scoord_bitfield_t parameter
+    * The base class will be for level, file and rank coordinates only, and does not support conversion to or from a bit offset.
+    * The base class will only be used for the coordinate location of a swapped axis board location on the 2D view
+    * in the code, any local variables which represent the swapped or potentially swapped coordinate location will both use the base class and also have a clear variable name indicating this is a swapped scoord location, used only for rendering the 2D view.
+
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
