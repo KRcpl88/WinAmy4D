@@ -52,9 +52,6 @@ That's **344 squares** in total.
 
 
 
-A side-on silhouette of the stack:
-
-![chess board 3D](4d_board.JPG)
 
 **Level `h` is the standard chessboard.** If you played a game that used
 only level `h`, you would be playing regular chess: the same eight files
@@ -73,10 +70,15 @@ The app offers two views of the board:
 - **2D view**: shows all fifteen levels laid out side-by-side, arranged
   in three rows so they fit on your screen. Easiest for reading exact
   positions.
+  
+![chess board 2D](2D.PNG)
+
 - **3D view**: shows the levels as a true stack in three-dimensional
   space, which makes vertical (cross-level) relationships much easier
   to see. Several "grid" orientations are available — see *Why is it
   called 4D chess?* below for what those are.
+
+![chess board 3D](4d_board.JPG)
 
 A toolbar button toggles between the two views. **Most players find the
 3D view essential once pieces start moving between levels.**
