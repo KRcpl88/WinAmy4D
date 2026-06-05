@@ -107,13 +107,7 @@ void CDECL PrintNoLog(int vb, const char *fmt, ...) {
         fflush(stdout);
         va_end(va);
     }
-    if (LogFile) {
-        va_list va;
-        va_start(va, fmt);
-        vfprintf(LogFile, fmt, va);
-        fflush(LogFile);
-        va_end(va);
-    }
+    
 }
 
 /**
