@@ -33,8 +33,9 @@ public:
     ~CWinAmy4dWnd();
 
     // Register window classes, create the main window, and run the message
-    // loop. Returns the WM_QUIT exit code.
-    int Run(HINSTANCE hInstance, int nCmdShow);
+    // loop. Returns the WM_QUIT exit code. lpCmdLine is the (program-name
+    // excluded) command line, used to enable optional file logging.
+    int Run(HINSTANCE hInstance, int nCmdShow, LPSTR lpCmdLine);
 
 private:
     // ---- Win32 window-procedure plumbing -------------------------------

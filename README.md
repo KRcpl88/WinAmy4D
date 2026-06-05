@@ -89,6 +89,31 @@ Note that you can specify these options via an '.amyrc' file, too. See below.
 	
  
 
+Logging (WinAmyGUI)
+===================
+
+`WinAmyGUI.exe` (the graphical front-end) runs as a Windows GUI application
+with no attached console, so anything the engine prints to standard output is
+discarded and cannot be captured. To record engine diagnostics — useful for
+investigating illegal or non-optimal moves — enable file logging with the
+optional `-log` command-line switch. Logging is **off by default**.
+
+	WinAmyGUI -log
+
+logs to the default file **`Amy.log`** in the working directory. You can give a
+custom file name in any of these forms (the switch is case-insensitive and also
+accepts `--` or `/` prefixes):
+
+	WinAmyGUI -log mygame.log
+	WinAmyGUI -log:mygame.log
+	WinAmyGUI -log=mygame.log
+
+The log file is recreated (truncated) on each launch. Both regular log output
+and the search "thinking"/progress lines are written to it once logging is
+enabled.
+
+
+
 Creating and using opening books
 ================================
 

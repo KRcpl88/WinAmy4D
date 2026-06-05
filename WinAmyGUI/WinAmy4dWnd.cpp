@@ -21,6 +21,7 @@
 #include "dbase.h"
 #include "heap.h"
 #include "move.h"
+#include "utils.h"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -40,6 +41,102 @@ static constexpr int BTN_GAP     = 6;
 // Shared width for the 2D plane selector and the 3D grid-type selector so the
 // two dropdowns line up in the same toolbar slot when switching view modes.
 static constexpr int DROPDOWN_W  = 160;
+
+// ---------------------------------------------------------------------------
+// Command-line logging support
+//
+// WinAmyGUI is a /SUBSYSTEM:WINDOWS application and therefore has no attached
+// console: anything the engine writes to stdout (via Print / PrintNoLog) is
+// discarded and cannot be captured in GUI mode. To diagnose engine behaviour
+// (e.g. illegal or non-optimal moves) the only reliable sink is the engine log
+// file, which is written whenever a log file has been opened via OpenLogFile().
+//
+// Logging is opt-in through a command-line switch so normal runs are unaffected:
+//
+//     WinAmyGUI.exe -log                 -> logs to "Amy.log"
+//     WinAmyGUI.exe -log <filename>      -> logs to <filename>
+//     WinAmyGUI.exe -log:<filename>      -> logs to <filename>
+//     WinAmyGUI.exe -log=<filename>      -> logs to <filename>
+//
+// "-", "--" and "/" prefixes are all accepted and the switch is case-insensitive.
+// ---------------------------------------------------------------------------
+
+static const char* MatchLogSwitch(const char* pszArg) {
+    // Skip a leading "-", "--" or "/" prefix.
+    if (pszArg[0] == '/') {
+        ++pszArg;
+    } else {
+        while (pszArg[0] == '-') {
+            ++pszArg;
+        }
+    }
+
+    if (_strnicmp(pszArg, "log", 3) != 0) {
+        return nullptr;
+    }
+
+    const char* pszRest = pszArg + 3;
+    if (pszRest[0] == '\0') {
+        return "";                 // bare switch; filename (if any) is a separate token
+    }
+    if ((pszRest[0] == ':') || (pszRest[0] == '=')) {
+        return pszRest + 1;        // inline filename, e.g. -log:game.log
+    }
+    return nullptr;                // e.g. "-logfoo" is not our switch
+}
+
+static void ConfigureLoggingFromCommandLine(LPSTR lpCmdLine) {
+    static const char* const kDefaultLogName = "Amy.log";
+
+    if (lpCmdLine == nullptr) {
+        return;
+    }
+
+    // GetCommandLine-style splitting is overkill here; a simple whitespace tokenizer
+    // is sufficient for the supported switches. Work on a mutable copy.
+    std::string strCmdLine(lpCmdLine);
+    std::vector<std::string> Tokens;
+    {
+        size_t nPos = 0;
+        while (nPos < strCmdLine.size()) {
+            while ((nPos < strCmdLine.size()) &&
+                   ((strCmdLine[nPos] == ' ') || (strCmdLine[nPos] == '\t'))) {
+                ++nPos;
+            }
+            size_t nStart = nPos;
+            while ((nPos < strCmdLine.size()) &&
+                   (strCmdLine[nPos] != ' ') && (strCmdLine[nPos] != '\t')) {
+                ++nPos;
+            }
+            if (nPos > nStart) {
+                Tokens.push_back(strCmdLine.substr(nStart, nPos - nStart));
+            }
+        }
+    }
+
+    for (size_t nIndex = 0; nIndex < Tokens.size(); ++nIndex) {
+        const char* pszFile = MatchLogSwitch(Tokens[nIndex].c_str());
+        if (pszFile == nullptr) {
+            continue;
+        }
+
+        std::string strFile;
+        if (pszFile[0] != '\0') {
+            strFile = pszFile;                         // inline filename
+        } else if ((nIndex + 1 < Tokens.size()) &&
+                   (Tokens[nIndex + 1][0] != '-') &&
+                   (Tokens[nIndex + 1][0] != '/')) {
+            strFile = Tokens[++nIndex];                // filename in next token
+        } else {
+            strFile = kDefaultLogName;                 // default
+        }
+
+        OpenLogFile(strFile.c_str());
+        Print(0, "WinAmyGUI: logging enabled -> %s\n", strFile.c_str());
+        return;
+    }
+}
+
 
 // ---------------------------------------------------------------------------
 // Construction / destruction
@@ -151,6 +248,16 @@ bool CWinAmy4dWnd::TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqT
          nIndex < pHeap->current_section->end; ++nIndex) {
         CMove mv = pHeap->data[nIndex];
         if (mv.GetFromCoord() == m_SelectedSquare && mv.GetToCoord() == sqTo) {
+            // Log that the human player initiated this move (the side moving is
+            // the side to move in the current position). MakeMove() logs the
+            // move itself; a MakeMove log with no matching "Player made move"
+            // entry therefore indicates a computer move.
+            {
+                char szSan[32];
+                const char *pszSan = const_cast<CPosition *>(pPos)->SAN(mv, szSan);
+                const char *pszSide = (pPos->GetTurn() == 0) ? "White" : "Black";
+                Print(0, "Player made move: %s by %s\n", pszSan, pszSide);
+            }
             m_Game.MakeMove(mv);
             free_heap(pHeap);
             return true;
@@ -281,7 +388,12 @@ LRESULT CWinAmy4dWnd::Render3DProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 // Run — register classes, create the window, pump messages
 // ---------------------------------------------------------------------------
 
-int CWinAmy4dWnd::Run(HINSTANCE hInstance, int /*nCmdShow*/) {
+int CWinAmy4dWnd::Run(HINSTANCE hInstance, int /*nCmdShow*/, LPSTR lpCmdLine) {
+    // Enable optional file logging before the engine starts so that any startup
+    // diagnostics are captured. See ConfigureLoggingFromCommandLine() for the
+    // accepted switches; logging is off unless requested on the command line.
+    ConfigureLoggingFromCommandLine(lpCmdLine);
+
     // Initialise common controls (needed for spin/status bar).
     INITCOMMONCONTROLSEX icce{sizeof(icce), ICC_WIN95_CLASSES};
     InitCommonControlsEx(&icce);
