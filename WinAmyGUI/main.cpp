@@ -10,7 +10,7 @@
 
 #include "WinAmy4dWnd.h"
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow) {
     CWinAmy4dWnd app;
-    return app.Run(hInstance, nCmdShow);
+    return app.Run(hInstance, nCmdShow, lpCmdLine);
 }

@@ -123,3 +123,27 @@ inform `xboard` about the features Amy supports.
 To use Amy with `xboard` use the `-fcp` like this: `xboard -fcp Amy`.
 This example assumes that your `PATH` variable contains the path to the
 Amy executable.
+
+## Logging in the WinAmyGUI front-end
+
+`WinAmyGUI.exe` is a Windows GUI application with no attached console, so engine
+output normally sent to standard output is discarded and cannot be captured. To
+record engine diagnostics (for example when investigating illegal or
+non-optimal moves), enable file logging with the optional `-log` command-line
+switch. Logging is **off by default**.
+
+Running
+
+    WinAmyGUI -log
+
+writes the log to the default file **`Amy.log`** in the working directory. A
+custom file name may be supplied in any of these forms (the switch is
+case-insensitive and also accepts `--` or `/` prefixes):
+
+    WinAmyGUI -log mygame.log
+    WinAmyGUI -log:mygame.log
+    WinAmyGUI -log=mygame.log
+
+The log file is truncated on each launch. Both the regular log output and the
+search progress/"thinking" lines are mirrored to the log file while logging is
+enabled.

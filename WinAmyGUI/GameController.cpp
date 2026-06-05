@@ -5,6 +5,8 @@
 
 #include "GameController.h"
 
+#include "utils.h"
+
 #include <cassert>
 #include <cctype>
 #include <cstdio>
@@ -411,6 +413,19 @@ void GameController::MakeMove(CMove move) {
         // board and making AtkSet/RecalcAttacks panic. Only apply legal moves.
         if (!m_pPosition->LegalMove(move))
             return;
+
+        // Log every move that is actually applied to the game. SAN must be
+        // computed from the position *before* the move is made, and GetTurn()
+        // (also pre-move) identifies the side that is moving. Player moves are
+        // additionally logged at the GUI call site, so a move that appears here
+        // with no preceding "Player made move" entry was made by the computer.
+        {
+            char szSan[32];
+            const char *pszSan = m_pPosition->SAN(move, szSan);
+            const char *pszSide = (m_pPosition->GetTurn() == 0) ? "White" : "Black";
+            Print(0, "Move made: %s by %s\n", pszSan, pszSide);
+        }
+
         m_pPosition->DoMove(move);
         // The position has changed, so any cached strategy result no longer
         // applies; force a recompute on the next strategy request.
@@ -503,7 +518,14 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     if (m_EngineThread.joinable())
         m_EngineThread.join();
 
-    m_EngineThread = std::thread([this, hwndTarget, uCompletionMsg]() {
+    // Scenario 2: log the suggest-move (hint) search BEFORE it is initiated. The
+    // matching AFTER log (with the suggested move) is emitted in the search
+    // thread once Iterate() returns.
+    const bool fHint = (uCompletionMsg == WM_APP_ENGINE_HINT);
+    if (fHint)
+        Print(0, "Suggest move: starting search (depth %d)...\n", m_nDepth);
+
+    m_EngineThread = std::thread([this, hwndTarget, uCompletionMsg, fHint]() {
         CMove bestMove = M_NONE;
 
         // CPosition::Iterate runs the search on the object it is called on,
@@ -525,7 +547,21 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
         if (pSearchPosition) {
             int score = 0, altScore = 0;
             bestMove = pSearchPosition->Iterate(&score, M_NONE, &altScore);
+
+            // Scenario 2: log the suggest-move search AFTER it completes,
+            // including the suggested move. SAN is computed on the (restored)
+            // root position the search ran on, before it is freed.
+            if (fHint) {
+                char szSan[32];
+                const char *pszSan = "(none)";
+                if (bestMove != M_NONE)
+                    pszSan = pSearchPosition->SAN(bestMove, szSan);
+                Print(0, "Suggest move: search complete, suggested move: %s\n", pszSan);
+            }
+
             CPosition::Free(pSearchPosition);
+        } else if (fHint) {
+            Print(0, "Suggest move: search complete, suggested move: (none)\n");
         }
 
         m_BestMove = bestMove;
@@ -558,8 +594,20 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
         m_EngineThread.join();
     }
 
+    // Scenario 3: log the strategy search BEFORE it is initiated. The matching
+    // AFTER log (with the strategic results) is emitted in the search thread
+    // once ComputeStrategyText() returns, so the log shows what the engine did
+    // to determine the optimal strategy.
+    Print(0, "Strategy: starting search (depth %d)...\n", m_nDepth);
+
     m_EngineThread = std::thread([this, hwndTarget]() {
         std::string strStrategy = ComputeStrategyText();
+
+        // Scenario 3: log the strategy search AFTER it completes, including the
+        // strategic results produced by the search.
+        Print(0, "Strategy: search complete, strategic results:\n%s\n",
+              strStrategy.c_str());
+
         {
             std::lock_guard<std::mutex> lock(m_PositionMutex);
             m_strStrategy = strStrategy;

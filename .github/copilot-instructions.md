@@ -79,6 +79,19 @@ WinAmy is a chess engine (fork of "Amy") built as a Windows C application with a
 - `src/` — All C implementation files for the engine
 - `include/config.h` — **Gitignored**, must be generated before building (CI does this automatically). Defines platform capability flags (`HAVE___BUILTIN_POPCOUNTLL`, etc.)
 
+### Logging (WinAmyGUI)
+
+`WinAmyGUI.exe` is a `/SUBSYSTEM:WINDOWS` app with no console, so engine output sent to `stdout` (via `Print`/`PrintNoLog`) is discarded and cannot be captured. To diagnose engine behaviour (e.g. illegal or non-optimal moves), enable file logging with an **optional command-line switch** (logging is off by default):
+
+```
+WinAmyGUI.exe -log              # logs to the default file Amy.log
+WinAmyGUI.exe -log <filename>   # logs to <filename>
+WinAmyGUI.exe -log:<filename>   # logs to <filename>
+WinAmyGUI.exe -log=<filename>   # logs to <filename>
+```
+
+The switch is case-insensitive and accepts `-`, `--`, or `/` prefixes. The default log file name is **`Amy.log`**, written (truncated) to the working directory. Both `Print` and `PrintNoLog` output are mirrored to the log file once it is open. Parsing lives in `ConfigureLoggingFromCommandLine` (`WinAmyGUI/WinAmy4dWnd.cpp`), which calls the engine's `OpenLogFile` (`src/utils.cpp`).
+
 ### Key Engine Modules
 
 - **bitboard.h/bitboard.c** — Bit manipulation: `SetMask`, `ClrMask`, `SetBit`, `ClrBit`, `TstBit`, `FindSetBit`, `CountBits`

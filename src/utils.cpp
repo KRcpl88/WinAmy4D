@@ -89,16 +89,25 @@ void CDECL Print(int vb, const char *fmt, ...) {
 }
 
 /**
- * Print to stdout only.
+ * Print to stdout, and additionally mirror to the log file when one is open.
+ *
+ * Historically this wrote to stdout only. However, WinAmyGUI is a
+ * /SUBSYSTEM:WINDOWS application with no attached console, so anything written
+ * to stdout here is discarded and cannot be captured in GUI mode. To make these
+ * diagnostics (e.g. search progress / xboard "thinking" lines) available when
+ * running under the GUI, we also append to the log file just like Print() does,
+ * unconditionally of the verbosity level. The stdout copy remains gated by
+ * Verbosity for the console front-ends.
  */
 void CDECL PrintNoLog(int vb, const char *fmt, ...) {
-    va_list va;
-    va_start(va, fmt);
     if (vb < Verbosity) {
+        va_list va;
+        va_start(va, fmt);
         vprintf(fmt, va);
         fflush(stdout);
+        va_end(va);
     }
-    va_end(va);
+    
 }
 
 /**
