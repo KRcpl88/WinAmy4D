@@ -40,12 +40,12 @@ public:
     static constexpr int NUM_ROWS = 3;
 
     // Colours for even-indexed levels (warm brown).
-    static constexpr COLORREF CLR_LIGHT      = RGB(120, 109,  91);
-    static constexpr COLORREF CLR_DARK       = RGB(181, 136,  99);
+    static constexpr COLORREF CLR_LIGHT      = RGB(200, 170, 150);
+    static constexpr COLORREF CLR_DARK       = RGB(120, 100,  90);
 
     // Colours for odd-indexed levels (cool blue-slate).
-    static constexpr COLORREF CLR_LIGHT_ALT  = RGB( 98, 108, 118);
-    static constexpr COLORREF CLR_DARK_ALT   = RGB( 90, 130, 170);
+    static constexpr COLORREF CLR_LIGHT_ALT  = RGB( 150, 170, 200);
+    static constexpr COLORREF CLR_DARK_ALT   = RGB( 90, 100, 120);
 
     // Highlight and label colours.
     static constexpr COLORREF CLR_SELECTED   = RGB( 20, 180,  20);
