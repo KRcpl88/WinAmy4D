@@ -68,6 +68,8 @@ private:
     void OnEngineMove(LPARAM lParam);
     void OnEngineHint(LPARAM lParam);
     void OnSuggestMove();
+    void OnStrategy();
+    void OnEngineStrategy(LPARAM lParam);
     void ClearHint();
     void OnSquareClick(POINT pt);
     void OnSquareClick3D(const CSCoord& sq);

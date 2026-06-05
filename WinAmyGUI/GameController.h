@@ -26,6 +26,11 @@
 // recommendation. WPARAM/LPARAM unused; the move is read via GetBestMove().
 #define WM_APP_ENGINE_HINT  (WM_APP + 2)
 
+// Posted to the main window when a strategy computation finishes. The result
+// (a formatted multi-line strategy description) is read via GetStrategyText().
+// WPARAM/LPARAM unused.
+#define WM_APP_ENGINE_STRATEGY  (WM_APP + 3)
+
 enum class PlayerMode {
     ZeroPlayers = 0, // self-play
     OnePlayer   = 1, // human vs engine
@@ -82,6 +87,14 @@ public:
     // it. The best move is retrieved via GetBestMove().
     void StartHintSearch(HWND hwndTarget);
 
+    // Start an asynchronous strategy computation for the current player. The
+    // engine searches a clone of the current position to find the top 3 moves,
+    // and for each one the opponent's most likely counter move and the
+    // recommended response after that. The completion is posted as
+    // WM_APP_ENGINE_STRATEGY to hwndTarget; the formatted result is retrieved
+    // via GetStrategyText().
+    void StartStrategySearch(HWND hwndTarget);
+
     // Request the engine to stop searching (sets AbortSearch).
     void PauseEngine();
 
@@ -106,11 +119,20 @@ public:
     // Retrieve the best move found by the last engine search.
     CMove GetBestMove() const { return m_BestMove; }
 
+    // Retrieve the formatted strategy text produced by the last strategy
+    // computation (see StartStrategySearch).
+    std::string GetStrategyText() const { return m_strStrategy; }
+
 private:
     // Shared implementation for StartEngineSearch / StartHintSearch. Clones the
     // current position, searches the clone on a background thread, stores the
     // result in m_BestMove, and posts uCompletionMsg to hwndTarget.
     void StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg);
+
+    // Compute the strategy text by searching a clone of the current position.
+    // Returns a formatted, human-readable multi-line description. Runs on the
+    // engine thread (see StartStrategySearch); never mutates m_pPosition.
+    std::string ComputeStrategyText();
 
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
@@ -119,4 +141,5 @@ private:
     std::thread         m_EngineThread;
     std::mutex          m_PositionMutex;
     CMove               m_BestMove{};
+    std::string         m_strStrategy;
 };
