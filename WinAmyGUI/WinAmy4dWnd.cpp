@@ -726,11 +726,17 @@ void CWinAmy4dWnd::OnEngineHint(LPARAM /*lParam*/) {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::OnStrategy() {
-    if (m_Game.IsEngineRunning()) return;
-    if (m_Game.IsGameOver()) return;
+    if (m_Game.IsEngineRunning()) {
+        return;
+    }
+    if (m_Game.IsGameOver()) {
+        return;
+    }
 
     const CPosition* pos = m_Game.GetPosition();
-    if (!pos) return;
+    if (!pos) {
+        return;
+    }
 
     // Clear any stale suggestion / selection so the board isn't left with
     // highlights that no longer reflect the current interaction.
@@ -738,7 +744,9 @@ void CWinAmy4dWnd::OnStrategy() {
     m_fHaveSelection = false;
     m_rgLegalDests.clear();
     InvalidateRect(m_hWnd, nullptr, TRUE);
-    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
 
     m_Game.StartStrategySearch(m_hWnd);
     UpdateStatusBar();
@@ -754,13 +762,15 @@ void CWinAmy4dWnd::OnEngineStrategy(LPARAM /*lParam*/) {
     UpdatePauseMenu();
 
     std::string strStrategy = m_Game.GetStrategyText();
-    if (strStrategy.empty())
+    if (strStrategy.empty()) {
         strStrategy = "No strategy could be computed.";
+    }
 
     int nLen = MultiByteToWideChar(CP_UTF8, 0, strStrategy.c_str(), -1, nullptr, 0);
     std::vector<wchar_t> rgwText(nLen > 0 ? static_cast<size_t>(nLen) : 1, 0);
-    if (nLen > 0)
+    if (nLen > 0) {
         MultiByteToWideChar(CP_UTF8, 0, strStrategy.c_str(), -1, rgwText.data(), nLen);
+    }
 
     MessageBoxW(m_hWnd, rgwText.data(), L"Strategy", MB_OK | MB_ICONINFORMATION);
 }

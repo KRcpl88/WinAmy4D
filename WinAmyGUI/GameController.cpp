@@ -538,15 +538,17 @@ void GameController::PauseEngine() {
 // ---------------------------------------------------------------------------
 
 void GameController::StartStrategySearch(HWND hwndTarget) {
-    if (m_fEngineRunning.load())
+    if (m_fEngineRunning.load()) {
         return;
+    }
 
     setMaxSearchDepth(m_nDepth);
     m_fEngineRunning.store(true);
     AbortSearch = false;
 
-    if (m_EngineThread.joinable())
+    if (m_EngineThread.joinable()) {
         m_EngineThread.join();
+    }
 
     m_EngineThread = std::thread([this, hwndTarget]() {
         m_strStrategy = ComputeStrategyText();
@@ -561,11 +563,13 @@ std::string GameController::ComputeStrategyText() {
     CPosition *p = nullptr;
     {
         std::lock_guard<std::mutex> lock(m_PositionMutex);
-        if (m_pPosition)
+        if (m_pPosition) {
             p = CPosition::Clone(m_pPosition);
+        }
     }
-    if (!p)
+    if (!p) {
         return std::string();
+    }
 
     setMaxSearchDepth(m_nDepth);
 
@@ -614,8 +618,9 @@ std::string GameController::ComputeStrategyText() {
         Cand.Reply = Reply;
         rgCandidates.push_back(Cand);
 
-        if (AbortSearch)
+        if (AbortSearch) {
             break;
+        }
     }
     free_heap(heap);
 
@@ -658,14 +663,16 @@ std::string GameController::ComputeStrategyText() {
             p->UndoMove(Cand.Move);
 
             oss << "Opponent's likely counter move: " << strCounterSan << "\n";
-            if (strResponseSan.empty())
+            if (strResponseSan.empty()) {
                 oss << "Respond with: (game over)\n";
-            else
+            } else {
                 oss << "Respond with: " << strResponseSan << "\n";
+            }
         }
 
-        if (i + 1 < nTop)
+        if (i + 1 < nTop) {
             oss << "\n";
+        }
     }
 
     CPosition::Free(p);
