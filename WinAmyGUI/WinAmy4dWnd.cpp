@@ -738,6 +738,14 @@ void CWinAmy4dWnd::OnStrategy() {
         return;
     }
 
+    // If a strategy has already been computed for the current position, reuse it
+    // instead of running the search again — the cache is invalidated whenever a
+    // move is made, so this stays valid until the player moves again.
+    if (m_Game.HasStrategy()) {
+        OnEngineStrategy(0);
+        return;
+    }
+
     // Clear any stale suggestion / selection so the board isn't left with
     // highlights that no longer reflect the current interaction.
     ClearHint();

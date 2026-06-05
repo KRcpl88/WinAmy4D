@@ -123,6 +123,13 @@ public:
     // computation (see StartStrategySearch).
     std::string GetStrategyText() const { return m_strStrategy; }
 
+    // Returns true if a strategy result has been computed for the current
+    // position and is still valid (i.e. the position has not changed since).
+    // The cache is invalidated whenever the position changes (a move is made
+    // or undone, a new game starts, or a position is loaded), so the strategy
+    // search only needs to run once per position.
+    bool HasStrategy() const { return m_fStrategyValid; }
+
 private:
     // Shared implementation for StartEngineSearch / StartHintSearch. Clones the
     // current position, searches the clone on a background thread, stores the
@@ -134,6 +141,11 @@ private:
     // engine thread (see StartStrategySearch); never mutates m_pPosition.
     std::string ComputeStrategyText();
 
+    // Discard any cached strategy result so the next strategy request recomputes
+    // it. Called whenever the position changes (move made/undone, new game,
+    // position loaded). Callers must hold m_PositionMutex.
+    void InvalidateStrategy();
+
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
     PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};
@@ -142,4 +154,5 @@ private:
     std::mutex          m_PositionMutex;
     CMove               m_BestMove{};
     std::string         m_strStrategy;
+    std::atomic<bool>   m_fStrategyValid{false};
 };

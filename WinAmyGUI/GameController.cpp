@@ -63,6 +63,7 @@ void GameController::NewGame() {
         CPosition::Free(m_pPosition);
     m_pPosition = CPosition::Initial();
     m_BestMove = M_NONE;
+    InvalidateStrategy();
 }
 
 bool GameController::LoadFromEPD(const char *pszEPD) {
@@ -82,6 +83,7 @@ bool GameController::LoadFromEPD(const char *pszEPD) {
         CPosition::Free(m_pPosition);
     m_pPosition = pNewPosition;
     m_BestMove = M_NONE;
+    InvalidateStrategy();
     return true;
 }
 
@@ -310,6 +312,7 @@ bool GameController::LoadFromPGNFile(const wchar_t *pszPath) {
         CPosition::Free(m_pPosition);
     m_pPosition = pNewPosition;
     m_BestMove = M_NONE;
+    InvalidateStrategy();
     return true;
 }
 
@@ -409,6 +412,9 @@ void GameController::MakeMove(CMove move) {
         if (!m_pPosition->LegalMove(move))
             return;
         m_pPosition->DoMove(move);
+        // The position has changed, so any cached strategy result no longer
+        // applies; force a recompute on the next strategy request.
+        InvalidateStrategy();
 #ifndef NDEBUG
         // Snapshot the incrementally maintained attack tables before the full
         // recompute below.  At this point m_pPosition already holds the correct
@@ -470,6 +476,7 @@ bool GameController::UndoLastHumanMove() {
 
     // Mirror MakeMove: keep the highlighting/attack state fully consistent.
     m_pPosition->RecalcAttacks();
+    InvalidateStrategy();
     return true;
 }
 
@@ -551,10 +558,20 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
     }
 
     m_EngineThread = std::thread([this, hwndTarget]() {
-        m_strStrategy = ComputeStrategyText();
+        std::string strStrategy = ComputeStrategyText();
+        {
+            std::lock_guard<std::mutex> lock(m_PositionMutex);
+            m_strStrategy = strStrategy;
+            m_fStrategyValid.store(true);
+        }
         m_fEngineRunning.store(false);
         PostMessage(hwndTarget, WM_APP_ENGINE_STRATEGY, 0, 0);
     });
+}
+
+void GameController::InvalidateStrategy() {
+    m_strStrategy.clear();
+    m_fStrategyValid.store(false);
 }
 
 std::string GameController::ComputeStrategyText() {
