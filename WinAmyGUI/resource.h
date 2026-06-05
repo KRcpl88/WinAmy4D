@@ -44,6 +44,10 @@
 // Undo the last full move (engine reply + human move) — 1-player mode only.
 #define IDM_UNDO            1055
 
+// Compute and display a short strategy (top 3 moves with replies) for the
+// current player.
+#define IDM_STRATEGY        1056
+
 // Button / control IDs
 #define IDC_BTN_NEW_GAME    2001
 #define IDC_BTN_HINT        2002

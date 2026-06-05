@@ -9,6 +9,8 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -61,6 +63,7 @@ void GameController::NewGame() {
         CPosition::Free(m_pPosition);
     m_pPosition = CPosition::Initial();
     m_BestMove = M_NONE;
+    InvalidateStrategy();
 }
 
 bool GameController::LoadFromEPD(const char *pszEPD) {
@@ -80,6 +83,7 @@ bool GameController::LoadFromEPD(const char *pszEPD) {
         CPosition::Free(m_pPosition);
     m_pPosition = pNewPosition;
     m_BestMove = M_NONE;
+    InvalidateStrategy();
     return true;
 }
 
@@ -308,6 +312,7 @@ bool GameController::LoadFromPGNFile(const wchar_t *pszPath) {
         CPosition::Free(m_pPosition);
     m_pPosition = pNewPosition;
     m_BestMove = M_NONE;
+    InvalidateStrategy();
     return true;
 }
 
@@ -407,6 +412,9 @@ void GameController::MakeMove(CMove move) {
         if (!m_pPosition->LegalMove(move))
             return;
         m_pPosition->DoMove(move);
+        // The position has changed, so any cached strategy result no longer
+        // applies; force a recompute on the next strategy request.
+        InvalidateStrategy();
 #ifndef NDEBUG
         // Snapshot the incrementally maintained attack tables before the full
         // recompute below.  At this point m_pPosition already holds the correct
@@ -468,6 +476,7 @@ bool GameController::UndoLastHumanMove() {
 
     // Mirror MakeMove: keep the highlighting/attack state fully consistent.
     m_pPosition->RecalcAttacks();
+    InvalidateStrategy();
     return true;
 }
 
@@ -529,6 +538,164 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
 
 void GameController::PauseEngine() {
     AbortSearch = true;
+}
+
+// ---------------------------------------------------------------------------
+// Strategy computation
+// ---------------------------------------------------------------------------
+
+void GameController::StartStrategySearch(HWND hwndTarget) {
+    if (m_fEngineRunning.load()) {
+        return;
+    }
+
+    setMaxSearchDepth(m_nDepth);
+    m_fEngineRunning.store(true);
+    m_fComputingStrategy.store(true);
+    AbortSearch = false;
+
+    if (m_EngineThread.joinable()) {
+        m_EngineThread.join();
+    }
+
+    m_EngineThread = std::thread([this, hwndTarget]() {
+        std::string strStrategy = ComputeStrategyText();
+        {
+            std::lock_guard<std::mutex> lock(m_PositionMutex);
+            m_strStrategy = strStrategy;
+            m_fStrategyValid.store(true);
+        }
+        m_fComputingStrategy.store(false);
+        m_fEngineRunning.store(false);
+        PostMessage(hwndTarget, WM_APP_ENGINE_STRATEGY, 0, 0);
+    });
+}
+
+void GameController::InvalidateStrategy() {
+    m_strStrategy.clear();
+    m_fStrategyValid.store(false);
+}
+
+std::string GameController::ComputeStrategyText() {
+    // Search a clone so the live game position is never mutated (CPosition's
+    // search entry points mutate the object they run on).
+    CPosition *p = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_PositionMutex);
+        if (m_pPosition) {
+            p = CPosition::Clone(m_pPosition);
+        }
+    }
+    if (!p) {
+        return std::string();
+    }
+
+    setMaxSearchDepth(m_nDepth);
+
+    // Enumerate the current player's legal moves.
+    heap_t heap = allocate_heap();
+    int cnt = p->LegalMoves(heap);
+    unsigned int nStart = heap->current_section->start;
+    unsigned int nEnd = heap->current_section->end;
+
+    if (cnt <= 0) {
+        free_heap(heap);
+        CPosition::Free(p);
+        return std::string("No legal moves are available for the current player.");
+    }
+
+    // A candidate move together with the engine's evaluation of it (from the
+    // current player's perspective) and the opponent's best reply.
+    struct SCandidate {
+        CMove       Move;
+        int         nValue;
+        std::string strSan;
+        CMove       Reply;
+    };
+    std::vector<SCandidate> rgCandidates;
+    rgCandidates.reserve(static_cast<size_t>(nEnd - nStart));
+
+    for (unsigned int i = nStart; i < nEnd; ++i) {
+        CMove themove = heap->data[i];
+
+        // SAN is computed from the position *before* the move is made.
+        char szSan[32];
+        std::string strSan = p->SAN(themove, szSan);
+
+        p->DoMove(themove);
+        // After the move it is the opponent's turn; Iterate returns the
+        // opponent's best reply and a score from the opponent's perspective.
+        // The value of our move is therefore the negation of that score.
+        int nReplyScore = 0;
+        CMove Reply = p->Iterate(&nReplyScore, M_NONE, nullptr);
+        p->UndoMove(themove);
+
+        SCandidate Cand;
+        Cand.Move = themove;
+        Cand.nValue = -nReplyScore;
+        Cand.strSan = strSan;
+        Cand.Reply = Reply;
+        rgCandidates.push_back(Cand);
+
+        if (AbortSearch) {
+            break;
+        }
+    }
+    free_heap(heap);
+
+    // Order best-first (highest value for the current player).
+    std::stable_sort(rgCandidates.begin(), rgCandidates.end(),
+                     [](const SCandidate &a, const SCandidate &b) {
+                         return a.nValue > b.nValue;
+                     });
+
+    const size_t nTop = (std::min)(static_cast<size_t>(3), rgCandidates.size());
+
+    std::ostringstream oss;
+    for (size_t i = 0; i < nTop; ++i) {
+        const SCandidate &Cand = rgCandidates[i];
+
+        oss << "Suggested Move #" << (i + 1) << ": " << Cand.strSan << "\n";
+
+        if (Cand.Reply == M_NONE) {
+            // The suggested move ends the game (checkmate / stalemate): there is
+            // no opponent reply to consider.
+            oss << "Opponent's likely counter move: (none \xe2\x80\x94 no reply)\n";
+            oss << "Respond with: (game over)\n";
+        } else {
+            // Counter SAN is computed from the position after our move.
+            p->DoMove(Cand.Move);
+
+            char szCounterSan[32];
+            std::string strCounterSan = p->SAN(Cand.Reply, szCounterSan);
+
+            // Find the recommended response after the opponent's reply.
+            p->DoMove(Cand.Reply);
+            int nResponseScore = 0;
+            CMove Response = p->Iterate(&nResponseScore, M_NONE, nullptr);
+            std::string strResponseSan;
+            if (Response != M_NONE) {
+                char szResponseSan[32];
+                strResponseSan = p->SAN(Response, szResponseSan);
+            }
+            p->UndoMove(Cand.Reply);
+            p->UndoMove(Cand.Move);
+
+            oss << "Opponent's likely counter move: " << strCounterSan << "\n";
+            if (strResponseSan.empty()) {
+                oss << "Respond with: (game over)\n";
+            } else {
+                oss << "Respond with: " << strResponseSan << "\n";
+            }
+        }
+
+        if (i + 1 < nTop) {
+            oss << "\n";
+        }
+    }
+
+    CPosition::Free(p);
+    return oss.str();
 }
 
 // ---------------------------------------------------------------------------

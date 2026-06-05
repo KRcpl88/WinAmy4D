@@ -26,6 +26,11 @@
 // recommendation. WPARAM/LPARAM unused; the move is read via GetBestMove().
 #define WM_APP_ENGINE_HINT  (WM_APP + 2)
 
+// Posted to the main window when a strategy computation finishes. The result
+// (a formatted multi-line strategy description) is read via GetStrategyText().
+// WPARAM/LPARAM unused.
+#define WM_APP_ENGINE_STRATEGY  (WM_APP + 3)
+
 enum class PlayerMode {
     ZeroPlayers = 0, // self-play
     OnePlayer   = 1, // human vs engine
@@ -82,11 +87,23 @@ public:
     // it. The best move is retrieved via GetBestMove().
     void StartHintSearch(HWND hwndTarget);
 
+    // Start an asynchronous strategy computation for the current player. The
+    // engine searches a clone of the current position to find the top 3 moves,
+    // and for each one the opponent's most likely counter move and the
+    // recommended response after that. The completion is posted as
+    // WM_APP_ENGINE_STRATEGY to hwndTarget; the formatted result is retrieved
+    // via GetStrategyText().
+    void StartStrategySearch(HWND hwndTarget);
+
     // Request the engine to stop searching (sets AbortSearch).
     void PauseEngine();
 
     // Returns true while the engine thread is running.
     bool IsEngineRunning() const { return m_fEngineRunning.load(); }
+
+    // Returns true while a strategy computation is in progress (see
+    // StartStrategySearch). Used to show a "Thinking…" status message.
+    bool IsComputingStrategy() const { return m_fComputingStrategy.load(); }
 
     // Access the current position (read-only while engine is running).
     const CPosition* GetPosition() const { return m_pPosition; }
@@ -106,17 +123,41 @@ public:
     // Retrieve the best move found by the last engine search.
     CMove GetBestMove() const { return m_BestMove; }
 
+    // Retrieve the formatted strategy text produced by the last strategy
+    // computation (see StartStrategySearch).
+    std::string GetStrategyText() const { return m_strStrategy; }
+
+    // Returns true if a strategy result has been computed for the current
+    // position and is still valid (i.e. the position has not changed since).
+    // The cache is invalidated whenever the position changes (a move is made
+    // or undone, a new game starts, or a position is loaded), so the strategy
+    // search only needs to run once per position.
+    bool HasStrategy() const { return m_fStrategyValid; }
+
 private:
     // Shared implementation for StartEngineSearch / StartHintSearch. Clones the
     // current position, searches the clone on a background thread, stores the
     // result in m_BestMove, and posts uCompletionMsg to hwndTarget.
     void StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg);
 
+    // Compute the strategy text by searching a clone of the current position.
+    // Returns a formatted, human-readable multi-line description. Runs on the
+    // engine thread (see StartStrategySearch); never mutates m_pPosition.
+    std::string ComputeStrategyText();
+
+    // Discard any cached strategy result so the next strategy request recomputes
+    // it. Called whenever the position changes (move made/undone, new game,
+    // position loaded). Callers must hold m_PositionMutex.
+    void InvalidateStrategy();
+
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
     PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};
     std::atomic<bool>   m_fEngineRunning{false};
+    std::atomic<bool>   m_fComputingStrategy{false};
     std::thread         m_EngineThread;
     std::mutex          m_PositionMutex;
     CMove               m_BestMove{};
+    std::string         m_strStrategy;
+    std::atomic<bool>   m_fStrategyValid{false};
 };

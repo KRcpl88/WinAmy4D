@@ -697,6 +697,7 @@ void CWinAmy4dWnd::OnSuggestMove() {
 
     m_Game.StartHintSearch(m_hWnd);
     UpdateStatusBar();
+    UpdatePauseMenu();
 }
 
 // ---------------------------------------------------------------------------
@@ -706,6 +707,7 @@ void CWinAmy4dWnd::OnSuggestMove() {
 void CWinAmy4dWnd::OnEngineHint(LPARAM /*lParam*/) {
     CMove move = m_Game.GetBestMove();
     UpdateStatusBar();
+    UpdatePauseMenu();
     if (move == M_NONE) {
         // No legal move to suggest (checkmate/stalemate) — nothing to show.
         return;
@@ -717,6 +719,68 @@ void CWinAmy4dWnd::OnEngineHint(LPARAM /*lParam*/) {
 
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+}
+
+// ---------------------------------------------------------------------------
+// OnStrategy — compute a short strategy (top 3 moves) for the current player
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::OnStrategy() {
+    if (m_Game.IsEngineRunning()) {
+        return;
+    }
+    if (m_Game.IsGameOver()) {
+        return;
+    }
+
+    const CPosition* pos = m_Game.GetPosition();
+    if (!pos) {
+        return;
+    }
+
+    // If a strategy has already been computed for the current position, reuse it
+    // instead of running the search again — the cache is invalidated whenever a
+    // move is made, so this stays valid until the player moves again.
+    if (m_Game.HasStrategy()) {
+        OnEngineStrategy(0);
+        return;
+    }
+
+    // Clear any stale suggestion / selection so the board isn't left with
+    // highlights that no longer reflect the current interaction.
+    ClearHint();
+    m_fHaveSelection = false;
+    m_rgLegalDests.clear();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
+
+    m_Game.StartStrategySearch(m_hWnd);
+    UpdateStatusBar();
+    UpdatePauseMenu();
+}
+
+// ---------------------------------------------------------------------------
+// OnEngineStrategy — handle WM_APP_ENGINE_STRATEGY (strategy search completed)
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::OnEngineStrategy(LPARAM /*lParam*/) {
+    UpdateStatusBar();
+    UpdatePauseMenu();
+
+    std::string strStrategy = m_Game.GetStrategyText();
+    if (strStrategy.empty()) {
+        strStrategy = "No strategy could be computed.";
+    }
+
+    int nLen = MultiByteToWideChar(CP_UTF8, 0, strStrategy.c_str(), -1, nullptr, 0);
+    std::vector<wchar_t> rgwText(nLen > 0 ? static_cast<size_t>(nLen) : 1, 0);
+    if (nLen > 0) {
+        MultiByteToWideChar(CP_UTF8, 0, strStrategy.c_str(), -1, rgwText.data(), nLen);
+    }
+
+    MessageBoxW(m_hWnd, rgwText.data(), L"Strategy", MB_OK | MB_ICONINFORMATION);
 }
 
 // ---------------------------------------------------------------------------
@@ -801,7 +865,9 @@ void CWinAmy4dWnd::UpdateStatusBar() {
 
     wchar_t buf[128];
     const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
-    if (m_Game.IsEngineRunning()) {
+    if (m_Game.IsComputingStrategy()) {
+        swprintf_s(buf, 128, L"%s  [Thinking...]", turn);
+    } else if (m_Game.IsEngineRunning()) {
         swprintf_s(buf, 128, L"%s  [Engine thinking...]", turn);
     } else {
         swprintf_s(buf, 128, L"%s", turn);
@@ -863,6 +929,15 @@ void CWinAmy4dWnd::UpdatePauseMenu() {
     CheckMenuItem(hMenu, IDM_PAUSE,
         MF_BYCOMMAND | (m_fPaused ? MF_CHECKED : MF_UNCHECKED));
     UpdateUndoMenu();
+
+    // Strategy can only be computed when the engine is idle and the game is
+    // still in progress.
+    CPosition* pStrategyPos = m_Game.GetPosition();
+    bool fStrategyEnabled = !m_Game.IsEngineRunning()
+                         && pStrategyPos != nullptr
+                         && !m_Game.IsGameOver();
+    EnableMenuItem(hMenu, IDM_STRATEGY,
+        MF_BYCOMMAND | (fStrategyEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
 }
 
 // Undo is offered only in 1-player mode (human vs engine), when the engine is
@@ -1291,6 +1366,10 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         OnEngineHint(lParam);
         return 0;
 
+    case WM_APP_ENGINE_STRATEGY:
+        OnEngineStrategy(lParam);
+        return 0;
+
     case WM_COMMAND: {
         int id = LOWORD(wParam);
         int code = HIWORD(wParam);
@@ -1416,6 +1495,10 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
         case IDM_UNDO:
             OnUndoMove();
+            break;
+
+        case IDM_STRATEGY:
+            OnStrategy();
             break;
         }
         return 0;
