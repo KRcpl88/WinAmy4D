@@ -865,7 +865,9 @@ void CWinAmy4dWnd::UpdateStatusBar() {
 
     wchar_t buf[128];
     const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
-    if (m_Game.IsEngineRunning()) {
+    if (m_Game.IsComputingStrategy()) {
+        swprintf_s(buf, 128, L"%s  [Thinking...]", turn);
+    } else if (m_Game.IsEngineRunning()) {
         swprintf_s(buf, 128, L"%s  [Engine thinking...]", turn);
     } else {
         swprintf_s(buf, 128, L"%s", turn);

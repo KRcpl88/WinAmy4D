@@ -551,6 +551,7 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
 
     setMaxSearchDepth(m_nDepth);
     m_fEngineRunning.store(true);
+    m_fComputingStrategy.store(true);
     AbortSearch = false;
 
     if (m_EngineThread.joinable()) {
@@ -564,6 +565,7 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
             m_strStrategy = strStrategy;
             m_fStrategyValid.store(true);
         }
+        m_fComputingStrategy.store(false);
         m_fEngineRunning.store(false);
         PostMessage(hwndTarget, WM_APP_ENGINE_STRATEGY, 0, 0);
     });

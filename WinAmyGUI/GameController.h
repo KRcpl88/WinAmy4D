@@ -101,6 +101,10 @@ public:
     // Returns true while the engine thread is running.
     bool IsEngineRunning() const { return m_fEngineRunning.load(); }
 
+    // Returns true while a strategy computation is in progress (see
+    // StartStrategySearch). Used to show a "Thinking…" status message.
+    bool IsComputingStrategy() const { return m_fComputingStrategy.load(); }
+
     // Access the current position (read-only while engine is running).
     const CPosition* GetPosition() const { return m_pPosition; }
     CPosition*       GetPosition()       { return m_pPosition; }
@@ -150,6 +154,7 @@ private:
     int                 m_nDepth{3};
     PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};
     std::atomic<bool>   m_fEngineRunning{false};
+    std::atomic<bool>   m_fComputingStrategy{false};
     std::thread         m_EngineThread;
     std::mutex          m_PositionMutex;
     CMove               m_BestMove{};
