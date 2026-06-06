@@ -337,6 +337,15 @@ These changes are looking really good.  The game is much easier to play now beca
 
 
 
+# debug logging
+
+1. Please remove the search time limit menu options, and set the search time based on thwe search depth.  The search time will be 10 times the search depth, so search depth 9 is a 90 second search time.
+2. Please add a new command line option -debug.  When set, PrintNoLog will also log to the log file (if provided)
+3. Rename the PrintNoLog function PrintDebug
+4. Add debug logging with the new PrintDebug every time GainAttacks or LoseAttacks is called to log the square it is called on and how many attack squares were added or removed.
+5. Please add PrintDebug every time recalc attacks is called to do a full attack recalc (Gain attacksa and lose attacks are incremental calculations.)
+
+
 
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
