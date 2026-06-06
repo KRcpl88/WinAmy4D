@@ -36,7 +36,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "&Undo Move\tCtrl+Z",               IDM_UNDO, GRAYED
-        MENUITEM "&Strategy...",                     IDM_STRATEGY
+        MENUITEM "&Recommend Strategy...",                     IDM_STRATEGY
         MENUITEM "&Pause Engine\tCtrl+P",             IDM_PAUSE, GRAYED
     END
     POPUP "&View"
