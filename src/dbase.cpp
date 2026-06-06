@@ -1763,9 +1763,10 @@ char *CPosition::SAN(CMove move, char *buffer) {
         }
     } else {
         CBitBoard tmp;
-        bool aamb = false, /* set for ambigous moves */
-            ramb = false,  /* set means ambigous rank */
-            famb = false;  /* set means ambigous file */
+        bool fAmbiguous = false;
+        bool fRankAmbiguous = false;
+        bool fFileAmbiguous = false;
+        bool fNeedFullFromSquare = false;
 
         tmp = p->m_rgAtkFr[to] & p->m_rgMask[p->m_nTurn][tp];
 
@@ -1792,25 +1793,33 @@ char *CPosition::SAN(CMove move, char *buffer) {
                 if (incheck)
                     continue;
 
-                aamb = true;
-                if (coord.m_nFile == frCoord.m_nFile)
-                    famb = true;
-                if (coord.m_nRank == frCoord.m_nRank)
-                    ramb = true;
+                fAmbiguous = true;
+                if (coord.m_nFile == frCoord.m_nFile) {
+                    fFileAmbiguous = true;
+                }
+                if (coord.m_nRank == frCoord.m_nRank) {
+                    fRankAmbiguous = true;
+                }
+                if (coord.m_nFile == frCoord.m_nFile &&
+                    coord.m_nRank == frCoord.m_nRank) {
+                    fNeedFullFromSquare = true;
+                }
             }
         }
 
         *(x++) = PieceName[tp];
-        if (aamb) {
-            if (!famb)
+        if (fAmbiguous) {
+            if (fNeedFullFromSquare) {
+                *(x++) = 'a' + frCoord.m_nLevel;
                 *(x++) = 'a' + frCoord.m_nFile;
-            else {
-                if (!ramb)
-                    *(x++) = '1' + frCoord.m_nRank;
-                else {
-                    *(x++) = 'a' + frCoord.m_nFile;
-                    *(x++) = '1' + frCoord.m_nRank;
-                }
+                *(x++) = '1' + frCoord.m_nRank;
+            } else if (!fFileAmbiguous) {
+                *(x++) = 'a' + frCoord.m_nFile;
+            } else if (!fRankAmbiguous) {
+                *(x++) = '1' + frCoord.m_nRank;
+            } else {
+                *(x++) = 'a' + frCoord.m_nFile;
+                *(x++) = '1' + frCoord.m_nRank;
             }
         }
 
@@ -2031,7 +2040,7 @@ static bool TryMove(CPosition *p, CMove move) {
  */
 static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
     int tp = Neutral;
-    int frk = -1, ffl = -1, tll = -1, trk = -1, tfl = -1;
+    int frk = -1, ffl = -1, fll = -1, tll = -1, trk = -1, tfl = -1;
     int pro = 0;
     unsigned int i;
     CMove move;
@@ -2130,17 +2139,35 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
         }
     }
 
-    /* Remaining prefix: optional from-file (a-h) and/or from-rank (1-8),
-     * and optional capture indicator 'x' */
+    /* Remaining prefix: optional source disambiguation and optional capture
+     * indicator 'x'. Accept both classic file/rank disambiguation and full
+     * 4D source square disambiguation (level+file+rank). */
+    char rgPrefix[16];
+    int nPrefixLen = 0;
     for (const char *q = prefix; q < prefix_end; q++) {
         if (*q == 'x' || *q == '+' || *q == '#')
             continue;
-        if (*q >= 'a' && *q <= 'h')
-            ffl = *q - 'a';
-        else if (*q >= '1' && *q <= '8')
-            frk = *q - '1';
-        else
+        if (nPrefixLen >= static_cast<int>(sizeof(rgPrefix)))
             return M_NONE;
+        rgPrefix[nPrefixLen++] = *q;
+    }
+
+    if (nPrefixLen == 3 && rgPrefix[0] >= 'a' && rgPrefix[0] <= 'o' &&
+        rgPrefix[1] >= 'a' && rgPrefix[1] <= 'h' &&
+        rgPrefix[2] >= '1' && rgPrefix[2] <= '8') {
+        fll = rgPrefix[0] - 'a';
+        ffl = rgPrefix[1] - 'a';
+        frk = rgPrefix[2] - '1';
+    } else {
+        for (int nPrefixIndex = 0; nPrefixIndex < nPrefixLen; ++nPrefixIndex) {
+            char c = rgPrefix[nPrefixIndex];
+            if (c >= 'a' && c <= 'h')
+                ffl = c - 'a';
+            else if (c >= '1' && c <= '8')
+                frk = c - '1';
+            else
+                return M_NONE;
+        }
     }
 
     if (tp == Neutral)
@@ -2157,6 +2184,8 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
             continue;
         if (toCoord.m_nLevel != tll || toCoord.m_nFile != tfl ||
             toCoord.m_nRank != trk)
+            continue;
+        if (fll != -1 && frCoord.m_nLevel != fll)
             continue;
         if (ffl != -1 && frCoord.m_nFile != ffl)
             continue;
@@ -2187,7 +2216,7 @@ CMove CPosition::ParseSAN(const char *san) {
 
 CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
     int tp = Neutral;
-    int frk = -1, ffl = -1, tll = -1, trk = -1, tfl = -1;
+    int frk = -1, ffl = -1, fll = -1, tll = -1, trk = -1, tfl = -1;
     int pro = 0;
     CMove move;
     int i;
@@ -2284,17 +2313,35 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
         }
     }
 
-    /* Remaining prefix: optional from-file (a-h) and/or from-rank (1-8),
-     * and optional capture indicator 'x' */
+    /* Remaining prefix: optional source disambiguation and optional capture
+     * indicator 'x'. Accept both classic file/rank disambiguation and full
+     * 4D source square disambiguation (level+file+rank). */
+    char rgPrefix[16];
+    int nPrefixLen = 0;
     for (const char *q = prefix; q < prefix_end; q++) {
         if (*q == 'x' || *q == '+' || *q == '#')
             continue;
-        if (*q >= 'a' && *q <= 'h')
-            ffl = *q - 'a';
-        else if (*q >= '1' && *q <= '8')
-            frk = *q - '1';
-        else
+        if (nPrefixLen >= static_cast<int>(sizeof(rgPrefix)))
             return M_NONE;
+        rgPrefix[nPrefixLen++] = *q;
+    }
+
+    if (nPrefixLen == 3 && rgPrefix[0] >= 'a' && rgPrefix[0] <= 'o' &&
+        rgPrefix[1] >= 'a' && rgPrefix[1] <= 'h' &&
+        rgPrefix[2] >= '1' && rgPrefix[2] <= '8') {
+        fll = rgPrefix[0] - 'a';
+        ffl = rgPrefix[1] - 'a';
+        frk = rgPrefix[2] - '1';
+    } else {
+        for (int nPrefixIndex = 0; nPrefixIndex < nPrefixLen; ++nPrefixIndex) {
+            char c = rgPrefix[nPrefixIndex];
+            if (c >= 'a' && c <= 'h')
+                ffl = c - 'a';
+            else if (c >= '1' && c <= '8')
+                frk = c - '1';
+            else
+                return M_NONE;
+        }
     }
 
     if (tp == Neutral)
@@ -2309,6 +2356,8 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
             continue;
         if (toCoord.m_nLevel != tll || toCoord.m_nFile != tfl ||
             toCoord.m_nRank != trk)
+            continue;
+        if (fll != -1 && frCoord.m_nLevel != fll)
             continue;
         if (ffl != -1 && frCoord.m_nFile != ffl)
             continue;
