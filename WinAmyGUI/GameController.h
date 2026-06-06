@@ -162,14 +162,13 @@ private:
     void InvalidateStrategy();
 
     // Configure the engine's search-termination limits before starting a search.
-    // When a fixed per-move time limit is set (m_nTimeLimit > 0) the engine uses
-    // fixed time-per-move mode and searches as deeply as time allows; otherwise
-    // it uses the default time control and stops at the configured search depth.
+    // A fixed per-move time limit (m_nTimeLimit > 0) is always used: the engine
+    // searches as deeply as the chosen interval allows.
     void ApplySearchLimits();
 
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
-    int                 m_nTimeLimit{0};
+    int                 m_nTimeLimit{30};
     PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};
     std::atomic<bool>   m_fEngineRunning{false};
     std::atomic<bool>   m_fComputingStrategy{false};

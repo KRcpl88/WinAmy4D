@@ -1232,15 +1232,14 @@ void CWinAmy4dWnd::SetDepthFromMenu(int nDepth) {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::SetTimeLimitFromMenu(int nMenuId) {
-    int nSeconds = 0;
+    int nSeconds = 30;
     switch (nMenuId) {
         case IDM_TIME_10: nSeconds = 10; break;
         case IDM_TIME_20: nSeconds = 20; break;
         case IDM_TIME_30: nSeconds = 30; break;
         case IDM_TIME_60: nSeconds = 60; break;
         case IDM_TIME_90: nSeconds = 90; break;
-        case IDM_TIME_NONE:
-        default:          nSeconds = 0;  break;
+        default:          nSeconds = 30; break;
     }
     m_Game.SetTimeLimit(nSeconds);
 
@@ -1610,9 +1609,9 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
             break;
 
-        case IDM_TIME_NONE: case IDM_TIME_10:
-        case IDM_TIME_20:   case IDM_TIME_30:
-        case IDM_TIME_60:   case IDM_TIME_90:
+        case IDM_TIME_10:   case IDM_TIME_20:
+        case IDM_TIME_30:   case IDM_TIME_60:
+        case IDM_TIME_90:
             SetTimeLimitFromMenu(id);
             break;
 
