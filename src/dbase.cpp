@@ -504,6 +504,10 @@ void CPosition::GainAttacks(const CSCoord& toCoord) {
     const uint16_t to = toCoord.BitOffset();
     CBitBoard tmp = m_rgAtkFr[to] & m_SlidingPieces;
 
+    PrintDebug(9, "GainAttacks: square (L%d F%d R%d) added %d attack squares\n",
+               toCoord.m_nLevel, toCoord.m_nFile, toCoord.m_nRank,
+               tmp.CountBits());
+
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
@@ -519,6 +523,10 @@ void CPosition::GainAttacks(const CSCoord& toCoord) {
 void CPosition::LooseAttacks(const CSCoord& toCoord) {
     const uint16_t to = toCoord.BitOffset();
     CBitBoard tmp = m_rgAtkFr[to] & m_SlidingPieces;
+
+    PrintDebug(9, "LooseAttacks: square (L%d F%d R%d) removed %d attack squares\n",
+               toCoord.m_nLevel, toCoord.m_nFile, toCoord.m_nRank,
+               tmp.CountBits());
 
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
@@ -1087,6 +1095,8 @@ void CPosition::RecalcAttacks() {
     CPosition *p = this;
     int i;
     CBitBoard tmp;
+
+    PrintDebug(9, "RecalcAttacks: performing full attack recalculation\n");
 
     for (unsigned int square = 0; square < CBitBoard::SIZE; square++) {
         p->m_rgAtkTo[square] = p->m_rgAtkFr[square] = {};

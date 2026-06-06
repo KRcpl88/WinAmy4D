@@ -580,7 +580,7 @@ void FlattenBook(unsigned int threshold) {
         tree_node_t *flattened =
             flatten_internal(BookDB, NULL, threshold, &read, &written);
 
-        PrintNoLog(0, "Read %d entries, wrote %d entries\n", read, written);
+        PrintDebug(0, "Read %d entries, wrote %d entries\n", read, written);
 
         FILE *fout = fopen("Book2.db", "wb");
         if (fout != NULL) {

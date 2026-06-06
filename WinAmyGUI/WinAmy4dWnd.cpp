@@ -46,7 +46,7 @@ static constexpr int DROPDOWN_W  = 160;
 // Command-line logging support
 //
 // WinAmyGUI is a /SUBSYSTEM:WINDOWS application and therefore has no attached
-// console: anything the engine writes to stdout (via Print / PrintNoLog) is
+// console: anything the engine writes to stdout (via Print / PrintDebug) is
 // discarded and cannot be captured in GUI mode. To diagnose engine behaviour
 // (e.g. illegal or non-optimal moves) the only reliable sink is the engine log
 // file, which is written whenever a log file has been opened via OpenLogFile().
@@ -58,8 +58,25 @@ static constexpr int DROPDOWN_W  = 160;
 //     WinAmyGUI.exe -log:<filename>      -> logs to <filename>
 //     WinAmyGUI.exe -log=<filename>      -> logs to <filename>
 //
+// The -debug switch additionally enables PrintDebug output to the log file:
+//
+//     WinAmyGUI.exe -log -debug          -> also mirrors PrintDebug to the log
+//
 // "-", "--" and "/" prefixes are all accepted and the switch is case-insensitive.
 // ---------------------------------------------------------------------------
+
+static bool MatchDebugSwitch(const char* pszArg) {
+    // Skip a leading "-", "--" or "/" prefix.
+    if (pszArg[0] == '/') {
+        ++pszArg;
+    } else {
+        while (pszArg[0] == '-') {
+            ++pszArg;
+        }
+    }
+
+    return _stricmp(pszArg, "debug") == 0;
+}
 
 static const char* MatchLogSwitch(const char* pszArg) {
     // Skip a leading "-", "--" or "/" prefix.
@@ -111,6 +128,14 @@ static void ConfigureLoggingFromCommandLine(LPSTR lpCmdLine) {
             if (nPos > nStart) {
                 Tokens.push_back(strCmdLine.substr(nStart, nPos - nStart));
             }
+        }
+    }
+
+    // First pass: enable debug mode if requested. This is order-independent and
+    // does not consume any other tokens.
+    for (size_t nIndex = 0; nIndex < Tokens.size(); ++nIndex) {
+        if (MatchDebugSwitch(Tokens[nIndex].c_str())) {
+            DebugMode = 1;
         }
     }
 
@@ -1228,30 +1253,6 @@ void CWinAmy4dWnd::SetDepthFromMenu(int nDepth) {
 }
 
 // ---------------------------------------------------------------------------
-// SetTimeLimitFromMenu — choose depth-based vs fixed per-move search time
-// ---------------------------------------------------------------------------
-
-void CWinAmy4dWnd::SetTimeLimitFromMenu(int nMenuId) {
-    int nSeconds = 30;
-    switch (nMenuId) {
-        case IDM_TIME_10:      nSeconds = 10; break;
-        case IDM_TIME_20:      nSeconds = 20; break;
-        case IDM_TIME_30:      nSeconds = 30; break;
-        case IDM_TIME_60:      nSeconds = 60; break;
-        case IDM_TIME_90:      nSeconds = 90; break;
-        case IDM_TIME_DEFAULT: nSeconds = 0;  break;
-        default:               nSeconds = 30; break;
-    }
-    m_Game.SetTimeLimit(nSeconds);
-
-    HMENU hMenu = GetMenu(m_hWnd);
-    HMENU hOpts = GetSubMenu(hMenu, 1);
-    HMENU hTime = GetSubMenu(hOpts, 1);
-    CheckMenuRadioItem(hTime, IDM_TIME_FIRST, IDM_TIME_LAST, nMenuId,
-                       MF_BYCOMMAND);
-}
-
-// ---------------------------------------------------------------------------
 // Grid (cell outline) type menu — IDM_GRID_FIRST..IDM_GRID_LAST map 1:1 onto
 // CUCoord::EOutlineType OT_full..OT_hex_4. CheckMenuRadioItem gives proper
 // radio behaviour across the contiguous ID range.
@@ -1608,12 +1609,6 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         case IDM_DEPTH_4: case IDM_DEPTH_5: case IDM_DEPTH_6:
         case IDM_DEPTH_7: case IDM_DEPTH_8: case IDM_DEPTH_9:
             SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
-            break;
-
-        case IDM_TIME_10:   case IDM_TIME_20:
-        case IDM_TIME_30:   case IDM_TIME_60:
-        case IDM_TIME_90:   case IDM_TIME_DEFAULT:
-            SetTimeLimitFromMenu(id);
             break;
 
         case IDM_GRID_FULL: case IDM_GRID_SQUARE_Z: case IDM_GRID_SQUARE_Y:

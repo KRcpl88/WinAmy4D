@@ -401,6 +401,9 @@ void GameController::SetDepth(int depth) {
     if (depth > 9) depth = 9;
     m_nDepth = depth;
     setMaxSearchDepth(depth);
+    // Search time is derived from the search depth: 10 seconds per ply, so
+    // depth 9 yields a 90 second search.
+    m_nTimeLimit = depth * 10;
 }
 
 void GameController::SetTimeLimit(int seconds) {

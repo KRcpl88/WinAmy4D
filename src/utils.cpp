@@ -58,6 +58,12 @@ extern bool XBoardMode;
 FILE *LogFile = NULL;
 int Verbosity = 9;
 
+/*
+ * When DebugMode is non-zero (enabled via the -debug command line option),
+ * PrintDebug also writes its output to the log file (if one is open).
+ */
+int DebugMode = 0;
+
 /**
  * Open a log file, remember fp in global variable LogFile
  */
@@ -89,17 +95,18 @@ void CDECL Print(int vb, const char *fmt, ...) {
 }
 
 /**
- * Print to stdout, and additionally mirror to the log file when one is open.
+ * Print to stdout, and additionally mirror to the log file when debug mode is
+ * enabled (via the -debug command line option) and a log file is open.
  *
  * Historically this wrote to stdout only. However, WinAmyGUI is a
  * /SUBSYSTEM:WINDOWS application with no attached console, so anything written
  * to stdout here is discarded and cannot be captured in GUI mode. To make these
- * diagnostics (e.g. search progress / xboard "thinking" lines) available when
- * running under the GUI, we also append to the log file just like Print() does,
- * unconditionally of the verbosity level. The stdout copy remains gated by
- * Verbosity for the console front-ends.
+ * diagnostics (e.g. search progress / xboard "thinking" lines, attack-map
+ * maintenance) available when running under the GUI, we also append to the log
+ * file when DebugMode is set, unconditionally of the verbosity level. The stdout
+ * copy remains gated by Verbosity for the console front-ends.
  */
-void CDECL PrintNoLog(int vb, const char *fmt, ...) {
+void CDECL PrintDebug(int vb, const char *fmt, ...) {
     if (vb < Verbosity) {
         va_list va;
         va_start(va, fmt);
@@ -107,7 +114,14 @@ void CDECL PrintNoLog(int vb, const char *fmt, ...) {
         fflush(stdout);
         va_end(va);
     }
-    
+
+    if (DebugMode && LogFile) {
+        va_list va;
+        va_start(va, fmt);
+        vfprintf(LogFile, fmt, va);
+        fflush(LogFile);
+        va_end(va);
+    }
 }
 
 /**

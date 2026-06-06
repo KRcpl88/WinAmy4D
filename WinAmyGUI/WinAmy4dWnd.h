@@ -84,7 +84,6 @@ private:
     void SetPlayerModeAction(PlayerMode mode);
     void TogglePause();
     void SetDepthFromMenu(int nDepth);
-    void SetTimeLimitFromMenu(int nMenuId);
     void SetViewMode(ViewMode mode);
     void UpdateViewToggleButton();
     void UpdateOutlinesButtonText();
