@@ -382,7 +382,7 @@ static void SetTime(char *arg) {
 static void SetXBoard(char *args) {
     (void)args;
     XBoardMode = true;
-    Verbosity = 1;
+    g_nVerbosity = 1;
 
     Print(0, "\n");
     Print(0, "feature myname=\"Amy " VERSION "\"\n");

@@ -56,13 +56,13 @@
 extern bool XBoardMode;
 
 FILE *LogFile = NULL;
-int Verbosity = 9;
+uint16_t g_nVerbosity = 9;
 
 /*
- * When DebugMode is non-zero (enabled via the -debug command line option),
+ * When g_nDebugMode is non-zero (enabled via the -debug command line option),
  * PrintDebug also writes its output to the log file (if one is open).
  */
-int DebugMode = 0;
+uint16_t g_nDebugMode = 0;
 
 /**
  * Open a log file, remember fp in global variable LogFile
@@ -78,7 +78,7 @@ void OpenLogFile(const char *name) {
  * Print something to stdout and to the logfile.
  */
 void CDECL Print(int vb, const char *fmt, ...) {
-    if (vb < Verbosity) {
+    if (vb < g_nVerbosity) {
         va_list va;
         va_start(va, fmt);
         vprintf(fmt, va);
@@ -103,11 +103,11 @@ void CDECL Print(int vb, const char *fmt, ...) {
  * to stdout here is discarded and cannot be captured in GUI mode. To make these
  * diagnostics (e.g. search progress / xboard "thinking" lines, attack-map
  * maintenance) available when running under the GUI, we also append to the log
- * file when DebugMode is set, unconditionally of the verbosity level. The stdout
- * copy remains gated by Verbosity for the console front-ends.
+ * file when g_nDebugMode is set, unconditionally of the verbosity level. The stdout
+ * copy remains gated by g_nVerbosity for the console front-ends.
  */
 void CDECL PrintDebug(int vb, const char *fmt, ...) {
-    if (vb < Verbosity) {
+    if (vb < g_nVerbosity) {
         va_list va;
         va_start(va, fmt);
         vprintf(fmt, va);
@@ -115,7 +115,7 @@ void CDECL PrintDebug(int vb, const char *fmt, ...) {
         va_end(va);
     }
 
-    if (DebugMode && LogFile) {
+    if (g_nDebugMode && LogFile) {
         va_list va;
         va_start(va, fmt);
         vfprintf(LogFile, fmt, va);

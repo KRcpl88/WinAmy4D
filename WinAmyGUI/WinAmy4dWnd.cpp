@@ -135,7 +135,7 @@ static void ConfigureLoggingFromCommandLine(LPSTR lpCmdLine) {
     // does not consume any other tokens.
     for (size_t nIndex = 0; nIndex < Tokens.size(); ++nIndex) {
         if (MatchDebugSwitch(Tokens[nIndex].c_str())) {
-            DebugMode = 1;
+            g_nDebugMode = 1;
         }
     }
 

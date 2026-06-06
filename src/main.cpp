@@ -92,7 +92,7 @@ static void ProcessOptions(int argc, char *argv[]) {
         }
 
         if (!strcmp(argv[i], "-debug")) {
-            DebugMode = 1;
+            g_nDebugMode = 1;
         }
 #if MP
         if (!strcmp(argv[i], "-cpu")) {

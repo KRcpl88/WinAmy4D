@@ -33,11 +33,12 @@
 #define UTILS_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define ONE_SECOND 100u
 
-extern int Verbosity;
-extern int DebugMode;
+extern uint16_t g_nVerbosity;
+extern uint16_t g_nDebugMode;
 
 void OpenLogFile(const char *name);
 void Print(int, const char *, ...);
