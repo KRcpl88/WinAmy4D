@@ -3138,7 +3138,7 @@ CPosition *CPosition::CreateFromEPD(const char *epd) {
 
 CPosition *CPosition::Initial() {
     CPosition *p = CPosition::CreateFromEPD(
-        "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|ppppppp/7/7/7/7/7/PPPPPPP|rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|rnbqbnr/ppppppp/7/7/7/PPPPPPP/RNBQBNR|pppppp/6/6/6/6/PPPPPP| w KQkq -");
+        "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|ppppppp/7/7/7/7/7/PPPPPPP|rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|rnbqnbr/ppppppp/7/7/7/PPPPPPP/RNBQNBR|pppppp/6/6/6/6/PPPPPP| w KQkq -");
 
     /* we are 'in book' in the InitalPosition */
     p->m_rgwOutOfBookCnt[White] = p->m_rgwOutOfBookCnt[Black] = 0;
