@@ -211,7 +211,7 @@ bool CSearchData::TerminateSearch() {
              */
 
             if (buffer[0] == '.') {
-                PrintNoLog(0, "stat01: %d %ld %d %d %d\n",
+                PrintDebug(0, "stat01: %d %ld %d %d %d\n",
                            (CurTime - StartTime), TotalNodes, sd->m_wDepth,
                            sd->m_wRootMoves - sd->m_wMoveNum - 1, sd->m_wRootMoves);
             }
@@ -1033,7 +1033,7 @@ void *IterateInt(void *x) {
                 char time_buffer[16];
                 char san_buffer[32];
 
-                PrintNoLog(
+                PrintDebug(
                     2, "%2d  %s   %2d/%2d  %s      \r", sd->m_wDepth,
                     FormatTime(CurTime - StartTime, time_buffer,
                                sizeof(time_buffer)),

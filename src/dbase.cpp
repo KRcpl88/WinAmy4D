@@ -1088,6 +1088,8 @@ void CPosition::RecalcAttacks() {
     int i;
     CBitBoard tmp;
 
+    PrintDebug(9, "RecalcAttacks: performing full attack recalculation\n");
+
     for (unsigned int square = 0; square < CBitBoard::SIZE; square++) {
         p->m_rgAtkTo[square] = p->m_rgAtkFr[square] = {};
     }

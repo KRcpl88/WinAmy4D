@@ -105,7 +105,7 @@ void SearchOutput(int depth, unsigned long time, int score, char *line,
                 }
                 short_line[idx] = '\0';
             }
-            PrintNoLog(0, "%d %d %d %lu %s\n", depth, s, time, nodes,
+            PrintDebug(0, "%d %d %d %lu %s\n", depth, s, time, nodes,
                        short_line);
             free(short_line);
         }
@@ -120,13 +120,13 @@ void SearchOutputFailHighLow(int depth, unsigned long time, int isfailhigh,
         Print(1, "%2d  %s     +++  %s\n", depth,
               FormatTime(time, time_as_text, sizeof(time_as_text)), move);
         if (PostMode) {
-            PrintNoLog(0, "%d 0 %d %lu %s!\n", depth, time, nodes, move);
+            PrintDebug(0, "%d 0 %d %lu %s!\n", depth, time, nodes, move);
         }
     } else {
         Print(1, "%2d  %s     ---  %s\n", depth,
               FormatTime(time, time_as_text, sizeof(time_as_text)), move);
         if (PostMode) {
-            PrintNoLog(0, "%d 0 %d %lu %s?\n", depth, time, nodes, move);
+            PrintDebug(0, "%d 0 %d %lu %s?\n", depth, time, nodes, move);
         }
     }
 }

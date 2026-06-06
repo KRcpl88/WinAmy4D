@@ -489,7 +489,7 @@ void CPosition::SearchRoot() {
               p->SAN(move, san_buffer));
 
         if (XBoardMode)
-            PrintNoLog(0, "move %s\n", ICS_SAN(move));
+            PrintDebug(0, "move %s\n", ICS_SAN(move));
 
         p->DoMove(move);
     }
@@ -601,7 +601,7 @@ int CPosition::PermanentBrain() {
                   p->SAN(move, san_buffer));
 
             if (XBoardMode) {
-                PrintNoLog(0, "move %s\n", ICS_SAN(move));
+                PrintDebug(0, "move %s\n", ICS_SAN(move));
             }
 
             p->DoMove(move);

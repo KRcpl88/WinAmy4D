@@ -90,6 +90,10 @@ static void ProcessOptions(int argc, char *argv[]) {
             RunAllTests();
             exit(0);
         }
+
+        if (!strcmp(argv[i], "-debug")) {
+            g_nDebugMode = 1;
+        }
 #if MP
         if (!strcmp(argv[i], "-cpu")) {
             i++;
