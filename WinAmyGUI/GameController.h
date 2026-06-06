@@ -155,6 +155,11 @@ private:
     PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};
     std::atomic<bool>   m_fEngineRunning{false};
     std::atomic<bool>   m_fComputingStrategy{false};
+    // Set by PauseEngine() to request that the user cancel an in-progress
+    // search. Distinct from the engine's global AbortSearch flag, which is also
+    // raised on normal time-limit termination of each search; only this flag
+    // indicates a genuine user-initiated stop.
+    std::atomic<bool>   m_fStopRequested{false};
     std::thread         m_EngineThread;
     std::mutex          m_PositionMutex;
     CMove               m_BestMove{};

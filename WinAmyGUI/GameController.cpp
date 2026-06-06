@@ -513,6 +513,7 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
 
     setMaxSearchDepth(m_nDepth);
     m_fEngineRunning.store(true);
+    m_fStopRequested.store(false);
     AbortSearch = false;
 
     if (m_EngineThread.joinable())
@@ -573,6 +574,7 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
 }
 
 void GameController::PauseEngine() {
+    m_fStopRequested.store(true);
     AbortSearch = true;
 }
 
@@ -588,6 +590,7 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
     setMaxSearchDepth(m_nDepth);
     m_fEngineRunning.store(true);
     m_fComputingStrategy.store(true);
+    m_fStopRequested.store(false);
     AbortSearch = false;
 
     if (m_EngineThread.joinable()) {
@@ -685,7 +688,12 @@ std::string GameController::ComputeStrategyText() {
         Cand.Reply = Reply;
         rgCandidates.push_back(Cand);
 
-        if (AbortSearch) {
+        // Stop only on a genuine user-initiated cancellation. The engine's
+        // global AbortSearch flag is also raised when an individual Iterate()
+        // call reaches its time limit (normal completion of a timed search), so
+        // checking it here would abort the candidate loop after the first move
+        // at higher search depths — yielding a single, unranked suggestion.
+        if (m_fStopRequested.load()) {
             break;
         }
     }
