@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <chrono>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -422,6 +423,18 @@ void GameController::ApplySearchLimits() {
     }
 }
 
+void GameController::ApplyStrategySearchLimits() {
+    // Strategy evaluation runs a separate search for *every* candidate move (and
+    // a follow-up search for the top few). If each of those used the fixed
+    // time-per-move budget, the total strategy time would be (number of moves) ×
+    // the limit — minutes, not seconds. Instead, bound every per-candidate
+    // search by the configured search depth so each one is fast and predictable,
+    // and cap the *total* strategy time with a wall-clock budget enforced in the
+    // candidate loop (see ComputeStrategyText).
+    SetDefaultTimeControl();
+    setMaxSearchDepth(m_nDepth);
+}
+
 void GameController::MakeMove(CMove move) {
     std::lock_guard<std::mutex> lock(m_PositionMutex);
     if (m_pPosition) {
@@ -607,7 +620,7 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
         return;
     }
 
-    ApplySearchLimits();
+    ApplyStrategySearchLimits();
     m_fEngineRunning.store(true);
     m_fComputingStrategy.store(true);
     m_fStopRequested.store(false);
@@ -661,7 +674,17 @@ std::string GameController::ComputeStrategyText() {
         return std::string();
     }
 
-    ApplySearchLimits();
+    ApplyStrategySearchLimits();
+
+    // Total wall-clock budget for the whole strategy computation. A positive
+    // per-move time limit is treated here as a budget for the *entire* strategy
+    // search (not per candidate), so enumerating many moves cannot blow the time
+    // out to minutes. When no limit is set (engine default), the search runs to
+    // completion bounded only by the configured depth.
+    const bool fBudgeted = (m_nTimeLimit > 0);
+    const std::chrono::steady_clock::time_point tStart =
+        std::chrono::steady_clock::now();
+    const std::chrono::seconds Budget(m_nTimeLimit);
 
     // Enumerate the current player's legal moves.
     heap_t heap = allocate_heap();
@@ -714,6 +737,15 @@ std::string GameController::ComputeStrategyText() {
         // checking it here would abort the candidate loop after the first move
         // at higher search depths — yielding a single, unranked suggestion.
         if (m_fStopRequested.load()) {
+            break;
+        }
+
+        // Enforce the overall strategy time budget. Each candidate search is
+        // depth-bounded (and therefore fast), but with many legal moves the
+        // cumulative time can still grow; stop enumerating further candidates
+        // once the budget is exhausted and rank whatever was evaluated so far.
+        if (fBudgeted &&
+            (std::chrono::steady_clock::now() - tStart) >= Budget) {
             break;
         }
     }

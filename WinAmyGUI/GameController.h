@@ -166,6 +166,14 @@ private:
     // searches as deeply as the chosen interval allows.
     void ApplySearchLimits();
 
+    // Configure the search-termination limits for a strategy computation. Unlike
+    // a single move search, the strategy runs one search per candidate move, so
+    // a fixed per-move time limit would multiply out to (number of moves) × the
+    // limit. Instead each candidate search is bounded by the configured depth,
+    // and the per-move time limit is applied as a single wall-clock budget for
+    // the whole strategy computation (enforced in ComputeStrategyText).
+    void ApplyStrategySearchLimits();
+
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
     int                 m_nTimeLimit{30};

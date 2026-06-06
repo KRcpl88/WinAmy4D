@@ -35,6 +35,7 @@ BEGIN
             MENUITEM "&30 seconds",             IDM_TIME_30, CHECKED
             MENUITEM "&60 seconds",             IDM_TIME_60
             MENUITEM "&90 seconds",             IDM_TIME_90
+            MENUITEM "Engine &default (no limit)", IDM_TIME_DEFAULT
         END
         POPUP "&Players"
         BEGIN

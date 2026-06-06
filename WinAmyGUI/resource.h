@@ -49,14 +49,16 @@
 #define IDM_STRATEGY        1056
 
 // Search time-limit menu items — contiguous range so CheckMenuRadioItem works.
-// Each item sets a fixed per-move search time in seconds.
+// Each item sets a fixed per-move search time in seconds, except IDM_TIME_DEFAULT
+// which clears the fixed limit and leaves the engine's default time control.
 #define IDM_TIME_FIRST      1062
 #define IDM_TIME_10         1062
 #define IDM_TIME_20         1063
 #define IDM_TIME_30         1064
 #define IDM_TIME_60         1065
 #define IDM_TIME_90         1066
-#define IDM_TIME_LAST       1066
+#define IDM_TIME_DEFAULT    1067
+#define IDM_TIME_LAST       1067
 
 // Button / control IDs
 #define IDC_BTN_NEW_GAME    2001
