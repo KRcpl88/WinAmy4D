@@ -723,8 +723,8 @@ void CWinAmy4dWnd::MaybeStartEngine() {
     }
 
     if (engineTurn) {
-        UpdateStatusBar();
         m_Game.StartEngineSearch(m_hWnd);
+        UpdateStatusBar();
         UpdatePauseMenu();
     }
 }
@@ -762,6 +762,7 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
     // For self-play, immediately start the engine again (other side).
     if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers && !m_fPaused) {
         m_Game.StartEngineSearch(m_hWnd);
+        UpdateStatusBar();
         UpdatePauseMenu();
     } else {
         MaybeStartEngine();
@@ -1227,6 +1228,30 @@ void CWinAmy4dWnd::SetDepthFromMenu(int nDepth) {
 }
 
 // ---------------------------------------------------------------------------
+// SetTimeLimitFromMenu — choose depth-based vs fixed per-move search time
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::SetTimeLimitFromMenu(int nMenuId) {
+    int nSeconds = 30;
+    switch (nMenuId) {
+        case IDM_TIME_10:      nSeconds = 10; break;
+        case IDM_TIME_20:      nSeconds = 20; break;
+        case IDM_TIME_30:      nSeconds = 30; break;
+        case IDM_TIME_60:      nSeconds = 60; break;
+        case IDM_TIME_90:      nSeconds = 90; break;
+        case IDM_TIME_DEFAULT: nSeconds = 0;  break;
+        default:               nSeconds = 30; break;
+    }
+    m_Game.SetTimeLimit(nSeconds);
+
+    HMENU hMenu = GetMenu(m_hWnd);
+    HMENU hOpts = GetSubMenu(hMenu, 1);
+    HMENU hTime = GetSubMenu(hOpts, 1);
+    CheckMenuRadioItem(hTime, IDM_TIME_FIRST, IDM_TIME_LAST, nMenuId,
+                       MF_BYCOMMAND);
+}
+
+// ---------------------------------------------------------------------------
 // Grid (cell outline) type menu — IDM_GRID_FIRST..IDM_GRID_LAST map 1:1 onto
 // CUCoord::EOutlineType OT_full..OT_hex_4. CheckMenuRadioItem gives proper
 // radio behaviour across the contiguous ID range.
@@ -1583,6 +1608,12 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         case IDM_DEPTH_4: case IDM_DEPTH_5: case IDM_DEPTH_6:
         case IDM_DEPTH_7: case IDM_DEPTH_8: case IDM_DEPTH_9:
             SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
+            break;
+
+        case IDM_TIME_10:   case IDM_TIME_20:
+        case IDM_TIME_30:   case IDM_TIME_60:
+        case IDM_TIME_90:   case IDM_TIME_DEFAULT:
+            SetTimeLimitFromMenu(id);
             break;
 
         case IDM_GRID_FULL: case IDM_GRID_SQUARE_Z: case IDM_GRID_SQUARE_Y:

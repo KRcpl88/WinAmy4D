@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <chrono>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -402,6 +403,38 @@ void GameController::SetDepth(int depth) {
     setMaxSearchDepth(depth);
 }
 
+void GameController::SetTimeLimit(int seconds) {
+    if (seconds < 0) seconds = 0;
+    m_nTimeLimit = seconds;
+}
+
+void GameController::ApplySearchLimits() {
+    if (m_nTimeLimit > 0) {
+        // Fixed time-per-move: let the engine search as deeply as it can within
+        // the time budget. MaxSearchDepth is raised to (just under) the engine's
+        // hard ceiling so the wall-clock limit, not the depth, governs.
+        SetFixedTimePerMove(m_nTimeLimit);
+        setMaxSearchDepth(MAX_TREE_SIZE - 2);
+    } else {
+        // Depth-based: restore the default time control (so the clock does not
+        // cut the search short) and cap the search at the configured depth.
+        SetDefaultTimeControl();
+        setMaxSearchDepth(m_nDepth);
+    }
+}
+
+void GameController::ApplyStrategySearchLimits() {
+    // Strategy evaluation runs a separate search for *every* candidate move (and
+    // a follow-up search for the top few). If each of those used the fixed
+    // time-per-move budget, the total strategy time would be (number of moves) ×
+    // the limit — minutes, not seconds. Instead, bound every per-candidate
+    // search by the configured search depth so each one is fast and predictable,
+    // and cap the *total* strategy time with a wall-clock budget enforced in the
+    // candidate loop (see ComputeStrategyText).
+    SetDefaultTimeControl();
+    setMaxSearchDepth(m_nDepth);
+}
+
 void GameController::MakeMove(CMove move) {
     std::lock_guard<std::mutex> lock(m_PositionMutex);
     if (m_pPosition) {
@@ -511,8 +544,9 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     if (m_fEngineRunning.load())
         return;
 
-    setMaxSearchDepth(m_nDepth);
+    ApplySearchLimits();
     m_fEngineRunning.store(true);
+    m_fStopRequested.store(false);
     AbortSearch = false;
 
     if (m_EngineThread.joinable())
@@ -573,6 +607,7 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
 }
 
 void GameController::PauseEngine() {
+    m_fStopRequested.store(true);
     AbortSearch = true;
 }
 
@@ -585,9 +620,10 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
         return;
     }
 
-    setMaxSearchDepth(m_nDepth);
+    ApplyStrategySearchLimits();
     m_fEngineRunning.store(true);
     m_fComputingStrategy.store(true);
+    m_fStopRequested.store(false);
     AbortSearch = false;
 
     if (m_EngineThread.joinable()) {
@@ -638,7 +674,17 @@ std::string GameController::ComputeStrategyText() {
         return std::string();
     }
 
-    setMaxSearchDepth(m_nDepth);
+    ApplyStrategySearchLimits();
+
+    // Total wall-clock budget for the whole strategy computation. A positive
+    // per-move time limit is treated here as a budget for the *entire* strategy
+    // search (not per candidate), so enumerating many moves cannot blow the time
+    // out to minutes. When no limit is set (engine default), the search runs to
+    // completion bounded only by the configured depth.
+    const bool fBudgeted = (m_nTimeLimit > 0);
+    const std::chrono::steady_clock::time_point tStart =
+        std::chrono::steady_clock::now();
+    const std::chrono::seconds Budget(m_nTimeLimit);
 
     // Enumerate the current player's legal moves.
     heap_t heap = allocate_heap();
@@ -685,7 +731,21 @@ std::string GameController::ComputeStrategyText() {
         Cand.Reply = Reply;
         rgCandidates.push_back(Cand);
 
-        if (AbortSearch) {
+        // Stop only on a genuine user-initiated cancellation. The engine's
+        // global AbortSearch flag is also raised when an individual Iterate()
+        // call reaches its time limit (normal completion of a timed search), so
+        // checking it here would abort the candidate loop after the first move
+        // at higher search depths — yielding a single, unranked suggestion.
+        if (m_fStopRequested.load()) {
+            break;
+        }
+
+        // Enforce the overall strategy time budget. Each candidate search is
+        // depth-bounded (and therefore fast), but with many legal moves the
+        // cumulative time can still grow; stop enumerating further candidates
+        // once the budget is exhausted and rank whatever was evaluated so far.
+        if (fBudgeted &&
+            (std::chrono::steady_clock::now() - tStart) >= Budget) {
             break;
         }
     }

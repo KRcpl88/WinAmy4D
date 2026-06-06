@@ -10,6 +10,7 @@
 #include "movedata.h"
 #include "search.h"
 #include "scoord.h"
+#include "time_ctl.h"
 
 #include <atomic>
 #include <mutex>
@@ -64,6 +65,16 @@ public:
 
     // Return current search depth.
     int  GetDepth() const { return m_nDepth; }
+
+    // Set a fixed per-move search time limit, in seconds. A value of 0 disables
+    // the fixed limit and reverts to depth-based search termination (the engine
+    // searches to GetDepth() plies). When a positive limit is set, the engine
+    // searches as deeply as it can within the given number of seconds.
+    void SetTimeLimit(int seconds);
+
+    // Return the current fixed per-move time limit in seconds, or 0 if search
+    // is depth-based.
+    int  GetTimeLimit() const { return m_nTimeLimit; }
 
     // Set player mode (0 / 1 / 2 human players).
     void SetPlayerMode(PlayerMode mode) { m_PlayerMode = mode; }
@@ -150,11 +161,30 @@ private:
     // position loaded). Callers must hold m_PositionMutex.
     void InvalidateStrategy();
 
+    // Configure the engine's search-termination limits before starting a search.
+    // A fixed per-move time limit (m_nTimeLimit > 0) is always used: the engine
+    // searches as deeply as the chosen interval allows.
+    void ApplySearchLimits();
+
+    // Configure the search-termination limits for a strategy computation. Unlike
+    // a single move search, the strategy runs one search per candidate move, so
+    // a fixed per-move time limit would multiply out to (number of moves) × the
+    // limit. Instead each candidate search is bounded by the configured depth,
+    // and the per-move time limit is applied as a single wall-clock budget for
+    // the whole strategy computation (enforced in ComputeStrategyText).
+    void ApplyStrategySearchLimits();
+
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
+    int                 m_nTimeLimit{30};
     PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};
     std::atomic<bool>   m_fEngineRunning{false};
     std::atomic<bool>   m_fComputingStrategy{false};
+    // Set by PauseEngine() to request that the user cancel an in-progress
+    // search. Distinct from the engine's global AbortSearch flag, which is also
+    // raised on normal time-limit termination of each search; only this flag
+    // indicates a genuine user-initiated stop.
+    std::atomic<bool>   m_fStopRequested{false};
     std::thread         m_EngineThread;
     std::mutex          m_PositionMutex;
     CMove               m_BestMove{};

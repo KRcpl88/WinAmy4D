@@ -300,3 +300,45 @@ void ResetTimeControl(bool verbose) {
         }
     }
 }
+
+/**
+ * Configure a fixed time-per-move time control.
+ *
+ * The engine will spend (at most) the given number of seconds on each search.
+ * Internally this uses the existing "fixed" time-control mode (moves == -1),
+ * for which CalcTime() returns the seconds-per-move value directly as both the
+ * soft and hard search limit.
+ *
+ * Args:
+ *     seconds: the per-move time budget in seconds (must be > 0).
+ */
+void SetFixedTimePerMove(int seconds) {
+    if (seconds <= 0) {
+        return;
+    }
+    globalTimeControl.first.moves = -1;
+    globalTimeControl.first.total_time = seconds;
+    globalTimeControl.first.increment = 0;
+    globalTimeControl.second.moves = 0;
+    globalTimeControl.second.total_time = 0;
+    globalTimeControl.second.increment = 0;
+    globalTimeControl.hasSecondTimeControl = false;
+    ResetTimeControl(false);
+}
+
+/**
+ * Restore the default time control (60 moves in 5 minutes).
+ *
+ * Used to leave fixed time-per-move mode so that search termination is governed
+ * by the configured search depth rather than a wall-clock budget.
+ */
+void SetDefaultTimeControl(void) {
+    globalTimeControl.first.moves = 60;
+    globalTimeControl.first.total_time = 5 * 60;
+    globalTimeControl.first.increment = 0;
+    globalTimeControl.second.moves = 0;
+    globalTimeControl.second.total_time = 0;
+    globalTimeControl.second.increment = 0;
+    globalTimeControl.hasSecondTimeControl = false;
+    ResetTimeControl(false);
+}
