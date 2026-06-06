@@ -53,10 +53,12 @@
 // per-move search time in seconds.
 #define IDM_TIME_FIRST      1061
 #define IDM_TIME_NONE       1061
-#define IDM_TIME_30         1062
-#define IDM_TIME_60         1063
-#define IDM_TIME_90         1064
-#define IDM_TIME_LAST       1064
+#define IDM_TIME_10         1062
+#define IDM_TIME_20         1063
+#define IDM_TIME_30         1064
+#define IDM_TIME_60         1065
+#define IDM_TIME_90         1066
+#define IDM_TIME_LAST       1066
 
 // Button / control IDs
 #define IDC_BTN_NEW_GAME    2001

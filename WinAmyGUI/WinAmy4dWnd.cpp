@@ -723,8 +723,8 @@ void CWinAmy4dWnd::MaybeStartEngine() {
     }
 
     if (engineTurn) {
-        UpdateStatusBar();
         m_Game.StartEngineSearch(m_hWnd);
+        UpdateStatusBar();
         UpdatePauseMenu();
     }
 }
@@ -762,6 +762,7 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
     // For self-play, immediately start the engine again (other side).
     if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers && !m_fPaused) {
         m_Game.StartEngineSearch(m_hWnd);
+        UpdateStatusBar();
         UpdatePauseMenu();
     } else {
         MaybeStartEngine();
@@ -1233,6 +1234,8 @@ void CWinAmy4dWnd::SetDepthFromMenu(int nDepth) {
 void CWinAmy4dWnd::SetTimeLimitFromMenu(int nMenuId) {
     int nSeconds = 0;
     switch (nMenuId) {
+        case IDM_TIME_10: nSeconds = 10; break;
+        case IDM_TIME_20: nSeconds = 20; break;
         case IDM_TIME_30: nSeconds = 30; break;
         case IDM_TIME_60: nSeconds = 60; break;
         case IDM_TIME_90: nSeconds = 90; break;
@@ -1607,7 +1610,8 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
             break;
 
-        case IDM_TIME_NONE: case IDM_TIME_30:
+        case IDM_TIME_NONE: case IDM_TIME_10:
+        case IDM_TIME_20:   case IDM_TIME_30:
         case IDM_TIME_60:   case IDM_TIME_90:
             SetTimeLimitFromMenu(id);
             break;
