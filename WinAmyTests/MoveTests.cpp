@@ -294,8 +294,8 @@ TEST_CLASS(MoveTests) {
             const char *pszSan = position.get()->SAN(move, szSan);
             const CMove parsed = position.get()->ParseSAN(pszSan);
 
-            Assert::AreNotEqual((int)M_NONE, (int)parsed,
-                                L"Generated SAN should always parse");
+            Assert::IsTrue(parsed != M_NONE,
+                           L"Generated SAN should always parse");
             Assert::IsTrue(parsed == move,
                            L"Generated SAN should round-trip to the same legal move");
         }
