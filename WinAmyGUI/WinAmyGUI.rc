@@ -28,6 +28,14 @@ BEGIN
             MENUITEM "8",   IDM_DEPTH_8
             MENUITEM "9",   IDM_DEPTH_9
         END
+        POPUP "Search &Time Limit"
+        BEGIN
+            MENUITEM "&Depth-based (no limit)", IDM_TIME_NONE, CHECKED
+            MENUITEM SEPARATOR
+            MENUITEM "&30 seconds",             IDM_TIME_30
+            MENUITEM "&60 seconds",             IDM_TIME_60
+            MENUITEM "&90 seconds",             IDM_TIME_90
+        END
         POPUP "&Players"
         BEGIN
             MENUITEM "&0 Players (Engine self-play)", IDM_PLAYERS_0

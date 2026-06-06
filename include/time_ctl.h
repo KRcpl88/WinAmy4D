@@ -44,5 +44,7 @@ void DoTC(CPosition *, int);
 void CalcTime(CPosition *, float *, float *);
 void SetTimeControl(char **, bool);
 void ResetTimeControl(bool);
+void SetFixedTimePerMove(int);
+void SetDefaultTimeControl(void);
 
 #endif

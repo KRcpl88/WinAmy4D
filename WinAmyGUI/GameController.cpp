@@ -402,6 +402,26 @@ void GameController::SetDepth(int depth) {
     setMaxSearchDepth(depth);
 }
 
+void GameController::SetTimeLimit(int seconds) {
+    if (seconds < 0) seconds = 0;
+    m_nTimeLimit = seconds;
+}
+
+void GameController::ApplySearchLimits() {
+    if (m_nTimeLimit > 0) {
+        // Fixed time-per-move: let the engine search as deeply as it can within
+        // the time budget. MaxSearchDepth is raised to (just under) the engine's
+        // hard ceiling so the wall-clock limit, not the depth, governs.
+        SetFixedTimePerMove(m_nTimeLimit);
+        setMaxSearchDepth(MAX_TREE_SIZE - 2);
+    } else {
+        // Depth-based: restore the default time control (so the clock does not
+        // cut the search short) and cap the search at the configured depth.
+        SetDefaultTimeControl();
+        setMaxSearchDepth(m_nDepth);
+    }
+}
+
 void GameController::MakeMove(CMove move) {
     std::lock_guard<std::mutex> lock(m_PositionMutex);
     if (m_pPosition) {
@@ -511,7 +531,7 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     if (m_fEngineRunning.load())
         return;
 
-    setMaxSearchDepth(m_nDepth);
+    ApplySearchLimits();
     m_fEngineRunning.store(true);
     m_fStopRequested.store(false);
     AbortSearch = false;
@@ -587,7 +607,7 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
         return;
     }
 
-    setMaxSearchDepth(m_nDepth);
+    ApplySearchLimits();
     m_fEngineRunning.store(true);
     m_fComputingStrategy.store(true);
     m_fStopRequested.store(false);
@@ -641,7 +661,7 @@ std::string GameController::ComputeStrategyText() {
         return std::string();
     }
 
-    setMaxSearchDepth(m_nDepth);
+    ApplySearchLimits();
 
     // Enumerate the current player's legal moves.
     heap_t heap = allocate_heap();

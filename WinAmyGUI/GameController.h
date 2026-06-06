@@ -10,6 +10,7 @@
 #include "movedata.h"
 #include "search.h"
 #include "scoord.h"
+#include "time_ctl.h"
 
 #include <atomic>
 #include <mutex>
@@ -64,6 +65,16 @@ public:
 
     // Return current search depth.
     int  GetDepth() const { return m_nDepth; }
+
+    // Set a fixed per-move search time limit, in seconds. A value of 0 disables
+    // the fixed limit and reverts to depth-based search termination (the engine
+    // searches to GetDepth() plies). When a positive limit is set, the engine
+    // searches as deeply as it can within the given number of seconds.
+    void SetTimeLimit(int seconds);
+
+    // Return the current fixed per-move time limit in seconds, or 0 if search
+    // is depth-based.
+    int  GetTimeLimit() const { return m_nTimeLimit; }
 
     // Set player mode (0 / 1 / 2 human players).
     void SetPlayerMode(PlayerMode mode) { m_PlayerMode = mode; }
@@ -150,8 +161,15 @@ private:
     // position loaded). Callers must hold m_PositionMutex.
     void InvalidateStrategy();
 
+    // Configure the engine's search-termination limits before starting a search.
+    // When a fixed per-move time limit is set (m_nTimeLimit > 0) the engine uses
+    // fixed time-per-move mode and searches as deeply as time allows; otherwise
+    // it uses the default time control and stops at the configured search depth.
+    void ApplySearchLimits();
+
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
+    int                 m_nTimeLimit{0};
     PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};
     std::atomic<bool>   m_fEngineRunning{false};
     std::atomic<bool>   m_fComputingStrategy{false};
