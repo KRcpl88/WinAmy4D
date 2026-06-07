@@ -1682,49 +1682,10 @@ char *CPosition::SAN(CMove move, char *buffer) {
 
     const CSCoord& toCoord = move.GetToCoord();
     const CSCoord& frCoord = move.GetFromCoord();
-    const uint16_t to = toCoord.BitOffset();
     const uint16_t fr = frCoord.BitOffset();
     int8_t tp = TYPE(p->m_rgPiece[fr]);
 
-    if (tp == Pawn) {
-        if (move.IsCapture() || move.IsEnPassant()) {
-            // In 4D, pawns on different levels can share a from-file and
-            // capture the same destination, so the from-file alone is not
-            // always enough to identify the capturing pawn.  If another own
-            // pawn that attacks the destination shares this pawn's file, emit
-            // the full source square (level + file + rank) instead.
-            bool fullSource = false;
-            CBitBoard pawnAtk =
-                p->m_rgAtkFr[to] & p->m_rgMask[p->m_nTurn][Pawn];
-            while (pawnAtk) {
-                CSCoord coord = pawnAtk.FindSetBitCoord();
-                pawnAtk.ClearLowestBit();
-                if (coord.BitOffset() == fr) {
-                    continue;
-                }
-                if (coord.m_nFile == frCoord.m_nFile) {
-                    fullSource = true;
-                    break;
-                }
-            }
-            if (fullSource) {
-                *(x++) = 'a' + frCoord.m_nLevel;
-                *(x++) = 'a' + frCoord.m_nFile;
-                *(x++) = '1' + frCoord.m_nRank;
-            } else {
-                *(x++) = 'a' + frCoord.m_nFile;
-            }
-            *(x++) = 'x';
-        }
-        *(x++) = 'a' + toCoord.m_nLevel;
-        *(x++) = 'a' + toCoord.m_nFile;
-        *(x++) = '1' + toCoord.m_nRank;
-
-        if (move.HasPromotion()) {
-            *(x++) = '=';
-            *(x++) = PieceName[PromoType(move)];
-        }
-    } else if (move.IsCastle()) {
+    if (move.IsCastle()) {
         *(x++) = 'O';
         *(x++) = '-';
         *(x++) = 'O';
@@ -1733,69 +1694,16 @@ char *CPosition::SAN(CMove move, char *buffer) {
             *(x++) = 'O';
         }
     } else {
-        CBitBoard tmp;
-        bool aamb = false, /* set for ambigous moves */
-            ramb = false,  /* set means ambigous rank */
-            famb = false,  /* set means ambigous file */
-            framb = false; /* set means a rival shares both file and rank
-                            * (differs only by level) */
-
-        tmp = p->m_rgAtkFr[to] & p->m_rgMask[p->m_nTurn][tp];
-
-        /* check for ambigous move */
-        while (tmp) {
-            CSCoord coord = (tmp).FindSetBitCoord();
-            tmp.ClearLowestBit();
-            if (coord.BitOffset() != fr) {
-                int incheck;
-                CMove tmove(coord, move.GetToCoord(), 0);
-
-                /* seems there is another piece of the same type which
-                 * can move to the same destination square.
-                 * Let's see wether it is pinned...
-                 */
-
-                if (p->m_rgPiece[to])
-                    tmove.SetCapture();
-
-                p->DoMove(tmove);
-                incheck = p->InCheck(OPP(p->m_nTurn));
-                p->UndoMove(tmove);
-
-                if (incheck)
-                    continue;
-
-                aamb = true;
-                if (coord.m_nFile == frCoord.m_nFile)
-                    famb = true;
-                if (coord.m_nRank == frCoord.m_nRank)
-                    ramb = true;
-                /* In 4D a rival can share both file and rank yet sit on a
-                 * different level; file/rank can never disambiguate it, so the
-                 * full source square (including level) must be emitted. */
-                if (coord.m_nFile == frCoord.m_nFile &&
-                    coord.m_nRank == frCoord.m_nRank)
-                    framb = true;
-            }
-        }
-
+        /* Full explicit notation: always emit the moving piece's letter
+         * (including 'P' for pawns), the complete source square
+         * (level + file + rank) and the complete destination square, so the
+         * mover and both squares are stated unambiguously.  This avoids any
+         * confusion about which piece is being moved in 4D, where several
+         * same-type pieces (or pawns) can share file and rank across levels. */
         *(x++) = PieceName[tp];
-        if (aamb) {
-            if (framb) {
-                *(x++) = 'a' + frCoord.m_nLevel;
-                *(x++) = 'a' + frCoord.m_nFile;
-                *(x++) = '1' + frCoord.m_nRank;
-            } else if (!famb) {
-                *(x++) = 'a' + frCoord.m_nFile;
-            } else {
-                if (!ramb)
-                    *(x++) = '1' + frCoord.m_nRank;
-                else {
-                    *(x++) = 'a' + frCoord.m_nFile;
-                    *(x++) = '1' + frCoord.m_nRank;
-                }
-            }
-        }
+        *(x++) = 'a' + frCoord.m_nLevel;
+        *(x++) = 'a' + frCoord.m_nFile;
+        *(x++) = '1' + frCoord.m_nRank;
 
         if (move.IsCapture() || move.IsEnPassant())
             *(x++) = 'x';
@@ -1803,6 +1711,11 @@ char *CPosition::SAN(CMove move, char *buffer) {
         *(x++) = 'a' + toCoord.m_nLevel;
         *(x++) = 'a' + toCoord.m_nFile;
         *(x++) = '1' + toCoord.m_nRank;
+
+        if (move.HasPromotion()) {
+            *(x++) = '=';
+            *(x++) = PieceName[PromoType(move)];
+        }
     }
 
     p->DoMove(move);
@@ -2101,9 +2014,13 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
     const char *prefix     = san;
     const char *prefix_end = end - 3;
 
-    /* Optional piece letter at the start of the prefix */
+    /* Optional piece letter at the start of the prefix.  The generator now
+     * emits an explicit 'P' for pawns, so accept it (and keep accepting the
+     * traditional pawn form with no leading letter for backward
+     * compatibility). */
     if (prefix < prefix_end) {
         switch (*prefix) {
+        case 'P': tp = Pawn;   prefix++; break;
         case 'N': tp = Knight; prefix++; break;
         case 'B': tp = Bishop; prefix++; break;
         case 'R': tp = Rook;   prefix++; break;
@@ -2280,9 +2197,13 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
     const char *prefix     = san;
     const char *prefix_end = end - 3;
 
-    /* Optional piece letter at the start of the prefix */
+    /* Optional piece letter at the start of the prefix.  The generator now
+     * emits an explicit 'P' for pawns, so accept it (and keep accepting the
+     * traditional pawn form with no leading letter for backward
+     * compatibility). */
     if (prefix < prefix_end) {
         switch (*prefix) {
+        case 'P': tp = Pawn;   prefix++; break;
         case 'N': tp = Knight; prefix++; break;
         case 'B': tp = Bishop; prefix++; break;
         case 'R': tp = Rook;   prefix++; break;
