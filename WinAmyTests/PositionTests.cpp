@@ -24,16 +24,14 @@ TEST_CLASS(PositionTests) {
     // --- IsCheckingMove tests ---
 
     TEST_METHOD(IsCheckingMoveDirectKnightCheck) {
-        // White knight on hd4, black king on hf3. Nd4-he2 checks king on hf3 (knight on he2 attacks hf4,hd4,hc3,hc1,hg1,hg3 ? no)
-        // Knight on hd4 attacks: hb3,hb5,hc2,hc6,he2,he6,hf3,hf5. King on hf3: Nd4-he2 attacks hd4,hf4,hc1,hc3,hg1,hg3 ? no.
-        // Let's use: knight hd4, king on hc6. Knight hd4-hb5 attacks hc7,ha7,hd6,ha3,hc3,hd4 ? no.
-        // Simplest: knight on hd4, king on hf5. hd4 attacks hf5? Yes! But knight is MOVING TO a square.
-        // Knight on hb1, king on he4. Nb1-hc3 attacks he4? Knight on hc3 attacks: ha2,ha4,hb1,hb5,hd1,hd5,he2,he4. Yes!
+        // Black king on he4, white knight on hb1.  After Nb1-hc3 the knight on
+        // hc3 attacks hc3's knight targets, which include he4, so the move
+        // gives check.
         char epd[] = "8/8/8/8/4k3/8/8/1N2K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
         CMove move = MakeMainBoardMove(hb1, hc3, 0);
-        Assert::IsFalse(position.get()->IsCheckingMove(move));
+        Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
     TEST_METHOD(IsCheckingMoveDirectKnightNoCheck) {

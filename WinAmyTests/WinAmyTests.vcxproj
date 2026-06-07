@@ -167,6 +167,7 @@
     <ClCompile Include="SearchDataTests.cpp" />
     <ClCompile Include="CheckmateTests.cpp" />
     <ClCompile Include="AttackConsistencyTests.cpp" />
+    <ClCompile Include="SanAndCheckTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectCapability Include="TestContainer" />
