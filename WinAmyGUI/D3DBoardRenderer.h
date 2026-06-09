@@ -161,6 +161,11 @@ private:
     ComPtr<ID3D11Texture2D>          m_pTargetTex;
     ComPtr<ID3D11ShaderResourceView> m_pTargetSRV;
 
+    // Axis label texture: a 3-cell atlas holding the green "+x", "+y" and "+z"
+    // glyphs, billboarded at the anchor cells so they mark the axis directions.
+    ComPtr<ID3D11Texture2D>          m_pAxisLabelTex;
+    ComPtr<ID3D11ShaderResourceView> m_pAxisLabelSRV;
+
     // ---- Cell geometry (lattice positions used for picking & lines) ----
     struct LineVertex {
         float x, y, z;
@@ -210,6 +215,7 @@ private:
     bool  CreateBackBufferViews();
     bool  CreatePipelines();
     bool  CreateTargetMarkerTexture();
+    bool  CreateAxisLabelTexture();
     void  BuildCellGeometry();
     bool  RebuildLineGeometry();
     void  EnsureSpriteCapacity(UINT uNeededVerts);
@@ -235,4 +241,8 @@ private:
                       const CPosition* pPosition);
     void RenderTargetMarkers(const DirectX::XMMATRIX& mViewProj,
                              const std::vector<CSCoord>& LegalDests);
+
+    // Draw the green +x / +y / +z axis labels as billboards at their anchor
+    // cells. Rendered before pieces so a piece on the same cell sits in front.
+    void RenderAxisLabels(const DirectX::XMMATRIX& mViewProj);
 };

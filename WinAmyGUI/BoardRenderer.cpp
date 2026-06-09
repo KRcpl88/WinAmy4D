@@ -147,6 +147,9 @@ void BoardRenderer::DrawBoard(HDC hdc, const CPosition* pos,
                               const CSCoord* HintTo) const {
     for (int lvl = 0; lvl < CBitBoard::NUM_LEVELS; ++lvl)
         DrawLevel(hdc, lvl, pos, selectedSquare, legalDests, HintFrom, HintTo);
+
+    // Draw the axis labels last so the green text sits on top of the squares.
+    DrawAxisLabels(hdc);
 }
 
 // ---------------------------------------------------------------------------
@@ -250,6 +253,56 @@ void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
             DeleteObject(hpen);
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// DrawAxisLabels
+// ---------------------------------------------------------------------------
+
+// The three squares that define the +x, +y and +z axis directions. These are
+// fixed *true* board squares (independent of the rendered view plane):
+//   +x → ha8  (level h, file a, rank 8)
+//   +y → hh8  (level h, file h, rank 8)
+//   +z → oa1  (level o, file a, rank 1)
+struct AxisLabelAnchor {
+    uint16_t level;
+    uint16_t file;
+    uint16_t rank;
+    const wchar_t* text;
+};
+static constexpr AxisLabelAnchor AXIS_LABEL_ANCHORS[3] = {
+    {  7, 0, 7, L"+x" }, // ha8
+    {  7, 7, 7, L"+y" }, // hh8
+    { 14, 0, 0, L"+z" }, // oa1
+};
+
+void BoardRenderer::DrawAxisLabels(HDC hdc) const {
+    HFONT hOldFont = (HFONT)SelectObject(hdc, m_hLabelFont);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, CLR_AXIS_LABEL);
+
+    for (const auto& anchor : AXIS_LABEL_ANCHORS) {
+        // The true square is permuted into a render slot by the active view
+        // plane. MapRenderToOriginal applies the (involutive) axis swap, so the
+        // same call maps the true square forward to the slot where it is drawn.
+        CSCoordBase TrueSquare(anchor.level, anchor.file, anchor.rank);
+        CSCoord RenderSlot = MapRenderToOriginal(TrueSquare);
+
+        const int level = RenderSlot.m_nLevel;
+        const int w     = CBitBoard::LEVEL_WIDTH[level];
+        POINT origin    = LevelOrigin(level);
+        int boardY      = origin.y + LABEL_HEIGHT;
+        int px          = origin.x + RenderSlot.m_nFile * SQUARE_SIZE;
+        int py          = boardY + (w - 1 - RenderSlot.m_nRank) * SQUARE_SIZE;
+
+        // Draw the label next to (just to the right of) the square so it does
+        // not obscure any piece occupying the cell.
+        RECT r{ px + SQUARE_SIZE + 2, py, px + 2 * SQUARE_SIZE + 2, py + SQUARE_SIZE };
+        DrawTextW(hdc, anchor.text, -1, &r,
+                  DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+    }
+
+    SelectObject(hdc, hOldFont);
 }
 
 // ---------------------------------------------------------------------------

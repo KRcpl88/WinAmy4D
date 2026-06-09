@@ -100,6 +100,27 @@ inline XMFLOAT3 UCoordToFloat3(const CUCoordFloat& v) {
 inline int AxisIndex(D3DBoardRenderer::EAxis eAxis) {
     return static_cast<int>(eAxis);
 }
+
+// Anchor cells for the +x / +y / +z axis labels. These are fixed *true* board
+// squares (CellCenter applies any active axis swap/inversion, so the labels
+// follow the board when the 3D view is reoriented):
+//   +x → ha8 (level h, file a, rank 8)
+//   +y → hh8 (level h, file h, rank 8)
+//   +z → oa1 (level o, file a, rank 1)
+struct AxisLabelCell {
+    uint16_t level;
+    uint16_t file;
+    uint16_t rank;
+    int      column; // column in the axis-label texture atlas
+};
+constexpr AxisLabelCell kAxisLabelCells[3] = {
+    {  7, 0, 7, 0 }, // ha8 -> +x
+    {  7, 7, 7, 1 }, // hh8 -> +y
+    { 14, 0, 0, 2 }, // oa1 -> +z
+};
+constexpr int kAxisLabelCols = 3;
+const wchar_t* const kAxisLabelText[kAxisLabelCols] = { L"+x", L"+y", L"+z" };
+constexpr int kAxisLabelCellPixels = 128;
 } // namespace
 
 // ---------------------------------------------------------------------------
@@ -111,6 +132,8 @@ D3DBoardRenderer::~D3DBoardRenderer() { Shutdown(); }
 
 void D3DBoardRenderer::Shutdown() {
     if (m_pContext) m_pContext->ClearState();
+    m_pAxisLabelSRV.Reset();
+    m_pAxisLabelTex.Reset();
     m_pTargetSRV.Reset();
     m_pTargetTex.Reset();
     m_PieceAtlas.Release();
@@ -152,6 +175,7 @@ bool D3DBoardRenderer::Initialize(HWND hWnd) {
     if (!CreatePipelines())          { Shutdown(); return false; }
     if (!m_PieceAtlas.Build(m_pDevice.Get())) { Shutdown(); return false; }
     if (!CreateTargetMarkerTexture()) { Shutdown(); return false; }
+    if (!CreateAxisLabelTexture())    { Shutdown(); return false; }
 
     BuildCellGeometry();
 
@@ -616,6 +640,9 @@ void D3DBoardRenderer::Render(const CPosition* pPosition,
         RenderTargetMarkers(mViewProj, LegalDests);
     RenderHighlights(mViewProj, pPosition, pSelectedSquare, LegalDests,
                      pHintFrom, pHintTo);
+    // Axis labels are drawn before the pieces so that a piece sharing an anchor
+    // cell is rendered on top and stays clearly visible.
+    RenderAxisLabels(mViewProj);
     RenderPieces(mViewProj, pPosition);
 
     m_pSwapChain->Present(1, 0);
@@ -782,6 +809,102 @@ bool D3DBoardRenderer::CreateTargetMarkerTexture() {
     srd.SysMemPitch = kSize * sizeof(uint32_t);
     if (FAILED(m_pDevice->CreateTexture2D(&desc, &srd, m_pTargetTex.GetAddressOf()))) return false;
     if (FAILED(m_pDevice->CreateShaderResourceView(m_pTargetTex.Get(), nullptr, m_pTargetSRV.GetAddressOf()))) return false;
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+// CreateAxisLabelTexture — GDI-rasterise the green "+x", "+y" and "+z" axis
+// labels into a 3-cell-wide texture atlas (transparent background) for use as
+// billboarded sprites on the axis anchor cells.
+// ---------------------------------------------------------------------------
+
+bool D3DBoardRenderer::CreateAxisLabelTexture() {
+    const int nCell = kAxisLabelCellPixels;
+    const int nW = nCell * kAxisLabelCols;
+    const int nH = nCell;
+
+    HDC hScreenDC = GetDC(nullptr);
+    HDC hMemDC    = CreateCompatibleDC(hScreenDC);
+
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth       = nW;
+    bmi.bmiHeader.biHeight      = -nH; // top-down
+    bmi.bmiHeader.biPlanes      = 1;
+    bmi.bmiHeader.biBitCount    = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    void* pvBits = nullptr;
+    HBITMAP hBmp    = CreateDIBSection(hMemDC, &bmi, DIB_RGB_COLORS, &pvBits, nullptr, 0);
+    HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, hBmp);
+
+    // Fully transparent background.
+    {
+        uint32_t* pPx = static_cast<uint32_t*>(pvBits);
+        for (int i = 0; i < nW * nH; ++i) pPx[i] = 0x00000000;
+    }
+
+    HFONT hFont = CreateFontW(
+        nCell - 24, 0, 0, 0, FW_BOLD,
+        FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        L"Segoe UI"
+    );
+    HFONT hOldFont = (HFONT)SelectObject(hMemDC, hFont);
+    SetBkMode(hMemDC, TRANSPARENT);
+    // Bright green text (GDI paints into the colour channels; alpha is
+    // reconstructed below from the painted intensity).
+    SetTextColor(hMemDC, RGB(0, 220, 0));
+
+    for (int nCol = 0; nCol < kAxisLabelCols; ++nCol) {
+        RECT rc{ nCol * nCell, 0, (nCol + 1) * nCell, nH };
+        DrawTextW(hMemDC, kAxisLabelText[nCol], -1, &rc,
+                  DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+    }
+    GdiFlush();
+
+    // GDI ignores alpha; reconstruct it from the painted green intensity so the
+    // glyph edges blend smoothly over the dark scene.
+    std::vector<uint32_t> Pixels(static_cast<size_t>(nW) * nH, 0);
+    {
+        const uint32_t* pPx = static_cast<const uint32_t*>(pvBits);
+        for (int i = 0; i < nW * nH; ++i) {
+            uint32_t v = pPx[i];
+            BYTE bB = static_cast<BYTE>((v      ) & 0xff);
+            BYTE bG = static_cast<BYTE>((v >>  8) & 0xff);
+            BYTE bR = static_cast<BYTE>((v >> 16) & 0xff);
+            BYTE bMax = bR;
+            if (bG > bMax) bMax = bG;
+            if (bB > bMax) bMax = bB;
+            Pixels[i] = (static_cast<uint32_t>(bMax) << 24) |
+                        (static_cast<uint32_t>(bR) << 16) |
+                        (static_cast<uint32_t>(bG) <<  8) |
+                         static_cast<uint32_t>(bB);
+        }
+    }
+
+    SelectObject(hMemDC, hOldFont);
+    DeleteObject(hFont);
+    SelectObject(hMemDC, hOldBmp);
+    DeleteObject(hBmp);
+    DeleteDC(hMemDC);
+    ReleaseDC(nullptr, hScreenDC);
+
+    D3D11_TEXTURE2D_DESC desc{};
+    desc.Width            = nW;
+    desc.Height           = nH;
+    desc.MipLevels        = 1;
+    desc.ArraySize        = 1;
+    desc.Format           = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.Usage            = D3D11_USAGE_IMMUTABLE;
+    desc.BindFlags        = D3D11_BIND_SHADER_RESOURCE;
+    D3D11_SUBRESOURCE_DATA srd{};
+    srd.pSysMem     = Pixels.data();
+    srd.SysMemPitch = nW * sizeof(uint32_t);
+    if (FAILED(m_pDevice->CreateTexture2D(&desc, &srd, m_pAxisLabelTex.GetAddressOf()))) return false;
+    if (FAILED(m_pDevice->CreateShaderResourceView(m_pAxisLabelTex.Get(), nullptr, m_pAxisLabelSRV.GetAddressOf()))) return false;
     return true;
 }
 
@@ -1082,6 +1205,82 @@ void D3DBoardRenderer::RenderTargetMarkers(const XMMATRIX& mViewProj,
     m_pContext->VSSetConstantBuffers(0, 1, m_pSpriteCB.GetAddressOf());
     m_pContext->PSSetShader(m_pSpritePS.Get(), nullptr, 0);
     auto* pSRV = m_pTargetSRV.Get();
+    m_pContext->PSSetShaderResources(0, 1, &pSRV);
+    m_pContext->PSSetSamplers(0, 1, m_pSampler.GetAddressOf());
+    m_pContext->OMSetDepthStencilState(m_pDepthStateSprites.Get(), 0);
+    float blendFactor[4]{};
+    m_pContext->OMSetBlendState(m_pBlendAlpha.Get(), blendFactor, 0xffffffff);
+
+    m_pContext->Draw(static_cast<UINT>(Verts.size()), 0);
+}
+
+// ---------------------------------------------------------------------------
+// RenderAxisLabels — billboard the green +x / +y / +z labels on their anchor
+// cells. Uses the same camera-facing sprite pipeline as the pieces; called
+// before RenderPieces so a piece on the same cell is drawn on top of the label.
+// ---------------------------------------------------------------------------
+
+void D3DBoardRenderer::RenderAxisLabels(const XMMATRIX& mViewProj) {
+    if (!m_pAxisLabelSRV) return;
+
+    XMMATRIX mView = MakeView();
+    XMVECTOR vDet;
+    XMMATRIX mInvView = XMMatrixInverse(&vDet, mView);
+    XMFLOAT3 vRight, vUp;
+    XMStoreFloat3(&vRight, mInvView.r[0]);
+    XMStoreFloat3(&vUp,    mInvView.r[1]);
+
+    // Slightly smaller than a piece so a piece on the same cell fully covers it.
+    const float fHalf = 0.5f;
+    const float fInvCols = 1.0f / static_cast<float>(kAxisLabelCols);
+
+    std::vector<SpriteVertex> Verts;
+    Verts.reserve(ARRAYSIZE(kAxisLabelCells) * 6);
+
+    for (const auto& Label : kAxisLabelCells) {
+        CSCoord Coord(Label.level, Label.file, Label.rank);
+        XMFLOAT3 c = CellCenter(Coord);
+        XMFLOAT3 r{ vRight.x * fHalf, vRight.y * fHalf, vRight.z * fHalf };
+        XMFLOAT3 u{ vUp.x    * fHalf, vUp.y    * fHalf, vUp.z    * fHalf };
+        XMFLOAT3 p00{ c.x - r.x - u.x, c.y - r.y - u.y, c.z - r.z - u.z };
+        XMFLOAT3 p10{ c.x + r.x - u.x, c.y + r.y - u.y, c.z + r.z - u.z };
+        XMFLOAT3 p01{ c.x - r.x + u.x, c.y - r.y + u.y, c.z - r.z + u.z };
+        XMFLOAT3 p11{ c.x + r.x + u.x, c.y + r.y + u.y, c.z + r.z + u.z };
+
+        float u0 = static_cast<float>(Label.column) * fInvCols;
+        float u1 = static_cast<float>(Label.column + 1) * fInvCols;
+        Verts.push_back({ p01, { u0, 0.0f } });
+        Verts.push_back({ p11, { u1, 0.0f } });
+        Verts.push_back({ p00, { u0, 1.0f } });
+        Verts.push_back({ p11, { u1, 0.0f } });
+        Verts.push_back({ p10, { u1, 1.0f } });
+        Verts.push_back({ p00, { u0, 1.0f } });
+    }
+    if (Verts.empty()) return;
+
+    EnsureSpriteCapacity(static_cast<UINT>(Verts.size()));
+    if (!m_pSpriteVB) return;
+
+    D3D11_MAPPED_SUBRESOURCE map{};
+    if (FAILED(m_pContext->Map(m_pSpriteVB.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &map))) return;
+    memcpy(map.pData, Verts.data(), Verts.size() * sizeof(SpriteVertex));
+    m_pContext->Unmap(m_pSpriteVB.Get(), 0);
+
+    SpriteCB cb;
+    XMStoreFloat4x4(&cb.mViewProj, mViewProj);
+    if (FAILED(m_pContext->Map(m_pSpriteCB.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &map))) return;
+    memcpy(map.pData, &cb, sizeof(cb));
+    m_pContext->Unmap(m_pSpriteCB.Get(), 0);
+
+    UINT uStride = sizeof(SpriteVertex);
+    UINT uOffset = 0;
+    m_pContext->IASetInputLayout(m_pSpriteLayout.Get());
+    m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_pContext->IASetVertexBuffers(0, 1, m_pSpriteVB.GetAddressOf(), &uStride, &uOffset);
+    m_pContext->VSSetShader(m_pSpriteVS.Get(), nullptr, 0);
+    m_pContext->VSSetConstantBuffers(0, 1, m_pSpriteCB.GetAddressOf());
+    m_pContext->PSSetShader(m_pSpritePS.Get(), nullptr, 0);
+    auto* pSRV = m_pAxisLabelSRV.Get();
     m_pContext->PSSetShaderResources(0, 1, &pSRV);
     m_pContext->PSSetSamplers(0, 1, m_pSampler.GetAddressOf());
     m_pContext->OMSetDepthStencilState(m_pDepthStateSprites.Get(), 0);

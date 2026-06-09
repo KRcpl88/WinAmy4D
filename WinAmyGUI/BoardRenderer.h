@@ -56,6 +56,8 @@ public:
     static constexpr COLORREF CLR_LABEL_BG   = RGB( 50,  50,  50);
     static constexpr COLORREF CLR_LABEL_FG   = RGB(230, 230, 230);
     static constexpr COLORREF CLR_BORDER     = RGB( 80,  80,  80);
+    // Bright green used for the +x / +y / +z axis labels.
+    static constexpr COLORREF CLR_AXIS_LABEL = RGB(  0, 220,   0);
 
     BoardRenderer();
     ~BoardRenderer();
@@ -98,6 +100,11 @@ private:
                    const std::vector<CSCoord>& legalDests,
                    const CSCoord* HintFrom,
                    const CSCoord* HintTo) const;
+
+    // Draw the green +x / +y / +z axis labels next to their anchor squares
+    // (ha8, hh8, oa1). The labels follow the active view plane so they always
+    // sit beside the true board square that defines each axis direction.
+    void DrawAxisLabels(HDC hdc) const;
 
     // Return the Unicode chess piece glyph for the given piece value.
     static wchar_t PieceGlyph(int8_t piece);
