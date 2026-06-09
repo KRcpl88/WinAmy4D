@@ -42,6 +42,11 @@ static constexpr int BTN_GAP     = 6;
 // two dropdowns line up in the same toolbar slot when switching view modes.
 static constexpr int DROPDOWN_W  = 160;
 
+// Timer used to poll single-move (engine / hint) search progress, whose
+// percentage is time-based and so has no push event to refresh the status bar.
+static constexpr UINT_PTR IDT_SEARCH_PROGRESS = 0xA001;
+static constexpr UINT     SEARCH_PROGRESS_MS  = 250;
+
 // ---------------------------------------------------------------------------
 // Command-line logging support
 //
@@ -749,6 +754,7 @@ void CWinAmy4dWnd::MaybeStartEngine() {
 
     if (engineTurn) {
         m_Game.StartEngineSearch(m_hWnd);
+        StartSearchProgressTimer();
         UpdateStatusBar();
         UpdatePauseMenu();
     }
@@ -787,6 +793,7 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
     // For self-play, immediately start the engine again (other side).
     if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers && !m_fPaused) {
         m_Game.StartEngineSearch(m_hWnd);
+        StartSearchProgressTimer();
         UpdateStatusBar();
         UpdatePauseMenu();
     } else {
@@ -833,7 +840,26 @@ void CWinAmy4dWnd::OnSuggestMove() {
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
 
+    // If a strategy has already been computed for the current position, reuse
+    // its top-ranked move (Suggested Move #1) instead of launching a fresh
+    // search — the strategy cache is invalidated whenever the position changes,
+    // so it stays valid until the player moves.
+    if (m_Game.HasStrategy()) {
+        CMove move = m_Game.GetStrategyBestMove();
+        if (move != M_NONE) {
+            m_HintFrom = move.GetFromCoord();
+            m_HintTo   = move.GetToCoord();
+            m_fHaveHint = true;
+            InvalidateRect(m_hWnd, nullptr, TRUE);
+            if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+            UpdateStatusBar();
+            UpdatePauseMenu();
+            return;
+        }
+    }
+
     m_Game.StartHintSearch(m_hWnd);
+    StartSearchProgressTimer();
     UpdateStatusBar();
     UpdatePauseMenu();
 }
@@ -980,12 +1006,32 @@ void CWinAmy4dWnd::OnSquareClick(POINT pt) {
 }
 
 // ---------------------------------------------------------------------------
+// Search-progress polling timer
+//
+// Single-move searches (the engine's own move and the suggest-move / hint
+// search) report progress as elapsed time against their per-move budget. There
+// is no engine event to push such updates to the UI, so a low-frequency timer
+// polls GetEngineSearchProgressPercent() and refreshes the status bar while the
+// search runs. Strategy searches are excluded: they push their own
+// WM_APP_ENGINE_PROGRESS updates from the worker thread.
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::StartSearchProgressTimer() {
+    // SetTimer with an existing id simply resets it, so calling this on each
+    // search start (including self-play continuations) is safe.
+    SetTimer(m_hWnd, IDT_SEARCH_PROGRESS, SEARCH_PROGRESS_MS, nullptr);
+}
+
+void CWinAmy4dWnd::StopSearchProgressTimer() {
+    KillTimer(m_hWnd, IDT_SEARCH_PROGRESS);
+}
+
+// ---------------------------------------------------------------------------
 // UpdateStatusBar
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::UpdateStatusBar() {
     if (!m_hStatus) return;
-
     const char* gameEnd = m_Game.GetGameEndMessage();
     if (gameEnd) {
         // Show the friendly result text (outcome, winner, move count).
@@ -1004,9 +1050,22 @@ void CWinAmy4dWnd::UpdateStatusBar() {
     wchar_t buf[128];
     const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
     if (m_Game.IsComputingStrategy()) {
-        swprintf_s(buf, 128, L"%s  [Thinking...]", turn);
+        // Show the strategy search progress as a percentage when available.
+        int nPercent = m_Game.GetStrategyProgressPercent();
+        if (nPercent >= 0) {
+            swprintf_s(buf, 128, L"%s  [Thinking... %d%%]", turn, nPercent);
+        } else {
+            swprintf_s(buf, 128, L"%s  [Thinking...]", turn);
+        }
     } else if (m_Game.IsEngineRunning()) {
-        swprintf_s(buf, 128, L"%s  [Engine thinking...]", turn);
+        // Single-move search (engine move or suggestion): show elapsed-time
+        // progress as a percentage when a time budget is in effect.
+        int nPercent = m_Game.GetEngineSearchProgressPercent();
+        if (nPercent >= 0) {
+            swprintf_s(buf, 128, L"%s  [Engine thinking... %d%%]", turn, nPercent);
+        } else {
+            swprintf_s(buf, 128, L"%s  [Engine thinking...]", turn);
+        }
     } else {
         swprintf_s(buf, 128, L"%s", turn);
     }
@@ -1507,6 +1566,27 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     case WM_APP_ENGINE_STRATEGY:
         OnEngineStrategy(lParam);
         return 0;
+
+    case WM_APP_ENGINE_PROGRESS:
+        // A strategy search advanced; refresh the status bar so the user sees
+        // the updated "% complete" figure.
+        UpdateStatusBar();
+        return 0;
+
+    case WM_TIMER:
+        if (wParam == IDT_SEARCH_PROGRESS) {
+            // Poll-driven refresh for single-move (engine / hint) searches,
+            // whose progress is time-based and so has no event to push updates.
+            // Stop polling once the search is no longer running (or a strategy
+            // search, which pushes its own WM_APP_ENGINE_PROGRESS updates).
+            if (m_Game.IsEngineRunning() && !m_Game.IsComputingStrategy()) {
+                UpdateStatusBar();
+            } else {
+                StopSearchProgressTimer();
+            }
+            return 0;
+        }
+        break;
 
     case WM_COMMAND: {
         int id = LOWORD(wParam);

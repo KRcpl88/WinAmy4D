@@ -363,6 +363,36 @@ void CPosition::AnalyzeHT(CMove move) {
 }
 
 /**
+ * Return the transposition-table best move for the current position, or M_NONE
+ * if no usable move is stored. This recovers a principal-variation continuation
+ * that a *prior* search already computed (and left in the hash table) without
+ * launching a fresh search. Used by the GUI's strategy analysis to obtain the
+ * recommended response from the candidate search itself rather than re-running
+ * a separate search for it.
+ */
+CMove CPosition::ProbeBestMove() {
+    CPosition *p = this;
+    CMove move = M_NONE;
+    int score;
+    bool dummy = false;
+
+#if MP
+    if (ProbeHT(p->m_ullHKey, &score, 0, &move, &dummy, 0, 0, NULL) == Useless)
+        return M_NONE;
+#else
+    if (ProbeHT(p->m_ullHKey, &score, 0, &move, &dummy, 0) == Useless)
+        return M_NONE;
+#endif
+
+    if (move == M_HASHED || move == M_NULL || move == M_NONE)
+        return M_NONE;
+    if (!p->LegalMove(move))
+        return M_NONE;
+
+    return move;
+}
+
+/**
  * The basic root iteration procedure.
  *
  * Parameters:
@@ -400,15 +430,35 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
 
     if (cnt == 0) {
         free_heap(heap);
-        if (!p->InCheck(p->m_nTurn))
+        /*
+         * No legal move: the side to move is either checkmated or stalemated.
+         * These paths return without running a search, so set *score_ptr
+         * explicitly (mate / draw, side-to-move relative) — otherwise callers
+         * that rank positions by score would read an uninitialized value.
+         */
+        if (!p->InCheck(p->m_nTurn)) {
             strcpy(AnalysisLine, "stalemate");
-        else
+            if (score_ptr != NULL)
+                *score_ptr = 0;
+        } else {
             strcpy(AnalysisLine, "mate");
+            if (score_ptr != NULL)
+                *score_ptr = -INF;
+        }
         return M_NONE;
     } else if (cnt == 1 && SearchMode != Analyzing) {
         CMove only_move = heap->data[heap->current_section->start];
         free_heap(heap);
         strcpy(AnalysisLine, "forced move");
+        /*
+         * A forced move is returned without searching; provide a static
+         * evaluation (side-to-move relative) so score-ranking callers receive
+         * a meaningful value rather than an uninitialized one.
+         */
+        if (score_ptr != NULL) {
+            InitEvaluation(p);
+            *score_ptr = EvaluatePosition(p);
+        }
         return only_move;
     }
 

@@ -100,6 +100,7 @@ class CPosition {
     char *NumberedSAN(CMove move, char *buffer, size_t len);
     void AnaLoop(int depth);
     void AnalyzeHT(CMove move);
+    CMove ProbeBestMove();
 #if MP
     void StartHelpers();
 #endif

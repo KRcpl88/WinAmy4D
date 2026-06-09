@@ -32,6 +32,11 @@
 // WPARAM/LPARAM unused.
 #define WM_APP_ENGINE_STRATEGY  (WM_APP + 3)
 
+// Posted to the main window periodically while a strategy computation is in
+// progress so the host can refresh the status bar with a "% complete" figure.
+// The percentage is read via GetStrategyProgressPercent(). WPARAM/LPARAM unused.
+#define WM_APP_ENGINE_PROGRESS  (WM_APP + 4)
+
 enum class PlayerMode {
     ZeroPlayers = 0, // self-play
     OnePlayer   = 1, // human vs engine
@@ -116,6 +121,30 @@ public:
     // StartStrategySearch). Used to show a "Thinking…" status message.
     bool IsComputingStrategy() const { return m_fComputingStrategy.load(); }
 
+    // Progress of the in-flight strategy computation, as a whole-number percent
+    // in [0, 100] (moves searched so far divided by the total number of searches
+    // the computation will perform). Returns -1 when no total has been
+    // established yet (e.g. before the candidate pool has been enumerated).
+    int GetStrategyProgressPercent() const {
+        const int nTotal = m_nProgressTotal.load();
+        if (nTotal <= 0) {
+            return -1;
+        }
+        int nDone = m_nProgressDone.load();
+        if (nDone > nTotal) {
+            nDone = nTotal;
+        }
+        return (nDone * 100) / nTotal;
+    }
+
+    // Progress of the in-flight single-move search (engine move or suggest-move
+    // / hint), as a whole-number percent in [0, 100]. Because such a search is
+    // bounded by a fixed per-move time budget, progress is measured as elapsed
+    // time divided by that budget. Returns -1 when no time budget is in effect
+    // (a pure depth-limited search), in which case the host shows an
+    // indeterminate "thinking" message instead of a percentage.
+    int GetEngineSearchProgressPercent() const;
+
     // Access the current position (read-only while engine is running).
     const CPosition* GetPosition() const { return m_pPosition; }
     CPosition*       GetPosition()       { return m_pPosition; }
@@ -145,6 +174,12 @@ public:
     // search only needs to run once per position.
     bool HasStrategy() const { return m_fStrategyValid; }
 
+    // Retrieve the top-ranked move (Suggested Move #1) from the last strategy
+    // computation. Valid only when HasStrategy() is true; returns M_NONE if the
+    // strategy produced no move (e.g. no legal moves). The strategy candidates
+    // are ranked best-first, so this is the engine's single best recommendation.
+    CMove GetStrategyBestMove() const { return m_StrategyBestMove; }
+
 private:
     // Shared implementation for StartEngineSearch / StartHintSearch. Clones the
     // current position, searches the clone on a background thread, stores the
@@ -154,7 +189,9 @@ private:
     // Compute the strategy text by searching a clone of the current position.
     // Returns a formatted, human-readable multi-line description. Runs on the
     // engine thread (see StartStrategySearch); never mutates m_pPosition.
-    std::string ComputeStrategyText();
+    // Posts WM_APP_ENGINE_PROGRESS to hwndTarget as candidates are searched so
+    // the host can show a progress percentage.
+    std::string ComputeStrategyText(HWND hwndTarget);
 
     // Discard any cached strategy result so the next strategy request recomputes
     // it. Called whenever the position changes (move made/undone, new game,
@@ -169,9 +206,9 @@ private:
     // Configure the search-termination limits for a strategy computation. Unlike
     // a single move search, the strategy runs one search per candidate move, so
     // a fixed per-move time limit would multiply out to (number of moves) × the
-    // limit. Instead each candidate search is bounded by the configured depth,
-    // and the per-move time limit is applied as a single wall-clock budget for
-    // the whole strategy computation (enforced in ComputeStrategyText).
+    // limit. Instead the default time control is restored (so the clock never
+    // cuts a search short) and each candidate search is bounded purely by its
+    // target depth (set in ComputeStrategyText).
     void ApplyStrategySearchLimits();
 
     CPosition*          m_pPosition{nullptr};
@@ -189,5 +226,18 @@ private:
     std::mutex          m_PositionMutex;
     CMove               m_BestMove{};
     std::string         m_strStrategy;
+    CMove               m_StrategyBestMove{};
     std::atomic<bool>   m_fStrategyValid{false};
+    // Progress of the in-flight strategy computation: number of candidate
+    // searches completed (m_nProgressDone) out of the total number planned
+    // (m_nProgressTotal). Read by GetStrategyProgressPercent() on the UI thread.
+    std::atomic<int>    m_nProgressDone{0};
+    std::atomic<int>    m_nProgressTotal{0};
+    // Timing of the in-flight single-move (engine / hint) search, used by
+    // GetEngineSearchProgressPercent(). m_nEngineSearchStartMs is a
+    // steady_clock timestamp (milliseconds) captured when the search starts;
+    // m_nEngineSearchBudgetMs is the per-move time budget in milliseconds, or 0
+    // for a pure depth-limited search with no time budget.
+    std::atomic<long long> m_nEngineSearchStartMs{0};
+    std::atomic<long long> m_nEngineSearchBudgetMs{0};
 };
