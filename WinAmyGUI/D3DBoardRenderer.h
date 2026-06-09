@@ -66,13 +66,12 @@ public:
     void Resize(int nWidth, int nHeight);
 
     // Render a single frame of the given position + selection state.
-    // pHintFrom/pHintTo, when non-null and valid, mark an engine move suggestion
-    // and are highlighted in cyan.
+    // HintSquares marks engine move suggestions or other recommendation
+    // highlights in cyan.
     void Render(const CPosition* pPosition,
                 const CSCoord* pSelectedSquare,
                 const std::vector<CSCoord>& LegalDests,
-                const CSCoord* pHintFrom = nullptr,
-                const CSCoord* pHintTo = nullptr);
+                const std::vector<CSCoord>& HintSquares);
 
     // Mouse input. Coordinates are in client-area pixels relative to the
     // top-left of the render area (the host applies any toolbar offset).
@@ -235,8 +234,7 @@ private:
                           const CPosition* pPosition,
                           const CSCoord* pSelectedSquare,
                           const std::vector<CSCoord>& LegalDests,
-                          const CSCoord* pHintFrom,
-                          const CSCoord* pHintTo);
+                          const std::vector<CSCoord>& HintSquares);
     void RenderPieces(const DirectX::XMMATRIX& mViewProj,
                       const CPosition* pPosition);
     void RenderTargetMarkers(const DirectX::XMMATRIX& mViewProj,
