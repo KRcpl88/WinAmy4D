@@ -72,6 +72,25 @@ extern int NumberOfCPUs;
 
 void setMaxSearchDepth(int);
 
+/*
+ * Root-move exclusion (used to emulate MultiPV by repeated searches).
+ *
+ * SetExcludedRootMoves installs a set of moves that the root search
+ * (IterateInt) will skip when it generates the root move list, so a subsequent
+ * Iterate() returns the best move *other than* the excluded ones. This lets a
+ * caller find the 2nd/3rd best root moves by searching repeatedly, excluding the
+ * previously found best move(s) each time.
+ *
+ * The state is a process-global mirror of the MaxSearchDepth pattern and is
+ * therefore NOT re-entrant: callers must not run two engine searches with
+ * different exclusion sets concurrently. The default (empty) set leaves the
+ * search completely unchanged, so the console engine and unit tests — which
+ * never set exclusions — are unaffected. Always pair a Set call with a Clear
+ * once the search completes.
+ */
+void SetExcludedRootMoves(const CMove *moves, int count);
+void ClearExcludedRootMoves(void);
+
 #if MP
 void StopHelpers(void);
 #endif

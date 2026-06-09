@@ -921,6 +921,7 @@ void CWinAmy4dWnd::OnStrategy() {
     }
 
     m_Game.StartStrategySearch(m_hWnd);
+    StartSearchProgressTimer();
     UpdateStatusBar();
     UpdatePauseMenu();
 }
@@ -1009,11 +1010,9 @@ void CWinAmy4dWnd::OnSquareClick(POINT pt) {
 // Search-progress polling timer
 //
 // Single-move searches (the engine's own move and the suggest-move / hint
-// search) report progress as elapsed time against their per-move budget. There
-// is no engine event to push such updates to the UI, so a low-frequency timer
-// polls GetEngineSearchProgressPercent() and refreshes the status bar while the
-// search runs. Strategy searches are excluded: they push their own
-// WM_APP_ENGINE_PROGRESS updates from the worker thread.
+// search) and strategy computations all report a time-based countdown. There is
+// no engine event to push such updates to the UI, so a low-frequency timer polls
+// GetSearchCountdownSeconds() and refreshes the status bar while any search runs.
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::StartSearchProgressTimer() {
@@ -1049,22 +1048,19 @@ void CWinAmy4dWnd::UpdateStatusBar() {
 
     wchar_t buf[128];
     const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
-    if (m_Game.IsComputingStrategy()) {
-        // Show the strategy search progress as a percentage when available.
-        int nPercent = m_Game.GetStrategyProgressPercent();
-        if (nPercent >= 0) {
-            swprintf_s(buf, 128, L"%s  [Thinking... %d%%]", turn, nPercent);
+    if (m_Game.IsComputingStrategy() || m_Game.IsEngineRunning()) {
+        // A search is in progress. Show a countdown of the seconds remaining
+        // until the engine is expected to finish (time budget + a small overhead
+        // buffer). For very short time limits the countdown is suppressed
+        // (GetSearchCountdownSeconds() returns -1) and an indeterminate
+        // "thinking" message is shown instead.
+        const wchar_t* label =
+            m_Game.IsComputingStrategy() ? L"Thinking" : L"Engine thinking";
+        int nSecs = m_Game.GetSearchCountdownSeconds();
+        if (nSecs >= 0) {
+            swprintf_s(buf, 128, L"%s  [%s... %ds]", turn, label, nSecs);
         } else {
-            swprintf_s(buf, 128, L"%s  [Thinking...]", turn);
-        }
-    } else if (m_Game.IsEngineRunning()) {
-        // Single-move search (engine move or suggestion): show elapsed-time
-        // progress as a percentage when a time budget is in effect.
-        int nPercent = m_Game.GetEngineSearchProgressPercent();
-        if (nPercent >= 0) {
-            swprintf_s(buf, 128, L"%s  [Engine thinking... %d%%]", turn, nPercent);
-        } else {
-            swprintf_s(buf, 128, L"%s  [Engine thinking...]", turn);
+            swprintf_s(buf, 128, L"%s  [%s...]", turn, label);
         }
     } else {
         swprintf_s(buf, 128, L"%s", turn);
@@ -1297,18 +1293,30 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
 }
 
 // ---------------------------------------------------------------------------
-// SetDepthFromMenu — set depth via menu checkmark
+// SetTimeFromMenu — set the search time limit via menu checkmark
 // ---------------------------------------------------------------------------
 
-void CWinAmy4dWnd::SetDepthFromMenu(int nDepth) {
-    m_Game.SetDepth(nDepth);
+void CWinAmy4dWnd::SetTimeFromMenu(int nSeconds) {
+    m_Game.SetTimeLimit(nSeconds);
 
-    HMENU hMenu  = GetMenu(m_hWnd);
-    HMENU hOpts  = GetSubMenu(hMenu, 1);
-    HMENU hDepth = GetSubMenu(hOpts, 0);
-    for (int i = 0; i < 9; ++i)
-        CheckMenuItem(hDepth, IDM_DEPTH_1 + i, MF_BYCOMMAND | MF_UNCHECKED);
-    CheckMenuItem(hDepth, IDM_DEPTH_1 + (nDepth - 1), MF_BYCOMMAND | MF_CHECKED);
+    HMENU hMenu = GetMenu(m_hWnd);
+    HMENU hOpts = GetSubMenu(hMenu, 1);
+    HMENU hTime = GetSubMenu(hOpts, 0);
+
+    // The Search Time menu IDs are not contiguous in their second values, so map
+    // each one explicitly rather than using arithmetic on a base ID.
+    static const struct {
+        int nId;
+        int nSeconds;
+    } kTimeItems[] = {
+        {IDM_TIME_5, 5},     {IDM_TIME_15, 15},   {IDM_TIME_30, 30},
+        {IDM_TIME_60, 60},   {IDM_TIME_120, 120}, {IDM_TIME_180, 180},
+    };
+    for (const auto &item : kTimeItems) {
+        CheckMenuItem(hTime, item.nId,
+                      MF_BYCOMMAND |
+                          (item.nSeconds == nSeconds ? MF_CHECKED : MF_UNCHECKED));
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1411,7 +1419,7 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     switch (uMsg) {
     case WM_CREATE:
         CreateControls(hWnd);
-        SetDepthFromMenu(3);
+        SetTimeFromMenu(15);
         UpdateScrollBars(hWnd);
         UpdateGridMenuEnabled();
         return 0;
@@ -1575,11 +1583,11 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
     case WM_TIMER:
         if (wParam == IDT_SEARCH_PROGRESS) {
-            // Poll-driven refresh for single-move (engine / hint) searches,
-            // whose progress is time-based and so has no event to push updates.
-            // Stop polling once the search is no longer running (or a strategy
-            // search, which pushes its own WM_APP_ENGINE_PROGRESS updates).
-            if (m_Game.IsEngineRunning() && !m_Game.IsComputingStrategy()) {
+            // Poll-driven refresh for the status-bar countdown. This drives both
+            // single-move (engine / hint) searches and strategy computations,
+            // whose remaining-time display has no engine event to push updates.
+            // Stop polling once no search is running.
+            if (m_Game.IsEngineRunning()) {
                 UpdateStatusBar();
             } else {
                 StopSearchProgressTimer();
@@ -1685,11 +1693,12 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             }
             break;
 
-        case IDM_DEPTH_1: case IDM_DEPTH_2: case IDM_DEPTH_3:
-        case IDM_DEPTH_4: case IDM_DEPTH_5: case IDM_DEPTH_6:
-        case IDM_DEPTH_7: case IDM_DEPTH_8: case IDM_DEPTH_9:
-            SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
-            break;
+        case IDM_TIME_5:   SetTimeFromMenu(5);   break;
+        case IDM_TIME_15:  SetTimeFromMenu(15);  break;
+        case IDM_TIME_30:  SetTimeFromMenu(30);  break;
+        case IDM_TIME_60:  SetTimeFromMenu(60);  break;
+        case IDM_TIME_120: SetTimeFromMenu(120); break;
+        case IDM_TIME_180: SetTimeFromMenu(180); break;
 
         case IDM_GRID_FULL: case IDM_GRID_SQUARE_Z: case IDM_GRID_SQUARE_Y:
         case IDM_GRID_SQUARE_X: case IDM_GRID_HEX_1: case IDM_GRID_HEX_2:
