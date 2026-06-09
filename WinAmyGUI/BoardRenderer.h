@@ -33,6 +33,11 @@ public:
     // Height of the level label above each board.
     static constexpr int LABEL_HEIGHT = 16;
 
+    // Extra horizontal gutter inserted on the left and right of the center
+    // board (level h) so the green axis labels have room to draw outside the
+    // squares without obscuring any pieces.
+    static constexpr int AXIS_LABEL_MARGIN = 30;
+
     // Row layout:
     //   Row 0 (top):    j(6) k(5) l(4) m(3) n(2) o(1)   — levels 9–14
     //   Row 1 (middle): g(7) h(8) i(7)                   — levels 6–8
@@ -89,6 +94,8 @@ public:
 private:
     HFONT m_hPieceFont{nullptr};
     HFONT m_hLabelFont{nullptr};
+    // Bold, slightly larger font used only for the +x / +y / +z axis labels.
+    HFONT m_hAxisFont{nullptr};
 
     // Returns the pixel origin (top-left of the grid area, below the label)
     // for level index 0–14. Also sets *outBoardW and *outBoardH if non-null.

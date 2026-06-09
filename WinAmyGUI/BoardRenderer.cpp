@@ -58,6 +58,27 @@ static int RowOriginY(int row) {
     return y;
 }
 
+// Extra horizontal space inserted to the left of a level so the green axis
+// labels beside the center board (level h) have room to draw outside the
+// squares. The center board sits in the middle row (g h i); a left gutter is
+// added before it and a right gutter after it, so everything from the center
+// board rightward in that row is shifted accordingly.
+static int AxisGutterBefore(int level) {
+    const LevelPlacement& p = PLACEMENT[level];
+    if (p.row != 1) {
+        return 0;
+    }
+    if (p.col > 1) {
+        // Level i and beyond: shifted by both the left and right gutters.
+        return 2 * BoardRenderer::AXIS_LABEL_MARGIN;
+    }
+    if (p.col == 1) {
+        // The center board itself: shifted by the left gutter only.
+        return BoardRenderer::AXIS_LABEL_MARGIN;
+    }
+    return 0;
+}
+
 // X pixel origin of the level box (left edge of its label/grid).
 static int LevelOriginX(int level) {
     const LevelPlacement& p = PLACEMENT[level];
@@ -67,6 +88,7 @@ static int LevelOriginX(int level) {
         x += CBitBoard::LEVEL_WIDTH[lvl] * BoardRenderer::SQUARE_SIZE
            + BoardRenderer::BOARD_MARGIN;
     }
+    x += AxisGutterBefore(level);
     return x;
 }
 
@@ -102,11 +124,21 @@ BoardRenderer::BoardRenderer() {
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
         L"Segoe UI"
     );
+    // Axis labels use a bold font a couple of point sizes larger than the
+    // level labels so the +x / +y / +z markers stand out beside the board.
+    m_hAxisFont = CreateFontW(
+        LABEL_HEIGHT + 4, 0, 0, 0, FW_BOLD,
+        FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        L"Segoe UI"
+    );
 }
 
 BoardRenderer::~BoardRenderer() {
     if (m_hPieceFont) DeleteObject(m_hPieceFont);
     if (m_hLabelFont) DeleteObject(m_hLabelFont);
+    if (m_hAxisFont) DeleteObject(m_hAxisFont);
 }
 
 // ---------------------------------------------------------------------------
@@ -277,7 +309,7 @@ static constexpr AxisLabelAnchor AXIS_LABEL_ANCHORS[3] = {
 };
 
 void BoardRenderer::DrawAxisLabels(HDC hdc) const {
-    HFONT hOldFont = (HFONT)SelectObject(hdc, m_hLabelFont);
+    HFONT hOldFont = (HFONT)SelectObject(hdc, m_hAxisFont);
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, CLR_AXIS_LABEL);
 
@@ -295,11 +327,21 @@ void BoardRenderer::DrawAxisLabels(HDC hdc) const {
         int px          = origin.x + RenderSlot.m_nFile * SQUARE_SIZE;
         int py          = boardY + (w - 1 - RenderSlot.m_nRank) * SQUARE_SIZE;
 
-        // Draw the label next to (just to the right of) the square so it does
-        // not obscure any piece occupying the cell.
-        RECT r{ px + SQUARE_SIZE + 2, py, px + 2 * SQUARE_SIZE + 2, py + SQUARE_SIZE };
-        DrawTextW(hdc, anchor.text, -1, &r,
-                  DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+        // Draw the label outside the board, on whichever side the square is
+        // nearest, so it never obscures a piece. Squares in the left half of
+        // the level draw their label to the left (in the left gutter); all
+        // others draw to the right.
+        RECT r;
+        UINT fmt;
+        if (RenderSlot.m_nFile < w / 2) {
+            r = RECT{ px - AXIS_LABEL_MARGIN - 2, py, px - 2, py + SQUARE_SIZE };
+            fmt = DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+        } else {
+            r = RECT{ px + SQUARE_SIZE + 2, py,
+                      px + SQUARE_SIZE + 2 + AXIS_LABEL_MARGIN, py + SQUARE_SIZE };
+            fmt = DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+        }
+        DrawTextW(hdc, anchor.text, -1, &r, fmt);
     }
 
     SelectObject(hdc, hOldFont);
@@ -346,6 +388,8 @@ CSCoord BoardRenderer::HitTest(POINT pt) const {
             int lvl = ROW_LEVELS[r][c];
             rowW += CBitBoard::LEVEL_WIDTH[lvl] * SQUARE_SIZE + BOARD_MARGIN;
         }
+        // The center row (g h i) carries the left + right axis-label gutters.
+        if (r == 1) rowW += 2 * AXIS_LABEL_MARGIN;
         if (rowW > maxW) maxW = rowW;
     }
 
