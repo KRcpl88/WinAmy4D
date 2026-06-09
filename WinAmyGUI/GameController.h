@@ -71,10 +71,10 @@ public:
     // Return current search depth.
     int  GetDepth() const { return m_nDepth; }
 
-    // Set a fixed per-move search time limit, in seconds. A value of 0 disables
-    // the fixed limit and reverts to depth-based search termination (the engine
-    // searches to GetDepth() plies). When a positive limit is set, the engine
-    // searches as deeply as it can within the given number of seconds.
+    // Set a fixed per-move search time limit, in seconds. The engine searches as
+    // deeply as it can within the given number of seconds. Changing the limit
+    // invalidates any cached strategy result (which was computed under the
+    // previous limit) so the next "recommend strategy" re-searches.
     void SetTimeLimit(int seconds);
 
     // Return the current fixed per-move time limit in seconds, or 0 if search
@@ -104,9 +104,10 @@ public:
     void StartHintSearch(HWND hwndTarget);
 
     // Start an asynchronous strategy computation for the current player. The
-    // engine searches a clone of the current position to find the top 3 moves,
-    // and for each one the opponent's most likely counter move and the
-    // recommended response after that. The completion is posted as
+    // engine searches a clone of the current position to find the top 3 moves
+    // (via repeated full-time searches that each exclude the previously found
+    // best move), and for each one the opponent's most likely counter move and
+    // the recommended response after that. The completion is posted as
     // WM_APP_ENGINE_STRATEGY to hwndTarget; the formatted result is retrieved
     // via GetStrategyText().
     void StartStrategySearch(HWND hwndTarget);
@@ -144,6 +145,18 @@ public:
     // (a pure depth-limited search), in which case the host shows an
     // indeterminate "thinking" message instead of a percentage.
     int GetEngineSearchProgressPercent() const;
+
+    // Number of whole seconds remaining on the current search's countdown, for
+    // display in the status bar. The countdown runs from (search start) to
+    // (search start + time budget), tracking the engine's search clock directly.
+    // If the search finishes first the host clears the countdown; if the
+    // countdown reaches zero first it holds at zero until the search returns
+    // (a couple of seconds at most). Applies to both single-move searches and
+    // strategy computations (whose budget spans all of their internal searches).
+    // Returns -1 when no countdown should be shown — i.e. when the configured
+    // time limit is 5 seconds or less (too short to be worth a countdown) or no
+    // time budget is in effect.
+    int GetSearchCountdownSeconds() const;
 
     // Access the current position (read-only while engine is running).
     const CPosition* GetPosition() const { return m_pPosition; }
@@ -203,17 +216,16 @@ private:
     // searches as deeply as the chosen interval allows.
     void ApplySearchLimits();
 
-    // Configure the search-termination limits for a strategy computation. Unlike
-    // a single move search, the strategy runs one search per candidate move, so
-    // a fixed per-move time limit would multiply out to (number of moves) × the
-    // limit. Instead the default time control is restored (so the clock never
-    // cuts a search short) and each candidate search is bounded purely by its
-    // target depth (set in ComputeStrategyText).
+    // Configure the search-termination limits for a strategy computation. The
+    // strategy now performs up to three full-time searches (one per ranked move,
+    // see ComputeStrategyText), so this installs the same fixed per-move time
+    // budget used for single searches; the cumulative wall-clock cost is at most
+    // (number of ranked moves) × the per-move limit.
     void ApplyStrategySearchLimits();
 
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
-    int                 m_nTimeLimit{30};
+    int                 m_nTimeLimit{15};
     PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};
     std::atomic<bool>   m_fEngineRunning{false};
     std::atomic<bool>   m_fComputingStrategy{false};

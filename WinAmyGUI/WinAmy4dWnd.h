@@ -85,7 +85,7 @@ private:
     void OnUndoMove();
     void SetPlayerModeAction(PlayerMode mode);
     void TogglePause();
-    void SetDepthFromMenu(int nDepth);
+    void SetTimeFromMenu(int nSeconds);
     void SetViewMode(ViewMode mode);
     void UpdateViewToggleButton();
     void UpdateOutlinesButtonText();

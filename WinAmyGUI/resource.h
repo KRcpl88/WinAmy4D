@@ -7,15 +7,15 @@
 #define IDM_FILE_SAVE_EPD   1004
 #define IDM_FILE_LOAD_PGN   1005
 #define IDM_FILE_SAVE_PGN   1006
-#define IDM_DEPTH_1         1011
-#define IDM_DEPTH_2         1012
-#define IDM_DEPTH_3         1013
-#define IDM_DEPTH_4         1014
-#define IDM_DEPTH_5         1015
-#define IDM_DEPTH_6         1016
-#define IDM_DEPTH_7         1017
-#define IDM_DEPTH_8         1018
-#define IDM_DEPTH_9         1019
+// Search-time menu items — each maps to a fixed per-move search time in seconds.
+#define IDM_TIME_FIRST      1011
+#define IDM_TIME_5          1011
+#define IDM_TIME_15         1012
+#define IDM_TIME_30         1013
+#define IDM_TIME_60         1014
+#define IDM_TIME_120        1015
+#define IDM_TIME_180        1016
+#define IDM_TIME_LAST       1016
 #define IDM_VIEW_2D         1031
 #define IDM_VIEW_3D         1032
 
@@ -48,9 +48,10 @@
 // current player.
 #define IDM_STRATEGY        1056
 
-// Search depth controls both the search depth cap and the search time: the
-// fixed per-move search time is 10 seconds for every ply of depth (so depth 9
-// gives a 90 second search).
+// The fixed per-move search time (in seconds) is selected from the Options ->
+// Search Time menu (IDM_TIME_5 .. IDM_TIME_180). The engine searches as deeply
+// as it can within the chosen interval; a longer interval yields a stronger
+// (deeper) move at the cost of a longer wait.
 
 // Button / control IDs
 #define IDC_BTN_NEW_GAME    2001
