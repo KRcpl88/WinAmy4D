@@ -58,6 +58,27 @@ static int RowOriginY(int row) {
     return y;
 }
 
+// Extra horizontal space inserted to the left of a level so the green axis
+// labels beside the center board (level h) have room to draw outside the
+// squares. The center board sits in the middle row (g h i); a left gutter is
+// added before it and a right gutter after it, so everything from the center
+// board rightward in that row is shifted accordingly.
+static int AxisGutterBefore(int level) {
+    const LevelPlacement& p = PLACEMENT[level];
+    if (p.row != 1) {
+        return 0;
+    }
+    if (p.col > 1) {
+        // Level i and beyond: shifted by both the left and right gutters.
+        return 2 * BoardRenderer::AXIS_LABEL_MARGIN;
+    }
+    if (p.col == 1) {
+        // The center board itself: shifted by the left gutter only.
+        return BoardRenderer::AXIS_LABEL_MARGIN;
+    }
+    return 0;
+}
+
 // X pixel origin of the level box (left edge of its label/grid).
 static int LevelOriginX(int level) {
     const LevelPlacement& p = PLACEMENT[level];
@@ -67,6 +88,7 @@ static int LevelOriginX(int level) {
         x += CBitBoard::LEVEL_WIDTH[lvl] * BoardRenderer::SQUARE_SIZE
            + BoardRenderer::BOARD_MARGIN;
     }
+    x += AxisGutterBefore(level);
     return x;
 }
 
@@ -102,11 +124,21 @@ BoardRenderer::BoardRenderer() {
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
         L"Segoe UI"
     );
+    // Axis labels use a bold font a couple of point sizes larger than the
+    // level labels so the +x / +y / +z markers stand out beside the board.
+    m_hAxisFont = CreateFontW(
+        LABEL_HEIGHT + 4, 0, 0, 0, FW_BOLD,
+        FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        L"Segoe UI"
+    );
 }
 
 BoardRenderer::~BoardRenderer() {
     if (m_hPieceFont) DeleteObject(m_hPieceFont);
     if (m_hLabelFont) DeleteObject(m_hLabelFont);
+    if (m_hAxisFont) DeleteObject(m_hAxisFont);
 }
 
 // ---------------------------------------------------------------------------
@@ -147,6 +179,9 @@ void BoardRenderer::DrawBoard(HDC hdc, const CPosition* pos,
                               const CSCoord* HintTo) const {
     for (int lvl = 0; lvl < CBitBoard::NUM_LEVELS; ++lvl)
         DrawLevel(hdc, lvl, pos, selectedSquare, legalDests, HintFrom, HintTo);
+
+    // Draw the axis labels last so the green text sits on top of the squares.
+    DrawAxisLabels(hdc);
 }
 
 // ---------------------------------------------------------------------------
@@ -253,6 +288,66 @@ void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
 }
 
 // ---------------------------------------------------------------------------
+// DrawAxisLabels
+// ---------------------------------------------------------------------------
+
+// The three squares that define the +x, +y and +z axis directions. These are
+// fixed *true* board squares (independent of the rendered view plane):
+//   +x → ha8  (level h, file a, rank 8)
+//   +y → hh8  (level h, file h, rank 8)
+//   +z → oa1  (level o, file a, rank 1)
+struct AxisLabelAnchor {
+    uint16_t level;
+    uint16_t file;
+    uint16_t rank;
+    const wchar_t* text;
+};
+static constexpr AxisLabelAnchor AXIS_LABEL_ANCHORS[3] = {
+    {  7, 0, 7, L"+x" }, // ha8
+    {  7, 7, 7, L"+y" }, // hh8
+    { 14, 0, 0, L"+z" }, // oa1
+};
+
+void BoardRenderer::DrawAxisLabels(HDC hdc) const {
+    HFONT hOldFont = (HFONT)SelectObject(hdc, m_hAxisFont);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, CLR_AXIS_LABEL);
+
+    for (const auto& anchor : AXIS_LABEL_ANCHORS) {
+        // The true square is permuted into a render slot by the active view
+        // plane. MapRenderToOriginal applies the (involutive) axis swap, so the
+        // same call maps the true square forward to the slot where it is drawn.
+        CSCoordBase TrueSquare(anchor.level, anchor.file, anchor.rank);
+        CSCoord RenderSlot = MapRenderToOriginal(TrueSquare);
+
+        const int level = RenderSlot.m_nLevel;
+        const int w     = CBitBoard::LEVEL_WIDTH[level];
+        POINT origin    = LevelOrigin(level);
+        int boardY      = origin.y + LABEL_HEIGHT;
+        int px          = origin.x + RenderSlot.m_nFile * SQUARE_SIZE;
+        int py          = boardY + (w - 1 - RenderSlot.m_nRank) * SQUARE_SIZE;
+
+        // Draw the label outside the board, on whichever side the square is
+        // nearest, so it never obscures a piece. Squares in the left half of
+        // the level draw their label to the left (in the left gutter); all
+        // others draw to the right.
+        RECT r;
+        UINT fmt;
+        if (RenderSlot.m_nFile < w / 2) {
+            r = RECT{ px - AXIS_LABEL_MARGIN - 2, py, px - 2, py + SQUARE_SIZE };
+            fmt = DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+        } else {
+            r = RECT{ px + SQUARE_SIZE + 2, py,
+                      px + SQUARE_SIZE + 2 + AXIS_LABEL_MARGIN, py + SQUARE_SIZE };
+            fmt = DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+        }
+        DrawTextW(hdc, anchor.text, -1, &r, fmt);
+    }
+
+    SelectObject(hdc, hOldFont);
+}
+
+// ---------------------------------------------------------------------------
 // HitTest
 // ---------------------------------------------------------------------------
 
@@ -293,6 +388,8 @@ CSCoord BoardRenderer::HitTest(POINT pt) const {
             int lvl = ROW_LEVELS[r][c];
             rowW += CBitBoard::LEVEL_WIDTH[lvl] * SQUARE_SIZE + BOARD_MARGIN;
         }
+        // The center row (g h i) carries the left + right axis-label gutters.
+        if (r == 1) rowW += 2 * AXIS_LABEL_MARGIN;
         if (rowW > maxW) maxW = rowW;
     }
 

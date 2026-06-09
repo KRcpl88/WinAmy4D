@@ -33,6 +33,11 @@ public:
     // Height of the level label above each board.
     static constexpr int LABEL_HEIGHT = 16;
 
+    // Extra horizontal gutter inserted on the left and right of the center
+    // board (level h) so the green axis labels have room to draw outside the
+    // squares without obscuring any pieces.
+    static constexpr int AXIS_LABEL_MARGIN = 30;
+
     // Row layout:
     //   Row 0 (top):    j(6) k(5) l(4) m(3) n(2) o(1)   — levels 9–14
     //   Row 1 (middle): g(7) h(8) i(7)                   — levels 6–8
@@ -56,6 +61,8 @@ public:
     static constexpr COLORREF CLR_LABEL_BG   = RGB( 50,  50,  50);
     static constexpr COLORREF CLR_LABEL_FG   = RGB(230, 230, 230);
     static constexpr COLORREF CLR_BORDER     = RGB( 80,  80,  80);
+    // Bright green used for the +x / +y / +z axis labels.
+    static constexpr COLORREF CLR_AXIS_LABEL = RGB(  0, 220,   0);
 
     BoardRenderer();
     ~BoardRenderer();
@@ -87,6 +94,8 @@ public:
 private:
     HFONT m_hPieceFont{nullptr};
     HFONT m_hLabelFont{nullptr};
+    // Bold, slightly larger font used only for the +x / +y / +z axis labels.
+    HFONT m_hAxisFont{nullptr};
 
     // Returns the pixel origin (top-left of the grid area, below the label)
     // for level index 0–14. Also sets *outBoardW and *outBoardH if non-null.
@@ -98,6 +107,11 @@ private:
                    const std::vector<CSCoord>& legalDests,
                    const CSCoord* HintFrom,
                    const CSCoord* HintTo) const;
+
+    // Draw the green +x / +y / +z axis labels next to their anchor squares
+    // (ha8, hh8, oa1). The labels follow the active view plane so they always
+    // sit beside the true board square that defines each axis direction.
+    void DrawAxisLabels(HDC hdc) const;
 
     // Return the Unicode chess piece glyph for the given piece value.
     static wchar_t PieceGlyph(int8_t piece);
