@@ -144,8 +144,8 @@ int DoneAtRoot;
  * search.h. Default-empty, so a normal search is unaffected.
  */
 #define MAX_EXCLUDED_ROOT_MOVES 8
-static CMove ExcludedRootMoves[MAX_EXCLUDED_ROOT_MOVES];
-static int NumExcludedRootMoves = 0;
+static CMove rgExcludedRootMoves[MAX_EXCLUDED_ROOT_MOVES];
+static uint16_t cExcludedRootMoves = 0;
 static int EGTBDepth = 0;
 
 static int NodesPerCheck;
@@ -1022,18 +1022,19 @@ void *IterateInt(void *x) {
      * move array in place and shrinking m_wRootMoves makes the rest of the
      * search ignore them entirely. The default (empty) set is a no-op.
      */
-    if (NumExcludedRootMoves > 0) {
+    if (cExcludedRootMoves > 0) {
         uint16_t w = 0;
         for (uint16_t r = 0; r < sd->m_wRootMoves; r++) {
-            bool excluded = false;
-            for (int e = 0; e < NumExcludedRootMoves; e++) {
-                if (mvs[r] == ExcludedRootMoves[e]) {
-                    excluded = true;
+            bool fExcluded = false;
+            for (uint16_t e = 0; e < cExcludedRootMoves; e++) {
+                if (mvs[r] == rgExcludedRootMoves[e]) {
+                    fExcluded = true;
                     break;
                 }
             }
-            if (!excluded)
+            if (!fExcluded) {
                 mvs[w++] = mvs[r];
+            }
         }
         sd->m_wRootMoves = w;
     }
@@ -1468,9 +1469,9 @@ void SetExcludedRootMoves(const CMove *pMoves, uint16_t cMoves) {
         cMoves = MAX_EXCLUDED_ROOT_MOVES;
     }
     for (uint16_t i = 0; i < cMoves; i++) {
-        ExcludedRootMoves[i] = pMoves[i];
+        rgExcludedRootMoves[i] = pMoves[i];
     }
-    NumExcludedRootMoves = cMoves;
+    cExcludedRootMoves = cMoves;
 }
 
-void ClearExcludedRootMoves(void) { NumExcludedRootMoves = 0; }
+void ClearExcludedRootMoves(void) { cExcludedRootMoves = 0; }
