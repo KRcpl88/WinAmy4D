@@ -262,10 +262,10 @@ void CWinAmy4dWnd::CollectLegalDestinationsForSquare(
 
 void CWinAmy4dWnd::AppendMoveHighlightSquares(
     std::vector<CSCoord>& rgSquares,
-    const CMove& Move) {
+    const CMove& mv) {
     const CSCoord rgMoveSquares[] = {
-        Move.GetFromCoord(),
-        Move.GetToCoord(),
+        mv.GetFromCoord(),
+        mv.GetToCoord(),
     };
 
     for (const CSCoord& sqMove : rgMoveSquares) {
@@ -963,26 +963,39 @@ std::vector<CSCoord> CWinAmy4dWnd::GetHintSquaresForRender() const {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::OnSuggestMove() {
-    if (m_Game.IsEngineRunning()) return;
-    if (m_Game.IsGameOver()) return;
-    if (m_fStrategyHints) return;
+    if (m_Game.IsEngineRunning()) {
+        return;
+    }
+    if (m_Game.IsGameOver()) {
+        return;
+    }
+    if (m_fStrategyHints) {
+        return;
+    }
     // A suggestion only makes sense when a human is to move.
-    if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
+    if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) {
+        return;
+    }
 
     const CPosition* pos = m_Game.GetPosition();
-    if (!pos) return;
+    if (!pos) {
+        return;
+    }
 
     // In 1-player mode the human plays White (turn 0); don't suggest a move
     // while it is the engine's turn.
-    if (m_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->GetTurn() == 1)
+    if (m_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->GetTurn() == 1) {
         return;
+    }
 
     // Clear any stale suggestion and current selection, then run the search.
     ClearHint();
     m_fHaveSelection = false;
     m_rgLegalDests.clear();
     InvalidateRect(m_hWnd, nullptr, TRUE);
-    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
 
     m_Game.StartHintSearch(m_hWnd);
     StartSearchProgressTimer();

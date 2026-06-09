@@ -59,7 +59,7 @@ private:
                                            HighlightSide eSide,
                                            std::vector<CSCoord>& rgSquares);
     static void AppendMoveHighlightSquares(std::vector<CSCoord>& rgSquares,
-                                           const CMove& Move);
+                                           const CMove& mv);
     bool TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqTo);
 
     // ---- Layout helpers ------------------------------------------------
