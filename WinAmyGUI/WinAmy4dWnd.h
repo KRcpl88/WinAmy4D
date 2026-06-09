@@ -57,8 +57,8 @@ private:
                                            std::vector<CSCoord>& rgDests);
     void CollectLegalMoveHighlightsForSide(const CPosition* pPos,
                                            HighlightSide eSide,
-                                           std::vector<CSCoord>& rgSquares);
-    static void AppendMoveHighlightSquares(std::vector<CSCoord>& rgSquares,
+                                           std::vector<CSCoord>& Squares);
+    static void AppendMoveHighlightSquares(std::vector<CSCoord>& Squares,
                                            const CMove& mv);
     bool TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqTo);
 
@@ -146,11 +146,11 @@ private:
     // recommendation; the engine does NOT make the move.
     bool                 m_fHaveHint = false;
     bool                 m_fStrategyHints = false;
-    std::vector<CSCoord> m_rgHintSquares;
+    std::vector<CSCoord> m_HintSquares;
 
     // Optional menu-driven highlight of all legal moves for a side.
     HighlightSide        m_eHighlightSide = HighlightSide::None;
-    std::vector<CSCoord> m_rgLegalMoveHintSquares;
+    std::vector<CSCoord> m_LegalMoveHintSquares;
 
     // Scroll state (pixels scrolled from origin).
     int m_nScrollX = 0;

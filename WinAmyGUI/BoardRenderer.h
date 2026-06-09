@@ -72,7 +72,7 @@ public:
     void DrawBoard(HDC hdc, const CPosition* pos,
                    const CSCoord* selectedSquare,
                    const std::vector<CSCoord>& legalDests,
-                   const std::vector<CSCoord>& rgHintSquares) const;
+                   const std::vector<CSCoord>& HintSquares) const;
 
     // Return the board square under the given client-area pixel, or an
     // invalid coord if no square is there. In a swapped view plane the
@@ -104,7 +104,7 @@ private:
     void DrawLevel(HDC hdc, int level, const CPosition* pos,
                    const CSCoord* selectedSquare,
                    const std::vector<CSCoord>& legalDests,
-                   const std::vector<CSCoord>& rgHintSquares) const;
+                   const std::vector<CSCoord>& HintSquares) const;
 
     // Draw the green +x / +y / +z axis labels next to their anchor squares
     // (ha8, hh8, oa1). The labels follow the active view plane so they always

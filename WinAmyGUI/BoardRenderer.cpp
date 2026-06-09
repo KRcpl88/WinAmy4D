@@ -175,9 +175,9 @@ CSCoord BoardRenderer::MapRenderToOriginal(const CSCoordBase& SwappedRenderCoord
 void BoardRenderer::DrawBoard(HDC hdc, const CPosition* pos,
                               const CSCoord* selectedSquare,
                               const std::vector<CSCoord>& legalDests,
-                              const std::vector<CSCoord>& rgHintSquares) const {
+                              const std::vector<CSCoord>& HintSquares) const {
     for (int lvl = 0; lvl < CBitBoard::NUM_LEVELS; ++lvl) {
-        DrawLevel(hdc, lvl, pos, selectedSquare, legalDests, rgHintSquares);
+        DrawLevel(hdc, lvl, pos, selectedSquare, legalDests, HintSquares);
     }
 
     // Draw the axis labels last so the green text sits on top of the squares.
@@ -191,7 +191,7 @@ void BoardRenderer::DrawBoard(HDC hdc, const CPosition* pos,
 void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
                                const CSCoord* selectedSquare,
                                const std::vector<CSCoord>& legalDests,
-                               const std::vector<CSCoord>& rgHintSquares) const {
+                               const std::vector<CSCoord>& HintSquares) const {
     const int w = CBitBoard::LEVEL_WIDTH[level];
     POINT origin = LevelOrigin(level);
     bool isOdd = (level % 2) != 0;
@@ -243,7 +243,7 @@ void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
                     && selectedSquare->BitOffset() == offset) {
                 bg = CLR_SELECTED;
             } else {
-                for (const auto& HintSquare : rgHintSquares) {
+                for (const auto& HintSquare : HintSquares) {
                     if (HintSquare.IsValid() && HintSquare.BitOffset() == offset) {
                         bg = CLR_HINT;
                         break;

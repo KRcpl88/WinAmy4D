@@ -195,7 +195,7 @@ public:
     CMove GetStrategyBestMove() const { return m_StrategyBestMove; }
 
     // Retrieve all ranked moves from the last strategy computation.
-    std::vector<CMove> GetStrategyMoves() const { return m_rgStrategyMoves; }
+    std::vector<CMove> GetStrategyMoves() const { return m_StrategyMoves; }
 
 private:
     // Shared implementation for StartEngineSearch / StartHintSearch. Clones the
@@ -243,7 +243,7 @@ private:
     CMove               m_BestMove{};
     std::string         m_strStrategy;
     CMove               m_StrategyBestMove{};
-    std::vector<CMove>  m_rgStrategyMoves;
+    std::vector<CMove>  m_StrategyMoves;
     std::atomic<bool>   m_fStrategyValid{false};
     // Progress of the in-flight strategy computation: number of candidate
     // searches completed (m_nProgressDone) out of the total number planned

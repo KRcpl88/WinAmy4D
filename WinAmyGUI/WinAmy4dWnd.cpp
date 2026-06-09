@@ -261,7 +261,7 @@ void CWinAmy4dWnd::CollectLegalDestinationsForSquare(
 }
 
 void CWinAmy4dWnd::AppendMoveHighlightSquares(
-    std::vector<CSCoord>& rgSquares,
+    std::vector<CSCoord>& Squares,
     const CMove& mv) {
     const CSCoord rgMoveSquares[] = {
         mv.GetFromCoord(),
@@ -274,7 +274,7 @@ void CWinAmy4dWnd::AppendMoveHighlightSquares(
         }
 
         bool fFound = false;
-        for (const CSCoord& sqExisting : rgSquares) {
+        for (const CSCoord& sqExisting : Squares) {
             if (sqExisting.IsValid()
                     && sqExisting.BitOffset() == sqMove.BitOffset()) {
                 fFound = true;
@@ -282,7 +282,7 @@ void CWinAmy4dWnd::AppendMoveHighlightSquares(
             }
         }
         if (!fFound) {
-            rgSquares.push_back(sqMove);
+            Squares.push_back(sqMove);
         }
     }
 }
@@ -290,8 +290,8 @@ void CWinAmy4dWnd::AppendMoveHighlightSquares(
 void CWinAmy4dWnd::CollectLegalMoveHighlightsForSide(
     const CPosition* pPos,
     HighlightSide eSide,
-    std::vector<CSCoord>& rgSquares) {
-    rgSquares.clear();
+    std::vector<CSCoord>& Squares) {
+    Squares.clear();
     if (!pPos || eSide == HighlightSide::None) {
         return;
     }
@@ -308,7 +308,7 @@ void CWinAmy4dWnd::CollectLegalMoveHighlightsForSide(
     pMovePos->LegalMoves(pHeap);
     for (unsigned int nIndex = pHeap->current_section->start;
          nIndex < pHeap->current_section->end; ++nIndex) {
-        AppendMoveHighlightSquares(rgSquares, pHeap->data[nIndex]);
+        AppendMoveHighlightSquares(Squares, pHeap->data[nIndex]);
     }
     free_heap(pHeap);
     CPosition::Free(pMovePos);
@@ -418,7 +418,7 @@ void CWinAmy4dWnd::OnSquareClick3D(const CSCoord& sq) {
         if (madeMove) {
             m_fHaveHint = false;
             m_fStrategyHints = false;
-            m_rgHintSquares.clear();
+            m_HintSquares.clear();
             RefreshLegalMoveHighlights();
             UpdateSuggestMoveButton();
             UpdateStatusBar();
@@ -439,9 +439,9 @@ LRESULT CWinAmy4dWnd::Render3DProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
         BeginPaint(hWnd, &ps);
         if (m_D3DRenderer.IsInitialized()) {
             const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
-            std::vector<CSCoord> rgHintSquares = GetHintSquaresForRender();
+            std::vector<CSCoord> HintSquares = GetHintSquaresForRender();
             m_D3DRenderer.Render(m_Game.GetPosition(), sel, m_rgLegalDests,
-                                 rgHintSquares);
+                                 HintSquares);
         }
         EndPaint(hWnd, &ps);
         return 0;
@@ -671,7 +671,7 @@ void CWinAmy4dWnd::OnNewGame() {
     m_fHaveHint = false;
     m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
-    m_rgHintSquares.clear();
+    m_HintSquares.clear();
     m_rgLegalDests.clear();
     m_Game.NewGame();
     RefreshLegalMoveHighlights();
@@ -710,7 +710,7 @@ void CWinAmy4dWnd::OnLoadEPDGame() {
     m_fHaveHint = false;
     m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
-    m_rgHintSquares.clear();
+    m_HintSquares.clear();
     m_rgLegalDests.clear();
     RefreshLegalMoveHighlights();
     UpdatePauseMenu();
@@ -769,7 +769,7 @@ void CWinAmy4dWnd::OnLoadPGNGame() {
     m_fHaveHint = false;
     m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
-    m_rgHintSquares.clear();
+    m_HintSquares.clear();
     m_rgLegalDests.clear();
     RefreshLegalMoveHighlights();
     UpdatePauseMenu();
@@ -853,7 +853,7 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
     m_rgLegalDests.clear();
     m_fHaveHint = false;
     m_fStrategyHints = false;
-    m_rgHintSquares.clear();
+    m_HintSquares.clear();
     RefreshLegalMoveHighlights();
     UpdateSuggestMoveButton();
 
@@ -884,12 +884,12 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::ClearHint() {
-    if (!m_fHaveHint && !m_fStrategyHints && m_rgHintSquares.empty()) {
+    if (!m_fHaveHint && !m_fStrategyHints && m_HintSquares.empty()) {
         return;
     }
     m_fHaveHint = false;
     m_fStrategyHints = false;
-    m_rgHintSquares.clear();
+    m_HintSquares.clear();
     UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
@@ -897,7 +897,7 @@ void CWinAmy4dWnd::ClearHint() {
 
 void CWinAmy4dWnd::RefreshLegalMoveHighlights() {
     CollectLegalMoveHighlightsForSide(m_Game.GetPosition(), m_eHighlightSide,
-                                      m_rgLegalMoveHintSquares);
+                                      m_LegalMoveHintSquares);
 }
 
 void CWinAmy4dWnd::SetLegalMoveHighlightSide(HighlightSide eSide) {
@@ -941,10 +941,10 @@ void CWinAmy4dWnd::UpdateSuggestMoveButton() {
 }
 
 std::vector<CSCoord> CWinAmy4dWnd::GetHintSquaresForRender() const {
-    std::vector<CSCoord> rgSquares = m_rgLegalMoveHintSquares;
-    for (const CSCoord& sqHint : m_rgHintSquares) {
+    std::vector<CSCoord> Squares = m_LegalMoveHintSquares;
+    for (const CSCoord& sqHint : m_HintSquares) {
         bool fFound = false;
-        for (const CSCoord& sqExisting : rgSquares) {
+        for (const CSCoord& sqExisting : Squares) {
             if (sqHint.IsValid() && sqExisting.IsValid()
                     && sqHint.BitOffset() == sqExisting.BitOffset()) {
                 fFound = true;
@@ -952,10 +952,10 @@ std::vector<CSCoord> CWinAmy4dWnd::GetHintSquaresForRender() const {
             }
         }
         if (!fFound) {
-            rgSquares.push_back(sqHint);
+            Squares.push_back(sqHint);
         }
     }
-    return rgSquares;
+    return Squares;
 }
 
 // ---------------------------------------------------------------------------
@@ -1016,8 +1016,8 @@ void CWinAmy4dWnd::OnEngineHint(LPARAM /*lParam*/) {
         return;
     }
 
-    m_rgHintSquares.clear();
-    AppendMoveHighlightSquares(m_rgHintSquares, move);
+    m_HintSquares.clear();
+    AppendMoveHighlightSquares(m_HintSquares, move);
     m_fStrategyHints = false;
     m_fHaveHint = true;
     UpdateSuggestMoveButton();
@@ -1072,11 +1072,11 @@ void CWinAmy4dWnd::OnStrategy() {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::OnEngineStrategy(LPARAM /*lParam*/) {
-    m_rgHintSquares.clear();
+    m_HintSquares.clear();
     for (const CMove& mv : m_Game.GetStrategyMoves()) {
-        AppendMoveHighlightSquares(m_rgHintSquares, mv);
+        AppendMoveHighlightSquares(m_HintSquares, mv);
     }
-    m_fHaveHint = !m_rgHintSquares.empty();
+    m_fHaveHint = !m_HintSquares.empty();
     m_fStrategyHints = m_fHaveHint;
     UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
@@ -1151,7 +1151,7 @@ void CWinAmy4dWnd::OnSquareClick(POINT pt) {
         if (madeMove) {
             m_fHaveHint = false;
             m_fStrategyHints = false;
-            m_rgHintSquares.clear();
+            m_HintSquares.clear();
             RefreshLegalMoveHighlights();
             UpdateSuggestMoveButton();
             UpdateStatusBar();
@@ -1317,7 +1317,7 @@ void CWinAmy4dWnd::OnUndoMove() {
     m_fHaveHint = false;
     m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
-    m_rgHintSquares.clear();
+    m_HintSquares.clear();
     m_rgLegalDests.clear();
     RefreshLegalMoveHighlights();
 
@@ -1657,9 +1657,9 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             SetViewportOrgEx(hdc, ptOffset.x - m_nScrollX, TOOLBAR_H + ptOffset.y - m_nScrollY, nullptr);
 
             const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
-            std::vector<CSCoord> rgHintSquares = GetHintSquaresForRender();
+            std::vector<CSCoord> HintSquares = GetHintSquaresForRender();
             m_Renderer.DrawBoard(hdc, m_Game.GetPosition(), sel, m_rgLegalDests,
-                                 rgHintSquares);
+                                 HintSquares);
 
             SetViewportOrgEx(hdc, 0, 0, nullptr);
 
