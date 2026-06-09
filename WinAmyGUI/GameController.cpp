@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cctype>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -868,7 +869,7 @@ std::string GameController::ComputeStrategyText(HWND hwndTarget) {
         // computation manipulates it at a time.
         if (!rgExcluded.empty()) {
             SetExcludedRootMoves(rgExcluded.data(),
-                                 static_cast<int>(rgExcluded.size()));
+                                 static_cast<uint16_t>(rgExcluded.size()));
         } else {
             ClearExcludedRootMoves();
         }

@@ -1463,15 +1463,14 @@ void setMaxSearchDepth(int max_search_depth) {
     }
 }
 
-void SetExcludedRootMoves(const CMove *moves, int count) {
-    if (count < 0)
-        count = 0;
-    if (count > MAX_EXCLUDED_ROOT_MOVES)
-        count = MAX_EXCLUDED_ROOT_MOVES;
-    for (int i = 0; i < count; i++)
-        ExcludedRootMoves[i] = moves[i];
-    NumExcludedRootMoves = count;
+void SetExcludedRootMoves(const CMove *pMoves, uint16_t cMoves) {
+    if (cMoves > MAX_EXCLUDED_ROOT_MOVES) {
+        cMoves = MAX_EXCLUDED_ROOT_MOVES;
+    }
+    for (uint16_t i = 0; i < cMoves; i++) {
+        ExcludedRootMoves[i] = pMoves[i];
+    }
+    NumExcludedRootMoves = cMoves;
 }
 
 void ClearExcludedRootMoves(void) { NumExcludedRootMoves = 0; }
-

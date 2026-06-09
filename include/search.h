@@ -88,7 +88,7 @@ void setMaxSearchDepth(int);
  * never set exclusions — are unaffected. Always pair a Set call with a Clear
  * once the search completes.
  */
-void SetExcludedRootMoves(const CMove *moves, int count);
+void SetExcludedRootMoves(const CMove *pMoves, uint16_t cMoves);
 void ClearExcludedRootMoves(void);
 
 #if MP
