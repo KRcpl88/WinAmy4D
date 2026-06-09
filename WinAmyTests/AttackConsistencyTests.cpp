@@ -6,10 +6,12 @@
 
 namespace WinAmyTests {
 
-// Regression tests guarding two engine invariants:
+// Regression tests guarding these engine invariants:
 //   1. The incremental gain/lose-attack updates performed inside DoMove keep
 //      the attack tables identical to a full RecalcAttacks() recompute.
-//   2. Engine self-play never removes a king from the board.
+//   2. The incremental Zobrist hash key maintained by DoMove (including the
+//      en-passant component) stays identical to a full RecalcAttacks() recompute.
+//   3. Engine self-play never removes a king from the board.
 TEST_CLASS(AttackConsistencyTests) {
   public:
     TEST_CLASS_INITIALIZE(InitializeEngine) {
@@ -61,6 +63,20 @@ TEST_CLASS(AttackConsistencyTests) {
                 PositionGuard clone(CPosition::Clone(pos.get()));
                 clone.get()->RecalcAttacks();
                 std::string msg;
+                if (pos.get()->GetHashKey() != clone.get()->GetHashKey()) {
+                    std::ostringstream os;
+                    os << "game " << game << " ply " << ply << ": HKey mismatch incr="
+                       << pos.get()->GetHashKey() << " recalc=" << clone.get()->GetHashKey()
+                       << " from=" << (int)mv.GetFromCoord().BitOffset()
+                       << " to=" << (int)mv.GetToCoord().BitOffset()
+                       << " cap=" << (int)mv.IsCapture()
+                       << " ep=" << (int)mv.IsEnPassant()
+                       << " castle=" << (int)mv.IsCastle()
+                       << " promo=" << (int)mv.HasPromotion();
+                    std::string s = os.str();
+                    std::wstring w(s.begin(), s.end());
+                    Assert::Fail(w.c_str());
+                }
                 if (!AttacksMatch(pos.get(), clone.get(), msg)) {
                     std::ostringstream os;
                     os << "game " << game << " ply " << ply << ": " << msg
