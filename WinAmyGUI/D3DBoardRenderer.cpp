@@ -603,8 +603,7 @@ XMMATRIX D3DBoardRenderer::MakeProj() const {
 void D3DBoardRenderer::Render(const CPosition* pPosition,
                               const CSCoord* pSelectedSquare,
                               const std::vector<CSCoord>& LegalDests,
-                              const CSCoord* pHintFrom,
-                              const CSCoord* pHintTo) {
+                              const std::vector<CSCoord>& rgHintSquares) {
     if (!m_pDevice || !m_pRTV) return;
 
     const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -639,7 +638,7 @@ void D3DBoardRenderer::Render(const CPosition* pPosition,
     if (fShowTargetMarkers)
         RenderTargetMarkers(mViewProj, LegalDests);
     RenderHighlights(mViewProj, pPosition, pSelectedSquare, LegalDests,
-                     pHintFrom, pHintTo);
+                     rgHintSquares);
     // Axis labels are drawn before the pieces so that a piece sharing an anchor
     // cell is rendered on top and stays clearly visible.
     RenderAxisLabels(mViewProj);
@@ -959,8 +958,7 @@ void D3DBoardRenderer::RenderHighlights(const XMMATRIX& mViewProj,
                                          const CPosition* /*pPosition*/,
                                          const CSCoord* pSelectedSquare,
                                          const std::vector<CSCoord>& LegalDests,
-                                         const CSCoord* pHintFrom,
-                                         const CSCoord* pHintTo) {
+                                         const std::vector<CSCoord>& rgHintSquares) {
     // Build a flat list of CChord endpoints for the selected square (in one
     // colour) and each legal-destination square (in another colour). We do
     // this in two passes since both share the line pipeline / constant
@@ -1033,15 +1031,15 @@ void D3DBoardRenderer::RenderHighlights(const XMMATRIX& mViewProj,
         DrawCellList(Verts, XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f));
     }
 
-    // Engine move suggestion (cyan) — highlight both the piece to move and the
-    // recommended destination. Drawn last so the recommendation stands out.
+    // Engine move suggestions (cyan). Drawn last so recommendations stand out.
     {
         std::vector<LineVertex> Verts;
-        Verts.reserve(96);
-        if (pHintFrom && pHintFrom->IsValid())
-            BuildBufferForCell(*pHintFrom, Verts);
-        if (pHintTo && pHintTo->IsValid())
-            BuildBufferForCell(*pHintTo, Verts);
+        Verts.reserve(rgHintSquares.size() * 48);
+        for (const auto& HintSquare : rgHintSquares) {
+            if (HintSquare.IsValid()) {
+                BuildBufferForCell(HintSquare, Verts);
+            }
+        }
         DrawCellList(Verts, XMFLOAT4(0.0f, 0.9f, 0.9f, 1.0f));
     }
 }

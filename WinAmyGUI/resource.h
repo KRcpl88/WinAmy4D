@@ -48,6 +48,11 @@
 // current player.
 #define IDM_STRATEGY        1056
 
+// Highlight all legal moves for one side. These are checkboxes, not radio
+// items, so the active side can be deselected.
+#define IDM_HIGHLIGHT_WHITE 1057
+#define IDM_HIGHLIGHT_BLACK 1058
+
 // The fixed per-move search time (in seconds) is selected from the Options ->
 // Search Time menu (IDM_TIME_5 .. IDM_TIME_180). The engine searches as deeply
 // as it can within the chosen interval; a longer interval yields a stronger

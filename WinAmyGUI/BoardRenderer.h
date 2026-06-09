@@ -67,13 +67,12 @@ public:
     BoardRenderer();
     ~BoardRenderer();
 
-    // Draw the entire board onto the given HDC. HintFrom/HintTo, when non-null
-    // and valid, mark an engine move suggestion and are highlighted in cyan.
+    // Draw the entire board onto the given HDC. HintSquares marks engine move
+    // suggestions or other recommendation highlights in cyan.
     void DrawBoard(HDC hdc, const CPosition* pos,
                    const CSCoord* selectedSquare,
                    const std::vector<CSCoord>& legalDests,
-                   const CSCoord* HintFrom = nullptr,
-                   const CSCoord* HintTo = nullptr) const;
+                   const std::vector<CSCoord>& rgHintSquares) const;
 
     // Return the board square under the given client-area pixel, or an
     // invalid coord if no square is there. In a swapped view plane the
@@ -105,8 +104,7 @@ private:
     void DrawLevel(HDC hdc, int level, const CPosition* pos,
                    const CSCoord* selectedSquare,
                    const std::vector<CSCoord>& legalDests,
-                   const CSCoord* HintFrom,
-                   const CSCoord* HintTo) const;
+                   const std::vector<CSCoord>& rgHintSquares) const;
 
     // Draw the green +x / +y / +z axis labels next to their anchor squares
     // (ha8, hh8, oa1). The labels follow the active view plane so they always

@@ -260,6 +260,60 @@ void CWinAmy4dWnd::CollectLegalDestinationsForSquare(
     CPosition::Free(pMovePos);
 }
 
+void CWinAmy4dWnd::AppendMoveHighlightSquares(
+    std::vector<CSCoord>& rgSquares,
+    const CMove& Move) {
+    const CSCoord rgMoveSquares[] = {
+        Move.GetFromCoord(),
+        Move.GetToCoord(),
+    };
+
+    for (const CSCoord& sqMove : rgMoveSquares) {
+        if (!sqMove.IsValid()) {
+            continue;
+        }
+
+        bool fFound = false;
+        for (const CSCoord& sqExisting : rgSquares) {
+            if (sqExisting.IsValid()
+                    && sqExisting.BitOffset() == sqMove.BitOffset()) {
+                fFound = true;
+                break;
+            }
+        }
+        if (!fFound) {
+            rgSquares.push_back(sqMove);
+        }
+    }
+}
+
+void CWinAmy4dWnd::CollectLegalMoveHighlightsForSide(
+    const CPosition* pPos,
+    HighlightSide eSide,
+    std::vector<CSCoord>& rgSquares) {
+    rgSquares.clear();
+    if (!pPos || eSide == HighlightSide::None) {
+        return;
+    }
+
+    CPosition* pMovePos = CPosition::Clone(pPos);
+    if (!pMovePos) {
+        return;
+    }
+
+    pMovePos->SetTurn(eSide == HighlightSide::White ? 0 : 1);
+
+    heap_t pHeap = allocate_heap();
+    push_section(pHeap);
+    pMovePos->LegalMoves(pHeap);
+    for (unsigned int nIndex = pHeap->current_section->start;
+         nIndex < pHeap->current_section->end; ++nIndex) {
+        AppendMoveHighlightSquares(rgSquares, pHeap->data[nIndex]);
+    }
+    free_heap(pHeap);
+    CPosition::Free(pMovePos);
+}
+
 bool CWinAmy4dWnd::TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqTo) {
     if (!pPos || !IsHumanAllowedToMove(pPos)) return false;
 
@@ -363,8 +417,14 @@ void CWinAmy4dWnd::OnSquareClick3D(const CSCoord& sq) {
         InvalidateRect(m_hRender3D ? m_hRender3D : m_hWnd, nullptr, FALSE);
         if (madeMove) {
             m_fHaveHint = false;
+            m_fStrategyHints = false;
+            m_rgHintSquares.clear();
+            RefreshLegalMoveHighlights();
+            UpdateSuggestMoveButton();
             UpdateStatusBar();
-            if (!m_Game.IsGameOver()) MaybeStartEngine();
+            if (!m_Game.IsGameOver()) {
+                MaybeStartEngine();
+            }
         }
     }
 }
@@ -379,10 +439,9 @@ LRESULT CWinAmy4dWnd::Render3DProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
         BeginPaint(hWnd, &ps);
         if (m_D3DRenderer.IsInitialized()) {
             const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
-            const CSCoord* HintFrom = m_fHaveHint ? &m_HintFrom : nullptr;
-            const CSCoord* HintTo   = m_fHaveHint ? &m_HintTo   : nullptr;
+            std::vector<CSCoord> rgHintSquares = GetHintSquaresForRender();
             m_D3DRenderer.Render(m_Game.GetPosition(), sel, m_rgLegalDests,
-                                 HintFrom, HintTo);
+                                 rgHintSquares);
         }
         EndPaint(hWnd, &ps);
         return 0;
@@ -595,8 +654,10 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
     // Set initial menu / button states.
     UpdatePlayerMenu();
     UpdatePauseMenu();
+    UpdateLegalMoveHighlightMenu();
     UpdateViewToggleButton();
     UpdateAxisControls();
+    UpdateSuggestMoveButton();
 }
 
 // ---------------------------------------------------------------------------
@@ -608,11 +669,15 @@ void CWinAmy4dWnd::OnNewGame() {
     m_fPaused = false;
     m_fHaveSelection = false;
     m_fHaveHint = false;
+    m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
+    m_rgHintSquares.clear();
     m_rgLegalDests.clear();
     m_Game.NewGame();
+    RefreshLegalMoveHighlights();
     // Preserve the depth previously selected via the Options menu.
     UpdatePauseMenu();
+    UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
@@ -643,9 +708,13 @@ void CWinAmy4dWnd::OnLoadEPDGame() {
     m_fPaused = false;
     m_fHaveSelection = false;
     m_fHaveHint = false;
+    m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
+    m_rgHintSquares.clear();
     m_rgLegalDests.clear();
+    RefreshLegalMoveHighlights();
     UpdatePauseMenu();
+    UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
@@ -698,9 +767,13 @@ void CWinAmy4dWnd::OnLoadPGNGame() {
     m_fPaused = false;
     m_fHaveSelection = false;
     m_fHaveHint = false;
+    m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
+    m_rgHintSquares.clear();
     m_rgLegalDests.clear();
+    RefreshLegalMoveHighlights();
     UpdatePauseMenu();
+    UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
@@ -779,6 +852,10 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
     m_fHaveSelection = false;
     m_rgLegalDests.clear();
     m_fHaveHint = false;
+    m_fStrategyHints = false;
+    m_rgHintSquares.clear();
+    RefreshLegalMoveHighlights();
+    UpdateSuggestMoveButton();
 
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
@@ -807,12 +884,78 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::ClearHint() {
-    if (!m_fHaveHint) return;
+    if (!m_fHaveHint && !m_fStrategyHints && m_rgHintSquares.empty()) {
+        return;
+    }
     m_fHaveHint = false;
-    m_HintFrom = InvalidSquareCoord();
-    m_HintTo   = InvalidSquareCoord();
+    m_fStrategyHints = false;
+    m_rgHintSquares.clear();
+    UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+}
+
+void CWinAmy4dWnd::RefreshLegalMoveHighlights() {
+    CollectLegalMoveHighlightsForSide(m_Game.GetPosition(), m_eHighlightSide,
+                                      m_rgLegalMoveHintSquares);
+}
+
+void CWinAmy4dWnd::SetLegalMoveHighlightSide(HighlightSide eSide) {
+    if (m_eHighlightSide == eSide) {
+        m_eHighlightSide = HighlightSide::None;
+    } else {
+        m_eHighlightSide = eSide;
+    }
+
+    RefreshLegalMoveHighlights();
+    UpdateLegalMoveHighlightMenu();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
+}
+
+void CWinAmy4dWnd::UpdateLegalMoveHighlightMenu() {
+    HMENU hMenu = GetMenu(m_hWnd);
+    if (!hMenu) {
+        return;
+    }
+
+    CheckMenuItem(hMenu, IDM_HIGHLIGHT_WHITE,
+                  MF_BYCOMMAND
+                      | (m_eHighlightSide == HighlightSide::White
+                             ? MF_CHECKED
+                             : MF_UNCHECKED));
+    CheckMenuItem(hMenu, IDM_HIGHLIGHT_BLACK,
+                  MF_BYCOMMAND
+                      | (m_eHighlightSide == HighlightSide::Black
+                             ? MF_CHECKED
+                             : MF_UNCHECKED));
+}
+
+void CWinAmy4dWnd::UpdateSuggestMoveButton() {
+    if (!m_hBtnHint) {
+        return;
+    }
+    EnableWindow(m_hBtnHint, !m_fStrategyHints);
+}
+
+std::vector<CSCoord> CWinAmy4dWnd::GetHintSquaresForRender() const {
+    std::vector<CSCoord> rgSquares = m_rgLegalMoveHintSquares;
+    for (const CSCoord& sqHint : m_rgHintSquares) {
+        bool fFound = false;
+        for (const CSCoord& sqExisting : rgSquares) {
+            if (sqHint.IsValid() && sqExisting.IsValid()
+                    && sqHint.BitOffset() == sqExisting.BitOffset()) {
+                fFound = true;
+                break;
+            }
+        }
+        if (!fFound) {
+            rgSquares.push_back(sqHint);
+        }
+    }
+    return rgSquares;
 }
 
 // ---------------------------------------------------------------------------
@@ -822,6 +965,7 @@ void CWinAmy4dWnd::ClearHint() {
 void CWinAmy4dWnd::OnSuggestMove() {
     if (m_Game.IsEngineRunning()) return;
     if (m_Game.IsGameOver()) return;
+    if (m_fStrategyHints) return;
     // A suggestion only makes sense when a human is to move.
     if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
 
@@ -839,24 +983,6 @@ void CWinAmy4dWnd::OnSuggestMove() {
     m_rgLegalDests.clear();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
-
-    // If a strategy has already been computed for the current position, reuse
-    // its top-ranked move (Suggested Move #1) instead of launching a fresh
-    // search — the strategy cache is invalidated whenever the position changes,
-    // so it stays valid until the player moves.
-    if (m_Game.HasStrategy()) {
-        CMove move = m_Game.GetStrategyBestMove();
-        if (move != M_NONE) {
-            m_HintFrom = move.GetFromCoord();
-            m_HintTo   = move.GetToCoord();
-            m_fHaveHint = true;
-            InvalidateRect(m_hWnd, nullptr, TRUE);
-            if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
-            UpdateStatusBar();
-            UpdatePauseMenu();
-            return;
-        }
-    }
 
     m_Game.StartHintSearch(m_hWnd);
     StartSearchProgressTimer();
@@ -877,9 +1003,11 @@ void CWinAmy4dWnd::OnEngineHint(LPARAM /*lParam*/) {
         return;
     }
 
-    m_HintFrom = move.GetFromCoord();
-    m_HintTo   = move.GetToCoord();
+    m_rgHintSquares.clear();
+    AppendMoveHighlightSquares(m_rgHintSquares, move);
+    m_fStrategyHints = false;
     m_fHaveHint = true;
+    UpdateSuggestMoveButton();
 
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
@@ -931,6 +1059,18 @@ void CWinAmy4dWnd::OnStrategy() {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::OnEngineStrategy(LPARAM /*lParam*/) {
+    m_rgHintSquares.clear();
+    for (const CMove& mv : m_Game.GetStrategyMoves()) {
+        AppendMoveHighlightSquares(m_rgHintSquares, mv);
+    }
+    m_fHaveHint = !m_rgHintSquares.empty();
+    m_fStrategyHints = m_fHaveHint;
+    UpdateSuggestMoveButton();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
+
     UpdateStatusBar();
     UpdatePauseMenu();
 
@@ -997,11 +1137,16 @@ void CWinAmy4dWnd::OnSquareClick(POINT pt) {
 
         if (madeMove) {
             m_fHaveHint = false;
+            m_fStrategyHints = false;
+            m_rgHintSquares.clear();
+            RefreshLegalMoveHighlights();
+            UpdateSuggestMoveButton();
             UpdateStatusBar();
-            if (!m_Game.IsGameOver())
+            if (!m_Game.IsGameOver()) {
                 MaybeStartEngine();
-            else
+            } else {
                 MaybeAnnounceGameOver();
+            }
         }
     }
 }
@@ -1156,13 +1301,18 @@ void CWinAmy4dWnd::OnUndoMove() {
     if (!m_Game.UndoLastHumanMove()) return;
 
     m_fHaveSelection = false;
+    m_fHaveHint = false;
+    m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
+    m_rgHintSquares.clear();
     m_rgLegalDests.clear();
+    RefreshLegalMoveHighlights();
 
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
     UpdatePauseMenu();
+    UpdateSuggestMoveButton();
 }
 
 void CWinAmy4dWnd::SetPlayerModeAction(PlayerMode mode) {
@@ -1494,10 +1644,9 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             SetViewportOrgEx(hdc, ptOffset.x - m_nScrollX, TOOLBAR_H + ptOffset.y - m_nScrollY, nullptr);
 
             const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
-            const CSCoord* HintFrom = m_fHaveHint ? &m_HintFrom : nullptr;
-            const CSCoord* HintTo   = m_fHaveHint ? &m_HintTo   : nullptr;
+            std::vector<CSCoord> rgHintSquares = GetHintSquaresForRender();
             m_Renderer.DrawBoard(hdc, m_Game.GetPosition(), sel, m_rgLegalDests,
-                                 HintFrom, HintTo);
+                                 rgHintSquares);
 
             SetViewportOrgEx(hdc, 0, 0, nullptr);
 
@@ -1726,6 +1875,14 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
         case IDM_STRATEGY:
             OnStrategy();
+            break;
+
+        case IDM_HIGHLIGHT_WHITE:
+            SetLegalMoveHighlightSide(HighlightSide::White);
+            break;
+
+        case IDM_HIGHLIGHT_BLACK:
+            SetLegalMoveHighlightSide(HighlightSide::Black);
             break;
         }
         return 0;

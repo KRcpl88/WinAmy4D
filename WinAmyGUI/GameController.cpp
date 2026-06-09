@@ -775,6 +775,7 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
 void GameController::InvalidateStrategy() {
     m_strStrategy.clear();
     m_StrategyBestMove = M_NONE;
+    m_rgStrategyMoves.clear();
     m_fStrategyValid.store(false);
 }
 
@@ -968,6 +969,11 @@ std::string GameController::ComputeStrategyText(HWND hwndTarget) {
     // can reuse it without launching a fresh search. Published together with
     // m_strStrategy / m_fStrategyValid by the strategy thread.
     m_StrategyBestMove = (nTop > 0) ? rgCandidates[0].Move : CMove(M_NONE);
+    m_rgStrategyMoves.clear();
+    m_rgStrategyMoves.reserve(nTop);
+    for (size_t nIndex = 0; nIndex < nTop; ++nIndex) {
+        m_rgStrategyMoves.push_back(rgCandidates[nIndex].Move);
+    }
 
     if (nTop == 0) {
         CPosition::Free(p);

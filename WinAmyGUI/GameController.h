@@ -16,6 +16,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 // Posted to the main window when the engine finishes a search.
 // WPARAM: unused (0)
@@ -193,6 +194,9 @@ public:
     // are ranked best-first, so this is the engine's single best recommendation.
     CMove GetStrategyBestMove() const { return m_StrategyBestMove; }
 
+    // Retrieve all ranked moves from the last strategy computation.
+    std::vector<CMove> GetStrategyMoves() const { return m_rgStrategyMoves; }
+
 private:
     // Shared implementation for StartEngineSearch / StartHintSearch. Clones the
     // current position, searches the clone on a background thread, stores the
@@ -239,6 +243,7 @@ private:
     CMove               m_BestMove{};
     std::string         m_strStrategy;
     CMove               m_StrategyBestMove{};
+    std::vector<CMove>  m_rgStrategyMoves;
     std::atomic<bool>   m_fStrategyValid{false};
     // Progress of the in-flight strategy computation: number of candidate
     // searches completed (m_nProgressDone) out of the total number planned

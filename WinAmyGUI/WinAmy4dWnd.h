@@ -28,6 +28,7 @@
 class CWinAmy4dWnd {
 public:
     enum class ViewMode { Mode2D, Mode3D };
+    enum class HighlightSide { None, White, Black };
 
     CWinAmy4dWnd();
     ~CWinAmy4dWnd();
@@ -54,6 +55,11 @@ private:
     void CollectLegalDestinationsForSquare(const CPosition* pPos,
                                            const CSCoord& From,
                                            std::vector<CSCoord>& rgDests);
+    void CollectLegalMoveHighlightsForSide(const CPosition* pPos,
+                                           HighlightSide eSide,
+                                           std::vector<CSCoord>& rgSquares);
+    static void AppendMoveHighlightSquares(std::vector<CSCoord>& rgSquares,
+                                           const CMove& Move);
     bool TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqTo);
 
     // ---- Layout helpers ------------------------------------------------
@@ -72,6 +78,11 @@ private:
     void OnStrategy();
     void OnEngineStrategy(LPARAM lParam);
     void ClearHint();
+    void RefreshLegalMoveHighlights();
+    void SetLegalMoveHighlightSide(HighlightSide eSide);
+    void UpdateLegalMoveHighlightMenu();
+    void UpdateSuggestMoveButton();
+    std::vector<CSCoord> GetHintSquaresForRender() const;
     void OnSquareClick(POINT pt);
     void OnSquareClick3D(const CSCoord& sq);
     void MaybeStartEngine();
@@ -131,11 +142,15 @@ private:
     std::vector<CSCoord> m_rgLegalDests;
 
     // Engine move-suggestion (hint) state. When m_fHaveHint is set, the
-    // suggested move's from-square (m_HintFrom) and to-square (m_HintTo) are
-    // highlighted as a recommendation; the engine does NOT make the move.
-    bool    m_fHaveHint = false;
-    CSCoord m_HintFrom;
-    CSCoord m_HintTo;
+    // suggested move's from-square and to-square are highlighted as a
+    // recommendation; the engine does NOT make the move.
+    bool                 m_fHaveHint = false;
+    bool                 m_fStrategyHints = false;
+    std::vector<CSCoord> m_rgHintSquares;
+
+    // Optional menu-driven highlight of all legal moves for a side.
+    HighlightSide        m_eHighlightSide = HighlightSide::None;
+    std::vector<CSCoord> m_rgLegalMoveHintSquares;
 
     // Scroll state (pixels scrolled from origin).
     int m_nScrollX = 0;
