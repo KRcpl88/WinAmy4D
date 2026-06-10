@@ -840,12 +840,12 @@ void CPosition::DoMove(CMove move) {
     if ((p->m_EnPassant.IsValid() != p->m_pActLog->gl_EnPassant.IsValid()) ||
         (p->m_EnPassant.IsValid() &&
          p->m_EnPassant.BitOffset() != p->m_pActLog->gl_EnPassant.BitOffset())) {
-        p->m_ullHKey ^=
-            HashKeysEP[p->m_pActLog->gl_EnPassant.IsValid()
-                           ? p->m_pActLog->gl_EnPassant.BitOffset()
-                           : 0];
-        p->m_ullHKey ^= HashKeysEP[p->m_EnPassant.IsValid() ? p->m_EnPassant.BitOffset()
-                                                     : 0];
+        if (p->m_pActLog->gl_EnPassant.IsValid()) {
+            p->m_ullHKey ^= HashKeysEP[p->m_pActLog->gl_EnPassant.BitOffset()];
+        }
+        if (p->m_EnPassant.IsValid()) {
+            p->m_ullHKey ^= HashKeysEP[p->m_EnPassant.BitOffset()];
+        }
     }
 
     /* Update SGameLog */
@@ -1035,12 +1035,12 @@ void CPosition::DoNull() {
     if ((p->m_EnPassant.IsValid() != p->m_pActLog->gl_EnPassant.IsValid()) ||
         (p->m_EnPassant.IsValid() &&
          p->m_EnPassant.BitOffset() != p->m_pActLog->gl_EnPassant.BitOffset())) {
-        p->m_ullHKey ^=
-            HashKeysEP[p->m_pActLog->gl_EnPassant.IsValid()
-                           ? p->m_pActLog->gl_EnPassant.BitOffset()
-                           : 0];
-        p->m_ullHKey ^= HashKeysEP[p->m_EnPassant.IsValid() ? p->m_EnPassant.BitOffset()
-                                                     : 0];
+        if (p->m_pActLog->gl_EnPassant.IsValid()) {
+            p->m_ullHKey ^= HashKeysEP[p->m_pActLog->gl_EnPassant.BitOffset()];
+        }
+        if (p->m_EnPassant.IsValid()) {
+            p->m_ullHKey ^= HashKeysEP[p->m_EnPassant.BitOffset()];
+        }
     }
 
     p->m_wPly++;
