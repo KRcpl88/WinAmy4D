@@ -60,6 +60,16 @@ TEST_CLASS(AttackConsistencyTests) {
 
                 PositionGuard clone(CPosition::Clone(pos.get()));
                 clone.get()->RecalcAttacks();
+                if (pos.get()->GetHashKey() != clone.get()->GetHashKey()) {
+                    std::ostringstream os;
+                    os << "HashKey mismatch game " << game << " ply " << ply
+                       << " from=" << (int)mv.GetFromCoord().BitOffset()
+                       << " to=" << (int)mv.GetToCoord().BitOffset()
+                       << " ep=" << (int)mv.IsEnPassant();
+                    std::string s = os.str();
+                    std::wstring w(s.begin(), s.end());
+                    Assert::Fail(w.c_str());
+                }
                 std::string msg;
                 if (!AttacksMatch(pos.get(), clone.get(), msg)) {
                     std::ostringstream os;
