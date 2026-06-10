@@ -347,6 +347,122 @@ These changes are looking really good.  The game is much easier to play now beca
 
 
 
+#bug
+
+Please fix this bug:
+
+There is an intermittent bug in GameController::StartSearchInternal on C:\git\WinAmy4D\WinAmyGUI\GameController.cpp line 632, bestMove is not valid (m_From and m_To ar both {m_nLevel=56797 m_nRank=56797 m_nFile=56797 }), which causes CSCoord::BitOffset to throw std::out_of_range("BitBoard::BitOffset(m_nLevel, m_nFile, m_nRank) level"); inside CPosition::SAN.
+
+Please diagnose how this could happen, it appears it had completed the search and was about to log the result, but somehow bestMove is not valid.  Also, the logs show the search found a valid move Nhe4xif2, but on the previous move (black) the search completed but it does not show black actually made the move.  
+
+```
+Engine move: starting search (time limit 180s)...
+It    Time   Score  principal Variation
+ 5     1.2  -7.984  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Rig7xhh8 
+ 5     1.5  -7.984  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Rig7xhh8 
+ 6     1.6     ---  4. Nhf3he5
+ 6     2.0  -8.512  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Phd3xhe2 7. Nhh8hg6+ Phh7xhg6 
+ 6     2.4  -8.512  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Phd3xhe2 7. Nhh8hg6+ Phh7xhg6 
+ 7     3.5  -8.640  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Nhd6ie4 7. Nie1id3 Rig7xhh8 
+ 7    15.6  -8.640  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Nhd6ie4 7. Nie1id3 Rig7xhh8 
+ 8    27.5  -8.784  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Rig7xhh8 7. Phe2he3 Nhd6he4 8. Bhf1xhd3 
+ 8    28.2  -8.784  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Rig7xhh8 7. Phe2he3 Nhd6he4 8. Bhf1xhd3 
+ 9    1:43  -8.848  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Phd3xhe2 7. Bhf1xhe2 Rig7xhh8 
+ 9    2:26  -8.848  4. Nhf3he5 Phc4xhd3 5. Nhe5xif6+ Khe8ie7 6. Nif6xhh8 
+                    Phd3xhe2 7. Bhf1xhe2 Rig7xhh8 
+Nodes = 1.86M, QPerc: 65 %, time = 180.08 secs, 10.3k nodes/s
+Extensions: Check: 178k  DblChk: 69  DiscChk: 4.51k  SingReply: 109k
+            Recapture: 2.60k   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 27.8k/647k = 4 %   Pawn: 887k/967k = 92 %
+         Eval: 247k/1.21M = 20 %
+Hashtable 1:  entries = 131k, use = 97.9k (75 %)
+              store failed = 46.6k (23 %)
+Engine move: search complete, best move Nhf3he5 (score -8.848)
+Move made: Nhf3he5 by White
+Engine move: starting search (time limit 180s)...
+It    Time   Score  principal Variation
+ 4     1.0  -0.576  4. .. Nib4id5 5. Nib1ic3 Nid5xic3 6. Pid2xic3 
+ 5     1.1     ---  4. .. Nib4id5
+ 5     1.4  -0.096  4. .. Nib4id5 5. Nib1ic3 Nid5xic3 6. Pid2xic3 Bhc8hf5 
+ 5     3.1     +++  4. .. Pgf7gf6
+ 5     3.9  -0.240  4. .. Pgf7gf6 5. Qhd1ha4+ Nhb8hd7 6. Nib1ic3 Nib7hd6 
+ 5     5.5     +++  4. .. Khe8ie7
+ 5     6.3  -0.400  4. .. Khe8ie7 5. Nhe5xhc4 Nhg8hf6 6. Nie1id3 Nib7hd6 
+ 5     7.3  -0.400  4. .. Khe8ie7 5. Nhe5xhc4 Nhg8hf6 6. Nie1id3 Nib7hd6 
+ 6     9.7     ---  4. .. Khe8ie7
+ 6    14.1  -0.128  4. .. Khe8ie7 5. Nhb1ha3 Nib4xha3 6. Nib1xha3 Qid7ea4 7. 
+                    Bhc1hg5 
+ 6    16.7     +++  4. .. Nib4id5
+ 6    17.8  -0.144  4. .. Nib4id5 5. Nib1ic3 Khe8ie7 6. Nic3xid5+ Pie6xid5 7. 
+                    Nhe5xhc4 Bhc8hf5 
+ 6    24.6  -0.144  4. .. Nib4id5 5. Nib1ic3 Khe8ie7 6. Nic3xid5+ Pie6xid5 7. 
+                    Nhe5xhc4 Bhc8hf5 
+ 7    35.3     +++  4. .. Nib4id5
+ 7    41.1  -0.496  4. .. Nib4id5 5. Nib1ic3 Nhb8hc6 6. Nic3xid5 Nhc6xhe5 7. 
+                    Bhc1hf4 Pie6xid5 
+ 7    1:02  -0.496  4. .. Nib4id5 5. Nib1ic3 Nhb8hc6 6. Nic3xid5 Nhc6xhe5 7. 
+                    Bhc1hf4 Pie6xid5 
+ 8    1:06     ---  4. .. Nib4id5
+ 8    1:38  -0.128  4. .. Nib4id5 5. Nib1ic3 Nhb8hc6 6. Nic3xid5 Nhc6xhe5 7. 
+                    Phd4xhe5 Qhd8xhd1+ 8. Qid1xhd1 Pie6xid5 9. Qhd1ha4+ 
+                    Phb7hb5 
+Nodes = 3.98M, QPerc: 84 %, time = 180.09 secs, 22.1k nodes/s
+Extensions: Check: 25.7k  DblChk: 1  DiscChk: 150  SingReply: 7.43k
+            Recapture: 22.5k   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 14.9k/632k = 2 %   Pawn: 2.57M/2.82M = 91 %
+         Eval: 527k/3.35M = 16 %
+Hashtable 1:  entries = 131k, use = 80.5k (61 %)
+              store failed = 21.3k (15 %)
+Engine move: search complete, best move Nib4id5 (score +0.128)
+Engine move: starting search (time limit 180s)...
+It    Time   Score  principal Variation
+ 4     1.4  -6.480  4. .. Nhe4xif2+ 5. Khe1hd2 Qhd8xhd4+ 6. Khd2gc2 Nif2he4+ 
+                    7. Kgc2gb2 Qhd4xhe5 8. Nhb1hc3 
+ 4     1.4  -6.480  4. .. Nhe4xif2+ 5. Khe1hd2 Qhd8xhd4+ 6. Khd2gc2 Nif2he4+ 
+                    7. Kgc2gb2 Qhd4xhe5 8. Nhb1hc3 
+ 5     4.0     +++  4. .. Nhe4xif2+
+ 5     6.9  -7.696  4. .. Nhe4xif2+ 5. Khe1hd2 Qhd8xhd4+ 6. Nib1hd3 Phc4xhd3 
+                    7. Nhe5xif6+ Khe8ie7 8. Nie1id3 Nif2he4+ 
+ 5     7.0  -7.696  4. .. Nhe4xif2+ 5. Khe1hd2 Qhd8xhd4+ 6. Nib1hd3 Phc4xhd3 
+                    7. Nhe5xif6+ Khe8ie7 8. Nie1id3 Nif2he4+ 
+ 6    18.4  -7.696  4. .. Nhe4xif2+ 5. Khe1hd2 Qhd8xhd4+ 6. Nib1hd3 Phc4xhd3 
+                    7. Nhe5xif6+ Khe8ie7 8. Nie1id3 Nif2he4+ 9. Khd2he1 
+                    Kie7xif6 
+ 6    18.4  -7.696  4. .. Nhe4xif2+ 5. Khe1hd2 Qhd8xhd4+ 6. Nib1hd3 Phc4xhd3 
+                    7. Nhe5xif6+ Khe8ie7 8. Nie1id3 Nif2he4+ 9. Khd2he1 
+                    Kie7xif6 
+Nodes = 2.09M, QPerc: 72 %, time = 180.03 secs, 11.6k nodes/s
+Extensions: Check: 200k  DblChk: 28  DiscChk: 1.99k  SingReply: 99.2k
+            Recapture: 5.26k   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 23.1k/589k = 4 %   Pawn: 1.29M/1.34M = 96 %
+         Eval: 157k/1.50M = 11 %
+Hashtable 1:  entries = 131k, use = 112k (86 %)
+              store failed = 91.8k (32 %)
+```
+
+Here is the full game history, the opening moves are queen's gambit accepted
+
+```
+Move made: Phd2hd4 by White
+Move made: Phd7hd5 by Black
+Move made: Phc2hc4 by White
+Move made: Phd5xhc4 by Black
+Move made: Nhg1hf3 by White
+Move made: Nie7hd6 by Black
+Move made: Nhf3he5 by White
+```
+
+
+
 # future cleanup:
 CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
