@@ -328,6 +328,22 @@ stalemate, insufficient material, agreed draw, and so on.
 
 ---
 
+## 8. Strategy
+
+### Queen's gambit
+
+### Queen's gambit accepted
+
+In 4D chess, there are 4 optimal responses for white to a queen's gambit accepted.
+
+1. **Nie1id3** - Move out the night on level i, moving play to another level on the board and opening up the full 3D board.
+2. **Qhd1ha4+** - Move out the queen on level h to check black's king.  Black should respond with Nhb8hc6 to block the check, and then white responds with Phe2he4 to prepare to castle.  This moves the queen into position where it may be used offensively.
+3. **NHg1hf3** - Moving up the knight begins to prepare for a castle.
+4. **Phe2he4** - develop the pawn on level h to open the bishop so the bishop and knight can be moved to open up a castle.
+
+
+---
+
 ## 8. Quick Reference
 
 | | |
