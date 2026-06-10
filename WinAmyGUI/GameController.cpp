@@ -76,6 +76,8 @@ void GameController::NewGame() {
         CPosition::Free(m_pPosition);
     m_pPosition = CPosition::Initial();
     m_BestMove = M_NONE;
+    m_nRejectCount = 0;
+    m_fEngineCorrupted = false;
     InvalidateStrategy();
 }
 
@@ -459,7 +461,7 @@ void GameController::ApplyStrategySearchLimits() {
     }
 }
 
-void GameController::MakeMove(CMove move) {
+bool GameController::MakeMove(CMove move) {
     std::lock_guard<std::mutex> lock(m_PositionMutex);
     if (m_pPosition) {
         // Defensive guard: a stale or duplicate WM_APP_ENGINE_MOVE can deliver a
@@ -473,17 +475,45 @@ void GameController::MakeMove(CMove move) {
             // SAN() is unsafe here because it internally calls DoMove/UndoMove,
             // which would corrupt the board for an illegal/stale move; instead
             // format the raw source and destination coordinates directly.
+            //
+            // Only the SAME move rejected repeatedly counts toward corruption:
+            // if a different invalid move arrives, restart the count at 1.
+            if (m_nRejectCount > 0 && move == m_LastRejectedMove) {
+                ++m_nRejectCount;
+            } else {
+                m_nRejectCount = 1;
+                m_LastRejectedMove = move;
+            }
             const CSCoord &FromCoord = move.GetFromCoord();
             const CSCoord &ToCoord = move.GetToCoord();
             const char *pszSide = (m_pPosition->GetTurn() == 0) ? "White" : "Black";
             Print(0,
                   "Move rejected (not valid) for %s: %c%c%c-%c%c%c; "
-                  "turn is unchanged, %s searches again\n",
+                  "turn is unchanged (attempt %d of %d)\n",
                   pszSide, 'a' + FromCoord.m_nLevel, 'a' + FromCoord.m_nFile,
                   '1' + FromCoord.m_nRank, 'a' + ToCoord.m_nLevel,
-                  'a' + ToCoord.m_nFile, '1' + ToCoord.m_nRank, pszSide);
-            return;
+                  'a' + ToCoord.m_nFile, '1' + ToCoord.m_nRank, m_nRejectCount,
+                  kMaxRejectRetries);
+
+            if (m_nRejectCount >= kMaxRejectRetries) {
+                // The same invalid move has been retried too many times: treat
+                // the engine as corrupted. Switch to human-only play so the host
+                // stops asking the engine to search; the user can still save the
+                // game.
+                m_fEngineCorrupted = true;
+                m_PlayerMode = PlayerMode::TwoPlayers;
+                Print(0,
+                      "Engine corrupted: same invalid move retried %d times; "
+                      "stopping play and switching to human only\n",
+                      m_nRejectCount);
+            }
+            return false;
         }
+
+        // A valid move ends any run of rejections.
+        m_nRejectCount = 0;
+        m_fEngineCorrupted = false;
+
 
         // Log every move that is actually applied to the game. SAN must be
         // computed from the position *before* the move is made, and GetTurn()
@@ -532,7 +562,9 @@ void GameController::MakeMove(CMove move) {
         assert(SlidingBefore == m_pPosition->GetSlidingPieces() &&
                "RecalcAttacks changed SlidingPieces: incremental attack update bug");
 #endif
+        return true;
     }
+    return false;
 }
 
 bool GameController::UndoLastHumanMove() {

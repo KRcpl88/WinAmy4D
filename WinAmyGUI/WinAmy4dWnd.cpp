@@ -848,7 +848,30 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
         return;
     }
 
-    m_Game.MakeMove(move);
+    bool fApplied = m_Game.MakeMove(move);
+    if (!fApplied && m_Game.IsEngineCorrupted()) {
+        // The engine kept returning the same invalid move; MakeMove has already
+        // switched to human-only play. Tell the user and stop searching so they
+        // can save the game.
+        m_fHaveSelection = false;
+        m_rgLegalDests.clear();
+        m_fHaveHint = false;
+        m_fStrategyHints = false;
+        m_HintSquares.clear();
+        RefreshLegalMoveHighlights();
+        UpdateSuggestMoveButton();
+        UpdatePlayerMenu();
+        UpdatePauseMenu();
+        InvalidateRect(m_hWnd, nullptr, TRUE);
+        if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+        UpdateStatusBar();
+        MessageBoxW(m_hWnd,
+                    L"Engine corrupted: the engine repeatedly returned an "
+                    L"invalid move. Play has been switched to human only so you "
+                    L"can save the game.",
+                    APP_TITLE, MB_OK | MB_ICONERROR);
+        return;
+    }
     m_fHaveSelection = false;
     m_rgLegalDests.clear();
     m_fHaveHint = false;
