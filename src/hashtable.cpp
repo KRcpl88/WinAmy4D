@@ -74,24 +74,26 @@ static int HTGeneration = 0;
 
 static OPTIONAL_ATOMIC unsigned int HTStoreFailed = 0, HTStoreTried = 0;
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
+
+#include <atomic>
 
 #define MUTEX_BITS 8
 #define MUTEX_COUNT (1 << MUTEX_BITS)
 #define MUTEX_MASK (MUTEX_COUNT - 1)
-static atomic_int TranspositionMutex[MUTEX_COUNT];
-static atomic_int PawnMutex[MUTEX_COUNT];
-static atomic_int ScoreMutex[MUTEX_COUNT];
+static std::atomic<int> TranspositionMutex[MUTEX_COUNT];
+static std::atomic<int> PawnMutex[MUTEX_COUNT];
+static std::atomic<int> ScoreMutex[MUTEX_COUNT];
 
 /**
  * Acquire a read lock for the given pointer. There can be many read locks,
  * but only a single write lock.
  */
-static void acquire_read_lock(atomic_int *data) {
+static void acquire_read_lock(std::atomic<int> *data) {
     for (;;) {
-        int val = *data;
+        int val = data->load();
         if (val >= 0) {
-            bool result = atomic_compare_exchange_strong(data, &val, val + 1);
+            bool result = data->compare_exchange_strong(val, val + 1);
             if (result)
                 return;
         }
@@ -101,11 +103,11 @@ static void acquire_read_lock(atomic_int *data) {
 /**
  * Release the read lock.
  */
-static void release_read_lock(atomic_int *data) {
+static void release_read_lock(std::atomic<int> *data) {
     for (;;) {
-        int val = *data;
+        int val = data->load();
         if (val > 0) {
-            bool result = atomic_compare_exchange_strong(data, &val, val - 1);
+            bool result = data->compare_exchange_strong(val, val - 1);
             if (result)
                 return;
         }
@@ -116,11 +118,11 @@ static void release_read_lock(atomic_int *data) {
  * Acquire a write lock for the given pointer. There can be many read locks,
  * but only a single write lock.
  */
-static void acquire_write_lock(atomic_int *data) {
+static void acquire_write_lock(std::atomic<int> *data) {
     for (;;) {
-        int val = *data;
+        int val = data->load();
         if (val == 0) {
-            bool result = atomic_compare_exchange_strong(data, &val, -1);
+            bool result = data->compare_exchange_strong(val, -1);
             if (result)
                 return;
         }
@@ -130,11 +132,11 @@ static void acquire_write_lock(atomic_int *data) {
 /**
  * Release the write lock.
  */
-static void release_write_lock(atomic_int *data) {
+static void release_write_lock(std::atomic<int> *data) {
     for (;;) {
-        int val = *data;
+        int val = data->load();
         if (val == -1) {
-            bool result = atomic_compare_exchange_strong(data, &val, 0);
+            bool result = data->compare_exchange_strong(val, 0);
             if (result)
                 return;
         }
@@ -147,16 +149,16 @@ static void release_write_lock(atomic_int *data) {
  * Gets an entry from the global transposition table.
  */
 static inline struct HTEntry GetHTEntry(hash_t key) {
-#if MP && HAVE_LIBPTHREAD
-    atomic_int *mutex = TranspositionMutex + ((key >> 32) & MUTEX_MASK);
+#if MP
+    std::atomic<int> *mutex = TranspositionMutex + ((key >> 32) & MUTEX_MASK);
     acquire_read_lock(mutex);
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 
     struct HTEntry entry = TranspositionTable[(key >> 32) & HT_Mask];
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
     release_read_lock(mutex);
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 
     return entry;
 }
@@ -165,16 +167,16 @@ static inline struct HTEntry GetHTEntry(hash_t key) {
  * Puts an entry to the global transposition table.
  */
 static inline void PutHTEntry(hash_t key, struct HTEntry entry) {
-#if MP && HAVE_LIBPTHREAD
-    atomic_int *mutex = TranspositionMutex + ((key >> 32) & MUTEX_MASK);
+#if MP
+    std::atomic<int> *mutex = TranspositionMutex + ((key >> 32) & MUTEX_MASK);
     acquire_write_lock(mutex);
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 
     TranspositionTable[(key >> 32) & HT_Mask] = entry;
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
     release_write_lock(mutex);
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 }
 
 /**
@@ -323,15 +325,15 @@ LookupResult ProbeHT(hash_t key, int *score, int depth, CMove *bestm,
 }
 
 LookupResult ProbePT(hash_t key, int *score, struct PawnFacts *pf) {
-#if MP && HAVE_LIBPTHREAD
+#if MP
     acquire_read_lock(PawnMutex + ((key >> 32) & MUTEX_MASK));
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 
     struct PTEntry h = PawnTable[(key >> 32) & PT_Mask];
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
     release_read_lock(PawnMutex + ((key >> 32) & MUTEX_MASK));
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 
     if (h.pt_Signature == (unsigned int)key && h.pt_Score != PT_INVALID) {
         *score = h.pt_Score;
@@ -343,15 +345,15 @@ LookupResult ProbePT(hash_t key, int *score, struct PawnFacts *pf) {
 }
 
 LookupResult ProbeST(hash_t key, int *score) {
-#if MP && HAVE_LIBPTHREAD
+#if MP
     acquire_read_lock(ScoreMutex + ((key >> 32) & MUTEX_MASK));
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 
     struct STEntry h = ScoreTable[(key >> 32) & ST_Mask];
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
     release_read_lock(ScoreMutex + ((key >> 32) & MUTEX_MASK));
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 
     if (h.st_Signature == (unsigned int)key && h.st_Score != PT_INVALID) {
         *score = h.st_Score;
@@ -444,29 +446,29 @@ void StoreHT(hash_t key, int best, int alpha, int beta, CMove bestm, int depth,
 void StorePT(hash_t key, int score, struct PawnFacts *pf) {
     struct PTEntry h = {(unsigned int)key, score, *pf};
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
     acquire_write_lock(PawnMutex + ((key >> 32) & MUTEX_MASK));
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 
     PawnTable[(key >> 32) & PT_Mask] = h;
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
     release_write_lock(PawnMutex + ((key >> 32) & MUTEX_MASK));
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 }
 
 void StoreST(hash_t key, int score) {
     struct STEntry h = {(unsigned int)key, score};
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
     acquire_write_lock(ScoreMutex + ((key >> 32) & MUTEX_MASK));
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 
     ScoreTable[(key >> 32) & ST_Mask] = h;
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
     release_write_lock(ScoreMutex + ((key >> 32) & MUTEX_MASK));
-#endif /* MP && HAVE_LIBPTHREAD */
+#endif /* MP */
 }
 
 /* Moved this to a seperate routine to make the PB-Move
@@ -564,7 +566,7 @@ void AllocateHT(void) {
                 1024),
           HT_Bits, PT_Bits, ST_Bits);
 
-#if MP && HAVE_LIBPTHREAD
+#if MP
     for (int i = 0; i < MUTEX_COUNT; i++) {
         TranspositionMutex[i] = 0;
         PawnMutex[i] = 0;
