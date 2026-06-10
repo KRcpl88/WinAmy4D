@@ -1014,7 +1014,20 @@ void *IterateInt(void *x) {
     sd->InitSearch();
     sd->m_wRootMoves = (uint16_t)p->LegalMoves(sd->m_hHeap);
 
-    CMove *mvs = sd->m_hHeap->data + sd->m_hHeap->current_section->start;
+    /*
+     * The root move list lives in the heap's current section. The heap is a
+     * growing arena: append_to_heap() (used by move generation inside
+     * NegaScout/Quies) reallocs heap->data when a section fills, which can move
+     * the buffer to a new address and free the old one. Caching a raw pointer
+     * into heap->data across a search call would therefore dangle, and reading
+     * mvs[0] afterwards would yield freed memory (an invalid move). The root
+     * section's start index is invariant for the master throughout the root
+     * loop (push_section/pop_section are balanced around every search call), so
+     * re-derive mvs from the live heap->data before each use that follows a
+     * call which may have grown the heap.
+     */
+    const unsigned int nRootStart = sd->m_hHeap->current_section->start;
+    CMove *mvs = sd->m_hHeap->data + nRootStart;
 
     /*
      * Drop any caller-excluded root moves (used to emulate MultiPV by repeated
@@ -1068,6 +1081,8 @@ void *IterateInt(void *x) {
         for (sd->m_wMoveNum = 0; sd->m_wMoveNum < sd->m_wRootMoves; sd->m_wMoveNum++) {
             int tmp;
             int next_depth = (sd->m_wDepth - 2) * OnePly;
+            // Re-derive after a prior iteration's search may have grown the heap.
+            mvs = sd->m_hHeap->data + nRootStart;
             CMove move = mvs[sd->m_wMoveNum];
             bool is_alternate = !is_pv && move == sd->m_AlternateMove;
 
@@ -1178,6 +1193,10 @@ void *IterateInt(void *x) {
                     unsigned long tn = nodes[sd->m_wMoveNum];
                     int j;
 
+                    // The fail-low/fail-high re-searches above may have grown
+                    // (and relocated) the heap; re-derive before reordering.
+                    mvs = sd->m_hHeap->data + nRootStart;
+
                     for (j = sd->m_wMoveNum; j > 0; j--) {
                         mvs[j] = mvs[j - 1];
                         nodes[j] = nodes[j - 1];
@@ -1250,6 +1269,8 @@ void *IterateInt(void *x) {
 
                 if (sd->m_fMaster) {
                     char score_as_text[16];
+                    // Re-derive: the searches above may have relocated the heap.
+                    mvs = sd->m_hHeap->data + nRootStart;
                     p->AnalyzeHT(mvs[0]);
                     pv_valid = true;
 
@@ -1310,6 +1331,9 @@ void *IterateInt(void *x) {
         }
 
         NeedTime = false;
+        // Re-derive before sorting: the move loop's searches may have relocated
+        // the heap buffer underneath the cached pointer.
+        mvs = sd->m_hHeap->data + nRootStart;
         ResortMovesList(sd->m_wRootMoves, mvs, nodes);
 
         /*
@@ -1417,6 +1441,10 @@ final:
         ShowHashStatistics();
     }
 
+    // Re-derive one last time: a search call before reaching here (including via
+    // the AbortSearch "goto final" paths) may have reallocated and relocated the
+    // heap buffer, leaving any cached pointer dangling into freed memory.
+    mvs = sd->m_hHeap->data + nRootStart;
     sd->m_BestMove = mvs[0];
 
     if (!sd->m_fMaster) {
