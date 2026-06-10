@@ -42,6 +42,11 @@ static constexpr int BTN_GAP     = 6;
 // two dropdowns line up in the same toolbar slot when switching view modes.
 static constexpr int DROPDOWN_W  = 160;
 
+// Timer used to poll single-move (engine / hint) search progress, whose
+// percentage is time-based and so has no push event to refresh the status bar.
+static constexpr UINT_PTR IDT_SEARCH_PROGRESS = 0xA001;
+static constexpr UINT     SEARCH_PROGRESS_MS  = 250;
+
 // ---------------------------------------------------------------------------
 // Command-line logging support
 //
@@ -255,6 +260,60 @@ void CWinAmy4dWnd::CollectLegalDestinationsForSquare(
     CPosition::Free(pMovePos);
 }
 
+void CWinAmy4dWnd::AppendMoveHighlightSquares(
+    std::vector<CSCoord>& Squares,
+    const CMove& mv) {
+    const CSCoord rgMoveSquares[] = {
+        mv.GetFromCoord(),
+        mv.GetToCoord(),
+    };
+
+    for (const CSCoord& sqMove : rgMoveSquares) {
+        if (!sqMove.IsValid()) {
+            continue;
+        }
+
+        bool fFound = false;
+        for (const CSCoord& sqExisting : Squares) {
+            if (sqExisting.IsValid()
+                    && sqExisting.BitOffset() == sqMove.BitOffset()) {
+                fFound = true;
+                break;
+            }
+        }
+        if (!fFound) {
+            Squares.push_back(sqMove);
+        }
+    }
+}
+
+void CWinAmy4dWnd::CollectLegalMoveHighlightsForSide(
+    const CPosition* pPos,
+    HighlightSide eSide,
+    std::vector<CSCoord>& Squares) {
+    Squares.clear();
+    if (!pPos || eSide == HighlightSide::None) {
+        return;
+    }
+
+    CPosition* pMovePos = CPosition::Clone(pPos);
+    if (!pMovePos) {
+        return;
+    }
+
+    pMovePos->SetTurn(eSide == HighlightSide::White ? 0 : 1);
+
+    heap_t pHeap = allocate_heap();
+    push_section(pHeap);
+    pMovePos->LegalMoves(pHeap);
+    for (unsigned int nIndex = pHeap->current_section->start;
+         nIndex < pHeap->current_section->end; ++nIndex) {
+        AppendMoveHighlightSquares(Squares, pHeap->data[nIndex]);
+    }
+    free_heap(pHeap);
+    CPosition::Free(pMovePos);
+}
+
 bool CWinAmy4dWnd::TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqTo) {
     if (!pPos || !IsHumanAllowedToMove(pPos)) return false;
 
@@ -358,8 +417,14 @@ void CWinAmy4dWnd::OnSquareClick3D(const CSCoord& sq) {
         InvalidateRect(m_hRender3D ? m_hRender3D : m_hWnd, nullptr, FALSE);
         if (madeMove) {
             m_fHaveHint = false;
+            m_fStrategyHints = false;
+            m_HintSquares.clear();
+            RefreshLegalMoveHighlights();
+            UpdateSuggestMoveButton();
             UpdateStatusBar();
-            if (!m_Game.IsGameOver()) MaybeStartEngine();
+            if (!m_Game.IsGameOver()) {
+                MaybeStartEngine();
+            }
         }
     }
 }
@@ -374,10 +439,9 @@ LRESULT CWinAmy4dWnd::Render3DProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
         BeginPaint(hWnd, &ps);
         if (m_D3DRenderer.IsInitialized()) {
             const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
-            const CSCoord* HintFrom = m_fHaveHint ? &m_HintFrom : nullptr;
-            const CSCoord* HintTo   = m_fHaveHint ? &m_HintTo   : nullptr;
+            std::vector<CSCoord> HintSquares = GetHintSquaresForRender();
             m_D3DRenderer.Render(m_Game.GetPosition(), sel, m_rgLegalDests,
-                                 HintFrom, HintTo);
+                                 HintSquares);
         }
         EndPaint(hWnd, &ps);
         return 0;
@@ -590,8 +654,10 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
     // Set initial menu / button states.
     UpdatePlayerMenu();
     UpdatePauseMenu();
+    UpdateLegalMoveHighlightMenu();
     UpdateViewToggleButton();
     UpdateAxisControls();
+    UpdateSuggestMoveButton();
 }
 
 // ---------------------------------------------------------------------------
@@ -603,11 +669,15 @@ void CWinAmy4dWnd::OnNewGame() {
     m_fPaused = false;
     m_fHaveSelection = false;
     m_fHaveHint = false;
+    m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
+    m_HintSquares.clear();
     m_rgLegalDests.clear();
     m_Game.NewGame();
+    RefreshLegalMoveHighlights();
     // Preserve the depth previously selected via the Options menu.
     UpdatePauseMenu();
+    UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
@@ -638,9 +708,13 @@ void CWinAmy4dWnd::OnLoadEPDGame() {
     m_fPaused = false;
     m_fHaveSelection = false;
     m_fHaveHint = false;
+    m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
+    m_HintSquares.clear();
     m_rgLegalDests.clear();
+    RefreshLegalMoveHighlights();
     UpdatePauseMenu();
+    UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
@@ -693,9 +767,13 @@ void CWinAmy4dWnd::OnLoadPGNGame() {
     m_fPaused = false;
     m_fHaveSelection = false;
     m_fHaveHint = false;
+    m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
+    m_HintSquares.clear();
     m_rgLegalDests.clear();
+    RefreshLegalMoveHighlights();
     UpdatePauseMenu();
+    UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
@@ -749,6 +827,7 @@ void CWinAmy4dWnd::MaybeStartEngine() {
 
     if (engineTurn) {
         m_Game.StartEngineSearch(m_hWnd);
+        StartSearchProgressTimer();
         UpdateStatusBar();
         UpdatePauseMenu();
     }
@@ -773,6 +852,10 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
     m_fHaveSelection = false;
     m_rgLegalDests.clear();
     m_fHaveHint = false;
+    m_fStrategyHints = false;
+    m_HintSquares.clear();
+    RefreshLegalMoveHighlights();
+    UpdateSuggestMoveButton();
 
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
@@ -787,6 +870,7 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
     // For self-play, immediately start the engine again (other side).
     if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers && !m_fPaused) {
         m_Game.StartEngineSearch(m_hWnd);
+        StartSearchProgressTimer();
         UpdateStatusBar();
         UpdatePauseMenu();
     } else {
@@ -800,12 +884,78 @@ void CWinAmy4dWnd::OnEngineMove(LPARAM /*lParam*/) {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::ClearHint() {
-    if (!m_fHaveHint) return;
+    if (!m_fHaveHint && !m_fStrategyHints && m_HintSquares.empty()) {
+        return;
+    }
     m_fHaveHint = false;
-    m_HintFrom = InvalidSquareCoord();
-    m_HintTo   = InvalidSquareCoord();
+    m_fStrategyHints = false;
+    m_HintSquares.clear();
+    UpdateSuggestMoveButton();
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+}
+
+void CWinAmy4dWnd::RefreshLegalMoveHighlights() {
+    CollectLegalMoveHighlightsForSide(m_Game.GetPosition(), m_eHighlightSide,
+                                      m_LegalMoveHintSquares);
+}
+
+void CWinAmy4dWnd::SetLegalMoveHighlightSide(HighlightSide eSide) {
+    if (m_eHighlightSide == eSide) {
+        m_eHighlightSide = HighlightSide::None;
+    } else {
+        m_eHighlightSide = eSide;
+    }
+
+    RefreshLegalMoveHighlights();
+    UpdateLegalMoveHighlightMenu();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
+}
+
+void CWinAmy4dWnd::UpdateLegalMoveHighlightMenu() {
+    HMENU hMenu = GetMenu(m_hWnd);
+    if (!hMenu) {
+        return;
+    }
+
+    CheckMenuItem(hMenu, IDM_HIGHLIGHT_WHITE,
+                  MF_BYCOMMAND
+                      | (m_eHighlightSide == HighlightSide::White
+                             ? MF_CHECKED
+                             : MF_UNCHECKED));
+    CheckMenuItem(hMenu, IDM_HIGHLIGHT_BLACK,
+                  MF_BYCOMMAND
+                      | (m_eHighlightSide == HighlightSide::Black
+                             ? MF_CHECKED
+                             : MF_UNCHECKED));
+}
+
+void CWinAmy4dWnd::UpdateSuggestMoveButton() {
+    if (!m_hBtnHint) {
+        return;
+    }
+    EnableWindow(m_hBtnHint, !m_fStrategyHints);
+}
+
+std::vector<CSCoord> CWinAmy4dWnd::GetHintSquaresForRender() const {
+    std::vector<CSCoord> Squares = m_LegalMoveHintSquares;
+    for (const CSCoord& sqHint : m_HintSquares) {
+        bool fFound = false;
+        for (const CSCoord& sqExisting : Squares) {
+            if (sqHint.IsValid() && sqExisting.IsValid()
+                    && sqHint.BitOffset() == sqExisting.BitOffset()) {
+                fFound = true;
+                break;
+            }
+        }
+        if (!fFound) {
+            Squares.push_back(sqHint);
+        }
+    }
+    return Squares;
 }
 
 // ---------------------------------------------------------------------------
@@ -813,27 +963,42 @@ void CWinAmy4dWnd::ClearHint() {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::OnSuggestMove() {
-    if (m_Game.IsEngineRunning()) return;
-    if (m_Game.IsGameOver()) return;
+    if (m_Game.IsEngineRunning()) {
+        return;
+    }
+    if (m_Game.IsGameOver()) {
+        return;
+    }
+    if (m_fStrategyHints) {
+        return;
+    }
     // A suggestion only makes sense when a human is to move.
-    if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
+    if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) {
+        return;
+    }
 
     const CPosition* pos = m_Game.GetPosition();
-    if (!pos) return;
+    if (!pos) {
+        return;
+    }
 
     // In 1-player mode the human plays White (turn 0); don't suggest a move
     // while it is the engine's turn.
-    if (m_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->GetTurn() == 1)
+    if (m_Game.GetPlayerMode() == PlayerMode::OnePlayer && pos->GetTurn() == 1) {
         return;
+    }
 
     // Clear any stale suggestion and current selection, then run the search.
     ClearHint();
     m_fHaveSelection = false;
     m_rgLegalDests.clear();
     InvalidateRect(m_hWnd, nullptr, TRUE);
-    if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
 
     m_Game.StartHintSearch(m_hWnd);
+    StartSearchProgressTimer();
     UpdateStatusBar();
     UpdatePauseMenu();
 }
@@ -851,9 +1016,11 @@ void CWinAmy4dWnd::OnEngineHint(LPARAM /*lParam*/) {
         return;
     }
 
-    m_HintFrom = move.GetFromCoord();
-    m_HintTo   = move.GetToCoord();
+    m_HintSquares.clear();
+    AppendMoveHighlightSquares(m_HintSquares, move);
+    m_fStrategyHints = false;
     m_fHaveHint = true;
+    UpdateSuggestMoveButton();
 
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
@@ -895,6 +1062,7 @@ void CWinAmy4dWnd::OnStrategy() {
     }
 
     m_Game.StartStrategySearch(m_hWnd);
+    StartSearchProgressTimer();
     UpdateStatusBar();
     UpdatePauseMenu();
 }
@@ -904,6 +1072,18 @@ void CWinAmy4dWnd::OnStrategy() {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::OnEngineStrategy(LPARAM /*lParam*/) {
+    m_HintSquares.clear();
+    for (const CMove& mv : m_Game.GetStrategyMoves()) {
+        AppendMoveHighlightSquares(m_HintSquares, mv);
+    }
+    m_fHaveHint = !m_HintSquares.empty();
+    m_fStrategyHints = m_fHaveHint;
+    UpdateSuggestMoveButton();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
+
     UpdateStatusBar();
     UpdatePauseMenu();
 
@@ -970,13 +1150,37 @@ void CWinAmy4dWnd::OnSquareClick(POINT pt) {
 
         if (madeMove) {
             m_fHaveHint = false;
+            m_fStrategyHints = false;
+            m_HintSquares.clear();
+            RefreshLegalMoveHighlights();
+            UpdateSuggestMoveButton();
             UpdateStatusBar();
-            if (!m_Game.IsGameOver())
+            if (!m_Game.IsGameOver()) {
                 MaybeStartEngine();
-            else
+            } else {
                 MaybeAnnounceGameOver();
+            }
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Search-progress polling timer
+//
+// Single-move searches (the engine's own move and the suggest-move / hint
+// search) and strategy computations all report a time-based countdown. There is
+// no engine event to push such updates to the UI, so a low-frequency timer polls
+// GetSearchCountdownSeconds() and refreshes the status bar while any search runs.
+// ---------------------------------------------------------------------------
+
+void CWinAmy4dWnd::StartSearchProgressTimer() {
+    // SetTimer with an existing id simply resets it, so calling this on each
+    // search start (including self-play continuations) is safe.
+    SetTimer(m_hWnd, IDT_SEARCH_PROGRESS, SEARCH_PROGRESS_MS, nullptr);
+}
+
+void CWinAmy4dWnd::StopSearchProgressTimer() {
+    KillTimer(m_hWnd, IDT_SEARCH_PROGRESS);
 }
 
 // ---------------------------------------------------------------------------
@@ -985,7 +1189,6 @@ void CWinAmy4dWnd::OnSquareClick(POINT pt) {
 
 void CWinAmy4dWnd::UpdateStatusBar() {
     if (!m_hStatus) return;
-
     const char* gameEnd = m_Game.GetGameEndMessage();
     if (gameEnd) {
         // Show the friendly result text (outcome, winner, move count).
@@ -1003,10 +1206,20 @@ void CWinAmy4dWnd::UpdateStatusBar() {
 
     wchar_t buf[128];
     const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
-    if (m_Game.IsComputingStrategy()) {
-        swprintf_s(buf, 128, L"%s  [Thinking...]", turn);
-    } else if (m_Game.IsEngineRunning()) {
-        swprintf_s(buf, 128, L"%s  [Engine thinking...]", turn);
+    if (m_Game.IsComputingStrategy() || m_Game.IsEngineRunning()) {
+        // A search is in progress. Show a countdown of the seconds remaining
+        // until the engine is expected to finish (time budget + a small overhead
+        // buffer). For very short time limits the countdown is suppressed
+        // (GetSearchCountdownSeconds() returns -1) and an indeterminate
+        // "thinking" message is shown instead.
+        const wchar_t* label =
+            m_Game.IsComputingStrategy() ? L"Thinking" : L"Engine thinking";
+        int nSecs = m_Game.GetSearchCountdownSeconds();
+        if (nSecs >= 0) {
+            swprintf_s(buf, 128, L"%s  [%s... %ds]", turn, label, nSecs);
+        } else {
+            swprintf_s(buf, 128, L"%s  [%s...]", turn, label);
+        }
     } else {
         swprintf_s(buf, 128, L"%s", turn);
     }
@@ -1101,13 +1314,18 @@ void CWinAmy4dWnd::OnUndoMove() {
     if (!m_Game.UndoLastHumanMove()) return;
 
     m_fHaveSelection = false;
+    m_fHaveHint = false;
+    m_fStrategyHints = false;
     m_fGameOverAnnounced = false;
+    m_HintSquares.clear();
     m_rgLegalDests.clear();
+    RefreshLegalMoveHighlights();
 
     InvalidateRect(m_hWnd, nullptr, TRUE);
     if (m_hRender3D) InvalidateRect(m_hRender3D, nullptr, FALSE);
     UpdateStatusBar();
     UpdatePauseMenu();
+    UpdateSuggestMoveButton();
 }
 
 void CWinAmy4dWnd::SetPlayerModeAction(PlayerMode mode) {
@@ -1238,18 +1456,30 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
 }
 
 // ---------------------------------------------------------------------------
-// SetDepthFromMenu — set depth via menu checkmark
+// SetTimeFromMenu — set the search time limit via menu checkmark
 // ---------------------------------------------------------------------------
 
-void CWinAmy4dWnd::SetDepthFromMenu(int nDepth) {
-    m_Game.SetDepth(nDepth);
+void CWinAmy4dWnd::SetTimeFromMenu(int nSeconds) {
+    m_Game.SetTimeLimit(nSeconds);
 
-    HMENU hMenu  = GetMenu(m_hWnd);
-    HMENU hOpts  = GetSubMenu(hMenu, 1);
-    HMENU hDepth = GetSubMenu(hOpts, 0);
-    for (int i = 0; i < 9; ++i)
-        CheckMenuItem(hDepth, IDM_DEPTH_1 + i, MF_BYCOMMAND | MF_UNCHECKED);
-    CheckMenuItem(hDepth, IDM_DEPTH_1 + (nDepth - 1), MF_BYCOMMAND | MF_CHECKED);
+    HMENU hMenu = GetMenu(m_hWnd);
+    HMENU hOpts = GetSubMenu(hMenu, 1);
+    HMENU hTime = GetSubMenu(hOpts, 0);
+
+    // The Search Time menu IDs are not contiguous in their second values, so map
+    // each one explicitly rather than using arithmetic on a base ID.
+    static const struct {
+        int nId;
+        int nSeconds;
+    } kTimeItems[] = {
+        {IDM_TIME_5, 5},     {IDM_TIME_15, 15},   {IDM_TIME_30, 30},
+        {IDM_TIME_60, 60},   {IDM_TIME_120, 120}, {IDM_TIME_180, 180},
+    };
+    for (const auto &item : kTimeItems) {
+        CheckMenuItem(hTime, item.nId,
+                      MF_BYCOMMAND |
+                          (item.nSeconds == nSeconds ? MF_CHECKED : MF_UNCHECKED));
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1352,7 +1582,7 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     switch (uMsg) {
     case WM_CREATE:
         CreateControls(hWnd);
-        SetDepthFromMenu(3);
+        SetTimeFromMenu(15);
         UpdateScrollBars(hWnd);
         UpdateGridMenuEnabled();
         return 0;
@@ -1427,10 +1657,9 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             SetViewportOrgEx(hdc, ptOffset.x - m_nScrollX, TOOLBAR_H + ptOffset.y - m_nScrollY, nullptr);
 
             const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
-            const CSCoord* HintFrom = m_fHaveHint ? &m_HintFrom : nullptr;
-            const CSCoord* HintTo   = m_fHaveHint ? &m_HintTo   : nullptr;
+            std::vector<CSCoord> HintSquares = GetHintSquaresForRender();
             m_Renderer.DrawBoard(hdc, m_Game.GetPosition(), sel, m_rgLegalDests,
-                                 HintFrom, HintTo);
+                                 HintSquares);
 
             SetViewportOrgEx(hdc, 0, 0, nullptr);
 
@@ -1507,6 +1736,27 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     case WM_APP_ENGINE_STRATEGY:
         OnEngineStrategy(lParam);
         return 0;
+
+    case WM_APP_ENGINE_PROGRESS:
+        // A strategy search advanced; refresh the status bar so the user sees
+        // the updated "% complete" figure.
+        UpdateStatusBar();
+        return 0;
+
+    case WM_TIMER:
+        if (wParam == IDT_SEARCH_PROGRESS) {
+            // Poll-driven refresh for the status-bar countdown. This drives both
+            // single-move (engine / hint) searches and strategy computations,
+            // whose remaining-time display has no engine event to push updates.
+            // Stop polling once no search is running.
+            if (m_Game.IsEngineRunning()) {
+                UpdateStatusBar();
+            } else {
+                StopSearchProgressTimer();
+            }
+            return 0;
+        }
+        break;
 
     case WM_COMMAND: {
         int id = LOWORD(wParam);
@@ -1605,11 +1855,12 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             }
             break;
 
-        case IDM_DEPTH_1: case IDM_DEPTH_2: case IDM_DEPTH_3:
-        case IDM_DEPTH_4: case IDM_DEPTH_5: case IDM_DEPTH_6:
-        case IDM_DEPTH_7: case IDM_DEPTH_8: case IDM_DEPTH_9:
-            SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
-            break;
+        case IDM_TIME_5:   SetTimeFromMenu(5);   break;
+        case IDM_TIME_15:  SetTimeFromMenu(15);  break;
+        case IDM_TIME_30:  SetTimeFromMenu(30);  break;
+        case IDM_TIME_60:  SetTimeFromMenu(60);  break;
+        case IDM_TIME_120: SetTimeFromMenu(120); break;
+        case IDM_TIME_180: SetTimeFromMenu(180); break;
 
         case IDM_GRID_FULL: case IDM_GRID_SQUARE_Z: case IDM_GRID_SQUARE_Y:
         case IDM_GRID_SQUARE_X: case IDM_GRID_HEX_1: case IDM_GRID_HEX_2:
@@ -1637,6 +1888,14 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
         case IDM_STRATEGY:
             OnStrategy();
+            break;
+
+        case IDM_HIGHLIGHT_WHITE:
+            SetLegalMoveHighlightSide(HighlightSide::White);
+            break;
+
+        case IDM_HIGHLIGHT_BLACK:
+            SetLegalMoveHighlightSide(HighlightSide::Black);
             break;
         }
         return 0;

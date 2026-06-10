@@ -66,13 +66,12 @@ public:
     void Resize(int nWidth, int nHeight);
 
     // Render a single frame of the given position + selection state.
-    // pHintFrom/pHintTo, when non-null and valid, mark an engine move suggestion
-    // and are highlighted in cyan.
+    // HintSquares marks engine move suggestions or other recommendation
+    // highlights in cyan.
     void Render(const CPosition* pPosition,
                 const CSCoord* pSelectedSquare,
                 const std::vector<CSCoord>& LegalDests,
-                const CSCoord* pHintFrom = nullptr,
-                const CSCoord* pHintTo = nullptr);
+                const std::vector<CSCoord>& HintSquares);
 
     // Mouse input. Coordinates are in client-area pixels relative to the
     // top-left of the render area (the host applies any toolbar offset).
@@ -161,6 +160,11 @@ private:
     ComPtr<ID3D11Texture2D>          m_pTargetTex;
     ComPtr<ID3D11ShaderResourceView> m_pTargetSRV;
 
+    // Axis label texture: a 3-cell atlas holding the green "+x", "+y" and "+z"
+    // glyphs, billboarded at the anchor cells so they mark the axis directions.
+    ComPtr<ID3D11Texture2D>          m_pAxisLabelTex;
+    ComPtr<ID3D11ShaderResourceView> m_pAxisLabelSRV;
+
     // ---- Cell geometry (lattice positions used for picking & lines) ----
     struct LineVertex {
         float x, y, z;
@@ -210,6 +214,7 @@ private:
     bool  CreateBackBufferViews();
     bool  CreatePipelines();
     bool  CreateTargetMarkerTexture();
+    bool  CreateAxisLabelTexture();
     void  BuildCellGeometry();
     bool  RebuildLineGeometry();
     void  EnsureSpriteCapacity(UINT uNeededVerts);
@@ -229,10 +234,13 @@ private:
                           const CPosition* pPosition,
                           const CSCoord* pSelectedSquare,
                           const std::vector<CSCoord>& LegalDests,
-                          const CSCoord* pHintFrom,
-                          const CSCoord* pHintTo);
+                          const std::vector<CSCoord>& HintSquares);
     void RenderPieces(const DirectX::XMMATRIX& mViewProj,
                       const CPosition* pPosition);
     void RenderTargetMarkers(const DirectX::XMMATRIX& mViewProj,
                              const std::vector<CSCoord>& LegalDests);
+
+    // Draw the green +x / +y / +z axis labels as billboards at their anchor
+    // cells. Rendered before pieces so a piece on the same cell sits in front.
+    void RenderAxisLabels(const DirectX::XMMATRIX& mViewProj);
 };

@@ -1430,6 +1430,17 @@ bool CPosition::LegalMove(CMove move) {
                                   static_cast<uint16_t>(ttRank))
                               .BitOffset();
             if (move.IsPawnDoublePush()) {
+                /* Double pushes (and therefore en passant) exist only on the
+                 * main board's home rank.  Reject any double-push flagged move
+                 * that does not originate there - e.g. a stale hash/killer move
+                 * referring to a pawn on another level - so legality stays
+                 * level-aware. */
+                const uint16_t nHomeRank = static_cast<uint16_t>(
+                    (p->m_nTurn == White) ? 1 : (levelWidth - 2));
+                if (frCoord.m_nLevel != MAIN_LEVEL ||
+                    frCoord.m_nRank != nHomeRank) {
+                    return false;
+                }
                 if (p->m_rgPiece[tt] != Neutral)
                     return false;
                 ttRank += rankStep;
@@ -1455,89 +1466,24 @@ bool CPosition::LegalMove(CMove move) {
 }
 
 /*
- * Test wether a move will give check
+ * Test wether a move will give check.
+ *
+ * In 4D the precomputed 2D endpoint masks (KnightEPM/KingEPM) and the
+ * pawn/slider geometry used by the old heuristic do not capture cross-level
+ * attacks or the many sliding directions, so it produced both false positives
+ * (e.g. a pawn "attacking" the square straight ahead) and large numbers of
+ * false negatives (missed cross-level and discovered checks).  Determine the
+ * answer exactly by making the move, testing whether the side to move is now
+ * in check, and unmaking it.  This is the same make/test/unmake pattern used
+ * for legality elsewhere and is inherently level-correct.
  */
 
 bool CPosition::IsCheckingMove(CMove move) {
     CPosition *p = this;
-    const CSCoord& frCoord = move.GetFromCoord();
-    const CSCoord& toCoord = move.GetToCoord();
-    const uint16_t fr = frCoord.BitOffset();
-    const uint16_t to = toCoord.BitOffset();
-    int tp = TYPE(p->m_rgPiece[fr]);
-    const uint16_t kp = p->m_rgMask[OPP(p->m_nTurn)][King].FindSetBit();
-    CBitBoard tmp;
-
-    /* Is it a direct check ? */
-
-    if (move.HasPromotion())
-        tp = PromoType(move);
-
-    switch (tp) {
-    case Knight:
-        if (KnightEPM[kp].TstBit(to))
-            return true;
-        break;
-    case Bishop:
-        if (BishopEPM[kp].TstBit(to)) {
-            if (!((p->m_rgMask[White][0] | p->m_rgMask[Black][0]) & InterPath[kp][to]))
-                return true;
-        }
-        break;
-    case Rook:
-        if (RookEPM[kp].TstBit(to)) {
-            if (!((p->m_rgMask[White][0] | p->m_rgMask[Black][0]) & InterPath[kp][to]))
-                return true;
-        }
-        break;
-    case Queen:
-        if (QueenEPM[kp].TstBit(to)) {
-            if (!((p->m_rgMask[White][0] | p->m_rgMask[Black][0]) & InterPath[kp][to]))
-                return true;
-        }
-        break;
-    case Pawn:
-        {
-            const CSCoord kingCoord(kp);
-            int fileDelta = kingCoord.m_nFile - toCoord.m_nFile;
-            int rankDelta = kingCoord.m_nRank - toCoord.m_nRank;
-            if (kingCoord.m_nLevel == toCoord.m_nLevel) {
-                if (p->m_nTurn == White && rankDelta == 1 &&
-                    (fileDelta == -1 || fileDelta == 1))
-                    return true;
-                if (p->m_nTurn == Black && rankDelta == -1 &&
-                    (fileDelta == -1 || fileDelta == 1))
-                    return true;
-            }
-        }
-        break;
-    }
-
-    /*
-     * No direct check...
-     * Let's see if it might be a discovered check...
-     */
-
-    tmp = (p->m_rgMask[p->m_nTurn][Bishop] | p->m_rgMask[p->m_nTurn][Rook] |
-           p->m_rgMask[p->m_nTurn][Queen]) &
-          QueenEPM[kp];
-
-    while (tmp) {
-        int i = (tmp).FindSetBit();
-        CBitBoard tmp2;
-
-        tmp.ClearLowestBit();
-        if (TYPE(p->m_rgPiece[i]) == Bishop && !BishopEPM[kp].TstBit(i))
-            continue;
-        if (TYPE(p->m_rgPiece[i]) == Rook && !RookEPM[kp].TstBit(i))
-            continue;
-
-        tmp2 = (p->m_rgMask[White][0] | p->m_rgMask[Black][0]) & InterPath[kp][i];
-        if ((tmp2).CountBits() == 1 && (tmp2).FindSetBit() == fr)
-            return true;
-    }
-
-    return false;
+    p->DoMove(move);
+    const bool fGivesCheck = p->InCheck(p->m_nTurn);
+    p->UndoMove(move);
+    return fGivesCheck;
 }
 
 /*
@@ -1736,24 +1682,10 @@ char *CPosition::SAN(CMove move, char *buffer) {
 
     const CSCoord& toCoord = move.GetToCoord();
     const CSCoord& frCoord = move.GetFromCoord();
-    const uint16_t to = toCoord.BitOffset();
     const uint16_t fr = frCoord.BitOffset();
     int8_t tp = TYPE(p->m_rgPiece[fr]);
 
-    if (tp == Pawn) {
-        if (move.IsCapture() || move.IsEnPassant()) {
-            *(x++) = 'a' + frCoord.m_nFile;
-            *(x++) = 'x';
-        }
-        *(x++) = 'a' + toCoord.m_nLevel;
-        *(x++) = 'a' + toCoord.m_nFile;
-        *(x++) = '1' + toCoord.m_nRank;
-
-        if (move.HasPromotion()) {
-            *(x++) = '=';
-            *(x++) = PieceName[PromoType(move)];
-        }
-    } else if (move.IsCastle()) {
+    if (move.IsCastle()) {
         *(x++) = 'O';
         *(x++) = '-';
         *(x++) = 'O';
@@ -1762,66 +1694,16 @@ char *CPosition::SAN(CMove move, char *buffer) {
             *(x++) = 'O';
         }
     } else {
-        CBitBoard tmp;
-        bool fAmbiguous = false;
-        bool fRankAmbiguous = false;
-        bool fFileAmbiguous = false;
-        bool fNeedFullFromSquare = false;
-
-        tmp = p->m_rgAtkFr[to] & p->m_rgMask[p->m_nTurn][tp];
-
-        /* check for ambigous move */
-        while (tmp) {
-            CSCoord coord = (tmp).FindSetBitCoord();
-            tmp.ClearLowestBit();
-            if (coord.BitOffset() != fr) {
-                int incheck;
-                CMove tmove(coord, move.GetToCoord(), 0);
-
-                /* seems there is another piece of the same type which
-                 * can move to the same destination square.
-                 * Let's see wether it is pinned...
-                 */
-
-                if (p->m_rgPiece[to])
-                    tmove.SetCapture();
-
-                p->DoMove(tmove);
-                incheck = p->InCheck(OPP(p->m_nTurn));
-                p->UndoMove(tmove);
-
-                if (incheck)
-                    continue;
-
-                fAmbiguous = true;
-                if (coord.m_nFile == frCoord.m_nFile) {
-                    fFileAmbiguous = true;
-                }
-                if (coord.m_nRank == frCoord.m_nRank) {
-                    fRankAmbiguous = true;
-                }
-                if (coord.m_nFile == frCoord.m_nFile &&
-                    coord.m_nRank == frCoord.m_nRank) {
-                    fNeedFullFromSquare = true;
-                }
-            }
-        }
-
+        /* Full explicit notation: always emit the moving piece's letter
+         * (including 'P' for pawns), the complete source square
+         * (level + file + rank) and the complete destination square, so the
+         * mover and both squares are stated unambiguously.  This avoids any
+         * confusion about which piece is being moved in 4D, where several
+         * same-type pieces (or pawns) can share file and rank across levels. */
         *(x++) = PieceName[tp];
-        if (fAmbiguous) {
-            if (fNeedFullFromSquare) {
-                *(x++) = 'a' + frCoord.m_nLevel;
-                *(x++) = 'a' + frCoord.m_nFile;
-                *(x++) = '1' + frCoord.m_nRank;
-            } else if (!fFileAmbiguous) {
-                *(x++) = 'a' + frCoord.m_nFile;
-            } else if (!fRankAmbiguous) {
-                *(x++) = '1' + frCoord.m_nRank;
-            } else {
-                *(x++) = 'a' + frCoord.m_nFile;
-                *(x++) = '1' + frCoord.m_nRank;
-            }
-        }
+        *(x++) = 'a' + frCoord.m_nLevel;
+        *(x++) = 'a' + frCoord.m_nFile;
+        *(x++) = '1' + frCoord.m_nRank;
 
         if (move.IsCapture() || move.IsEnPassant())
             *(x++) = 'x';
@@ -1829,6 +1711,11 @@ char *CPosition::SAN(CMove move, char *buffer) {
         *(x++) = 'a' + toCoord.m_nLevel;
         *(x++) = 'a' + toCoord.m_nFile;
         *(x++) = '1' + toCoord.m_nRank;
+
+        if (move.HasPromotion()) {
+            *(x++) = '=';
+            *(x++) = PieceName[PromoType(move)];
+        }
     }
 
     p->DoMove(move);
@@ -2127,9 +2014,13 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
     const char *prefix     = san;
     const char *prefix_end = end - 3;
 
-    /* Optional piece letter at the start of the prefix */
+    /* Optional piece letter at the start of the prefix.  The generator now
+     * emits an explicit 'P' for pawns, so accept it (and keep accepting the
+     * traditional pawn form with no leading letter for backward
+     * compatibility). */
     if (prefix < prefix_end) {
         switch (*prefix) {
+        case 'P': tp = Pawn;   prefix++; break;
         case 'N': tp = Knight; prefix++; break;
         case 'B': tp = Bishop; prefix++; break;
         case 'R': tp = Rook;   prefix++; break;
@@ -2139,34 +2030,39 @@ static CMove parse_san_with_heap(CPosition *p, const char *san, heap_t heap) {
         }
     }
 
-    /* Remaining prefix: optional source disambiguation and optional capture
-     * indicator 'x'. Accept both classic file/rank disambiguation and full
-     * 4D source square disambiguation (level+file+rank). */
-    char rgPrefix[16];
-    int nPrefixLen = 0;
+    /* Remaining prefix: source-square disambiguation.  Standard 2D
+     * disambiguation is an optional from-file (a-h) and/or from-rank (1-8).
+     * In 4D, when two same-type pieces share file and rank but sit on
+     * different levels, the generator emits the FULL source square
+     * (level letter a-o + file letter a-h + rank digit 1-8); detect that
+     * 3-character form first so SAN round-trips. */
+    char dis[8];
+    int ndis = 0;
     for (const char *q = prefix; q < prefix_end; q++) {
-        if (*q == 'x' || *q == '+' || *q == '#')
+        if (*q == 'x' || *q == '+' || *q == '#') {
             continue;
-        if (nPrefixLen >= static_cast<int>(sizeof(rgPrefix)))
+        }
+        if (ndis >= static_cast<int>(sizeof(dis))) {
             return M_NONE;
-        rgPrefix[nPrefixLen++] = *q;
+        }
+        dis[ndis++] = *q;
     }
 
-    if (nPrefixLen == 3 && rgPrefix[0] >= 'a' && rgPrefix[0] <= 'o' &&
-        rgPrefix[1] >= 'a' && rgPrefix[1] <= 'h' &&
-        rgPrefix[2] >= '1' && rgPrefix[2] <= '8') {
-        fll = rgPrefix[0] - 'a';
-        ffl = rgPrefix[1] - 'a';
-        frk = rgPrefix[2] - '1';
+    if (ndis == 3 && dis[0] >= 'a' && dis[0] <= 'o' && dis[1] >= 'a' &&
+        dis[1] <= 'h' && dis[2] >= '1' && dis[2] <= '8') {
+        fll = dis[0] - 'a';
+        ffl = dis[1] - 'a';
+        frk = dis[2] - '1';
     } else {
-        for (int nPrefixIndex = 0; nPrefixIndex < nPrefixLen; ++nPrefixIndex) {
-            char c = rgPrefix[nPrefixIndex];
-            if (c >= 'a' && c <= 'h')
+        for (int k = 0; k < ndis; k++) {
+            char c = dis[k];
+            if (c >= 'a' && c <= 'h') {
                 ffl = c - 'a';
-            else if (c >= '1' && c <= '8')
+            } else if (c >= '1' && c <= '8') {
                 frk = c - '1';
-            else
+            } else {
                 return M_NONE;
+            }
         }
     }
 
@@ -2301,9 +2197,13 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
     const char *prefix     = san;
     const char *prefix_end = end - 3;
 
-    /* Optional piece letter at the start of the prefix */
+    /* Optional piece letter at the start of the prefix.  The generator now
+     * emits an explicit 'P' for pawns, so accept it (and keep accepting the
+     * traditional pawn form with no leading letter for backward
+     * compatibility). */
     if (prefix < prefix_end) {
         switch (*prefix) {
+        case 'P': tp = Pawn;   prefix++; break;
         case 'N': tp = Knight; prefix++; break;
         case 'B': tp = Bishop; prefix++; break;
         case 'R': tp = Rook;   prefix++; break;
@@ -2313,34 +2213,39 @@ CMove ParseSANList(char *san, Color side, CMove *mvs, int cnt, int *pmap) {
         }
     }
 
-    /* Remaining prefix: optional source disambiguation and optional capture
-     * indicator 'x'. Accept both classic file/rank disambiguation and full
-     * 4D source square disambiguation (level+file+rank). */
-    char rgPrefix[16];
-    int nPrefixLen = 0;
+    /* Remaining prefix: source-square disambiguation.  Standard 2D
+     * disambiguation is an optional from-file (a-h) and/or from-rank (1-8).
+     * In 4D, when two same-type pieces share file and rank but sit on
+     * different levels, the generator emits the FULL source square
+     * (level letter a-o + file letter a-h + rank digit 1-8); detect that
+     * 3-character form first so SAN round-trips. */
+    char dis[8];
+    int ndis = 0;
     for (const char *q = prefix; q < prefix_end; q++) {
-        if (*q == 'x' || *q == '+' || *q == '#')
+        if (*q == 'x' || *q == '+' || *q == '#') {
             continue;
-        if (nPrefixLen >= static_cast<int>(sizeof(rgPrefix)))
+        }
+        if (ndis >= static_cast<int>(sizeof(dis))) {
             return M_NONE;
-        rgPrefix[nPrefixLen++] = *q;
+        }
+        dis[ndis++] = *q;
     }
 
-    if (nPrefixLen == 3 && rgPrefix[0] >= 'a' && rgPrefix[0] <= 'o' &&
-        rgPrefix[1] >= 'a' && rgPrefix[1] <= 'h' &&
-        rgPrefix[2] >= '1' && rgPrefix[2] <= '8') {
-        fll = rgPrefix[0] - 'a';
-        ffl = rgPrefix[1] - 'a';
-        frk = rgPrefix[2] - '1';
+    if (ndis == 3 && dis[0] >= 'a' && dis[0] <= 'o' && dis[1] >= 'a' &&
+        dis[1] <= 'h' && dis[2] >= '1' && dis[2] <= '8') {
+        fll = dis[0] - 'a';
+        ffl = dis[1] - 'a';
+        frk = dis[2] - '1';
     } else {
-        for (int nPrefixIndex = 0; nPrefixIndex < nPrefixLen; ++nPrefixIndex) {
-            char c = rgPrefix[nPrefixIndex];
-            if (c >= 'a' && c <= 'h')
+        for (int k = 0; k < ndis; k++) {
+            char c = dis[k];
+            if (c >= 'a' && c <= 'h') {
                 ffl = c - 'a';
-            else if (c >= '1' && c <= '8')
+            } else if (c >= '1' && c <= '8') {
                 frk = c - '1';
-            else
+            } else {
                 return M_NONE;
+            }
         }
     }
 
@@ -3187,7 +3092,7 @@ CPosition *CPosition::CreateFromEPD(const char *epd) {
 
 CPosition *CPosition::Initial() {
     CPosition *p = CPosition::CreateFromEPD(
-        "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|ppppppp/7/7/7/7/7/PPPPPPP|rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|rnbqbnr/ppppppp/7/7/7/PPPPPPP/RNBQBNR|pppppp/6/6/6/6/PPPPPP| w KQkq -");
+        "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|ppppppp/7/7/7/7/7/PPPPPPP|rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|rnbqnbr/ppppppp/7/7/7/PPPPPPP/RNBQNBR|pppppp/6/6/6/6/PPPPPP| w KQkq -");
 
     /* we are 'in book' in the InitalPosition */
     p->m_rgwOutOfBookCnt[White] = p->m_rgwOutOfBookCnt[Black] = 0;

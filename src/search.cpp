@@ -138,6 +138,14 @@ bool NeedTime = false;
 int PrintOK;
 static int MaxSearchDepth = MAX_TREE_SIZE - 1;
 int DoneAtRoot;
+
+/*
+ * Root moves to exclude from the next search(es). See SetExcludedRootMoves in
+ * search.h. Default-empty, so a normal search is unaffected.
+ */
+#define MAX_EXCLUDED_ROOT_MOVES 8
+static CMove rgExcludedRootMoves[MAX_EXCLUDED_ROOT_MOVES];
+static uint16_t cExcludedRootMoves = 0;
 static int EGTBDepth = 0;
 
 static int NodesPerCheck;
@@ -1008,7 +1016,43 @@ void *IterateInt(void *x) {
 
     CMove *mvs = sd->m_hHeap->data + sd->m_hHeap->current_section->start;
 
+    /*
+     * Drop any caller-excluded root moves (used to emulate MultiPV by repeated
+     * searches that each exclude the previously found best move). Compacting the
+     * move array in place and shrinking m_wRootMoves makes the rest of the
+     * search ignore them entirely. The default (empty) set is a no-op.
+     */
+    if (cExcludedRootMoves > 0) {
+        uint16_t w = 0;
+        for (uint16_t r = 0; r < sd->m_wRootMoves; r++) {
+            bool fExcluded = false;
+            for (uint16_t e = 0; e < cExcludedRootMoves; e++) {
+                if (mvs[r] == rgExcludedRootMoves[e]) {
+                    fExcluded = true;
+                    break;
+                }
+            }
+            if (!fExcluded) {
+                mvs[w++] = mvs[r];
+            }
+        }
+        sd->m_wRootMoves = w;
+    }
+
     sd->m_nBestScore = p->GetMaterial(p->GetTurn()) - p->GetMaterial(OPP(p->GetTurn()));
+
+    /*
+     * If every legal move was excluded there is nothing to search. Bail out with
+     * no best move rather than dereferencing mvs[0] below.
+     */
+    if (sd->m_wRootMoves == 0) {
+        sd->m_BestMove = M_NONE;
+        if (!sd->m_fMaster) {
+            CPosition::Free(sd->m_pPosition);
+            delete sd;
+        }
+        return NULL;
+    }
 
     if (!mvs[0].IsTactical())
         sd->PutKiller(mvs[0]);
@@ -1420,3 +1464,14 @@ void setMaxSearchDepth(int max_search_depth) {
     }
 }
 
+void SetExcludedRootMoves(const CMove *pMoves, uint16_t cMoves) {
+    if (cMoves > MAX_EXCLUDED_ROOT_MOVES) {
+        cMoves = MAX_EXCLUDED_ROOT_MOVES;
+    }
+    for (uint16_t i = 0; i < cMoves; i++) {
+        rgExcludedRootMoves[i] = pMoves[i];
+    }
+    cExcludedRootMoves = cMoves;
+}
+
+void ClearExcludedRootMoves(void) { cExcludedRootMoves = 0; }

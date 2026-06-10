@@ -239,7 +239,7 @@ levels `a`–`f` and `k`–`o` starting empty:
 |:-----:|:-----:|--------------------------------------------------|---------------------------------------------|
 |  `g`  | 7 × 7 | (none — pawns only)                              | One row of **7 pawns** for each side       |
 | **`h`** | **8 × 8** | **R N B Q K B N R**                            | **Full standard chess starting position**   |
-|  `i`  | 7 × 7 | **R N B Q B N R** (no king)                      | Pieces plus one row of 7 pawns each side    |
+|  `i`  | 7 × 7 | **R N B Q N B R** (no king)                      | Pieces plus one row of 7 pawns each side    |
 |  `j`  | 6 × 6 | (none — pawns only)                              | One row of **6 pawns** for each side       |
 
 A few important things to notice:

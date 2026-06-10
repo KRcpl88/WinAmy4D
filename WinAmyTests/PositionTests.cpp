@@ -24,16 +24,14 @@ TEST_CLASS(PositionTests) {
     // --- IsCheckingMove tests ---
 
     TEST_METHOD(IsCheckingMoveDirectKnightCheck) {
-        // White knight on hd4, black king on hf3. Nd4-he2 checks king on hf3 (knight on he2 attacks hf4,hd4,hc3,hc1,hg1,hg3 ? no)
-        // Knight on hd4 attacks: hb3,hb5,hc2,hc6,he2,he6,hf3,hf5. King on hf3: Nd4-he2 attacks hd4,hf4,hc1,hc3,hg1,hg3 ? no.
-        // Let's use: knight hd4, king on hc6. Knight hd4-hb5 attacks hc7,ha7,hd6,ha3,hc3,hd4 ? no.
-        // Simplest: knight on hd4, king on hf5. hd4 attacks hf5? Yes! But knight is MOVING TO a square.
-        // Knight on hb1, king on he4. Nb1-hc3 attacks he4? Knight on hc3 attacks: ha2,ha4,hb1,hb5,hd1,hd5,he2,he4. Yes!
+        // Black king on he4, white knight on hb1.  After Nb1-hc3 the knight on
+        // hc3 attacks hc3's knight targets, which include he4, so the move
+        // gives check.
         char epd[] = "8/8/8/8/4k3/8/8/1N2K3 w - -";
         PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
 
         CMove move = MakeMainBoardMove(hb1, hc3, 0);
-        Assert::IsFalse(position.get()->IsCheckingMove(move));
+        Assert::IsTrue(position.get()->IsCheckingMove(move));
     }
 
     TEST_METHOD(IsCheckingMoveDirectKnightNoCheck) {
@@ -287,24 +285,24 @@ TEST_CLASS(PositionTests) {
         PositionGuard position(CPosition::Initial());
 
         int count = position.get()->LegalMoves(NULL);
-        Assert::AreEqual(56, count);
+        Assert::AreEqual(57, count);
     }
 
     TEST_METHOD(LegalMovesInitialPositionAllPieceMovesPresent) {
         // Verify every expected legal move from the 4D opening position is present
-        // in the output of LegalMoves.  The 56 moves break down as:
+        // in the output of LegalMoves.  The 57 moves break down as:
         //   Main board (h, 8x8)  : 8 pawns × 2 (push+double) + 2 knights × 3 = 22
         //   Level g (6, 7x7)     : 7 pawns × 1 (single push, not at homeRank) = 7
         //   Level i (8, 7x7)     : 7 pawns × 1 (single push; double push is
-        //                          only legal on level h) + 2 knights × 7
-        //                          (incl. cross-level) = 21
+        //                          only legal on level h) + knights (7 + 8
+        //                          moves incl. cross-level) = 22
         //   Level j (9, 6x6)     : 6 pawns × 1 (single push, not at homeRank) = 6
         PositionGuard position(CPosition::Initial());
 
         // Collect all fully-legal moves into a heap, then index by (from, to) offsets.
         heap_t heap = allocate_heap();
         const int count = position.get()->LegalMoves(heap);
-        Assert::AreEqual(56, count);
+        Assert::AreEqual(57, count);
 
         std::set<std::pair<uint16_t, uint16_t>> legalSet;
         for (unsigned int i = heap->current_section->start;
@@ -347,7 +345,7 @@ TEST_CLASS(PositionTests) {
             AssertPresent(CSCoord(6, file, 0), CSCoord(6, file, 1));
         }
 
-        // --- Level i (index 8, 7x7): 21 moves ---
+        // --- Level i (index 8, 7x7): 22 moves ---
         // 7 white pawns on rank 1 (ia2–ig2).
         // Rank 1 == homeRank, but the two-square double push is only allowed on
         // level h, so each of these pawns has a single push only.
@@ -365,15 +363,15 @@ TEST_CLASS(PositionTests) {
         AssertPresent(ib1, CSCoord(MAIN_LEVEL, 0, 2)); // ha3 (main board)
         AssertPresent(ib1, CSCoord(MAIN_LEVEL, 3, 2)); // hd3 (main board)
 
-        // Knight if1 (file=5, rank=0): 2 same-level + 5 cross-level jumps.
-        CSCoord if1(8, 5, 0);
-        AssertPresent(if1, CSCoord(8, 4, 2));          // ie3
-        AssertPresent(if1, CSCoord(8, 6, 2));          // ig3
-        AssertPresent(if1, CSCoord(9, 3, 1));          // jd2 (level j)
-        AssertPresent(if1, CSCoord(5, 4, 0));          // fe1 (level f)
-        AssertPresent(if1, CSCoord(5, 5, 0));          // ff1 (level f)
-        AssertPresent(if1, CSCoord(MAIN_LEVEL, 4, 2)); // he3 (main board)
-        AssertPresent(if1, CSCoord(MAIN_LEVEL, 7, 2)); // hh3 (main board)
+        // Knight ie1 (file=4, rank=0): 2 same-level + 5 cross-level jumps.
+        CSCoord ie1(8, 4, 0);
+        AssertPresent(ie1, CSCoord(8, 3, 2));          // id3
+        AssertPresent(ie1, CSCoord(8, 5, 2));          // if3
+        AssertPresent(ie1, CSCoord(9, 2, 1));          // jc2 (level j)
+        AssertPresent(ie1, CSCoord(5, 3, 0));          // fd1 (level f)
+        AssertPresent(ie1, CSCoord(5, 4, 0));          // fe1 (level f)
+        AssertPresent(ie1, CSCoord(MAIN_LEVEL, 3, 2)); // hd3 (main board)
+        AssertPresent(ie1, CSCoord(MAIN_LEVEL, 6, 2)); // hg3 (main board)
 
         // --- Level j (index 9, 6x6): 6 moves ---
         // 6 white pawns on rank 0 (ja1–jf1).

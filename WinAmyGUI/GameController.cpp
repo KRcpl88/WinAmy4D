@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cctype>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -16,6 +17,15 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+namespace {
+// Number of ranked moves reported by a strategy computation.
+constexpr int kStrategyRanks = 3;
+} // namespace
 
 // ---------------------------------------------------------------------------
 // Static engine initialisation
@@ -404,11 +414,20 @@ void GameController::SetDepth(int depth) {
     // Search time is derived from the search depth: 10 seconds per ply, so
     // depth 9 yields a 90 second search.
     m_nTimeLimit = depth * 10;
+    // Any cached strategy was computed at the previous depth and is now stale;
+    // drop it so the next "recommend strategy" re-searches at the new depth.
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    InvalidateStrategy();
 }
 
 void GameController::SetTimeLimit(int seconds) {
     if (seconds < 0) seconds = 0;
     m_nTimeLimit = seconds;
+    // Any cached strategy was computed under the previous time limit and is now
+    // stale; drop it so the next "recommend strategy" re-searches at the new
+    // limit.
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    InvalidateStrategy();
 }
 
 void GameController::ApplySearchLimits() {
@@ -427,15 +446,17 @@ void GameController::ApplySearchLimits() {
 }
 
 void GameController::ApplyStrategySearchLimits() {
-    // Strategy evaluation runs a separate search for *every* candidate move (and
-    // a follow-up search for the top few). If each of those used the fixed
-    // time-per-move budget, the total strategy time would be (number of moves) ×
-    // the limit — minutes, not seconds. Instead, bound every per-candidate
-    // search by the configured search depth so each one is fast and predictable,
-    // and cap the *total* strategy time with a wall-clock budget enforced in the
-    // candidate loop (see ComputeStrategyText).
-    SetDefaultTimeControl();
-    setMaxSearchDepth(m_nDepth);
+    // The strategy runs up to three full-time searches (one per ranked move),
+    // each excluding the previously found best move(s). Use the same fixed
+    // per-move time budget as a single search; the cumulative cost is bounded by
+    // (number of ranked moves) × the per-move limit.
+    if (m_nTimeLimit > 0) {
+        SetFixedTimePerMove(m_nTimeLimit);
+        setMaxSearchDepth(MAX_TREE_SIZE - 2);
+    } else {
+        SetDefaultTimeControl();
+        setMaxSearchDepth(m_nDepth);
+    }
 }
 
 void GameController::MakeMove(CMove move) {
@@ -552,17 +573,34 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     m_fStopRequested.store(false);
     AbortSearch = false;
 
+    // Capture the search start time and per-move time budget so the UI can
+    // report progress for this single-move search (engine move or hint). A
+    // timed search runs until the budget elapses, so elapsed/budget is a smooth,
+    // monotonic progress measure. A pure depth-limited search has no budget
+    // (0), and GetEngineSearchProgressPercent() then reports "indeterminate".
+    {
+        using namespace std::chrono;
+        const long long nNowMs =
+            duration_cast<milliseconds>(steady_clock::now().time_since_epoch())
+                .count();
+        m_nEngineSearchStartMs.store(nNowMs);
+        m_nEngineSearchBudgetMs.store(m_nTimeLimit > 0
+                                          ? static_cast<long long>(m_nTimeLimit) * 1000
+                                          : 0);
+    }
+
     if (m_EngineThread.joinable())
         m_EngineThread.join();
 
-    // Scenario 2: log the suggest-move (hint) search BEFORE it is initiated. The
-    // matching AFTER log (with the suggested move) is emitted in the search
-    // thread once Iterate() returns.
+    // Scenario 2: log the engine search BEFORE it is initiated. Both the
+    // engine's own move search and the suggest-move (hint) search run through
+    // here; label them distinctly. The matching AFTER log (with the chosen move
+    // and its score) is emitted in the search thread once Iterate() returns.
     const bool fHint = (uCompletionMsg == WM_APP_ENGINE_HINT);
-    if (fHint)
-        Print(0, "Suggest move: starting search (depth %d)...\n", m_nDepth);
+    const char *pszLabel = fHint ? "Suggest move" : "Engine move";
+    Print(0, "%s: starting search (time limit %ds)...\n", pszLabel, m_nTimeLimit);
 
-    m_EngineThread = std::thread([this, hwndTarget, uCompletionMsg, fHint]() {
+    m_EngineThread = std::thread([this, hwndTarget, uCompletionMsg, pszLabel]() {
         CMove bestMove = M_NONE;
 
         // CPosition::Iterate runs the search on the object it is called on,
@@ -585,20 +623,21 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
             int score = 0, altScore = 0;
             bestMove = pSearchPosition->Iterate(&score, M_NONE, &altScore);
 
-            // Scenario 2: log the suggest-move search AFTER it completes,
-            // including the suggested move. SAN is computed on the (restored)
-            // root position the search ran on, before it is freed.
-            if (fHint) {
-                char szSan[32];
-                const char *pszSan = "(none)";
-                if (bestMove != M_NONE)
-                    pszSan = pSearchPosition->SAN(bestMove, szSan);
-                Print(0, "Suggest move: search complete, suggested move: %s\n", pszSan);
-            }
+            // Scenario 2: log the search AFTER it completes, including the chosen
+            // move and its score. SAN is computed on the (restored) root position
+            // the search ran on, before it is freed.
+            char szSan[32];
+            const char *pszSan = "(none)";
+            if (bestMove != M_NONE)
+                pszSan = pSearchPosition->SAN(bestMove, szSan);
+            char szScore[16];
+            FormatScore(score, szScore, sizeof(szScore));
+            Print(0, "%s: search complete, best move %s (score %s)\n",
+                  pszLabel, pszSan, szScore);
 
             CPosition::Free(pSearchPosition);
-        } else if (fHint) {
-            Print(0, "Suggest move: search complete, suggested move: (none)\n");
+        } else {
+            Print(0, "%s: search complete, best move (none)\n", pszLabel);
         }
 
         m_BestMove = bestMove;
@@ -612,6 +651,58 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
 void GameController::PauseEngine() {
     m_fStopRequested.store(true);
     AbortSearch = true;
+}
+
+int GameController::GetEngineSearchProgressPercent() const {
+    const long long nBudgetMs = m_nEngineSearchBudgetMs.load();
+    if (nBudgetMs <= 0) {
+        // Pure depth-limited search: no time budget to measure against.
+        return -1;
+    }
+
+    using namespace std::chrono;
+    const long long nNowMs =
+        duration_cast<milliseconds>(steady_clock::now().time_since_epoch())
+            .count();
+    long long nElapsedMs = nNowMs - m_nEngineSearchStartMs.load();
+    if (nElapsedMs < 0) {
+        nElapsedMs = 0;
+    }
+    int nPercent = static_cast<int>((nElapsedMs * 100) / nBudgetMs);
+    if (nPercent > 100) {
+        nPercent = 100;
+    }
+    return nPercent;
+}
+
+int GameController::GetSearchCountdownSeconds() const {
+    // No countdown for very short limits (5s or less) — the number would barely
+    // be readable and the search ends almost immediately.
+    if (m_nTimeLimit <= 5) {
+        return -1;
+    }
+    const long long nBudgetMs = m_nEngineSearchBudgetMs.load();
+    if (nBudgetMs <= 0) {
+        // Pure depth-limited search: no deadline to count down to.
+        return -1;
+    }
+
+    using namespace std::chrono;
+    const long long nNowMs =
+        duration_cast<milliseconds>(steady_clock::now().time_since_epoch())
+            .count();
+    // The countdown tracks the search clock directly (no padding): the engine's
+    // timer is reliable enough that it finishes very close to the limit. If the
+    // search finishes first the host clears the countdown; if the countdown
+    // reaches zero first it simply stays at 0 until the search returns (a couple
+    // of seconds at most).
+    const long long nDeadlineMs = m_nEngineSearchStartMs.load() + nBudgetMs;
+    long long nRemainingMs = nDeadlineMs - nNowMs;
+    if (nRemainingMs < 0) {
+        nRemainingMs = 0;
+    }
+    // Round up so the final partial second still shows "1" rather than "0".
+    return static_cast<int>((nRemainingMs + 999) / 1000);
 }
 
 // ---------------------------------------------------------------------------
@@ -629,6 +720,28 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
     m_fStopRequested.store(false);
     AbortSearch = false;
 
+    // Reset the progress counters so the status bar starts at 0%. The total is
+    // established once ComputeStrategyText() has enumerated the candidate pool.
+    m_nProgressDone.store(0);
+    m_nProgressTotal.store(0);
+
+    // Capture the search start time and a cumulative time budget so the UI can
+    // run a single countdown across the whole strategy computation. The strategy
+    // performs up to kStrategyRanks full-time searches, so the upper bound on the
+    // wall-clock cost is kStrategyRanks × the per-move limit. If the searches
+    // finish early the countdown is simply cleared.
+    {
+        using namespace std::chrono;
+        const long long nNowMs =
+            duration_cast<milliseconds>(steady_clock::now().time_since_epoch())
+                .count();
+        m_nEngineSearchStartMs.store(nNowMs);
+        m_nEngineSearchBudgetMs.store(
+            m_nTimeLimit > 0
+                ? static_cast<long long>(m_nTimeLimit) * 1000 * kStrategyRanks
+                : 0);
+    }
+
     if (m_EngineThread.joinable()) {
         m_EngineThread.join();
     }
@@ -637,10 +750,11 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
     // AFTER log (with the strategic results) is emitted in the search thread
     // once ComputeStrategyText() returns, so the log shows what the engine did
     // to determine the optimal strategy.
-    Print(0, "Strategy: starting search (depth %d)...\n", m_nDepth);
+    Print(0, "Strategy: starting search (time limit %ds per move)...\n",
+          m_nTimeLimit);
 
     m_EngineThread = std::thread([this, hwndTarget]() {
-        std::string strStrategy = ComputeStrategyText();
+        std::string strStrategy = ComputeStrategyText(hwndTarget);
 
         // Scenario 3: log the strategy search AFTER it completes, including the
         // strategic results produced by the search.
@@ -660,10 +774,12 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
 
 void GameController::InvalidateStrategy() {
     m_strStrategy.clear();
+    m_StrategyBestMove = M_NONE;
+    m_StrategyMoves.clear();
     m_fStrategyValid.store(false);
 }
 
-std::string GameController::ComputeStrategyText() {
+std::string GameController::ComputeStrategyText(HWND hwndTarget) {
     // Search a clone so the live game position is never mutated (CPosition's
     // search entry points mutate the object they run on).
     CPosition *p = nullptr;
@@ -677,90 +793,193 @@ std::string GameController::ComputeStrategyText() {
         return std::string();
     }
 
-    ApplyStrategySearchLimits();
+    // The engine is single-PV: each search yields one best move with a reliable
+    // score, while the runner-up root moves are searched with narrow windows so
+    // their exact scores are not preserved. To report the top kStrategyRanks
+    // moves we therefore emulate MultiPV by running that many full-time searches,
+    // each excluding the best move(s) already found at the root. Every search
+    // uses the full per-move time budget, so the ranking reflects deep evaluation
+    // rather than whatever the move generator happens to emit first.
+    if (m_nTimeLimit > 0) {
+        SetFixedTimePerMove(m_nTimeLimit);
+        setMaxSearchDepth(MAX_TREE_SIZE - 2);
+    } else {
+        SetDefaultTimeControl();
+        setMaxSearchDepth(m_nDepth);
+    }
 
-    // Total wall-clock budget for the whole strategy computation. A positive
-    // per-move time limit is treated here as a budget for the *entire* strategy
-    // search (not per candidate), so enumerating many moves cannot blow the time
-    // out to minutes. When no limit is set (engine default), the search runs to
-    // completion bounded only by the configured depth.
-    const bool fBudgeted = (m_nTimeLimit > 0);
-    const std::chrono::steady_clock::time_point tStart =
-        std::chrono::steady_clock::now();
-    const std::chrono::seconds Budget(m_nTimeLimit);
-
-    // Enumerate the current player's legal moves.
+    // Enumerate the current player's legal moves only to size the ranking and
+    // detect the no-moves case; the searches themselves operate on the position.
     heap_t heap = allocate_heap();
     int cnt = p->LegalMoves(heap);
-    unsigned int nStart = heap->current_section->start;
-    unsigned int nEnd = heap->current_section->end;
+    free_heap(heap);
 
     if (cnt <= 0) {
-        free_heap(heap);
         CPosition::Free(p);
         return std::string("No legal moves are available for the current player.");
     }
 
-    // A candidate move together with the engine's evaluation of it (from the
-    // current player's perspective) and the opponent's best reply.
+    // A ranked move together with the engine's evaluation of it (from the current
+    // player's perspective), the opponent's best reply, our recommended response
+    // to that reply, and whether the move ends the game.
     struct SCandidate {
         CMove       Move;
         int         nValue;
         std::string strSan;
         CMove       Reply;
+        CMove       Response;
+        std::string strReplySan;
+        std::string strResponseSan;
+        bool        bGameOver;
     };
+
+    // One full-time search per reported rank (bounded by the number of legal
+    // moves). The status-bar countdown spans all of them (see
+    // StartStrategySearch). Progress is reported as completed searches / nRanks.
+    const int nRanks = (cnt < kStrategyRanks) ? cnt : kStrategyRanks;
+    m_nProgressDone.store(0);
+    m_nProgressTotal.store(nRanks);
+
+    // Advance the progress counter by one completed search and notify the UI so
+    // it can refresh the status bar. Posting (not sending) keeps the engine
+    // thread decoupled from the window thread.
+    auto BumpProgress = [this, hwndTarget]() {
+        m_nProgressDone.fetch_add(1);
+        if (hwndTarget) {
+            PostMessage(hwndTarget, WM_APP_ENGINE_PROGRESS, 0, 0);
+        }
+    };
+
     std::vector<SCandidate> rgCandidates;
-    rgCandidates.reserve(static_cast<size_t>(nEnd - nStart));
+    rgCandidates.reserve(static_cast<size_t>(nRanks));
 
-    for (unsigned int i = nStart; i < nEnd; ++i) {
-        CMove themove = heap->data[i];
+    // Root moves found so far, excluded from subsequent searches so each search
+    // surfaces the next-best move.
+    std::vector<CMove> rgExcluded;
+    rgExcluded.reserve(static_cast<size_t>(nRanks));
 
-        // SAN is computed from the position *before* the move is made.
-        char szSan[32];
-        std::string strSan = p->SAN(themove, szSan);
-
-        p->DoMove(themove);
-        // After the move it is the opponent's turn; Iterate returns the
-        // opponent's best reply and a score from the opponent's perspective.
-        // The value of our move is therefore the negation of that score.
-        int nReplyScore = 0;
-        CMove Reply = p->Iterate(&nReplyScore, M_NONE, nullptr);
-        p->UndoMove(themove);
-
-        SCandidate Cand;
-        Cand.Move = themove;
-        Cand.nValue = -nReplyScore;
-        Cand.strSan = strSan;
-        Cand.Reply = Reply;
-        rgCandidates.push_back(Cand);
-
-        // Stop only on a genuine user-initiated cancellation. The engine's
-        // global AbortSearch flag is also raised when an individual Iterate()
-        // call reaches its time limit (normal completion of a timed search), so
-        // checking it here would abort the candidate loop after the first move
-        // at higher search depths — yielding a single, unranked suggestion.
+    for (int r = 0; r < nRanks; ++r) {
+        // Honour a user cancellation before starting another full-time search.
         if (m_fStopRequested.load()) {
             break;
         }
 
-        // Enforce the overall strategy time budget. Each candidate search is
-        // depth-bounded (and therefore fast), but with many legal moves the
-        // cumulative time can still grow; stop enumerating further candidates
-        // once the budget is exhausted and rank whatever was evaluated so far.
-        if (fBudgeted &&
-            (std::chrono::steady_clock::now() - tStart) >= Budget) {
+        // Install the exclusion list for this rank. The exclusion API is a
+        // process-global, non-reentrant facility; this is safe because the GUI
+        // serialises engine searches (m_fEngineRunning), so only this strategy
+        // computation manipulates it at a time.
+        if (!rgExcluded.empty()) {
+            SetExcludedRootMoves(rgExcluded.data(),
+                                 static_cast<uint16_t>(rgExcluded.size()));
+        } else {
+            ClearExcludedRootMoves();
+        }
+
+        Print(0, "Strategy: searching for move #%d of %d (time limit %ds)...\n",
+              r + 1, nRanks, m_nTimeLimit);
+
+        // Search the cloned root directly: Iterate returns the best move and a
+        // score from the side-to-move (our) perspective, so no negation is
+        // needed. Iterate restores the position before returning.
+        int nScore = 0;
+        CMove best = p->Iterate(&nScore, M_NONE, nullptr);
+
+        // Always clear the exclusions immediately so no later search (here or in
+        // any future caller) inherits them.
+        ClearExcludedRootMoves();
+
+        BumpProgress();
+
+        if (best == M_NONE) {
+            // No further distinct move could be found (the remaining pool was
+            // exhausted, or the search was cut short before yielding a move).
             break;
         }
-    }
-    free_heap(heap);
 
-    // Order best-first (highest value for the current player).
+        // SAN is computed from the position *before* the move is made.
+        char szSan[32];
+        std::string strSan = p->SAN(best, szSan);
+
+        // Derive the opponent's most likely reply and our recommended response
+        // from the transposition table left behind by the search just run, so we
+        // spend no extra search time on them. A TT miss simply yields "(none)".
+        std::string strReplySan;
+        std::string strResponseSan;
+        CMove Reply = M_NONE;
+        CMove Response = M_NONE;
+        bool bGameOver = false;
+
+        p->DoMove(best);
+        bGameOver = (p->GameEnd() != nullptr);
+        if (!bGameOver) {
+            Reply = p->ProbeBestMove();
+            if (Reply != M_NONE) {
+                char szReplySan[32];
+                strReplySan = p->SAN(Reply, szReplySan);
+
+                p->DoMove(Reply);
+                Response = p->ProbeBestMove();
+                if (Response != M_NONE) {
+                    char szResponseSan[32];
+                    strResponseSan = p->SAN(Response, szResponseSan);
+                }
+                p->UndoMove(Reply);
+            }
+        }
+        p->UndoMove(best);
+
+        SCandidate Cand;
+        Cand.Move = best;
+        Cand.nValue = nScore;
+        Cand.strSan = strSan;
+        Cand.Reply = Reply;
+        Cand.Response = Response;
+        Cand.strReplySan = strReplySan;
+        Cand.strResponseSan = strResponseSan;
+        Cand.bGameOver = bGameOver;
+        rgCandidates.push_back(Cand);
+
+        // Exclude this move from the remaining searches.
+        rgExcluded.push_back(best);
+
+        char szValue[16];
+        FormatScore(nScore, szValue, sizeof(szValue));
+        Print(0,
+              "Strategy: move #%d %s value %s, opponent best reply %s, "
+              "response %s\n",
+              r + 1, strSan.c_str(), szValue,
+              bGameOver ? "(none)"
+                        : (strReplySan.empty() ? "(none)" : strReplySan.c_str()),
+              bGameOver ? "(game over)"
+                        : (strResponseSan.empty() ? "(none)"
+                                                  : strResponseSan.c_str()));
+    }
+
+    // Time-limited searches surface moves best-first by construction, but the
+    // clock is not guaranteed to preserve a strict ordering; sort the (<=3)
+    // results by our-perspective score, highest first, as a defensive measure.
     std::stable_sort(rgCandidates.begin(), rgCandidates.end(),
                      [](const SCandidate &a, const SCandidate &b) {
                          return a.nValue > b.nValue;
                      });
 
-    const size_t nTop = (std::min)(static_cast<size_t>(3), rgCandidates.size());
+    const size_t nTop = rgCandidates.size();
+
+    // Record Suggested Move #1 (the top-ranked move) so the suggest-move feature
+    // can reuse it without launching a fresh search. Published together with
+    // m_strStrategy / m_fStrategyValid by the strategy thread.
+    m_StrategyBestMove = (nTop > 0) ? rgCandidates[0].Move : CMove(M_NONE);
+    m_StrategyMoves.clear();
+    m_StrategyMoves.reserve(nTop);
+    for (size_t nIndex = 0; nIndex < nTop; ++nIndex) {
+        m_StrategyMoves.push_back(rgCandidates[nIndex].Move);
+    }
+
+    if (nTop == 0) {
+        CPosition::Free(p);
+        return std::string(
+            "No strategy could be determined for the current player.");
+    }
 
     std::ostringstream oss;
     for (size_t i = 0; i < nTop; ++i) {
@@ -768,35 +987,22 @@ std::string GameController::ComputeStrategyText() {
 
         oss << "Suggested Move #" << (i + 1) << ": " << Cand.strSan << "\n";
 
-        if (Cand.Reply == M_NONE) {
+        if (Cand.bGameOver) {
             // The suggested move ends the game (checkmate / stalemate): there is
             // no opponent reply to consider.
             oss << "Opponent's likely counter move: (none \xe2\x80\x94 no reply)\n";
             oss << "Respond with: (game over)\n";
         } else {
-            // Counter SAN is computed from the position after our move.
-            p->DoMove(Cand.Move);
-
-            char szCounterSan[32];
-            std::string strCounterSan = p->SAN(Cand.Reply, szCounterSan);
-
-            // Find the recommended response after the opponent's reply.
-            p->DoMove(Cand.Reply);
-            int nResponseScore = 0;
-            CMove Response = p->Iterate(&nResponseScore, M_NONE, nullptr);
-            std::string strResponseSan;
-            if (Response != M_NONE) {
-                char szResponseSan[32];
-                strResponseSan = p->SAN(Response, szResponseSan);
-            }
-            p->UndoMove(Cand.Reply);
-            p->UndoMove(Cand.Move);
-
-            oss << "Opponent's likely counter move: " << strCounterSan << "\n";
-            if (strResponseSan.empty()) {
-                oss << "Respond with: (game over)\n";
+            if (Cand.strReplySan.empty()) {
+                oss << "Opponent's likely counter move: (none)\n";
             } else {
-                oss << "Respond with: " << strResponseSan << "\n";
+                oss << "Opponent's likely counter move: " << Cand.strReplySan
+                    << "\n";
+            }
+            if (Cand.strResponseSan.empty()) {
+                oss << "Respond with: (none)\n";
+            } else {
+                oss << "Respond with: " << Cand.strResponseSan << "\n";
             }
         }
 
