@@ -312,9 +312,11 @@ stalemate, insufficient material, agreed draw, and so on.
   cross between levels — and those are the threats that catch beginners
   out.
 - **Try each Hex grid.** The four Hex orientations in the 3D view's
-  grid menu each show you cells aligned along a different one of the
-  underlying 4D diagonals. Trying all four is the quickest way to
-  develop an intuition for cross-level lines.
+  grid menu each show you cells aligned along a different diagonal.
+  It's the same board, just viewed from a corner that makse the board locations
+  appear hexagonal, because of course the real shape is a rhombic dodecahedron.
+  Trying all four is the good way to develop an intuition for the board's unique
+  geometry.  Also rooks and Queens can move straight along any row as hexagons too!
 - **Watch above and below your king.** A piece on level `g` or level
   `i` (or further) can deliver check to your king on level `h`. If you
   only watch level `h`, you will miss those threats.
