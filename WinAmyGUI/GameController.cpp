@@ -468,8 +468,22 @@ void GameController::MakeMove(CMove move) {
         // second time, the move's from-square is already empty, so DoMove would
         // set an occupancy bit on a square whose piece is Neutral, corrupting the
         // board and making AtkSet/RecalcAttacks panic. Only apply legal moves.
-        if (!m_pPosition->LegalMove(move))
+        if (!m_pPosition->LegalMove(move)) {
+            // Log the rejection so the discarded move is visible in the log.
+            // SAN() is unsafe here because it internally calls DoMove/UndoMove,
+            // which would corrupt the board for an illegal/stale move; instead
+            // format the raw source and destination coordinates directly.
+            const CSCoord &FromCoord = move.GetFromCoord();
+            const CSCoord &ToCoord = move.GetToCoord();
+            const char *pszSide = (m_pPosition->GetTurn() == 0) ? "White" : "Black";
+            Print(0,
+                  "Move rejected (not valid) for %s: %c%c%c-%c%c%c; "
+                  "turn is unchanged, %s searches again\n",
+                  pszSide, 'a' + FromCoord.m_nLevel, 'a' + FromCoord.m_nFile,
+                  '1' + FromCoord.m_nRank, 'a' + ToCoord.m_nLevel,
+                  'a' + ToCoord.m_nFile, '1' + ToCoord.m_nRank, pszSide);
             return;
+        }
 
         // Log every move that is actually applied to the game. SAN must be
         // computed from the position *before* the move is made, and GetTurn()
