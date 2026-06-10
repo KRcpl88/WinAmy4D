@@ -20,6 +20,10 @@
 #include <pthread.h>
 #endif
 
+#if MP
+#include <mutex>
+#endif
+
 /*
  * This is from tbindex.cpp
  */
@@ -65,8 +69,8 @@ extern int TB_CRC_CHECK;
 static int EGTBMenCount;
 int EGTBProbe, EGTBProbeSucc;
 
-#if MP && HAVE_LIBPTHREAD
-static pthread_mutex_t EGTBMutex = PTHREAD_MUTEX_INITIALIZER;
+#if MP
+static std::mutex EGTBMutex;
 #endif
 
 void InitEGTB(char *tbpath) {
@@ -118,8 +122,8 @@ int ProbeEGTB(const CPosition *p, int *score, int ply) {
     InitializeCounters(pcCount + 8, bSquares, 3, p->GetMask(Black, Rook));
     InitializeCounters(pcCount + 9, bSquares, 4, p->GetMask(Black, Queen));
 
-#if MP && HAVE_LIBPTHREAD
-    pthread_mutex_lock(&EGTBMutex);
+#if MP
+    std::lock_guard<std::mutex> egtbGuard(EGTBMutex);
 #endif
 
     do {
@@ -171,10 +175,6 @@ int ProbeEGTB(const CPosition *p, int *score, int ply) {
         EGTBProbeSucc++;
         result = 1;
     } while (0);
-
-#if MP && HAVE_LIBPTHREAD
-    pthread_mutex_unlock(&EGTBMutex);
-#endif
 
     return result;
 }

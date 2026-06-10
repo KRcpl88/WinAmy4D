@@ -38,6 +38,7 @@ jobs:
         #define HAVE_SELECT 0
         #define HAVE_GETHOSTNAME 0
         #define HAVE_SETBUF 1
+        #define MP 1
         '@ | Set-Content -Path .\Include\config.h -Encoding Ascii
 
     - name: Build solution (Release x64)

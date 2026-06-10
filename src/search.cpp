@@ -63,6 +63,11 @@
 #include <pthread.h>
 #endif
 
+#if MP
+#include <thread>
+#include <vector>
+#endif
+
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -78,6 +83,28 @@
 #define DEFERRED_DEPTH_OFFSET 32768
 
 #define ALTERNATE_DELTA 1500
+
+#if MP
+#include <string.h>
+/*
+ * The parallel (ABDADA) search defers children that another thread is already
+ * evaluating, remembering the move and the depth it should be searched at.
+ * The deferred list reuses the CMove-typed search heap, so the (small) integer
+ * depth is packed into a CMove slot. CMove is trivially copyable, so a byte
+ * copy is well defined and round-trips exactly.
+ */
+static inline CMove EncodeDeferredDepth(int nDepth) {
+    CMove mvEncoded;
+    memcpy(&mvEncoded, &nDepth, sizeof(nDepth));
+    return mvEncoded;
+}
+
+static inline int DecodeDeferredDepth(CMove mvEncoded) {
+    int nDepth;
+    memcpy(&nDepth, &mvEncoded, sizeof(nDepth));
+    return nDepth;
+}
+#endif /* MP */
 
 /*
  * We use fractional ply extensions.
@@ -148,7 +175,7 @@ static CMove rgExcludedRootMoves[MAX_EXCLUDED_ROOT_MOVES];
 static uint16_t cExcludedRootMoves = 0;
 static int EGTBDepth = 0;
 
-static int NodesPerCheck;
+static int NodesPerCheck = 1000;
 
 OPTIONAL_ATOMIC unsigned long TotalNodes;
 
@@ -448,6 +475,27 @@ int CSearchData::NegaScout(int alpha, int beta,
         AbortSearch = true;
         goto EXIT;
     }
+
+#if MP
+    /*
+     * Helper (non-master) threads periodically yield the CPU so the GUI / UI
+     * thread and other processes on the machine stay responsive while the
+     * engine is searching. The same node-count throttle used for master
+     * termination keeps this off the hot path. Checking AbortSearch here also
+     * lets helpers stop promptly when StopHelpers() joins them.
+     */
+    if (!sd->m_fMaster) {
+        if (AbortSearch) {
+            goto EXIT;
+        }
+        if ((sd->m_ulNodesCount + sd->m_ulQNodesCount) >
+            sd->m_ulCheckNodesCount) {
+            sd->m_ulCheckNodesCount =
+                sd->m_ulNodesCount + sd->m_ulQNodesCount + NodesPerCheck;
+            std::this_thread::yield();
+        }
+    }
+#endif /* MP */
 
     /* max search depth reached */
     if (sd->m_wPly >= MaxDepth)
@@ -811,7 +859,8 @@ int CSearchData::NegaScout(int alpha, int beta,
                  */
                 append_to_heap(sd->m_hDeferredHeap, move);
                 append_to_heap(sd->m_hDeferredHeap,
-                               next_depth + DEFERRED_DEPTH_OFFSET);
+                               EncodeDeferredDepth(next_depth +
+                                                   DEFERRED_DEPTH_OFFSET));
             } else {
 #endif /* MP */
 
@@ -862,7 +911,8 @@ int CSearchData::NegaScout(int alpha, int beta,
 
         move = sd->m_hDeferredHeap->data[deferred_index];
         int next_depth =
-            sd->m_hDeferredHeap->data[deferred_index + 1] - DEFERRED_DEPTH_OFFSET;
+            DecodeDeferredDepth(sd->m_hDeferredHeap->data[deferred_index + 1]) -
+            DEFERRED_DEPTH_OFFSET;
 
         p->DoMove(move);
 
@@ -1448,30 +1498,38 @@ final:
     return NULL;
 }
 
-#if MP && HAVE_LIBPTHREAD
-pthread_t *tids = NULL;
-#endif /* MP && HAVE_LIBPTHREAD */
-
 #if MP
+/*
+ * Helper threads used for the parallel (ABDADA) search. The master search runs
+ * on the calling thread; these are the additional worker threads.
+ */
+std::vector<std::thread> HelperThreads;
+
+/*
+ * Lower the priority of the current search thread so that the GUI / UI thread
+ * and other processes on the machine remain responsive while the engine is
+ * thinking. Called at the start of every helper thread.
+ */
+void SetSearchThreadBackgroundPriority(void) {
+#ifdef _WIN32
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+#endif
+}
 
 /*
  * In parallel search stop all helper threads
  */
 
 void StopHelpers(void) {
-#if HAVE_LIBPTHREAD
-    if (tids) {
-        int nthread;
-        void *dummy;
-
+    if (!HelperThreads.empty()) {
         AbortSearch = true;
-        for (nthread = 0; nthread < (NumberOfCPUs - 1); nthread++) {
-            pthread_join(tids[nthread], &dummy);
+        for (std::thread &thread : HelperThreads) {
+            if (thread.joinable()) {
+                thread.join();
+            }
         }
-        free(tids);
-        tids = NULL;
+        HelperThreads.clear();
     }
-#endif /* HAVE_LIBPTHREAD */
 }
 
 #endif /* MP */

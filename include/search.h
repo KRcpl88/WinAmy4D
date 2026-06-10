@@ -93,6 +93,7 @@ void ClearExcludedRootMoves(void);
 
 #if MP
 void StopHelpers(void);
+void SetSearchThreadBackgroundPriority(void);
 #endif
 
 #endif

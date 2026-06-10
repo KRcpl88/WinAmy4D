@@ -52,6 +52,11 @@
 #include <pthread.h>
 #endif
 
+#if MP
+#include <thread>
+#include <vector>
+#endif
+
 extern unsigned long DblExt, DiscExt, SingExt;
 extern int ExtendDoubleCheck, ExtendDiscoveredCheck, ExtendSingularReply;
 extern unsigned long HardLimit, SoftLimit, SoftLimit2;
@@ -85,9 +90,8 @@ enum {
 extern int NumberOfCPUs;
 extern bool AbortSearch;
 extern void StopHelpers(void);
-#if HAVE_LIBPTHREAD
-extern pthread_t *tids;
-#endif
+extern void SetSearchThreadBackgroundPriority(void);
+extern std::vector<std::thread> HelperThreads;
 #endif
 
 /*
@@ -691,33 +695,45 @@ void CPosition::AnalysisMode() {
 
 void CPosition::StartHelpers() {
     CPosition *p = this;
-#if HAVE_LIBPTHREAD
-    pthread_attr_t attr;
     int nthread;
 
-    if (tids) {
+    if (!HelperThreads.empty()) {
         StopHelpers();
     }
 
-    if (NumberOfCPUs < 2)
+    /*
+     * Default the number of search threads to the number of logical CPUs when
+     * it has not been set explicitly (e.g. via -cpu or .amyrc). This lets the
+     * parallel search engage for both the console engine and the GUI without
+     * any extra configuration.
+     */
+    if (NumberOfCPUs <= 0) {
+        NumberOfCPUs = (int)std::thread::hardware_concurrency();
+        if (NumberOfCPUs <= 0) {
+            NumberOfCPUs = 1;
+        }
+    }
+
+    if (NumberOfCPUs < 2) {
         return;
-
-    tids = (pthread_t *)safe_calloc(NumberOfCPUs - 1, sizeof(pthread_t));
-
-    pthread_attr_init(&attr);
-    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+    }
 
     /*
-     * Start up the helper threads.
+     * Start up the helper threads. Each helper searches its own clone of the
+     * position; results are shared through the global transposition table.
+     * Helpers run at background priority so the GUI / UI thread stays
+     * responsive.
      */
 
+    HelperThreads.reserve(NumberOfCPUs - 1);
     for (nthread = 0; nthread < (NumberOfCPUs - 1); nthread++) {
         CSearchData *sd = new CSearchData(CPosition::Clone(p));
         sd->m_fMaster = false;
-        pthread_create(tids + nthread, &attr, &IterateInt, sd);
+        HelperThreads.emplace_back([sd]() {
+            SetSearchThreadBackgroundPriority();
+            IterateInt(sd);
+        });
     }
-
-#endif /* HAVE_LIBPTHREAD */
 }
 #endif /* MP */
 
