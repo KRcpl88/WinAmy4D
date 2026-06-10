@@ -274,6 +274,34 @@ TEST_CLASS(MoveTests) {
         }
         free_heap(heap);
     }
+
+    TEST_METHOD(SANRoundTripsForAllLegalMovesInReportedStrategyEPD) {
+        const char *pszEpd =
+            "1|2/1r|3/3/3|4/4/4/4|4R/5/5/5/5|6/6/6/6/6/4N1|ppppppp/7/7/7/7/2NPN2/PPPQPPP|"
+            "r1bq1rk1/p1pp1ppp/1pnbp3/8/8/8/PPPPPPPP/2BQ1B1R|"
+            "1nbqb1r/ppppppp/4n2/7/7/PP1PPPP/1NBKB1R|"
+            "pppppp/6/6/6/P5/1PPPPP|5/5/5/5/5|4/4/4/4|3/3/3|2/2|1 w - -";
+        PositionGuard position(CPosition::CreateFromEPD(pszEpd));
+        Assert::IsNotNull(position.get(), L"Failed to create position from EPD");
+
+        heap_t heap = allocate_heap();
+        position.get()->LegalMoves(heap);
+
+        for (unsigned int i = heap->current_section->start;
+             i < heap->current_section->end; i++) {
+            const CMove move = heap->data[i];
+            char szSan[32];
+            const char *pszSan = position.get()->SAN(move, szSan);
+            const CMove parsed = position.get()->ParseSAN(pszSan);
+
+            Assert::IsTrue(parsed != M_NONE,
+                           L"Generated SAN should always parse");
+            Assert::IsTrue(parsed == move,
+                           L"Generated SAN should round-trip to the same legal move");
+        }
+
+        free_heap(heap);
+    }
 };
 
 } // namespace WinAmyTests
