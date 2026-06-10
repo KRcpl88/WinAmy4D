@@ -46,6 +46,10 @@ enum class PlayerMode {
 
 class GameController {
 public:
+    // Number of consecutive invalid moves tolerated before the engine is
+    // declared corrupted (see MakeMove / IsEngineCorrupted).
+    static constexpr int kMaxRejectRetries = 3;
+
     GameController();
     ~GameController();
 
@@ -86,8 +90,18 @@ public:
     void SetPlayerMode(PlayerMode mode) { m_PlayerMode = mode; }
     PlayerMode GetPlayerMode() const    { return m_PlayerMode; }
 
-    // Apply a move to the current position. Must NOT be called while engine is thinking.
-    void MakeMove(CMove move);
+    // Apply a move to the current position. Must NOT be called while engine is
+    // thinking. Returns true if the move was legal and applied, false if it was
+    // rejected as not valid (in which case the position is left unchanged and an
+    // internal consecutive-rejection counter is advanced; see IsEngineCorrupted).
+    bool MakeMove(CMove move);
+
+    // Returns true once the engine has retried the SAME invalid move
+    // kMaxRejectRetries times in a row. When this happens MakeMove also switches
+    // the player mode to TwoPlayers (human only) so the host can stop searching
+    // and let the user save the game. The flag is cleared by NewGame() and by
+    // any subsequently applied valid move.
+    bool IsEngineCorrupted() const { return m_fEngineCorrupted; }
 
     // Undo the last full move in 1-player mode: reverts the engine's reply and
     // the human player's preceding move so the human may move again. Returns true
@@ -257,4 +271,13 @@ private:
     // for a pure depth-limited search with no time budget.
     std::atomic<long long> m_nEngineSearchStartMs{0};
     std::atomic<long long> m_nEngineSearchBudgetMs{0};
+    // Number of consecutive times the SAME invalid move has been rejected by
+    // MakeMove (tracked in m_LastRejectedMove) since the last valid move (or
+    // NewGame). When it reaches kMaxRejectRetries the engine is declared
+    // corrupted (m_fEngineCorrupted) and play is switched to human only. A
+    // successfully applied move and NewGame() both reset this. A different
+    // rejected move restarts the count at 1.
+    int                 m_nRejectCount{0};
+    CMove               m_LastRejectedMove{};
+    bool                m_fEngineCorrupted{false};
 };

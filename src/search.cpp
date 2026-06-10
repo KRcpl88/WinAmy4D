@@ -1014,7 +1014,16 @@ void *IterateInt(void *x) {
     sd->InitSearch();
     sd->m_wRootMoves = (uint16_t)p->LegalMoves(sd->m_hHeap);
 
-    CMove *mvs = sd->m_hHeap->data + sd->m_hHeap->current_section->start;
+    // The root move list lives at a fixed index range within the shared search
+    // heap. Move generation deeper in the search appends to that same heap, and
+    // append_to_heap() may realloc() the underlying data buffer, relocating it
+    // and invalidating any cached pointer into it. Remember the root section
+    // start index and re-derive `mvs` from the (possibly moved) heap->data after
+    // every operation that can grow the heap, so we never read through a
+    // dangling pointer (which previously yielded a corrupt best move that
+    // crashed in CPosition::SAN).
+    const unsigned int uRootStart = sd->m_hHeap->current_section->start;
+    CMove *mvs = sd->m_hHeap->data + uRootStart;
 
     /*
      * Drop any caller-excluded root moves (used to emulate MultiPV by repeated
@@ -1106,6 +1115,9 @@ void *IterateInt(void *x) {
                 tmp = -sd->Quies(-beta, -alpha, 0);
             }
             p->UndoMove(move);
+            // Move generation during the search above may have realloc'd the
+            // heap; re-derive `mvs` so it points into the live data buffer.
+            mvs = sd->m_hHeap->data + uRootStart;
             if (AbortSearch)
                 goto final;
 
@@ -1142,6 +1154,7 @@ void *IterateInt(void *x) {
                     tmp = -sd->Quies(-beta, -alpha, 0);
                 }
                 p->UndoMove(move);
+                mvs = sd->m_hHeap->data + uRootStart;
                 if (AbortSearch)
                     goto final;
 
@@ -1161,6 +1174,7 @@ void *IterateInt(void *x) {
                         tmp = -sd->Quies(-beta, -alpha, 0);
                     }
                     p->UndoMove(move);
+                    mvs = sd->m_hHeap->data + uRootStart;
                     if (AbortSearch)
                         goto final;
                 }
@@ -1215,6 +1229,7 @@ void *IterateInt(void *x) {
                     tmp = -sd->Quies(-beta, -alpha, 0);
                 }
                 p->UndoMove(move);
+                mvs = sd->m_hHeap->data + uRootStart;
                 if (AbortSearch)
                     goto final;
 
@@ -1234,6 +1249,7 @@ void *IterateInt(void *x) {
                         tmp = -sd->Quies(-beta, -alpha, 0);
                     }
                     p->UndoMove(move);
+                    mvs = sd->m_hHeap->data + uRootStart;
                     if (AbortSearch)
                         goto final;
                 }
@@ -1310,6 +1326,7 @@ void *IterateInt(void *x) {
         }
 
         NeedTime = false;
+        mvs = sd->m_hHeap->data + uRootStart;
         ResortMovesList(sd->m_wRootMoves, mvs, nodes);
 
         /*
@@ -1417,6 +1434,10 @@ final:
         ShowHashStatistics();
     }
 
+    // Reached via the normal loop exit or via `goto final`; re-derive `mvs` one
+    // last time in case the heap moved, so the returned best move is read from
+    // the live buffer rather than a stale (freed) one.
+    mvs = sd->m_hHeap->data + uRootStart;
     sd->m_BestMove = mvs[0];
 
     if (!sd->m_fMaster) {
