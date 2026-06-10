@@ -87,6 +87,13 @@ enum {
 #define NORMAL "\x1B[0m"
 
 #if MP
+/*
+ * Upper bound on the number of search threads. Guards against
+ * hardware_concurrency() (or a misconfigured override) reporting an
+ * unreasonably large value.
+ */
+#define MAX_SEARCH_THREADS 32
+
 extern int NumberOfCPUs;
 extern bool AbortSearch;
 extern void StopHelpers(void);
@@ -705,13 +712,30 @@ void CPosition::StartHelpers() {
      * Default the number of search threads to the number of logical CPUs when
      * it has not been set explicitly (e.g. via -cpu or .amyrc). This lets the
      * parallel search engage for both the console engine and the GUI without
-     * any extra configuration.
+     * any extra configuration. The count is logged once so the chosen thread
+     * count is visible at startup.
      */
+    static bool s_fThreadCountLogged = false;
+
     if (NumberOfCPUs <= 0) {
         NumberOfCPUs = (int)std::thread::hardware_concurrency();
         if (NumberOfCPUs <= 0) {
             NumberOfCPUs = 1;
         }
+    }
+
+    /*
+     * Cap the number of search threads to a sane maximum in case
+     * hardware_concurrency() (or a misconfigured override) reports an
+     * unreasonably large value.
+     */
+    if (NumberOfCPUs > MAX_SEARCH_THREADS) {
+        NumberOfCPUs = MAX_SEARCH_THREADS;
+    }
+
+    if (!s_fThreadCountLogged) {
+        s_fThreadCountLogged = true;
+        Print(0, "Search threads: %d\n", NumberOfCPUs);
     }
 
     if (NumberOfCPUs < 2) {
