@@ -336,31 +336,6 @@ Mainy powerful openings in 4D chess begin with developing knights on both the ma
 #### Knight's Opening
 The knight's opening on the main board (level h) these begins with Nhg1hf3.  Black can respond on the main level with NHg8hf6 or on the second level with Nib7ic5, developing their knight, and white follows by openeing the second level with Nib1ic3.  Both sides continue developing their knights, for example black responding with Nib7ic5, asusming their first move was NHg8hf6, or vice versa, and white responds with Nie1if3.  At this point, white's knights control most of the center board on both h and i, and have maintained an advantage of 3 nights in action against 2 that black has been able to move out.  At this point, black can open up a 3rd board on level j with Nie7jf5 or Nie7jc5.  At this point, both players have 3 knights out controlling much of the middle of the board accross multiple levels.
 
-
-```
-Black knights jf5, hf6, ic5
-White knights hf3, ic3, if3
-
-Suggested Move #1: Ria1bb2
-Opponent's likely counter move: Nie7hd6
-Respond with: Nib1ic3
-
-Suggested Move #2: Nie1id3
-Opponent's likely counter move: Phd7hd5
-Respond with: Ria1bb2
-
-Suggested Move #3: Nhg1hf3
-Opponent's likely counter move: Nib7ic5
-Respond with: Ria1bb2
-
-```
-
-
-, and white can counter with Nif3he5 or Nif3jd4, depending on which move was made by black.  
-
-Either move will create a possible mate against black's king, requiring black to respond by moving their king, which is the ultimate goal of this opening, to bring pressure against black's king and threaten a possible early checkmate.
-
-
 #### Second Knight's Opening
 The second knight's openeing is the same, but begins with Nib1ic3 on the second level first.  Black usually responds with Nib7ic5, but an opening response on the main level with NHg8hf6 is also a good move. Either way, white responds with Nhg1hf3 on the main level or continuing on the second level with Nie1if3.
 
