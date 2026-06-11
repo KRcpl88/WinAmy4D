@@ -330,7 +330,7 @@ stalemate, insufficient material, agreed draw, and so on.
 
 ## 8. Strategy
 
-### Fianchetto
+### 3D Fianchetto
 In 4D chess, both rooks are vulnerable on the right side of the board on level i to a fianchetto attack.  White opens with Nhg8hf6, and then white responds with Bic1ib2, which puts the rook under threat.  White can capture black's pawn at if6 which is undefended, and threaten black's rook which can neither move nor attack the bishop
 
 ### Ruy Lopez
