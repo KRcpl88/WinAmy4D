@@ -364,6 +364,22 @@ Either move will create a possible mate against black's king, requiring black to
 #### Second Knight's Opening
 The second knight's openeing is the same, but begins with Nib1ic3 on the second level first.  Black usually responds with Nib7ic5, but an opening response on the main level with NHg8hf6 is also a good move. Either way, white responds with Nhg1hf3 on the main level or continuing on the second level with Nie1if3.
 
+### Development
+Once both players have 3 knights out, they may be in different positions, but at this point each player shoudl being developing other pieces.
+
+For example with white to move, assume both sides have advanced knights as follows:
+
+```
+Black knights jf5, hf6, ic5
+White knights hf3, ic3, if3
+```
+
+From this position, White has 3 good options:
+
+- **Ria1bb2** - black may counter with Nie7hd6, white responds with Nib1ic3
+- **Nie1id3** - black may counter with Phd7hd5, white responds with Ria1bb2
+- **Nhg1hf3** - black may counter with Nib7ic5, white responds with Ria1bb2
+
 
 ### 3D Fianchetto
 In 4D chess, both rooks are vulnerable on the right side of the board on level i to a fianchetto attack.  White opens with Pib2ib3, and black may respiond with Nhg8hf6.  White's next move is Bic1ib2, which puts the rook under threat.  White can capture black's pawn at if6 which is undefended, and threaten black's rook which can neither move nor attack the bishop.  To counter this, black must move their knioght from hf6 to hh5, protecting the pawn at if6, and allowing their knight to captcher white's bishop at if6 if they take the pawn.  However, if black does not respond to this opening correctly to defend the pawn and rook at if6 and ig7, white casn gain a significant early advantage.  If not, this opening forces black to commit to defending if6 early in the game and limits their freedom to act strategically in other directions.
