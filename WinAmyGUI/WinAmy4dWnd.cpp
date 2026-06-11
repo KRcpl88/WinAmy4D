@@ -325,6 +325,17 @@ bool CWinAmy4dWnd::TryMakeSelectedMove(const CPosition* pPos, const CSCoord& sqT
     bool fWhiteTurn = (pPos->GetTurn() == 0);
     if (fSelIsWhite != fWhiteTurn) return false;
 
+    // The user is committing a move with one of their own pieces. If a
+    // suggest-move / strategy / engine search is still running, abort it and
+    // wait for the engine thread to finish before touching the live position:
+    // this discards the search's now-irrelevant result and frees the shared
+    // engine state so the next search can start. The caller only invokes this
+    // for a square already known to be a legal destination of the selected
+    // piece, so a move is about to be made.
+    if (m_Game.IsEngineRunning()) {
+        m_Game.AbortAndJoinSearch();
+    }
+
     heap_t pHeap = allocate_heap();
     push_section(pHeap);
     const_cast<CPosition*>(pPos)->LegalMoves(pHeap);
@@ -391,7 +402,10 @@ POINT CWinAmy4dWnd::Get2DBoardOffset(HWND hWnd) const {
 // Handles a click on a CSCoord that came from the 3D pick. Mirrors the
 // selection/move logic in OnSquareClick but skips the 2D hit-test.
 void CWinAmy4dWnd::OnSquareClick3D(const CSCoord& sq) {
-    if (m_Game.IsEngineRunning() || m_Game.IsGameOver()
+    // Input is intentionally NOT blocked while the engine is searching; see the
+    // note in OnSquareClick. TryMakeSelectedMove() aborts the in-flight search
+    // when the user actually commits a move.
+    if (m_Game.IsGameOver()
         || m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
     const CPosition* pos = m_Game.GetPosition();
     if (!pos) return;
@@ -425,6 +439,9 @@ void CWinAmy4dWnd::OnSquareClick3D(const CSCoord& sq) {
             if (!m_Game.IsGameOver()) {
                 MaybeStartEngine();
             }
+            // The move may have aborted an in-flight search; refresh the pause
+            // menu so it reflects whether the engine is now running again.
+            UpdatePauseMenu();
         }
     }
 }
@@ -1129,7 +1146,10 @@ void CWinAmy4dWnd::OnEngineStrategy(LPARAM /*lParam*/) {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::OnSquareClick(POINT pt) {
-    if (m_Game.IsEngineRunning()) return;
+    // Note: input is intentionally NOT blocked while the engine is searching.
+    // The user may select any piece to inspect its legal moves, and may commit
+    // a move of their own; TryMakeSelectedMove() aborts the in-flight search
+    // when a move is actually made (see below).
     if (m_Game.IsGameOver()) return;
     if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) return;
 
@@ -1183,6 +1203,9 @@ void CWinAmy4dWnd::OnSquareClick(POINT pt) {
             } else {
                 MaybeAnnounceGameOver();
             }
+            // The move may have aborted an in-flight search; refresh the pause
+            // menu so it reflects whether the engine is now running again.
+            UpdatePauseMenu();
         }
     }
 }
@@ -1772,15 +1795,20 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     }
 
     case WM_APP_ENGINE_MOVE:
-        OnEngineMove(lParam);
+        // Ignore a completion left over from a search that has since been
+        // superseded (e.g. aborted because the user made a move).
+        if (static_cast<uint32_t>(wParam) == m_Game.GetSearchGeneration())
+            OnEngineMove(lParam);
         return 0;
 
     case WM_APP_ENGINE_HINT:
-        OnEngineHint(lParam);
+        if (static_cast<uint32_t>(wParam) == m_Game.GetSearchGeneration())
+            OnEngineHint(lParam);
         return 0;
 
     case WM_APP_ENGINE_STRATEGY:
-        OnEngineStrategy(lParam);
+        if (static_cast<uint32_t>(wParam) == m_Game.GetSearchGeneration())
+            OnEngineStrategy(lParam);
         return 0;
 
     case WM_APP_ENGINE_PROGRESS:
