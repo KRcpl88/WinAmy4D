@@ -331,7 +331,7 @@ stalemate, insufficient material, agreed draw, and so on.
 ## 8. Strategy
 
 ### Knight's Openings
-Mainy powerful openings in 4D chess begin with developing knights on both the main level and second level (level i).  They are all similar and foxu on developing knights on both sides to open up and control the center, using knights which are the quickest attack pieces to bring out and control the center of the board.
+Mainy powerful openings in 4D chess begin with developing knights on both the main level and second level (level i).  They are all similar and foxu on developing knights on both sides to open up and control the center, using knights which are the quickest attack pieces to bring out and control the center of the board.  These openings are similar to Réti or King's Indian Attack, but rely much more on developing knight positions which are relatively more powerful in 4D chess because of additional moves on multiple levels.
 
 #### Knight's Opening
 The knight's ppening on the main board (level h) these begins with Nhg1hf3.  Black can respond on the main level with NHg8hf6 or on the second level with Nib7ic5, developing their knight, and white follows by openeing the second level with Nib1ic3
