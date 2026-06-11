@@ -378,17 +378,17 @@ void BoardRenderer::DrawAxisLabels(HDC hdc) const {
         // others draw to the right. On the XY plane the rank labels share the
         // left gutter and are baseline-aligned with the bottom of each rank, so
         // the axis labels are top-aligned there to leave room for them below.
-        const UINT fmtVAlign =
+        const UINT uVAlign =
             (m_eViewPlane == ViewPlane::PlaneXY) ? DT_TOP : DT_VCENTER;
         RECT r;
         UINT fmt;
         if (RenderSlot.m_nFile < w / 2) {
             r = RECT{ px - AXIS_LABEL_MARGIN - 2, py, px - 2, py + SQUARE_SIZE };
-            fmt = DT_RIGHT | fmtVAlign | DT_SINGLELINE | DT_NOCLIP;
+            fmt = DT_RIGHT | uVAlign | DT_SINGLELINE | DT_NOCLIP;
         } else {
             r = RECT{ px + SQUARE_SIZE + 2, py,
                       px + SQUARE_SIZE + 2 + AXIS_LABEL_MARGIN, py + SQUARE_SIZE };
-            fmt = DT_LEFT | fmtVAlign | DT_SINGLELINE | DT_NOCLIP;
+            fmt = DT_LEFT | uVAlign | DT_SINGLELINE | DT_NOCLIP;
         }
         DrawTextW(hdc, anchor.text, -1, &r, fmt);
     }
