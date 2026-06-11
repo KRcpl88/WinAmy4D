@@ -330,6 +330,16 @@ stalemate, insufficient material, agreed draw, and so on.
 
 ## 8. Strategy
 
+### Knight's Openings
+Mainy powerful openings in 4D chess begin with developing knights on both the main level and second level (level i).  They are all similar and foxu on developing knights on both sides to open up and control the center, using knights which are the quickest attack pieces to bring out and control the center of the board.
+
+#### Knight's Opening
+The knight's ppening on the main board (level h) these begins with Nhg1hf3.  Black can respond on the main level with NHg8hf6 or on the second level with Nib7ic5, developing their knight, and white follows by openeing the second level with Nib1ic3
+
+#### Second Knight's Opening
+The second knight's openeing is the same, but begins with Nib1ic3 on the second level first.  Black usually responds with Nib7ic5, but an opening response on the main level with NHg8hf6 is also a good move. Either way, white responds with Nhg1hf3 on the main level or continuing on the second level with Nie1if3 
+
+
 ### 3D Fianchetto
 In 4D chess, both rooks are vulnerable on the right side of the board on level i to a fianchetto attack.  White opens with Pib2ib3, and black may respiond with Nhg8hf6.  White's next move is Bic1ib2, which puts the rook under threat.  White can capture black's pawn at if6 which is undefended, and threaten black's rook which can neither move nor attack the bishop.  To counter this, black must move their knioght from hf6 to hh5, protecting the pawn at if6, and allowing their knight to captcher white's bishop at if6 if they take the pawn.  However, if black does not respond to this opening correctly to defend the pawn and rook at if6 and ig7, white casn gain a significant early advantage.
 
