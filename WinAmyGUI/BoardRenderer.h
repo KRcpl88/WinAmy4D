@@ -38,6 +38,10 @@ public:
     // squares without obscuring any pieces.
     static constexpr int AXIS_LABEL_MARGIN = 30;
 
+    // Gap (in pixels) between a board edge and the rank/file coordinate labels
+    // drawn beside it on the XY plane view.
+    static constexpr int COORD_LABEL_GAP = 4;
+
     // Row layout:
     //   Row 0 (top):    j(6) k(5) l(4) m(3) n(2) o(1)   — levels 9–14
     //   Row 1 (middle): g(7) h(8) i(7)                   — levels 6–8
@@ -63,6 +67,9 @@ public:
     static constexpr COLORREF CLR_BORDER     = RGB( 80,  80,  80);
     // Bright green used for the +x / +y / +z axis labels.
     static constexpr COLORREF CLR_AXIS_LABEL = RGB(  0, 220,   0);
+    // Dark grey used for the rank/file coordinate labels drawn over the (light)
+    // window background on the XY plane view.
+    static constexpr COLORREF CLR_COORD_LABEL = RGB( 60,  60,  60);
 
     BoardRenderer();
     ~BoardRenderer();
@@ -110,6 +117,13 @@ private:
     // (ha8, hh8, oa1). The labels follow the active view plane so they always
     // sit beside the true board square that defines each axis direction.
     void DrawAxisLabels(HDC hdc) const;
+
+    // Draw the rank (left) and file (bottom) coordinate labels for one level.
+    // Only meaningful on the XY plane view, where each rendered level is a true
+    // board level and the file/rank letters/digits are correct. Rank labels are
+    // baseline-aligned with the bottom of each rank square so it is unambiguous
+    // which rank each digit belongs to.
+    void DrawRankFileLabels(HDC hdc, int level) const;
 
     // Return the Unicode chess piece glyph for the given piece value.
     static wchar_t PieceGlyph(int8_t piece);

@@ -285,6 +285,51 @@ void BoardRenderer::DrawLevel(HDC hdc, int level, const CPosition* pos,
             DeleteObject(hpen);
         }
     }
+
+    // Rank/file coordinate labels only make sense on the natural x/y plane,
+    // where each rendered level is a true board level (a–o) and the file/rank
+    // letters/digits correspond to real board coordinates.
+    if (m_eViewPlane == ViewPlane::PlaneXY) {
+        DrawRankFileLabels(hdc, level);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// DrawRankFileLabels
+// ---------------------------------------------------------------------------
+
+void BoardRenderer::DrawRankFileLabels(HDC hdc, int level) const {
+    const int nWidth   = CBitBoard::LEVEL_WIDTH[level];
+    POINT origin       = LevelOrigin(level);
+    const int nBoardY  = origin.y + LABEL_HEIGHT;
+    const int nBoardBottom = nBoardY + nWidth * SQUARE_SIZE;
+
+    HFONT hOldFont = (HFONT)SelectObject(hdc, m_hLabelFont);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, CLR_COORD_LABEL);
+    UINT uOldAlign = GetTextAlign(hdc);
+
+    // Rank labels down the left side. The text baseline is aligned with the
+    // bottom of each rank square (TA_BASELINE) — not centred on the square — so
+    // it is unambiguous which rank the digit belongs to.
+    SetTextAlign(hdc, TA_RIGHT | TA_BASELINE);
+    for (int nRank = 0; nRank < nWidth; ++nRank) {
+        int nSquareTop = nBoardY + (nWidth - 1 - nRank) * SQUARE_SIZE;
+        int nBaselineY = nSquareTop + SQUARE_SIZE;
+        wchar_t chRank = (wchar_t)(L'1' + nRank);
+        TextOutW(hdc, origin.x - COORD_LABEL_GAP, nBaselineY, &chRank, 1);
+    }
+
+    // File labels along the bottom, centred under each file column.
+    SetTextAlign(hdc, TA_CENTER | TA_TOP);
+    for (int nFile = 0; nFile < nWidth; ++nFile) {
+        int nCenterX = origin.x + nFile * SQUARE_SIZE + SQUARE_SIZE / 2;
+        wchar_t chFile = (wchar_t)(L'a' + nFile);
+        TextOutW(hdc, nCenterX, nBoardBottom + COORD_LABEL_GAP, &chFile, 1);
+    }
+
+    SetTextAlign(hdc, uOldAlign);
+    SelectObject(hdc, hOldFont);
 }
 
 // ---------------------------------------------------------------------------
@@ -330,16 +375,20 @@ void BoardRenderer::DrawAxisLabels(HDC hdc) const {
         // Draw the label outside the board, on whichever side the square is
         // nearest, so it never obscures a piece. Squares in the left half of
         // the level draw their label to the left (in the left gutter); all
-        // others draw to the right.
+        // others draw to the right. On the XY plane the rank labels share the
+        // left gutter and are baseline-aligned with the bottom of each rank, so
+        // the axis labels are top-aligned there to leave room for them below.
+        const UINT uVAlign =
+            (m_eViewPlane == ViewPlane::PlaneXY) ? DT_TOP : DT_VCENTER;
         RECT r;
         UINT fmt;
         if (RenderSlot.m_nFile < w / 2) {
             r = RECT{ px - AXIS_LABEL_MARGIN - 2, py, px - 2, py + SQUARE_SIZE };
-            fmt = DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+            fmt = DT_RIGHT | uVAlign | DT_SINGLELINE | DT_NOCLIP;
         } else {
             r = RECT{ px + SQUARE_SIZE + 2, py,
                       px + SQUARE_SIZE + 2 + AXIS_LABEL_MARGIN, py + SQUARE_SIZE };
-            fmt = DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+            fmt = DT_LEFT | uVAlign | DT_SINGLELINE | DT_NOCLIP;
         }
         DrawTextW(hdc, anchor.text, -1, &r, fmt);
     }
