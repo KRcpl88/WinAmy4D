@@ -79,6 +79,59 @@ static int AxisGutterBefore(int level) {
     return 0;
 }
 
+// Natural pixel width of a row: left margin + each level's grid plus the margin
+// that follows it, plus the center row's axis-label gutters. This is the width
+// before any width-balancing gaps are added.
+static int RowNaturalWidth(int row) {
+    int nWidth = BoardRenderer::BOARD_MARGIN;
+    for (int c = 0; c < ROW_COUNT[row]; ++c) {
+        int lvl = ROW_LEVELS[row][c];
+        nWidth += CBitBoard::LEVEL_WIDTH[lvl] * BoardRenderer::SQUARE_SIZE
+                + BoardRenderer::BOARD_MARGIN;
+    }
+    // The center row (g h i) carries the left + right axis-label gutters.
+    if (row == 1) {
+        nWidth += 2 * BoardRenderer::AXIS_LABEL_MARGIN;
+    }
+    return nWidth;
+}
+
+// Width of the widest row (the natural reference the other rows are padded to).
+static int MaxRowNaturalWidth() {
+    int nMax = 0;
+    for (int r = 0; r < BoardRenderer::NUM_ROWS; ++r) {
+        int nWidth = RowNaturalWidth(r);
+        if (nWidth > nMax) {
+            nMax = nWidth;
+        }
+    }
+    return nMax;
+}
+
+// Cumulative extra horizontal space inserted before the level in column nCol of
+// a row so that the row's total width matches the widest row. The width deficit
+// is spread evenly across the gaps separating the boards (column 0 gets none),
+// which visually centres the row and widens the gaps on the narrower top and
+// bottom rows. The center row is already the widest, so it receives no padding.
+static int RowExtraGapBefore(int row, int nCol) {
+    if (nCol <= 0) {
+        return 0;
+    }
+    int nGaps = ROW_COUNT[row] - 1;
+    if (nGaps <= 0) {
+        return 0;
+    }
+    int nDeficit = MaxRowNaturalWidth() - RowNaturalWidth(row);
+    if (nDeficit <= 0) {
+        return 0;
+    }
+    // Distribute the deficit evenly; the leftmost gaps absorb the remainder so
+    // the per-gap padding never differs by more than a pixel.
+    int nBase = nDeficit / nGaps;
+    int nRem  = nDeficit % nGaps;
+    return nBase * nCol + (nCol < nRem ? nCol : nRem);
+}
+
 // X pixel origin of the level box (left edge of its label/grid).
 static int LevelOriginX(int level) {
     const LevelPlacement& p = PLACEMENT[level];
@@ -89,6 +142,7 @@ static int LevelOriginX(int level) {
            + BoardRenderer::BOARD_MARGIN;
     }
     x += AxisGutterBefore(level);
+    x += RowExtraGapBefore(p.row, p.col);
     return x;
 }
 
@@ -428,19 +482,9 @@ CSCoord BoardRenderer::HitTest(POINT pt) const {
 // ---------------------------------------------------------------------------
 
 /* static */ SIZE BoardRenderer::GetBoardAreaSize() {
-    // Width: widest row.  All three rows happen to be the same (840 px).
-    // Compute explicitly to be safe.
-    int maxW = 0;
-    for (int r = 0; r < NUM_ROWS; ++r) {
-        int rowW = BOARD_MARGIN; // left margin
-        for (int c = 0; c < ROW_COUNT[r]; ++c) {
-            int lvl = ROW_LEVELS[r][c];
-            rowW += CBitBoard::LEVEL_WIDTH[lvl] * SQUARE_SIZE + BOARD_MARGIN;
-        }
-        // The center row (g h i) carries the left + right axis-label gutters.
-        if (r == 1) rowW += 2 * AXIS_LABEL_MARGIN;
-        if (rowW > maxW) maxW = rowW;
-    }
+    // After width-balancing, every row is padded to the widest row's natural
+    // width, so the overall board width is simply that maximum.
+    int maxW = MaxRowNaturalWidth();
 
     // Height: sum of all row heights plus margins.
     int totalH = BOARD_MARGIN;

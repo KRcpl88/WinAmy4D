@@ -1640,8 +1640,21 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         m_nScrollX = max(0, min(m_nScrollX, si.nMax - (int)si.nPage));
         if (m_nScrollX != oldX) {
             SetScrollPos(hWnd, SB_HORZ, m_nScrollX, TRUE);
+            // Confine the scroll to the board area (below the toolbar, above the
+            // status bar) and erase the uncovered strip. DrawBoard only paints
+            // the squares/labels, not the surrounding background, so without
+            // SW_ERASE the freshly exposed margin pixels keep the scrolled-in
+            // bits and the board looks fragmented.
+            RECT rcScroll;
+            GetClientRect(hWnd, &rcScroll);
+            rcScroll.top    += TOOLBAR_H;
+            rcScroll.bottom -= STATUSBAR_H;
+            if (rcScroll.bottom < rcScroll.top) {
+                rcScroll.bottom = rcScroll.top;
+            }
             ScrollWindowEx(hWnd, oldX - m_nScrollX, 0,
-                           nullptr, nullptr, nullptr, nullptr, SW_INVALIDATE);
+                           &rcScroll, &rcScroll, nullptr, nullptr,
+                           SW_INVALIDATE | SW_ERASE);
             UpdateWindow(hWnd);
         }
         return 0;
@@ -1663,8 +1676,18 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         m_nScrollY = max(0, min(m_nScrollY, si.nMax - (int)si.nPage));
         if (m_nScrollY != oldY) {
             SetScrollPos(hWnd, SB_VERT, m_nScrollY, TRUE);
+            // See the WM_HSCROLL note: confine to the board area and erase the
+            // uncovered strip so the background repaints correctly.
+            RECT rcScroll;
+            GetClientRect(hWnd, &rcScroll);
+            rcScroll.top    += TOOLBAR_H;
+            rcScroll.bottom -= STATUSBAR_H;
+            if (rcScroll.bottom < rcScroll.top) {
+                rcScroll.bottom = rcScroll.top;
+            }
             ScrollWindowEx(hWnd, 0, oldY - m_nScrollY,
-                           nullptr, nullptr, nullptr, nullptr, SW_INVALIDATE);
+                           &rcScroll, &rcScroll, nullptr, nullptr,
+                           SW_INVALIDATE | SW_ERASE);
             UpdateWindow(hWnd);
         }
         return 0;
