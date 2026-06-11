@@ -13,24 +13,29 @@
 #include "time_ctl.h"
 
 #include <atomic>
+#include <cstdint>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
 
 // Posted to the main window when the engine finishes a search.
-// WPARAM: unused (0)
-// LPARAM: CMove encoded as int32_t (cast to LPARAM)
+// WPARAM: the search generation token (see GetSearchGeneration()); the host
+//         ignores the message if it does not match the current generation,
+//         which is how a search aborted by a user move is discarded.
+// LPARAM: unused (0); the move is read via GetBestMove().
 #define WM_APP_ENGINE_MOVE  (WM_APP + 1)
 
 // Posted to the main window when a move-suggestion (hint) search finishes.
 // The engine does NOT apply the move; the host highlights it as a
-// recommendation. WPARAM/LPARAM unused; the move is read via GetBestMove().
+// recommendation. WPARAM carries the search generation token (see
+// WM_APP_ENGINE_MOVE); LPARAM unused; the move is read via GetBestMove().
 #define WM_APP_ENGINE_HINT  (WM_APP + 2)
 
 // Posted to the main window when a strategy computation finishes. The result
 // (a formatted multi-line strategy description) is read via GetStrategyText().
-// WPARAM/LPARAM unused.
+// WPARAM carries the search generation token (see WM_APP_ENGINE_MOVE); LPARAM
+// unused.
 #define WM_APP_ENGINE_STRATEGY  (WM_APP + 3)
 
 // Posted to the main window periodically while a strategy computation is in
@@ -129,6 +134,22 @@ public:
 
     // Request the engine to stop searching (sets AbortSearch).
     void PauseEngine();
+
+    // Stop the in-flight search and block until the engine thread has fully
+    // finished, so the shared engine state (hash table, search globals) is free
+    // before the caller mutates the position or starts a new search. The
+    // search's completion message (already posted by the finishing thread) is
+    // made stale by advancing the search generation, so the host ignores its
+    // now-irrelevant result. Safe to call when no search is running. Must be
+    // called on the UI thread (it may briefly block the message pump).
+    void AbortAndJoinSearch();
+
+    // Monotonic token identifying the most recently started search. Each engine
+    // completion message (move / hint / strategy) carries the generation that
+    // was current when its search started; the host compares it against this
+    // value and discards messages whose generation no longer matches (e.g. a
+    // search aborted because the user made a move). See AbortAndJoinSearch().
+    uint32_t GetSearchGeneration() const { return m_nSearchGen.load(); }
 
     // Returns true while the engine thread is running.
     bool IsEngineRunning() const { return m_fEngineRunning.load(); }
@@ -252,6 +273,11 @@ private:
     // raised on normal time-limit termination of each search; only this flag
     // indicates a genuine user-initiated stop.
     std::atomic<bool>   m_fStopRequested{false};
+    // Monotonically increasing token advanced each time a search starts and
+    // each time a running search is aborted via AbortAndJoinSearch(). Used to
+    // tag and validate engine completion messages so a search whose result is
+    // no longer wanted (the user moved while it was running) is ignored.
+    std::atomic<uint32_t> m_nSearchGen{0};
     std::thread         m_EngineThread;
     std::mutex          m_PositionMutex;
     CMove               m_BestMove{};

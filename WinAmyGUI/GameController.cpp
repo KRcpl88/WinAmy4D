@@ -619,6 +619,11 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     m_fStopRequested.store(false);
     AbortSearch = false;
 
+    // Tag this search with a fresh generation token so its completion message
+    // can be matched (and a stale one — e.g. from a search the user aborted by
+    // moving — discarded) by the host. See GetSearchGeneration().
+    const uint32_t nGen = ++m_nSearchGen;
+
     // Capture the search start time and per-move time budget so the UI can
     // report progress for this single-move search (engine move or hint). A
     // timed search runs until the budget elapses, so elapsed/budget is a smooth,
@@ -646,7 +651,7 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     const char *pszLabel = fHint ? "Suggest move" : "Engine move";
     Print(0, "%s: starting search (time limit %ds)...\n", pszLabel, m_nTimeLimit);
 
-    m_EngineThread = std::thread([this, hwndTarget, uCompletionMsg, pszLabel]() {
+    m_EngineThread = std::thread([this, hwndTarget, uCompletionMsg, pszLabel, nGen]() {
         CMove bestMove = M_NONE;
 
         // CPosition::Iterate runs the search on the object it is called on,
@@ -690,13 +695,36 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
         m_fEngineRunning.store(false);
 
         // Notify the window — no move data in the message, caller uses GetBestMove().
-        PostMessage(hwndTarget, uCompletionMsg, 0, 0);
+        // WPARAM carries this search's generation so the host can discard the
+        // message if the search was superseded (e.g. aborted by a user move).
+        PostMessage(hwndTarget, uCompletionMsg, static_cast<WPARAM>(nGen), 0);
     });
 }
 
 void GameController::PauseEngine() {
     m_fStopRequested.store(true);
     AbortSearch = true;
+}
+
+void GameController::AbortAndJoinSearch() {
+    // Request the running search to stop. The engine honours AbortSearch (and
+    // the strategy loop additionally honours m_fStopRequested between its
+    // per-move searches), so the engine thread returns promptly.
+    m_fStopRequested.store(true);
+    AbortSearch = true;
+
+    // Block until the engine thread has fully exited. This guarantees the
+    // shared engine state (hash table, search globals) is no longer in use, so
+    // the caller may safely mutate the position and start a new search.
+    if (m_EngineThread.joinable()) {
+        m_EngineThread.join();
+    }
+
+    // The finishing thread has already posted its completion message. Advance
+    // the generation so that message is now stale and the host ignores it.
+    ++m_nSearchGen;
+    m_fEngineRunning.store(false);
+    m_fComputingStrategy.store(false);
 }
 
 int GameController::GetEngineSearchProgressPercent() const {
@@ -766,6 +794,11 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
     m_fStopRequested.store(false);
     AbortSearch = false;
 
+    // Tag this strategy computation with a fresh generation token so its
+    // completion message can be discarded if it is superseded (e.g. the user
+    // makes a move while it runs). See GetSearchGeneration().
+    const uint32_t nGen = ++m_nSearchGen;
+
     // Reset the progress counters so the status bar starts at 0%. The total is
     // established once ComputeStrategyText() has enumerated the candidate pool.
     m_nProgressDone.store(0);
@@ -799,7 +832,7 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
     Print(0, "Strategy: starting search (time limit %ds per move)...\n",
           m_nTimeLimit);
 
-    m_EngineThread = std::thread([this, hwndTarget]() {
+    m_EngineThread = std::thread([this, hwndTarget, nGen]() {
         std::string strStrategy = ComputeStrategyText(hwndTarget);
 
         // Scenario 3: log the strategy search AFTER it completes, including the
@@ -814,7 +847,10 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
         }
         m_fComputingStrategy.store(false);
         m_fEngineRunning.store(false);
-        PostMessage(hwndTarget, WM_APP_ENGINE_STRATEGY, 0, 0);
+        // WPARAM carries this search's generation so the host can discard the
+        // message if the strategy computation was superseded (e.g. by a user
+        // move). See GetSearchGeneration().
+        PostMessage(hwndTarget, WM_APP_ENGINE_STRATEGY, static_cast<WPARAM>(nGen), 0);
     });
 }
 
