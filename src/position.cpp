@@ -485,6 +485,20 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
 
 #if MP
     p->StartHelpers();
+#else
+    /*
+     * Single-threaded build: the parallel search (helper threads) is compiled
+     * out because MP is not defined. Log this once so it is clear from the log
+     * that the engine is running in single-thread mode (the MP build instead
+     * logs the chosen "Search threads: N" count in StartHelpers).
+     */
+    {
+        static bool s_fSingleThreadLogged = false;
+        if (!s_fSingleThreadLogged) {
+            s_fSingleThreadLogged = true;
+            Print(0, "Single-threaded search (MP not defined)\n");
+        }
+    }
 #endif /* MP */
 
     sd = new CSearchData(p);

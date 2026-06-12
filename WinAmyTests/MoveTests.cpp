@@ -1,4 +1,6 @@
 #include "TestHelpers.h"
+#include "heap.h"
+#include <vector>
 
 namespace WinAmyTests {
 
@@ -273,6 +275,60 @@ TEST_CLASS(MoveTests) {
                                 L"Pawn on last rank of narrow level must not move forward");
         }
         free_heap(heap);
+    }
+
+    // Closes the DoMove/UndoMove test gap left by the king-safety self-play
+    // repro (which only ever calls DoMove). Play a long pseudo-random legal
+    // game recording every move, then UndoMove each one in reverse order and
+    // assert the position is byte-for-byte identical to a snapshot taken at
+    // each ply along the way. This exercises UndoMove across captures,
+    // en passant, castling and promotions over many random positions.
+    TEST_METHOD(DoMoveUndoMoveRoundTripsOverRandomGame) {
+        uint32_t nRng = 0xC0FFEEu;
+        auto Rand = [&nRng]() {
+            nRng = nRng * 1664525u + 1013904223u;
+            return nRng;
+        };
+
+        for (int nGame = 0; nGame < 20; nGame++) {
+            nRng = 0x1000u + nGame * 2654435761u;
+            PositionGuard position(CPosition::Initial());
+
+            std::vector<CMove> rgMovesPlayed;
+            std::vector<CPosition *> rgSnapshots;
+
+            for (int nPly = 0; nPly < 60; nPly++) {
+                PositionGuard snapshot(CPosition::Clone(position.get()));
+
+                heap_t heap = allocate_heap();
+                push_section(heap);
+                position.get()->LegalMoves(heap);
+                std::vector<CMove> rgMoves;
+                for (unsigned int i = heap->current_section->start;
+                     i < heap->current_section->end; ++i) {
+                    rgMoves.push_back(heap->data[i]);
+                }
+                free_heap(heap);
+                if (rgMoves.empty()) {
+                    break;
+                }
+
+                CMove move = rgMoves[Rand() % rgMoves.size()];
+
+                position.get()->DoMove(move);
+                rgMovesPlayed.push_back(move);
+                rgSnapshots.push_back(CPosition::Clone(snapshot.get()));
+            }
+
+            // Unwind the whole game one move at a time, asserting after each
+            // UndoMove that we exactly recover the snapshot taken before the
+            // corresponding DoMove.
+            for (int i = (int)rgMovesPlayed.size() - 1; i >= 0; i--) {
+                position.get()->UndoMove(rgMovesPlayed[i]);
+                AssertPositionsEqual(position.get(), rgSnapshots[i]);
+                CPosition::Free(rgSnapshots[i]);
+            }
+        }
     }
 
     TEST_METHOD(SANRoundTripsForAllLegalMovesInReportedStrategyEPD) {

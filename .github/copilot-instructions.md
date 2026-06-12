@@ -136,6 +136,7 @@ extern "C" {
   - `m_` — member variable prefix (e.g., `m_nLevel`, `m_rgdData`)
   - `g_` — global variable prefix (e.g., `g_nCount`)
   - `s_` — static variable prefix (e.g., `s_nInstances`)
+- **Class objects (instances) do NOT take a Hungarian type prefix — use plain PascalCase.** A variable whose type is a class/struct *object* (for example `CMove`, `CPosition`, `CSCoord`, `PositionGuard`) is named in PascalCase with no leading type tag: `CMove BestMove` (not `mvBestMove`/`bestMove`), `CSCoord FromCoord` (not `coFromCoord`). This also applies to **C++ standard-library template specializations**, which are class objects: `std::vector<CMove> Moves` (not `rgMoves` — a `std::vector` is a container object, not a raw array), `std::string Name`, `std::unique_ptr<CSearchData> SearchData`. The `m_`/`g_`/`s_` scope prefixes still apply to class-object members/globals/statics (e.g., `m_BestMove`, `s_Position`). Pointers to class objects keep the `p` pointer prefix (e.g., `pPosition`).
 - **This rule is mandatory and has no exceptions.** Every variable name — including local variables, loop indices, temporaries, function parameters, and variables in test code — must carry the correct Hungarian type prefix combined with PascalCase. For example, use `nNewRank` (not `newRank`), `nDblRank` (not `dblRank`), `nDirection` (not `direction`), and `nWidth` (not `width`). The prefix for a `bool` is `f` (e.g., `fEnabled`), not `b` — `b` is reserved for `BYTE`. New or modified code must follow this convention even when adjacent legacy code does not.
 
 ### Test Naming
