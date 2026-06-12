@@ -26,8 +26,8 @@ TEST_CLASS(SearchTests) {
     // list for the position.  Returns the engine's best move so callers can make
     // additional assertions.
     static CMove SearchAndAssertLegal(const char *pszEpd, int nMaxDepth) {
-        PositionGuard position(CPosition::CreateFromEPD(pszEpd));
-        Assert::IsTrue(position.get() != nullptr,
+        PositionGuard Position(CPosition::CreateFromEPD(pszEpd));
+        Assert::IsTrue(Position.get() != nullptr,
                        L"CreateFromEPD returned nullptr");
 
         // Keep the search short and deterministic: cap the iterative-deepening
@@ -36,31 +36,31 @@ TEST_CLASS(SearchTests) {
         SetFixedTimePerMove(60);
 
         int nScore = 0;
-        CMove bestMove =
-            position.get()->Iterate(&nScore, M_NONE, nullptr);
+        CMove BestMove =
+            Position.get()->Iterate(&nScore, M_NONE, nullptr);
 
         // Restore a near-default search depth for any subsequent test.
         // setMaxSearchDepth only accepts values < MAX_TREE_SIZE - 1.
         setMaxSearchDepth(MAX_TREE_SIZE - 2);
 
-        Assert::IsTrue(bestMove != M_NONE,
+        Assert::IsTrue(BestMove != M_NONE,
                        L"Engine returned M_NONE for a position with legal moves");
 
         // The chosen move must be legal in the root position.  This is exactly
         // the failure mode behind the reported "engine recommended an illegal
         // move" bug.
-        Assert::IsTrue(position.get()->LegalMove(bestMove),
+        Assert::IsTrue(Position.get()->LegalMove(BestMove),
                        L"Engine returned an illegal best move");
 
         // The chosen move must also appear in the generated legal move list.
         heap_t heap = allocate_heap();
-        int nLegal = position.get()->LegalMoves(heap);
+        int nLegal = Position.get()->LegalMoves(heap);
         Assert::IsTrue(nLegal > 0, L"Position unexpectedly has no legal moves");
 
         bool fFound = false;
         for (unsigned int i = heap->current_section->start;
              i < heap->current_section->end; i++) {
-            if (heap->data[i] == bestMove) {
+            if (heap->data[i] == BestMove) {
                 fFound = true;
                 break;
             }
@@ -70,7 +70,7 @@ TEST_CLASS(SearchTests) {
         Assert::IsTrue(fFound,
                        L"Engine best move was not among the legal moves");
 
-        return bestMove;
+        return BestMove;
     }
 
     // Regression for the reported bug: in this position the engine previously
@@ -89,19 +89,19 @@ TEST_CLASS(SearchTests) {
     // Sanity check on the standard initial position: the engine must produce a
     // legal opening move.
     TEST_METHOD(EngineReturnsLegalMoveForInitialPosition) {
-        PositionGuard position(CPosition::Initial());
+        PositionGuard Position(CPosition::Initial());
 
         setMaxSearchDepth(4);
         SetFixedTimePerMove(60);
 
         int nScore = 0;
-        CMove bestMove = position.get()->Iterate(&nScore, M_NONE, nullptr);
+        CMove BestMove = Position.get()->Iterate(&nScore, M_NONE, nullptr);
 
         setMaxSearchDepth(MAX_TREE_SIZE - 2);
 
-        Assert::IsTrue(bestMove != M_NONE,
+        Assert::IsTrue(BestMove != M_NONE,
                        L"Engine returned M_NONE for the initial position");
-        Assert::IsTrue(position.get()->LegalMove(bestMove),
+        Assert::IsTrue(Position.get()->LegalMove(BestMove),
                        L"Engine returned an illegal move for the initial position");
     }
 };
