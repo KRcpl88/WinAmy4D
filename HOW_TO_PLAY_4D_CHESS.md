@@ -345,7 +345,7 @@ Once both players have 3 knights out, they may be in different positions, but at
 For example with white to move, assume both sides have advanced knights as follows:
 
 ```
-Black knights jf5, hf6, ic5
+Black knights jf5, hf6, ic6
 White knights hf3, ic3, if3
 ```
 
