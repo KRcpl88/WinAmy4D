@@ -159,12 +159,30 @@ static void ProcessRCFile(void) {
 static void ShowVersion(void) {
     Print(0, "\n");
     Print(0, CopyrightNotice);
+    Print(0, "\n");
+    Print(0, "    BUILTIN_POPCOUNTLL = %d, POPCNT = %d, SYS_TIME = %d, UNISTD = %d, SYS_SOCKET = %d, ", HAVE___BUILTIN_POPCOUNTLL, HAVE_POPCNT, HAVE_SYS_TIME_H, HAVE_UNISTD_H, HAVE_SYS_SOCKET_H);
+    Print(0, "NETDB_H = %d, SELECT = %d, GETHOSTNAME = %d, SETBUF = %d\n", HAVE_NETDB_H, HAVE_SELECT, HAVE_GETHOSTNAME, HAVE_SETBUF);
 #if MP
-    Print(0, "    Multiprocessor support (%d CPUs).\n\n", NumberOfCPUs);
+    Print(0, "Multiprocessor support (%d CPUs).\n\n", NumberOfCPUs);
 #else
-    Print(0, "    No multiprocessor support.\n\n");
+    Print(0, "No multiprocessor support.\n\n");
 #endif
 }
+
+/*
+#define HAVE___BUILTIN_POPCOUNTLL 0
+#define HAVE_POPCNT 1
+#define HAVE_PTHREAD_H 0
+#define HAVE_LIBPTHREAD 0
+#define HAVE_SYS_TIME_H 0
+#define HAVE_UNISTD_H 0
+#define HAVE_SYS_SOCKET_H 0
+#define HAVE_NETDB_H 0
+#define HAVE_SELECT 0
+#define HAVE_GETHOSTNAME 0
+#define HAVE_SETBUF 1
+ */
+
 
 int main(int argc, char *argv[]) {
 #if HAVE_SETBUF

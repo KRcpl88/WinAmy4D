@@ -159,11 +159,7 @@ static void ProcessRCFile(void) {
 static void ShowVersion(void) {
     Print(0, "\n");
     Print(0, CopyrightNotice);
-#if MP
-    Print(0, "    Multiprocessor support (%d CPUs).\n\n", NumberOfCPUs);
-#else
-    Print(0, "    No multiprocessor support.\n\n");
-#endif
+    Print(0, "\n\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -172,6 +168,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     OpenLogFile("Amy.log");
+    Print(0, "WinAmy: logging enabled\n");
 
     InitMoves();
 
