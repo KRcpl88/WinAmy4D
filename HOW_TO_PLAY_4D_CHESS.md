@@ -349,11 +349,7 @@ Black knights jf5, hf6, ic6
 White knights hf3, ic3, if3
 ```
 
-From this position, White has 3 good options:
-
-- **Ria1bb2** - black may counter with Nie7hd6, white responds with Nib1ic3
-- **Nie1id3** - black may counter with Phd7hd5, white responds with Ria1bb2
-- **Nhg1hf3** - black may counter with Nib7ic5, white responds with Ria1bb2
+From this position, White can threaten black's king by moving Nif3jd4, which threatens if6, forcing black to defned their kingby moving Khe8ie7, otherwise white can move Njd4if6, whihc will put black's king in check and allow white to capture their queen with Nif6xid7.
 
 
 ### 3D Fianchetto
