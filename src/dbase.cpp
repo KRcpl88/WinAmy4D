@@ -2354,6 +2354,16 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
         for (i = tmp_heap->current_section->start;
              i < tmp_heap->current_section->end; i++) {
             CMove move = tmp_heap->data[i];
+            /*
+             * Capturing a king is never a legal move. In an arbitrary
+             * (e.g. user-supplied) position the opponent's king may be left
+             * en prise, in which case GenTo would emit a capture of it. Skip
+             * such moves so they never reach DoMove (which traps on a king
+             * capture).
+             */
+            if (TYPE(p->GetPiece(move.GetToCoord().BitOffset())) == King) {
+                continue;
+            }
             p->DoMove(move);
             if (!p->InCheck(OPP(p->GetTurn()))) {
                 append_to_heap(heap, move);
@@ -2378,6 +2388,11 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t tmp_heap) {
             CMove move = tmp_heap->data[i];
             if ((move.IsCastle()) && !p->MayCastle(move))
                 continue;
+
+            /* Capturing a king is never a legal move (see note above). */
+            if (TYPE(p->GetPiece(move.GetToCoord().BitOffset())) == King) {
+                continue;
+            }
 
             p->DoMove(move);
             if (!p->InCheck(OPP(p->GetTurn()))) {
