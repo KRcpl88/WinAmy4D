@@ -36,6 +36,11 @@ void GameController::InitEngine() {
     InitAll();
     HashInit();
     AllocateHT();
+    // TODO: Also call RecogInit() here so the GUI engine has the interior-node
+    // endgame recognizers (KK/KBK/KBNK/KNK/...) that the console build sets up
+    // in main().  Without it ProbeRecognizer() always returns Useless, so the
+    // engine is weaker in simple endgames.  Deferred for now to avoid
+    // introducing new behaviour/bugs in this change.
 }
 
 // ---------------------------------------------------------------------------

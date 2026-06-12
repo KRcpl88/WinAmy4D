@@ -165,6 +165,7 @@
     <ClCompile Include="ChordTests.cpp" />
     <ClCompile Include="PolyTests.cpp" />
     <ClCompile Include="SearchDataTests.cpp" />
+    <ClCompile Include="SearchTests.cpp" />
     <ClCompile Include="CheckmateTests.cpp" />
     <ClCompile Include="AttackConsistencyTests.cpp" />
     <ClCompile Include="SanAndCheckTests.cpp" />
