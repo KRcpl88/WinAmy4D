@@ -713,6 +713,18 @@ void CPosition::DoMove(CMove move) {
         if (move.IsCapture()) {
             int sp = TYPE(p->m_rgPiece[toOffset]);
 
+            /*
+             * Capturing a king is an illegal/invalid scenario: a legal move
+             * generator must never let the opponent's king be taken. Catch it
+             * here so the corrupt state is both logged and trapped in the
+             * debugger (no-op in release builds).
+             */
+            AMY_ASSERT(sp != King,
+                       "DoMove capturing a King at L%d/F%d/R%d (from "
+                       "L%d/F%d/R%d) - illegal move reached DoMove\n",
+                       toCoord.m_nLevel, toCoord.m_nFile, toCoord.m_nRank,
+                       fromCoord.m_nLevel, fromCoord.m_nFile, fromCoord.m_nRank);
+
             /* piece looses its attacks */
             p->AtkClr(toCoord);
 
@@ -881,6 +893,21 @@ void CPosition::UndoMove(CMove move) {
     const uint16_t fromOffset = fromCoord.BitOffset();
     const uint16_t toOffset = toCoord.BitOffset();
     int8_t tp = TYPE(p->m_rgPiece[toOffset]);
+
+    /*
+     * Log every UndoMove invocation. This is high-frequency (the search calls
+     * it once per searched node), so it goes through PrintDebug at a verbosity
+     * above the console threshold: it is written only to the log file and only
+     * when debug mode is enabled (-debug), keeping normal play unaffected while
+     * making it clear in diagnostic logs whenever a move is undone.
+     */
+    PrintDebug(9,
+               "UndoMove: from L%d/F%d/R%d to L%d/F%d/R%d cap=%d ep=%d "
+               "castle=%d promo=%d ply=%d\n",
+               fromCoord.m_nLevel, fromCoord.m_nFile, fromCoord.m_nRank,
+               toCoord.m_nLevel, toCoord.m_nFile, toCoord.m_nRank,
+               (int)move.IsCapture(), (int)move.IsEnPassant(),
+               (int)move.IsCastle(), (int)move.HasPromotion(), (int)p->m_wPly);
 
     /* Swap p->turns */
     p->m_nTurn = OPP(p->m_nTurn);

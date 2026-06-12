@@ -43,6 +43,33 @@ extern uint16_t g_nDebugMode;
 void OpenLogFile(const char *name);
 void Print(int, const char *, ...);
 void PrintDebug(int, const char *, ...);
+
+/*
+ * AMY_ASSERT - diagnostic assertion for "this should never happen" scenarios.
+ *
+ * When the condition is false it (1) logs a descriptive message via Print so the
+ * failure is visible in the log file (e.g. when running under WinAmyGUI which
+ * has no console) and (2) traps into the debugger via the standard assert()
+ * macro so the offending state can be inspected. In release builds (NDEBUG
+ * defined) it expands to nothing, exactly like the standard assert(), so it adds
+ * no overhead on the search hot path.
+ *
+ * Usage: AMY_ASSERT(cond, fmt, ...) - a printf-style format string is required.
+ */
+#ifdef NDEBUG
+#define AMY_ASSERT(cond, ...) ((void)0)
+#else
+#include <assert.h>
+#define AMY_ASSERT(cond, ...)                                                  \
+    do {                                                                       \
+        if (!(cond)) {                                                         \
+            Print(0, "ASSERTION FAILED (%s:%d): ", __FILE__, __LINE__);        \
+            Print(0, __VA_ARGS__);                                             \
+            assert(cond);                                                      \
+        }                                                                      \
+    } while (0)
+#endif
+
 int InputReady(void);
 int ReadLine(char *buffer, int cnt);
 char *FormatTime(unsigned long, char *, size_t);

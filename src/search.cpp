@@ -1145,6 +1145,20 @@ void *IterateInt(void *x) {
             }
 
             p->DoMove(move);
+            /*
+             * Root moves come from LegalMoves(), so the side that just moved
+             * must not have left its own king in check. If it has, an illegal
+             * move slipped into the root list (the class of bug behind the
+             * "engine recommended an illegal move" reports): log it and trap
+             * into the debugger so the position/move can be inspected.
+             */
+            AMY_ASSERT(
+                !p->InCheck(OPP(p->GetTurn())),
+                "Illegal root move left own king in check: from L%d/F%d/R%d "
+                "to L%d/F%d/R%d\n",
+                move.GetFromCoord().m_nLevel, move.GetFromCoord().m_nFile,
+                move.GetFromCoord().m_nRank, move.GetToCoord().m_nLevel,
+                move.GetToCoord().m_nFile, move.GetToCoord().m_nRank);
             if (p->InCheck(p->GetTurn()))
                 next_depth += ExtendInCheck;
 
@@ -1489,6 +1503,22 @@ final:
     // the live buffer rather than a stale (freed) one.
     mvs = sd->m_hHeap->data + uRootStart;
     sd->m_BestMove = mvs[0];
+
+    /*
+     * The returned best move must be legal in the (now restored) root position.
+     * Returning an illegal move here is exactly the failure mode behind the
+     * reported "engine recommended an illegal move" bug, so assert it: the
+     * failure is logged and trapped in the debugger (no-op in release).
+     */
+    AMY_ASSERT(sd->m_BestMove == M_NONE || p->LegalMove(sd->m_BestMove),
+               "IterateInt returning an illegal best move: from L%d/F%d/R%d "
+               "to L%d/F%d/R%d\n",
+               sd->m_BestMove.GetFromCoord().m_nLevel,
+               sd->m_BestMove.GetFromCoord().m_nFile,
+               sd->m_BestMove.GetFromCoord().m_nRank,
+               sd->m_BestMove.GetToCoord().m_nLevel,
+               sd->m_BestMove.GetToCoord().m_nFile,
+               sd->m_BestMove.GetToCoord().m_nRank);
 
     if (!sd->m_fMaster) {
         CPosition::Free(sd->m_pPosition);
