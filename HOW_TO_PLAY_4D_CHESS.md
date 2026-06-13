@@ -362,7 +362,10 @@ In 4D chess, both rooks are vulnerable on the right side of the board on level i
 
 ### Queen's gambit
 
-### Queen's gambit accepted
+#### Queen's gambit delined
+Phe6 
+
+#### Queen's gambit accepted
 
 In 4D chess, there are 4 optimal responses for white to a queen's gambit accepted.
 
