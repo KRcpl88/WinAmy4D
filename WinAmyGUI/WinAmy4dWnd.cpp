@@ -648,12 +648,10 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
 
     x += BTN_GAP * 2;
 
-    // 3D-mode zoom controls.
-    m_hBtnZoomIn  = makeBtn(L"Zoom +", IDC_BTN_ZOOM_IN,  60);
-    m_hBtnZoomOut = makeBtn(L"Zoom -", IDC_BTN_ZOOM_OUT, 60);
     // 3D-mode toggle: when checked the camera rotates so the selected outline
     // type faces the view; when unchecked (the default) changing the outline
-    // type leaves the camera orientation unchanged.
+    // type leaves the camera orientation unchanged. Placed between the grid-type
+    // selector and the zoom buttons.
     {
         m_hBtnRotateGrid = CreateWindowExW(0, L"BUTTON", L"Rotate Grid",
             WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -664,6 +662,10 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
         SendMessageW(m_hBtnRotateGrid, BM_SETCHECK, BST_UNCHECKED, 0);
     }
     x += BTN_GAP;
+
+    // 3D-mode zoom controls.
+    m_hBtnZoomIn  = makeBtn(L"Zoom +", IDC_BTN_ZOOM_IN,  60);
+    m_hBtnZoomOut = makeBtn(L"Zoom -", IDC_BTN_ZOOM_OUT, 60);
     // 2D-mode control: selects which plane of the 4D board the flat view shows
     // (an axis swap applied purely for rendering). Hidden in 3D mode.
     {
