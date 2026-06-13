@@ -83,6 +83,7 @@ void GameController::NewGame() {
     m_BestMove = M_NONE;
     m_nRejectCount = 0;
     m_fEngineCorrupted = false;
+    m_PlayerMode = PlayerMode::TwoPlayers;
     InvalidateStrategy();
 }
 

@@ -99,7 +99,8 @@ public:
     // call before Initialize — the new selection is applied to the line
     // buffer at first init or on the next call after the renderer is
     // initialized.
-    void SetOutlineType(CUCoord::EOutlineType eType);
+    void SetOutlineType(CUCoord::EOutlineType eType,
+                        bool fPreserveCameraPosition = false);
     CUCoord::EOutlineType GetOutlineType() const { return m_eOutlineType; }
 
     // Reset orbit yaw/pitch, zoom, and axis transforms to defaults.
@@ -222,6 +223,14 @@ private:
 
     DirectX::XMMATRIX MakeView()  const;
     DirectX::XMMATRIX MakeProj()  const;
+    DirectX::XMVECTOR GetUpVectorForOutlineType(CUCoord::EOutlineType eType) const;
+    void BuildViewBasis(CUCoord::EOutlineType eType,
+                        DirectX::XMVECTOR& vUp,
+                        DirectX::XMVECTOR& vRight,
+                        DirectX::XMVECTOR& vForward) const;
+    DirectX::XMVECTOR GetEyeDirectionForOutlineType(CUCoord::EOutlineType eType) const;
+    void SetEyeDirectionForOutlineType(CUCoord::EOutlineType eType,
+                                       DirectX::XMVECTOR vEyeDir);
 
     // Returns the cell center for a CSCoord in render space.
     DirectX::XMFLOAT3 CellCenter(const CSCoord& Coord) const;

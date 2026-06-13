@@ -47,6 +47,9 @@
 // Compute and display a short strategy (top 3 moves with replies) for the
 // current player.
 #define IDM_STRATEGY        1056
+#define IDM_SUGGEST_MOVE    1059
+#define IDM_VIEW_GRIDLINES  1060
+#define IDM_VIEW_RESET      1061
 
 // Highlight all legal moves for one side. These are checkboxes, not radio
 // items, so the active side can be deselected.
@@ -67,6 +70,7 @@
 #define IDC_BTN_ZOOM_OUT    2011
 #define IDC_BTN_VIEW_TOGGLE 2012
 #define IDC_CB_GRID_TYPE    2013
+#define IDC_CHK_PRESERVE_VIEW 2014
 #define IDC_CB_SWAP_AXES    2017
 
 // Custom window messages

@@ -556,38 +556,82 @@ void D3DBoardRenderer::Resize(int nWidth, int nHeight) {
 XMMATRIX D3DBoardRenderer::MakeView() const {
     XMVECTOR vCenter = XMVectorSet(m_BoardCenter.x, m_BoardCenter.y, m_BoardCenter.z, 1.0f);
 
-    // Point "up" along the up vector for the currently selected outline type,
-    // transformed through the same axis order/inversion as the cell geometry so
-    // the camera stays aligned with the board after swaps or inversions.
-    size_t nOutline = static_cast<size_t>(m_eOutlineType);
-    if (nOutline >= ARRAYSIZE(g_rgUpVector)) nOutline = 0;
-    XMFLOAT3 vUpDir = ApplyAxisTransform(UCoordToFloat3(g_rgUpVector[nOutline]));
-    XMVECTOR vUp    = XMVector3Normalize(XMVectorSet(vUpDir.x, vUpDir.y, vUpDir.z, 0.0f));
+    XMVECTOR vUp;
+    XMVECTOR vRight;
+    XMVECTOR vForward;
+    BuildViewBasis(m_eOutlineType, vUp, vRight, vForward);
+    XMVECTOR vEyeDir = GetEyeDirectionForOutlineType(m_eOutlineType);
+    XMVECTOR vEye     = XMVectorAdd(vCenter, XMVectorScale(vEyeDir, m_fDistance));
 
-    // Build an orthonormal basis in the board plane (perpendicular to vUp) so
-    // that yaw orbits the eye horizontally around the board while pitch raises
-    // or lowers it above/below that plane. Defining the basis relative to vUp
-    // keeps both rotation axes working for every outline orientation, and a
-    // positive default pitch makes the eye look slightly down on the board.
+    return XMMatrixLookAtLH(vEye, vCenter, vUp);
+}
+
+XMVECTOR D3DBoardRenderer::GetUpVectorForOutlineType(CUCoord::EOutlineType eType) const {
+    size_t nOutline = static_cast<size_t>(eType);
+    if (nOutline >= ARRAYSIZE(g_rgUpVector)) {
+        nOutline = 0;
+    }
+    XMFLOAT3 vUpDir = ApplyAxisTransform(UCoordToFloat3(g_rgUpVector[nOutline]));
+    return XMVector3Normalize(XMVectorSet(vUpDir.x, vUpDir.y, vUpDir.z, 0.0f));
+}
+
+void D3DBoardRenderer::BuildViewBasis(CUCoord::EOutlineType eType,
+                                      XMVECTOR& vUp,
+                                      XMVECTOR& vRight,
+                                      XMVECTOR& vForward) const {
+    vUp = GetUpVectorForOutlineType(eType);
+
     XMVECTOR vRef = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-    if (fabsf(XMVectorGetX(XMVector3Dot(vRef, vUp))) > 0.99f)
+    if (fabsf(XMVectorGetX(XMVector3Dot(vRef, vUp))) > 0.99f) {
         vRef = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-    XMVECTOR vRight   = XMVector3Normalize(XMVector3Cross(vUp, vRef));
-    XMVECTOR vForward = XMVector3Cross(vRight, vUp);
+    }
+    vRight   = XMVector3Normalize(XMVector3Cross(vUp, vRef));
+    vForward = XMVector3Cross(vRight, vUp);
+}
+
+XMVECTOR D3DBoardRenderer::GetEyeDirectionForOutlineType(CUCoord::EOutlineType eType) const {
+    XMVECTOR vUp;
+    XMVECTOR vRight;
+    XMVECTOR vForward;
+    BuildViewBasis(eType, vUp, vRight, vForward);
 
     float dCp = std::cos(m_fPitch);
     float dSp = std::sin(m_fPitch);
     float dCy = std::cos(m_fYaw);
     float dSy = std::sin(m_fYaw);
 
-    // Direction from the board center to the eye: orbit in-plane via yaw, then
-    // lift above (or below) the plane via pitch. The eye stays a constant
-    // m_fDistance from the center for any yaw/pitch.
-    XMVECTOR vInPlane = XMVectorAdd(XMVectorScale(vForward, dCy), XMVectorScale(vRight, dSy));
-    XMVECTOR vEyeDir  = XMVectorAdd(XMVectorScale(vInPlane, dCp), XMVectorScale(vUp, dSp));
-    XMVECTOR vEye     = XMVectorAdd(vCenter, XMVectorScale(vEyeDir, m_fDistance));
+    XMVECTOR vInPlane = XMVectorAdd(XMVectorScale(vForward, dCy),
+                                    XMVectorScale(vRight, dSy));
+    return XMVector3Normalize(XMVectorAdd(XMVectorScale(vInPlane, dCp),
+                                          XMVectorScale(vUp, dSp)));
+}
 
-    return XMMatrixLookAtLH(vEye, vCenter, vUp);
+void D3DBoardRenderer::SetEyeDirectionForOutlineType(CUCoord::EOutlineType eType,
+                                                     XMVECTOR vEyeDir) {
+    XMVECTOR vUp;
+    XMVECTOR vRight;
+    XMVECTOR vForward;
+    BuildViewBasis(eType, vUp, vRight, vForward);
+
+    vEyeDir = XMVector3Normalize(vEyeDir);
+
+    float fUp = XMVectorGetX(XMVector3Dot(vEyeDir, vUp));
+    fUp = (std::max)(-1.0f, (std::min)(1.0f, fUp));
+    m_fPitch = std::asinf(fUp);
+
+    const float kPitchLimit = 1.55f;
+    if (m_fPitch > kPitchLimit) {
+        m_fPitch = kPitchLimit;
+    }
+    if (m_fPitch < -kPitchLimit) {
+        m_fPitch = -kPitchLimit;
+    }
+
+    float fForward = XMVectorGetX(XMVector3Dot(vEyeDir, vForward));
+    float fRight   = XMVectorGetX(XMVector3Dot(vEyeDir, vRight));
+    if (fabsf(fForward) > 1e-5f || fabsf(fRight) > 1e-5f) {
+        m_fYaw = std::atan2(fRight, fForward);
+    }
 }
 
 XMMATRIX D3DBoardRenderer::MakeProj() const {
@@ -657,13 +701,22 @@ void D3DBoardRenderer::SetShowOutlines(bool bShow) {
     if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
 }
 
-void D3DBoardRenderer::SetOutlineType(CUCoord::EOutlineType eType) {
+void D3DBoardRenderer::SetOutlineType(CUCoord::EOutlineType eType,
+                                      bool fPreserveCameraPosition) {
     if (m_eOutlineType == eType) return;
+    XMVECTOR vEyeDir = XMVectorZero();
+    if (fPreserveCameraPosition) {
+        vEyeDir = GetEyeDirectionForOutlineType(m_eOutlineType);
+    }
     m_eOutlineType = eType;
+    if (fPreserveCameraPosition) {
+        SetEyeDirectionForOutlineType(eType, vEyeDir);
+    }
     // Only rebuild the GPU buffer if the device is up; otherwise the new
     // selection is picked up by the first RebuildLineGeometry call in
     // Initialize.
     if (m_pDevice) RebuildLineGeometry();
+    if (m_hWnd) InvalidateRect(m_hWnd, nullptr, FALSE);
 }
 
 void D3DBoardRenderer::ResetView() {

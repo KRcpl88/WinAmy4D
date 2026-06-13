@@ -33,6 +33,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "&Undo Move\tCtrl+Z",               IDM_UNDO, GRAYED
+        MENUITEM "&Suggest Move",                   IDM_SUGGEST_MOVE
         MENUITEM "&Recommend Strategy...",                     IDM_STRATEGY
         POPUP "&Highlight Legal Moves"
         BEGIN
@@ -45,6 +46,9 @@ BEGIN
     BEGIN
         MENUITEM "&2D Board\tCtrl+2", IDM_VIEW_2D, CHECKED
         MENUITEM "&3D Board\tCtrl+3", IDM_VIEW_3D
+        MENUITEM SEPARATOR
+        MENUITEM "Show &Gridlines",  IDM_VIEW_GRIDLINES, CHECKED
+        MENUITEM "&Reset View",      IDM_VIEW_RESET
         MENUITEM SEPARATOR
         POPUP "&Grid Type"
         BEGIN
