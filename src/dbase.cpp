@@ -1332,6 +1332,17 @@ bool CPosition::MayCastle(CMove move) {
         fromCoord.m_nRank != kingHome.m_nRank)
         return false;
 
+    /* The castling-rights flags can be inconsistent with the actual piece
+     * placement: they may be loaded verbatim from an EPD/FEN, or arrive as a
+     * stale castle move from the hash/countermove tables.  In the 4D variant
+     * the king and rooks need not sit on the main-level home squares even when
+     * rights are set, so verify the pieces are really there before allowing a
+     * castle.  Without this, DoCastle would shuffle non-existent pieces and
+     * corrupt the board (mask bits set on empty squares). */
+    if (TYPE(p->m_rgPiece[kingHome.BitOffset()]) != King ||
+        !SAME_COLOR(p->m_rgPiece[kingHome.BitOffset()], p->m_nTurn))
+        return false;
+
     if (p->InCheck(p->m_nTurn))
         return false;
 
@@ -1339,6 +1350,12 @@ bool CPosition::MayCastle(CMove move) {
     if (move.IsShortCastle() && (p->m_bCastle & CastleMask[p->m_nTurn][0])) {
         int fs = (p->m_nTurn == White ? CASTLE_F1 : CASTLE_F8);
         int gs = (p->m_nTurn == White ? CASTLE_G1 : CASTLE_G8);
+        int hs = (p->m_nTurn == White ? CASTLE_H1 : CASTLE_H8);
+
+        /* The king-side rook must actually be on its home square */
+        if (TYPE(p->m_rgPiece[hs]) != Rook ||
+            !SAME_COLOR(p->m_rgPiece[hs], p->m_nTurn))
+            return false;
 
         /* Check if f and g square are empty */
         if (p->m_rgPiece[fs] == Neutral && p->m_rgPiece[gs] == Neutral) {
@@ -1352,9 +1369,15 @@ bool CPosition::MayCastle(CMove move) {
 
     /* queen p->m_nTurn castling */
     if (move.IsLongCastle() && (p->m_bCastle & CastleMask[p->m_nTurn][1])) {
+        int as = (p->m_nTurn == White ? CASTLE_A1 : CASTLE_A8);
         int bs = (p->m_nTurn == White ? CASTLE_B1 : CASTLE_B8);
         int cs = (p->m_nTurn == White ? CASTLE_C1 : CASTLE_C8);
         int ds = (p->m_nTurn == White ? CASTLE_D1 : CASTLE_D8);
+
+        /* The queen-side rook must actually be on its home square */
+        if (TYPE(p->m_rgPiece[as]) != Rook ||
+            !SAME_COLOR(p->m_rgPiece[as], p->m_nTurn))
+            return false;
 
         /* Check if b, c and d square are empty */
         if (p->m_rgPiece[bs] == Neutral && p->m_rgPiece[cs] == Neutral &&
@@ -3111,15 +3134,108 @@ bool IsPassed(const CPosition *p, const CSCoord& sqCoord, int side) {
 }
 
 /**
- * Create a position from an EPD
+ * Validate the castling-rights flags of a freshly parsed EPD position.
+ *
+ * Castling rights are read verbatim from the EPD text, but a right is only
+ * meaningful when the relevant king and rook actually occupy their home
+ * squares.  In the 4D variant castling is confined to the main level, so for
+ * every declared right verify the friendly King is on its E-file home square
+ * and the friendly Rook is on the matching corner (H for king-side, A for
+ * queen-side).  Returns false when any declared right is inconsistent with the
+ * board.
  */
+static bool EpdCastlingRightsValid(const CPosition *p) {
+    const int8_t bCastle = p->GetCastle();
 
-CPosition *CPosition::CreateFromEPD(const char *epd) {
+    if (bCastle & CastleMask[White][0]) {
+        if (TYPE(p->GetPiece(CASTLE_E1)) != King ||
+            !SAME_COLOR(p->GetPiece(CASTLE_E1), White)) {
+            return false;
+        }
+        if (TYPE(p->GetPiece(CASTLE_H1)) != Rook ||
+            !SAME_COLOR(p->GetPiece(CASTLE_H1), White)) {
+            return false;
+        }
+    }
+    if (bCastle & CastleMask[White][1]) {
+        if (TYPE(p->GetPiece(CASTLE_E1)) != King ||
+            !SAME_COLOR(p->GetPiece(CASTLE_E1), White)) {
+            return false;
+        }
+        if (TYPE(p->GetPiece(CASTLE_A1)) != Rook ||
+            !SAME_COLOR(p->GetPiece(CASTLE_A1), White)) {
+            return false;
+        }
+    }
+    if (bCastle & CastleMask[Black][0]) {
+        if (TYPE(p->GetPiece(CASTLE_E8)) != King ||
+            !SAME_COLOR(p->GetPiece(CASTLE_E8), Black)) {
+            return false;
+        }
+        if (TYPE(p->GetPiece(CASTLE_H8)) != Rook ||
+            !SAME_COLOR(p->GetPiece(CASTLE_H8), Black)) {
+            return false;
+        }
+    }
+    if (bCastle & CastleMask[Black][1]) {
+        if (TYPE(p->GetPiece(CASTLE_E8)) != King ||
+            !SAME_COLOR(p->GetPiece(CASTLE_E8), Black)) {
+            return false;
+        }
+        if (TYPE(p->GetPiece(CASTLE_A8)) != Rook ||
+            !SAME_COLOR(p->GetPiece(CASTLE_A8), Black)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Check whether an EPD string describes a valid position.
+ *
+ * Currently this validates the castling rights against the actual king/rook
+ * placement; an EPD that declares a castling right with no matching king or
+ * rook on its home square is rejected.  Returns false for a null/empty EPD or
+ * any detected validity issue.
+ */
+bool CPosition::IsValidEPD(const char *epd) {
+    if (epd == nullptr || *epd == '\0') {
+        return false;
+    }
+
     CPosition *p = (CPosition *)safe_calloc(1, sizeof(CPosition));
     p->m_cGameLog = INITIAL_GAME_LOG_SIZE;
     p->m_pGameLog = (SGameLog *)safe_calloc(p->m_cGameLog, sizeof(SGameLog));
     p->m_pActLog = p->m_pGameLog;
     ReadEPD(p, epd);
+
+    const bool fValid = EpdCastlingRightsValid(p);
+
+    CPosition::Free(p);
+    return fValid;
+}
+
+/**
+ * Create a position from an EPD
+ */
+
+CPosition *CPosition::CreateFromEPD(const char *epd) {
+    if (epd == nullptr || *epd == '\0') {
+        return nullptr;
+    }
+
+    CPosition *p = (CPosition *)safe_calloc(1, sizeof(CPosition));
+    p->m_cGameLog = INITIAL_GAME_LOG_SIZE;
+    p->m_pGameLog = (SGameLog *)safe_calloc(p->m_cGameLog, sizeof(SGameLog));
+    p->m_pActLog = p->m_pGameLog;
+    ReadEPD(p, epd);
+
+    /* Reject EPDs whose castling rights are inconsistent with the board. */
+    if (!EpdCastlingRightsValid(p)) {
+        CPosition::Free(p);
+        return nullptr;
+    }
+
     p->m_pActLog->gl_IrrevCount = 0;
 
     /* default for book usage is no book */

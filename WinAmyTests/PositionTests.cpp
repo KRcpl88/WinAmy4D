@@ -535,6 +535,53 @@ TEST_CLASS(PositionTests) {
 
         Assert::IsFalse(position.get()->InCheck(White));
     }
+
+    // --- EPD validation tests ---
+
+    // A castling right is only valid when the matching king and rook actually
+    // occupy their home squares.  This EPD declares white rights "KQ" but the
+    // white king sits on level 'a' (the leading "K" field) with no rook on the
+    // main-level corners, so the rights are inconsistent with the board.
+    static const char *InvalidCastlingEpd() {
+        return "K|2/2|3/3/3|4/4/4/4|5/3Q1/5/5/n4|6/6/6/6/6/6|7/7/7/7/7/7/7|"
+               "8/8/8/8/8/8/2R5/8|7/7/7/7/7/7/7|6/6/6/6/6/6|5/5/5/5/5|"
+               "4/4/4/4|n2/3/r2|bb/2|k w KQ -";
+    }
+
+    // The standard initial position declares "KQkq" with kings on e1/e8 and
+    // rooks on a1/h1/a8/h8, so every castling right is consistent.
+    static const char *ValidCastlingEpd() {
+        return "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|ppppppp/7/7/7/7/7/"
+               "PPPPPPP|rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|"
+               "rnbqnbr/ppppppp/7/7/7/PPPPPPP/RNBQNBR|pppppp/6/6/6/6/PPPPPP|"
+               " w KQkq -";
+    }
+
+    TEST_METHOD(IsValidEPDRejectsInconsistentCastlingRights) {
+        Assert::IsFalse(CPosition::IsValidEPD(InvalidCastlingEpd()),
+                        L"IsValidEPD must reject castling rights that have no "
+                        L"matching king/rook on their home squares");
+    }
+
+    TEST_METHOD(IsValidEPDAcceptsConsistentCastlingRights) {
+        Assert::IsTrue(CPosition::IsValidEPD(ValidCastlingEpd()),
+                       L"IsValidEPD must accept a position whose castling "
+                       L"rights match the board");
+    }
+
+    TEST_METHOD(CreateFromEPDReturnsNullForInconsistentCastlingRights) {
+        CPosition *pPosition = CPosition::CreateFromEPD(InvalidCastlingEpd());
+        Assert::IsNull(pPosition,
+                       L"CreateFromEPD must return nullptr for an EPD with "
+                       L"invalid castling rights");
+    }
+
+    TEST_METHOD(CreateFromEPDSucceedsForConsistentCastlingRights) {
+        PositionGuard Position(CPosition::CreateFromEPD(ValidCastlingEpd()));
+        Assert::IsNotNull(Position.get(),
+                          L"CreateFromEPD must succeed for an EPD with valid "
+                          L"castling rights");
+    }
 };
 
 } // namespace WinAmyTests

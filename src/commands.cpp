@@ -262,6 +262,10 @@ static void Test(char *fname) {
             break;
         Print(0, "Problem %d:\n", i);
         p = CPosition::CreateFromEPD(line);
+        if (p == NULL) {
+            Print(0, "Skipping invalid EPD.\n");
+            continue;
+        }
         p->ShowPosition();
 
         /* TestSwap(); */
@@ -345,6 +349,10 @@ static void TestScore(char *fname) {
         if (fgets(line, 256, fin) == NULL)
             break;
         p = CPosition::CreateFromEPD(line);
+        if (p == NULL) {
+            Print(0, "Skipping invalid EPD.\n");
+            continue;
+        }
         InitEvaluation(p);
         int score = EvaluatePosition(p);
 
@@ -541,8 +549,13 @@ static void SetEPD(char *args) {
         Print(0, "Usage: epd <EPD>\n");
         return;
     }
+    CPosition *pNewPosition = CPosition::CreateFromEPD(args);
+    if (pNewPosition == NULL) {
+        Print(0, "Invalid EPD.\n");
+        return;
+    }
     CPosition::Free(CurrentPosition);
-    CurrentPosition = CPosition::CreateFromEPD(args);
+    CurrentPosition = pNewPosition;
 }
 
 static void RunAnnotate(char *fname, int side) {

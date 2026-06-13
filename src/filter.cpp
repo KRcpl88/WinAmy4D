@@ -63,6 +63,11 @@ void FilterQuiescentPositions(char *file_name) {
             p = CPosition::Initial();
         }
 
+        if (p == NULL) {
+            Print(0, "Skipping game with invalid setup EPD.\n");
+            continue;
+        }
+
         print_header(fout, &header);
 
         bool last_position_was_quiet = true;
