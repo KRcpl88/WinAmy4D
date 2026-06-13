@@ -53,6 +53,14 @@
 #define IDM_HIGHLIGHT_WHITE 1057
 #define IDM_HIGHLIGHT_BLACK 1058
 
+// Ask the engine to suggest a move for the current human player (highlights the
+// recommended from/to squares without applying the move).
+#define IDM_SUGGEST         1059
+
+// View menu — 3D-only items (enabled only while in 3D mode).
+#define IDM_VIEW_SHOW_GRIDLINES 1060
+#define IDM_VIEW_RESET_VIEW     1061
+
 // The fixed per-move search time (in seconds) is selected from the Options ->
 // Search Time menu (IDM_TIME_5 .. IDM_TIME_180). The engine searches as deeply
 // as it can within the chosen interval; a longer interval yields a stronger

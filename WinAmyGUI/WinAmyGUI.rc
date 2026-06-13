@@ -6,6 +6,7 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&New Game\tCtrl+N",   IDM_FILE_NEW
+        MENUITEM SEPARATOR
         MENUITEM "&Load Game from EPD...", IDM_FILE_LOAD_EPD
         MENUITEM "&Save Game to EPD...",   IDM_FILE_SAVE_EPD
         MENUITEM SEPARATOR
@@ -28,11 +29,12 @@ BEGIN
         POPUP "&Players"
         BEGIN
             MENUITEM "&0 Players (Engine self-play)", IDM_PLAYERS_0
-            MENUITEM "&1 Player (vs Engine)",         IDM_PLAYERS_1, CHECKED
-            MENUITEM "&2 Players (Human vs Human)",   IDM_PLAYERS_2
+            MENUITEM "&1 Player (vs Engine)",         IDM_PLAYERS_1
+            MENUITEM "&2 Players (Human vs Human)",   IDM_PLAYERS_2, CHECKED
         END
         MENUITEM SEPARATOR
         MENUITEM "&Undo Move\tCtrl+Z",               IDM_UNDO, GRAYED
+        MENUITEM "&Suggest Move",                    IDM_SUGGEST, GRAYED
         MENUITEM "&Recommend Strategy...",                     IDM_STRATEGY
         POPUP "&Highlight Legal Moves"
         BEGIN
@@ -59,5 +61,8 @@ BEGIN
             MENUITEM "Hex &3 (-X,+Y,-Z)",   IDM_GRID_HEX_3
             MENUITEM "Hex &4 (+X,-Y,-Z)",   IDM_GRID_HEX_4
         END
+        MENUITEM SEPARATOR
+        MENUITEM "Show &Gridlines",   IDM_VIEW_SHOW_GRIDLINES, GRAYED
+        MENUITEM "Reset &View",       IDM_VIEW_RESET_VIEW, GRAYED
     END
 END
