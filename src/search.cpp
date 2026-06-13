@@ -180,7 +180,24 @@ static int NodesPerCheck = 1000;
 OPTIONAL_ATOMIC unsigned long TotalNodes;
 
 #if MP
-int NumberOfCPUs;
+int NumberOfCores;
+#endif
+
+#if MP
+int ResolveNumberOfCores(void) {
+    if (NumberOfCores <= 0) {
+        NumberOfCores = (int)std::thread::hardware_concurrency();
+        if (NumberOfCores <= 0) {
+            NumberOfCores = 1;
+        }
+    }
+
+    if (NumberOfCores > MAX_SEARCH_THREADS) {
+        NumberOfCores = MAX_SEARCH_THREADS;
+    }
+
+    return NumberOfCores;
+}
 #endif
 
 /*

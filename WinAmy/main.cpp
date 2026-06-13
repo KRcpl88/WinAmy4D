@@ -98,7 +98,7 @@ static void ProcessOptions(int argc, char *argv[]) {
         if (!strcmp(argv[i], "-cpu")) {
             i++;
             if (i < argc) {
-                NumberOfCPUs = atoi(argv[i]);
+                NumberOfCores = atoi(argv[i]);
             }
         }
 #endif
@@ -143,7 +143,7 @@ static void ProcessRCFile(void) {
             strncpy(EGTBPath, value, sizeof(EGTBPath) - 1);
         } else if (!strcmp(key, "cpu")) {
 #if MP
-            NumberOfCPUs = atoi(value);
+            NumberOfCores = atoi(value);
 #endif /* MP */
         } else if (!strcmp(key, "autosave")) {
             AutoSave = !strcmp(value, "true");
@@ -190,7 +190,7 @@ static void ShowVersion(void) {
 #endif
     Print(0, "\n");
 #if MP
-    Print(0, "Multiprocessor support (%d CPUs).\n\n", NumberOfCPUs);
+    Print(0, "Multiprocessor support (%d CPUs).\n\n", ResolveNumberOfCores());
 #else
     Print(0, "No multiprocessor support.\n\n");
 #endif

@@ -87,14 +87,7 @@ enum {
 #define NORMAL "\x1B[0m"
 
 #if MP
-/*
- * Upper bound on the number of search threads. Guards against
- * hardware_concurrency() (or a misconfigured override) reporting an
- * unreasonably large value.
- */
-#define MAX_SEARCH_THREADS 32
-
-extern int NumberOfCPUs;
+extern int NumberOfCores;
 extern bool AbortSearch;
 extern void StopHelpers(void);
 extern void SetSearchThreadBackgroundPriority(void);
@@ -731,28 +724,14 @@ void CPosition::StartHelpers() {
      */
     static bool s_fThreadCountLogged = false;
 
-    if (NumberOfCPUs <= 0) {
-        NumberOfCPUs = (int)std::thread::hardware_concurrency();
-        if (NumberOfCPUs <= 0) {
-            NumberOfCPUs = 1;
-        }
-    }
-
-    /*
-     * Cap the number of search threads to a sane maximum in case
-     * hardware_concurrency() (or a misconfigured override) reports an
-     * unreasonably large value.
-     */
-    if (NumberOfCPUs > MAX_SEARCH_THREADS) {
-        NumberOfCPUs = MAX_SEARCH_THREADS;
-    }
+    ResolveNumberOfCores();
 
     if (!s_fThreadCountLogged) {
         s_fThreadCountLogged = true;
-        Print(0, "Search threads: %d\n", NumberOfCPUs);
+        Print(0, "Search threads: %d\n", NumberOfCores);
     }
 
-    if (NumberOfCPUs < 2) {
+    if (NumberOfCores < 2) {
         return;
     }
 
@@ -763,8 +742,8 @@ void CPosition::StartHelpers() {
      * responsive.
      */
 
-    HelperThreads.reserve(NumberOfCPUs - 1);
-    for (nthread = 0; nthread < (NumberOfCPUs - 1); nthread++) {
+    HelperThreads.reserve(NumberOfCores - 1);
+    for (nthread = 0; nthread < (NumberOfCores - 1); nthread++) {
         CSearchData *sd = new CSearchData(CPosition::Clone(p));
         sd->m_fMaster = false;
         HelperThreads.emplace_back([sd]() {
@@ -774,4 +753,3 @@ void CPosition::StartHelpers() {
     }
 }
 #endif /* MP */
-
