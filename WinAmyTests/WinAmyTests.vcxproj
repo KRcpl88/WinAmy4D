@@ -168,6 +168,7 @@
     <ClCompile Include="SearchTests.cpp" />
     <ClCompile Include="CheckmateTests.cpp" />
     <ClCompile Include="AttackConsistencyTests.cpp" />
+    <ClCompile Include="HashCollisionTests.cpp" />
     <ClCompile Include="SanAndCheckTests.cpp" />
   </ItemGroup>
   <ItemGroup>
