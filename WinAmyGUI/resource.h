@@ -76,6 +76,7 @@
 #define IDC_BTN_VIEW_TOGGLE 2012
 #define IDC_CB_GRID_TYPE    2013
 #define IDC_CB_SWAP_AXES    2017
+#define IDC_BTN_ROTATE_GRID 2018
 
 // Custom window messages
 #define WM_APP_ENGINE_MOVE  (WM_APP + 1)

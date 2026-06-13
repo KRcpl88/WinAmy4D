@@ -651,6 +651,18 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
     // 3D-mode zoom controls.
     m_hBtnZoomIn  = makeBtn(L"Zoom +", IDC_BTN_ZOOM_IN,  60);
     m_hBtnZoomOut = makeBtn(L"Zoom -", IDC_BTN_ZOOM_OUT, 60);
+    // 3D-mode toggle: when checked the camera rotates so the selected outline
+    // type faces the view; when unchecked (the default) changing the outline
+    // type leaves the camera orientation unchanged.
+    {
+        m_hBtnRotateGrid = CreateWindowExW(0, L"BUTTON", L"Rotate Grid",
+            WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, BTN_Y, 100, BTN_H, hWnd,
+            (HMENU)(INT_PTR)IDC_BTN_ROTATE_GRID, hInst, nullptr);
+        x += 100 + BTN_GAP;
+        // Default to unchecked, matching the renderer's m_bRotateGrid default.
+        SendMessageW(m_hBtnRotateGrid, BM_SETCHECK, BST_UNCHECKED, 0);
+    }
     x += BTN_GAP;
     // 2D-mode control: selects which plane of the 4D board the flat view shows
     // (an axis swap applied purely for rendering). Hidden in 3D mode.
@@ -677,6 +689,7 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
     ShowWindow(m_hCbGridType,  SW_HIDE);
     ShowWindow(m_hBtnZoomIn,   SW_HIDE);
     ShowWindow(m_hBtnZoomOut,  SW_HIDE);
+    ShowWindow(m_hBtnRotateGrid, SW_HIDE);
     ShowWindow(m_hCbSwapAxes,  SW_SHOW);
 
     // Status bar
@@ -1496,6 +1509,7 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         ShowWindow(m_hCbGridType,  SW_SHOW);
         ShowWindow(m_hBtnZoomIn,   SW_SHOW);
         ShowWindow(m_hBtnZoomOut,  SW_SHOW);
+        ShowWindow(m_hBtnRotateGrid, SW_SHOW);
         ShowWindow(m_hCbSwapAxes,  SW_HIDE);
         // Enable the 3D-only View menu items.
         EnableMenuItem(hMenu, IDM_VIEW_SHOW_GRIDLINES, MF_BYCOMMAND | MF_ENABLED);
@@ -1523,6 +1537,7 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         ShowWindow(m_hCbGridType,  SW_HIDE);
         ShowWindow(m_hBtnZoomIn,   SW_HIDE);
         ShowWindow(m_hBtnZoomOut,  SW_HIDE);
+        ShowWindow(m_hBtnRotateGrid, SW_HIDE);
         ShowWindow(m_hCbSwapAxes,  SW_SHOW);
         // Disable the 3D-only View menu items.
         EnableMenuItem(hMenu, IDM_VIEW_SHOW_GRIDLINES,
@@ -1930,6 +1945,15 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
         case IDC_BTN_ZOOM_OUT:
             if (m_D3DRenderer.IsInitialized()) m_D3DRenderer.AdjustZoom(1.18f);
+            break;
+
+        case IDC_BTN_ROTATE_GRID:
+            if (m_D3DRenderer.IsInitialized()) {
+                bool fRotate =
+                    (SendMessageW(m_hBtnRotateGrid, BM_GETCHECK, 0, 0)
+                     == BST_CHECKED);
+                m_D3DRenderer.SetRotateGrid(fRotate);
+            }
             break;
 
         case IDC_CB_GRID_TYPE:

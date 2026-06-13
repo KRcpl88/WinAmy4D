@@ -102,6 +102,13 @@ public:
     void SetOutlineType(CUCoord::EOutlineType eType);
     CUCoord::EOutlineType GetOutlineType() const { return m_eOutlineType; }
 
+    // Control whether the camera "up" direction follows the selected outline
+    // type. When enabled the view rotates so the chosen outline's plane faces
+    // the camera; when disabled (the default) changing the outline type leaves
+    // the camera orientation unchanged.
+    void SetRotateGrid(bool bRotate);
+    bool GetRotateGrid() const { return m_bRotateGrid; }
+
     // Reset orbit yaw/pitch, zoom, and axis transforms to defaults.
     void ResetView();
 
@@ -195,6 +202,11 @@ private:
 
     // Which outline geometry to render for each cell.
     CUCoord::EOutlineType m_eOutlineType{CUCoord::OT_square_z};
+
+    // When true, the camera "up" direction follows the selected outline type so
+    // the view rotates as the outline changes. When false (the default) the
+    // camera orientation is held fixed regardless of the outline type.
+    bool  m_bRotateGrid{false};
 
     // Render-space axis remapping and inversion state.
     int  m_rgnAxisOrder[3]{ AxisX, AxisY, AxisZ };

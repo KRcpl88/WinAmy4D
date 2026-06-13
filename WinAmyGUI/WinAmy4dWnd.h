@@ -118,6 +118,7 @@ private:
     HWND m_hCbGridType   = nullptr;
     HWND m_hBtnZoomIn    = nullptr;
     HWND m_hBtnZoomOut    = nullptr;
+    HWND m_hBtnRotateGrid = nullptr;
     HWND m_hCbSwapAxes   = nullptr;
 
     // Shared toolbar x-origin for the grid-type (3D) and swap-axes (2D)
