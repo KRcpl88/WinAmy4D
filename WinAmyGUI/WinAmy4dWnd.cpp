@@ -611,11 +611,6 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
         return h;
     };
 
-    m_hBtnNew = makeBtn(L"New Game", IDC_BTN_NEW_GAME);
-    // Ask the engine to suggest a move for the human player (highlight only).
-    m_hBtnHint = makeBtn(L"Suggest Move", IDC_BTN_HINT, 110);
-    x += BTN_GAP * 2; // spacer
-
     // 2D/3D view toggle — always enabled regardless of current view mode.
     // Label is kept in sync with m_eViewMode by UpdateViewToggleButton.
     m_hBtnViewToggle = makeBtn(L"Switch to 3D", IDC_BTN_VIEW_TOGGLE, 110);
@@ -653,12 +648,9 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
 
     x += BTN_GAP * 2;
 
-    // 3D-mode controls. Search depth is configured exclusively via the
-    // Options > Search Depth menu; there are no toolbar depth controls.
-    m_hBtnOutlines  = makeBtn(L"Outlines: On", IDC_BTN_OUTLINES,   90);
-    m_hBtnResetView = makeBtn(L"Reset View",   IDC_BTN_RESET_VIEW, 80);
-    m_hBtnZoomIn    = makeBtn(L"Zoom +",       IDC_BTN_ZOOM_IN,    60);
-    m_hBtnZoomOut   = makeBtn(L"Zoom -",       IDC_BTN_ZOOM_OUT,   60);
+    // 3D-mode zoom controls.
+    m_hBtnZoomIn  = makeBtn(L"Zoom +", IDC_BTN_ZOOM_IN,  60);
+    m_hBtnZoomOut = makeBtn(L"Zoom -", IDC_BTN_ZOOM_OUT, 60);
     x += BTN_GAP;
     // 2D-mode control: selects which plane of the 4D board the flat view shows
     // (an axis swap applied purely for rendering). Hidden in 3D mode.
@@ -682,12 +674,10 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
 
     // Initial visibility for the current (2D) view mode: the 3D-only view
     // controls are hidden, while the 2D-only plane selector stays visible.
-    ShowWindow(m_hCbGridType,   SW_HIDE);
-    ShowWindow(m_hBtnOutlines,  SW_HIDE);
-    ShowWindow(m_hBtnResetView, SW_HIDE);
-    ShowWindow(m_hBtnZoomIn,    SW_HIDE);
-    ShowWindow(m_hBtnZoomOut,   SW_HIDE);
-    ShowWindow(m_hCbSwapAxes,   SW_SHOW);
+    ShowWindow(m_hCbGridType,  SW_HIDE);
+    ShowWindow(m_hBtnZoomIn,   SW_HIDE);
+    ShowWindow(m_hBtnZoomOut,  SW_HIDE);
+    ShowWindow(m_hCbSwapAxes,  SW_SHOW);
 
     // Status bar
     m_hStatus = CreateWindowExW(0, STATUSCLASSNAMEW, nullptr,
@@ -1007,10 +997,16 @@ void CWinAmy4dWnd::UpdateLegalMoveHighlightMenu() {
 }
 
 void CWinAmy4dWnd::UpdateSuggestMoveButton() {
-    if (!m_hBtnHint) {
+    HMENU hMenu = GetMenu(m_hWnd);
+    if (!hMenu) {
         return;
     }
-    EnableWindow(m_hBtnHint, !m_fStrategyHints);
+    bool fEnabled = !m_fStrategyHints
+                 && !m_Game.IsEngineRunning()
+                 && !m_Game.IsGameOver()
+                 && m_Game.GetPlayerMode() != PlayerMode::ZeroPlayers;
+    EnableMenuItem(hMenu, IDM_SUGGEST,
+        MF_BYCOMMAND | (fEnabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED)));
 }
 
 std::vector<CSCoord> CWinAmy4dWnd::GetHintSquaresForRender() const {
@@ -1437,10 +1433,12 @@ void CWinAmy4dWnd::TogglePause() {
 // SetViewMode — toggle between 2D GDI rendering and 3D Direct3D 11 rendering
 // ---------------------------------------------------------------------------
 
-void CWinAmy4dWnd::UpdateOutlinesButtonText() {
-    if (!m_hBtnOutlines) return;
+void CWinAmy4dWnd::UpdateOutlinesMenuItem() {
+    HMENU hMenu = GetMenu(m_hWnd);
+    if (!hMenu) return;
     bool bOn = m_D3DRenderer.IsInitialized() ? m_D3DRenderer.GetShowOutlines() : true;
-    SetWindowTextW(m_hBtnOutlines, bOn ? L"Outlines: On" : L"Outlines: Off");
+    CheckMenuItem(hMenu, IDM_VIEW_SHOW_GRIDLINES,
+        MF_BYCOMMAND | (bOn ? MF_CHECKED : MF_UNCHECKED));
 }
 
 void CWinAmy4dWnd::UpdateViewToggleButton() {
@@ -1494,14 +1492,15 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         }
         ShowWindow(m_hRender3D, SW_SHOW);
         ShowScrollBar(m_hWnd, SB_BOTH, FALSE);
-        // 3D-only view controls become visible; the 2D plane selector hides.
-        ShowWindow(m_hCbGridType,   SW_SHOW);
-        ShowWindow(m_hBtnOutlines,  SW_SHOW);
-        ShowWindow(m_hBtnResetView, SW_SHOW);
-        ShowWindow(m_hBtnZoomIn,    SW_SHOW);
-        ShowWindow(m_hBtnZoomOut,   SW_SHOW);
-        ShowWindow(m_hCbSwapAxes,   SW_HIDE);
-        UpdateOutlinesButtonText();
+        // 3D-only toolbar controls become visible; the 2D plane selector hides.
+        ShowWindow(m_hCbGridType,  SW_SHOW);
+        ShowWindow(m_hBtnZoomIn,   SW_SHOW);
+        ShowWindow(m_hBtnZoomOut,  SW_SHOW);
+        ShowWindow(m_hCbSwapAxes,  SW_HIDE);
+        // Enable the 3D-only View menu items.
+        EnableMenuItem(hMenu, IDM_VIEW_SHOW_GRIDLINES, MF_BYCOMMAND | MF_ENABLED);
+        EnableMenuItem(hMenu, IDM_VIEW_RESET_VIEW,     MF_BYCOMMAND | MF_ENABLED);
+        UpdateOutlinesMenuItem();
         UpdateAxisControls();
         // Reflect the renderer's actual grid type in the menu checkmark
         // and combobox selection (the renderer is the source of truth —
@@ -1520,13 +1519,16 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         ShowWindow(m_hRender3D, SW_HIDE);
         ShowScrollBar(m_hWnd, SB_BOTH, TRUE);
         UpdateScrollBars(m_hWnd);
-        // 3D-only view controls hide; the 2D plane selector becomes visible.
-        ShowWindow(m_hCbGridType,   SW_HIDE);
-        ShowWindow(m_hBtnOutlines,  SW_HIDE);
-        ShowWindow(m_hBtnResetView, SW_HIDE);
-        ShowWindow(m_hBtnZoomIn,    SW_HIDE);
-        ShowWindow(m_hBtnZoomOut,   SW_HIDE);
-        ShowWindow(m_hCbSwapAxes,   SW_SHOW);
+        // 3D-only toolbar controls hide; the 2D plane selector becomes visible.
+        ShowWindow(m_hCbGridType,  SW_HIDE);
+        ShowWindow(m_hBtnZoomIn,   SW_HIDE);
+        ShowWindow(m_hBtnZoomOut,  SW_HIDE);
+        ShowWindow(m_hCbSwapAxes,  SW_SHOW);
+        // Disable the 3D-only View menu items.
+        EnableMenuItem(hMenu, IDM_VIEW_SHOW_GRIDLINES,
+            MF_BYCOMMAND | MF_GRAYED | MF_DISABLED);
+        EnableMenuItem(hMenu, IDM_VIEW_RESET_VIEW,
+            MF_BYCOMMAND | MF_GRAYED | MF_DISABLED);
         UpdateAxisControls();
     }
     UpdateGridMenuEnabled();
@@ -1870,11 +1872,10 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         int code = HIWORD(wParam);
         switch (id) {
         case IDM_FILE_NEW:
-        case IDC_BTN_NEW_GAME:
             OnNewGame();
             break;
 
-        case IDC_BTN_HINT:
+        case IDM_SUGGEST:
             OnSuggestMove();
             break;
 
@@ -1910,14 +1911,14 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                             ? ViewMode::Mode3D : ViewMode::Mode2D);
             break;
 
-        case IDC_BTN_OUTLINES:
+        case IDM_VIEW_SHOW_GRIDLINES:
             if (m_D3DRenderer.IsInitialized()) {
                 m_D3DRenderer.SetShowOutlines(!m_D3DRenderer.GetShowOutlines());
-                UpdateOutlinesButtonText();
+                UpdateOutlinesMenuItem();
             }
             break;
 
-        case IDC_BTN_RESET_VIEW:
+        case IDM_VIEW_RESET_VIEW:
             if (m_D3DRenderer.IsInitialized()) {
                 m_D3DRenderer.ResetView();
             }

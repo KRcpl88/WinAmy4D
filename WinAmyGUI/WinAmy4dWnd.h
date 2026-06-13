@@ -99,7 +99,7 @@ private:
     void SetTimeFromMenu(int nSeconds);
     void SetViewMode(ViewMode mode);
     void UpdateViewToggleButton();
-    void UpdateOutlinesButtonText();
+    void UpdateOutlinesMenuItem();
     void UpdateAxisControls();
     void SetGridType(CUCoord::EOutlineType eType);
     void SetGridTypeFromMenu(int nMenuId);
@@ -114,12 +114,8 @@ private:
     HWND m_hWnd          = nullptr;
     HWND m_hRender3D     = nullptr; // Child window the D3D swap chain renders into.
     HWND m_hStatus       = nullptr;
-    HWND m_hBtnNew       = nullptr;
-    HWND m_hBtnHint      = nullptr;
     HWND m_hBtnViewToggle = nullptr;
     HWND m_hCbGridType   = nullptr;
-    HWND m_hBtnOutlines  = nullptr;
-    HWND m_hBtnResetView = nullptr;
     HWND m_hBtnZoomIn    = nullptr;
     HWND m_hBtnZoomOut    = nullptr;
     HWND m_hCbSwapAxes   = nullptr;
