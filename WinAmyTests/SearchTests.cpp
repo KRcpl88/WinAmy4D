@@ -146,6 +146,63 @@ TEST_CLASS(SearchTests) {
                 ((Result.GetFromCoord() == CSCoord(6, 5, 6)) && (Result.GetToCoord() == CSCoord(6, 5, 5))),
             L"Engine failed to evade forced queen capture");
     }
+
+    TEST_METHOD(EngineEvadesForcedQueenCapture2FromInitialWithDoMove) {
+        PositionGuard Position(CPosition::Initial());
+        Assert::IsTrue(Position.get() != nullptr, L"Initial returned nullptr");
+
+        const char *rgszSetupMoves[] = {"Nhg1hf3", "Nhg8hf6", "Nie1if3",
+                                        "Nhb8gc6", "Nib1ic3", "Nie7if5",
+                                        "Nic3ie4"};
+
+        const int nMoveCount = static_cast<int>(sizeof(rgszSetupMoves) /
+                                                sizeof(rgszSetupMoves[0]));
+        for (int nMoveIndex = 0; nMoveIndex < nMoveCount; nMoveIndex++) {
+            CMove Move = Position.get()->ParseSAN(rgszSetupMoves[nMoveIndex]);
+            Assert::IsTrue(Move != M_NONE, L"ParseSAN returned M_NONE");
+            Assert::IsTrue(Position.get()->LegalMove(Move),
+                           L"Setup move is illegal");
+            Position.get()->DoMove(Move);
+        }
+
+        Assert::AreEqual(static_cast<int>(Black),
+                         static_cast<int>(Position.get()->GetTurn()),
+                         L"Setup did not end with black to move");
+
+        setMaxSearchDepth(4);
+        SetFixedTimePerMove(60);
+
+        int nScore = 0;
+        CMove Result = Position.get()->Iterate(&nScore, M_NONE, nullptr);
+
+        setMaxSearchDepth(MAX_TREE_SIZE - 2);
+
+        Assert::IsTrue(Result != M_NONE,
+                       L"Engine returned M_NONE for the setup position");
+        Assert::IsTrue(Position.get()->LegalMove(Result),
+                       L"Engine returned an illegal best move");
+
+        char rgMsg[256]{0};
+
+        _snprintf_s(rgMsg, sizeof(rgMsg), "Best move: %d,%d,%d to %d,%d,%d",
+                    Result.GetFromCoord().m_nLevel,
+                    Result.GetFromCoord().m_nFile,
+                    Result.GetFromCoord().m_nRank, Result.GetToCoord().m_nLevel,
+                    Result.GetToCoord().m_nFile, Result.GetToCoord().m_nRank);
+
+        Logger::WriteMessage(rgMsg);
+
+        Assert::IsTrue(
+            // queen
+            Result.GetFromCoord() == CSCoord(8, 3, 6) ||
+                // king
+                Result.GetFromCoord() == CSCoord(7, 4, 7) ||
+                // knight Nhf6ig4
+                ((Result.GetFromCoord() == CSCoord(7, 5, 5)) && (Result.GetToCoord() == CSCoord(8, 6, 3))) ||
+                // pawn Pgf7gf6 (defends if6, enabling a recapture)
+                ((Result.GetFromCoord() == CSCoord(6, 5, 6)) && (Result.GetToCoord() == CSCoord(6, 5, 5))),
+            L"Engine failed to evade forced queen capture");
+    }
     
     // White must sacrifice the rook to save the queen from capture by the
     // knight, which would check the black king.  So white must move their
