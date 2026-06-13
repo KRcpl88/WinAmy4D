@@ -107,6 +107,7 @@ class CPosition {
 
     // Static factory methods
     static CPosition *CreateFromEPD(const char *epd);
+    static bool IsValidEPD(const char *epd);
     static CPosition *Initial();
     static CPosition *Clone(const CPosition *src);
     static void Free(CPosition *p);

@@ -160,8 +160,35 @@ static void ShowVersion(void) {
     Print(0, "\n");
     Print(0, CopyrightNotice);
     Print(0, "\n");
-    Print(0, "    BUILTIN_POPCOUNTLL = %d, POPCNT = %d, SYS_TIME = %d, UNISTD = %d, SYS_SOCKET = %d, ", HAVE___BUILTIN_POPCOUNTLL, HAVE_POPCNT, HAVE_SYS_TIME_H, HAVE_UNISTD_H, HAVE_SYS_SOCKET_H);
-    Print(0, "NETDB_H = %d, SELECT = %d, GETHOSTNAME = %d, SETBUF = %d\n", HAVE_NETDB_H, HAVE_SELECT, HAVE_GETHOSTNAME, HAVE_SETBUF);
+    Print(0, "   ");
+#ifdef HAVE___BUILTIN_POPCOUNTLL
+    Print(0, " BUILTIN_POPCOUNTLL = %d,", HAVE___BUILTIN_POPCOUNTLL);
+#endif
+#ifdef HAVE_POPCNT
+    Print(0, " POPCNT = %d,", HAVE_POPCNT);
+#endif
+#ifdef HAVE_SYS_TIME_H
+    Print(0, " SYS_TIME = %d,", HAVE_SYS_TIME_H);
+#endif
+#ifdef HAVE_UNISTD_H
+    Print(0, " UNISTD = %d,", HAVE_UNISTD_H);
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+    Print(0, " SYS_SOCKET = %d,", HAVE_SYS_SOCKET_H);
+#endif
+#ifdef HAVE_NETDB_H
+    Print(0, " NETDB_H = %d,", HAVE_NETDB_H);
+#endif
+#ifdef HAVE_SELECT
+    Print(0, " SELECT = %d,", HAVE_SELECT);
+#endif
+#ifdef HAVE_GETHOSTNAME
+    Print(0, " GETHOSTNAME = %d,", HAVE_GETHOSTNAME);
+#endif
+#ifdef HAVE_SETBUF
+    Print(0, " SETBUF = %d", HAVE_SETBUF);
+#endif
+    Print(0, "\n");
 #if MP
     Print(0, "Multiprocessor support (%d CPUs).\n\n", NumberOfCPUs);
 #else

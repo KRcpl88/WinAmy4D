@@ -115,7 +115,9 @@ TEST_CLASS(SearchTests) {
     // White must sacrifice the rook to save the queen from capture by the knight, which would check the black king.
     TEST_METHOD(EngineSacrificeRookEvadesForcedQueenCapture) {
         const char *pszEpd =
-            "K|2/2|3/3/3|4/4/4/4|5/3Q1/5/5/n4|6/6/6/6/6/6|7/7/7/7/7/7/7|8/8/8/8/8/8/2R5/8|7/7/7/7/7/7/7|6/6/6/6/6/6|5/5/5/5/5|4/4/4/4|3/1n1/r2|bb/2|k w KQ -";
+            "K|2/2|3/3/3|4/4/4/4|5/3Q1/5/5/n4|6/6/6/6/6/6|7/7/7/7/7/7/7|"
+            "8/8/8/8/8/8/2R5/8|7/7/7/7/7/7/7|6/6/6/6/6/6|5/5/5/5/5|"
+            "4/4/4/4|n2/3/r2|bb/2|k w - -";
 
         CMove Result = SearchAndAssertLegal(pszEpd, 4);
         
