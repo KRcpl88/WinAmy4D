@@ -437,6 +437,36 @@ TEST_CLASS(PositionTests) {
             L"Pawn capture onto a non-promotion edge rank must not be generated");
     }
 
+    TEST_METHOD(LegalMovesNeverCapturesAKing) {
+        // Regression for a crash in CWinAmy4dWnd::OnSquareClick: in an
+        // arbitrary user-supplied position the opponent's king may be left
+        // en prise.  GenTo (and GenFrom) would then emit a pseudo-legal
+        // capture of that king, which DoMove traps as an illegal state.
+        // LegalMoves must skip king captures so the GUI can enumerate legal
+        // destinations without crashing.
+        const char *epd =
+            "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|ppppppp/7/7/7/7/7/PPPPPPP|"
+            "rnbqkb1r/pppppppp/5n2/8/8/5N2/PPPPPPPP/RNBQKB1R|"
+            "r1bq1br/pppppNp/7/7/1n3N1/PPPPPPP/R1BQ1BR|"
+            "pppppp/5n/6/6/6/PPPPPP|5/5/5/5/5|4/4/4/4|3/3/3|2/2|1 b KQkq -";
+        PositionGuard position(CPosition::CreateFromEPD(epd));
+        CPosition *p = position.get();
+
+        heap_t heap = allocate_heap();
+        p->LegalMoves(heap);
+
+        for (unsigned int i = heap->current_section->start;
+             i < heap->current_section->end; i++) {
+            CMove move = heap->data[i];
+            int8_t nTarget =
+                TYPE(p->GetPiece(move.GetToCoord().BitOffset()));
+            Assert::AreNotEqual((int)King, (int)nTarget,
+                L"LegalMoves must never produce a move that captures a king");
+        }
+
+        free_heap(heap);
+    }
+
     // --- Repeated tests ---
 
     TEST_METHOD(RepeatedReturnsFalseForNewPosition) {
