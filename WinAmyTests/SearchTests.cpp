@@ -141,7 +141,9 @@ TEST_CLASS(SearchTests) {
                 // king
                 Result.GetFromCoord() == CSCoord(7, 4, 7) ||
                 // knight Nhf6ig4
-                ((Result.GetFromCoord() == CSCoord(7, 5, 5)) && (Result.GetToCoord() == CSCoord(8, 6, 3))),
+                ((Result.GetFromCoord() == CSCoord(7, 5, 5)) && (Result.GetToCoord() == CSCoord(8, 6, 3))) ||
+                // pawn Pgf7gf6 (defends if6, enabling a recapture)
+                ((Result.GetFromCoord() == CSCoord(6, 5, 6)) && (Result.GetToCoord() == CSCoord(6, 5, 5))),
             L"Engine failed to evade forced queen capture");
     }
     

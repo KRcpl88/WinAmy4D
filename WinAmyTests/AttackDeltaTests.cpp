@@ -28,15 +28,6 @@ TEST_CLASS(AttackDeltaTests) {
             const CUCoord dir = ATTACK_DELTA[pieceType][d];
             const CSCoord sq = origin.Step(dir);
             if (sq.IsValid()) {
-                // Pawns capture only diagonally forward (cross-level diagonals
-                // must still advance the pawn); mirror the production rule in
-                // ComputeLeapAttacks so this stays a faithful reference.
-                if (pieceType == Pawn && sq.m_nRank <= origin.m_nRank) {
-                    continue;
-                }
-                if (pieceType == BPawn && sq.m_nRank >= origin.m_nRank) {
-                    continue;
-                }
                 result.SetBit(sq.BitOffset());
             }
         }
