@@ -366,7 +366,7 @@ In 4D chess, both rooks are vulnerable on the right side of the board on level i
 Although the standard response to decline queen's gambit in 2D chess would be for black Phe6, in 4D chess there are two knight options that have better strategic value
 
 
-** Nhg8hf6 **
+**Nhg8hf6**
 
 Suggested Move #1: Phe2he3
 Opponent's likely counter move: (none)
@@ -380,7 +380,7 @@ Suggested Move #3: Phc4hc5
 Opponent's likely counter move: Nib7ic5
 Respond with: Nhb1hc3
 
-** Nib7ic5 **
+**Nib7ic5**
 Opponent's likely counter move: Phc4xhd5
 Respond with: Nhg8hf6
 
