@@ -136,8 +136,12 @@ TEST_CLASS(SearchTests) {
         Logger::WriteMessage(rgMsg);
 
         Assert::IsTrue(
+            // queen
             Result.GetFromCoord() == CSCoord(8, 3, 6) ||
-                Result.GetFromCoord() == CSCoord(7, 4, 7),
+                // king
+                Result.GetFromCoord() == CSCoord(7, 4, 7) ||
+                // knight Nhf6ig4
+                ((Result.GetFromCoord() == CSCoord(7, 5, 5)) && (Result.GetToCoord() == CSCoord(8, 6, 3))),
             L"Engine failed to evade forced queen capture");
     }
     
