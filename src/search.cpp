@@ -180,7 +180,7 @@ static int NodesPerCheck = 1000;
 OPTIONAL_ATOMIC unsigned long TotalNodes;
 
 #if MP
-int NumberOfCPUs;
+int NumberOfCores;
 #endif
 
 /*

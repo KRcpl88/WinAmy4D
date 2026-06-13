@@ -87,14 +87,7 @@ enum {
 #define NORMAL "\x1B[0m"
 
 #if MP
-/*
- * Upper bound on the number of search threads. Guards against
- * hardware_concurrency() (or a misconfigured override) reporting an
- * unreasonably large value.
- */
-#define MAX_SEARCH_THREADS 32
-
-extern int NumberOfCPUs;
+extern int NumberOfCores;
 extern bool AbortSearch;
 extern void StopHelpers(void);
 extern void SetSearchThreadBackgroundPriority(void);
@@ -716,6 +709,7 @@ void CPosition::AnalysisMode() {
 
 void CPosition::StartHelpers() {
     CPosition *p = this;
+    int nHelperThreads;
     int nthread;
 
     if (!HelperThreads.empty()) {
@@ -726,33 +720,28 @@ void CPosition::StartHelpers() {
      * Default the number of search threads to the number of logical CPUs when
      * it has not been set explicitly (e.g. via -cpu or .amyrc). This lets the
      * parallel search engage for both the console engine and the GUI without
-     * any extra configuration. The count is logged once so the chosen thread
-     * count is visible at startup.
+     * any extra configuration.
      */
-    static bool s_fThreadCountLogged = false;
-
-    if (NumberOfCPUs <= 0) {
-        NumberOfCPUs = (int)std::thread::hardware_concurrency();
-        if (NumberOfCPUs <= 0) {
-            NumberOfCPUs = 1;
+    if (NumberOfCores <= 0) {
+        NumberOfCores = (int)std::thread::hardware_concurrency();
+        if (NumberOfCores <= 0) {
+            NumberOfCores = 1;
         }
     }
 
-    /*
-     * Cap the number of search threads to a sane maximum in case
-     * hardware_concurrency() (or a misconfigured override) reports an
-     * unreasonably large value.
-     */
-    if (NumberOfCPUs > MAX_SEARCH_THREADS) {
-        NumberOfCPUs = MAX_SEARCH_THREADS;
+    if (NumberOfCores > MAX_SEARCH_THREADS) {
+        NumberOfCores = MAX_SEARCH_THREADS;
     }
 
-    if (!s_fThreadCountLogged) {
-        s_fThreadCountLogged = true;
-        Print(0, "Search threads: %d\n", NumberOfCPUs);
+    nHelperThreads = NumberOfCores - 1;
+    if (nHelperThreads < 0) {
+        nHelperThreads = 0;
     }
 
-    if (NumberOfCPUs < 2) {
+    Print(0, "Multiprocessor support (%d cores, %d helper threads).\n\n",
+          NumberOfCores, nHelperThreads);
+
+    if (NumberOfCores < 2) {
         return;
     }
 
@@ -763,8 +752,8 @@ void CPosition::StartHelpers() {
      * responsive.
      */
 
-    HelperThreads.reserve(NumberOfCPUs - 1);
-    for (nthread = 0; nthread < (NumberOfCPUs - 1); nthread++) {
+    HelperThreads.reserve(NumberOfCores - 1);
+    for (nthread = 0; nthread < (NumberOfCores - 1); nthread++) {
         CSearchData *sd = new CSearchData(CPosition::Clone(p));
         sd->m_fMaster = false;
         HelperThreads.emplace_back([sd]() {
@@ -774,4 +763,3 @@ void CPosition::StartHelpers() {
     }
 }
 #endif /* MP */
-

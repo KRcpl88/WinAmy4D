@@ -67,7 +67,8 @@ extern unsigned long FHTime;
 extern bool AbortSearch;
 
 #if MP
-extern int NumberOfCPUs;
+extern int NumberOfCores;
+#define MAX_SEARCH_THREADS 32
 #endif
 
 void setMaxSearchDepth(int);

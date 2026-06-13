@@ -192,7 +192,7 @@ static void ConfigureLoggingFromCommandLine(LPSTR lpCmdLine) {
 #endif
         Print(0, "\n");
 #if MP
-        Print(0, "Multiprocessor support (%d CPUs).\n\n", NumberOfCPUs);
+        Print(0, "Multiprocessor support.\n\n");
 #else
         Print(0, "No multiprocessor support.\n\n");
 #endif
