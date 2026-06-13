@@ -108,11 +108,42 @@ TEST_CLASS(SearchTests) {
 
         Assert::IsTrue(Result.GetFromCoord() == CSCoord(8,3,6) ||
                        Result.GetFromCoord() == CSCoord(7,4,7) ,
-                       L"Engine failed to evade forced queen capture, move was scoord");
+                       L"Engine failed to evade forced queen capture");
     }
 
 
-    // White must sacrifice the rook to save the queen from capture by the knight, which would check the black king.
+
+    // Make sure the searchs ees the threat from nie4 catpuring the pawn at if6
+    // and forcing a queen capture because the knight will check to the black
+    // king. The engine must move the black king or queen to avoid the capture
+    TEST_METHOD(EngineEvadesForcedQueenCapture2) {
+        const char *pszEpd =
+            "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|ppppppp/2n4/7/7/7/7/"
+            "PPPPPPP|r1bqkb1r/pppppppp/5n2/8/8/5N2/PPPPPPPP/RNBQKB1R|rnbq1br/"
+            "ppppppp/5n1/4N2/5N1/PPPPPPP/R1BQ1BR|pppppp/6/6/6/6/PPPPPP|"
+            "5/5/5/5/5|4/4/4/4|3/3/3|2/2|1 b KQkq -";
+
+        CMove Result = SearchAndAssertLegal(pszEpd, 4);
+
+        char rgMsg[256]{0};
+
+        _snprintf_s(rgMsg, sizeof(rgMsg), "Best move: %d,%d,%d to %d,%d,%d",
+                    Result.GetFromCoord().m_nLevel,
+                    Result.GetFromCoord().m_nFile,
+                    Result.GetFromCoord().m_nRank, Result.GetToCoord().m_nLevel,
+                    Result.GetToCoord().m_nFile, Result.GetToCoord().m_nRank);
+
+        Logger::WriteMessage(rgMsg);
+
+        Assert::IsTrue(
+            Result.GetFromCoord() == CSCoord(8, 3, 6) ||
+                Result.GetFromCoord() == CSCoord(7, 4, 7),
+            L"Engine failed to evade forced queen capture");
+    }
+    
+    // White must sacrifice the rook to save the queen from capture by the
+    // knight, which would check the black king.  So white must move their
+    // king at aa1 or queen at ed4 and sacrifice the rook at hc2
     TEST_METHOD(EngineSacrificeRookEvadesForcedQueenCapture) {
         const char *pszEpd =
             "K|2/2|3/3/3|4/4/4/4|5/3Q1/5/5/n4|6/6/6/6/6/6|7/7/7/7/7/7/7|"
@@ -128,11 +159,9 @@ TEST_CLASS(SearchTests) {
 
         Logger::WriteMessage(rgMsg);
 
-        /*
-
-        Assert::IsTrue(Result.GetFromCoord() == CSCoord(8,3,6) ||
-                       Result.GetFromCoord() == CSCoord(7,4,7) ,
-                       L"Engine failed to evade forced queen capture, move was scoord");*/
+        Assert::IsTrue(Result.GetFromCoord() == CSCoord(0,0,0) ||
+                       Result.GetFromCoord() == CSCoord(4,3,3),
+                       L"Engine failed to evade forced queen capture");
     }
 
 
