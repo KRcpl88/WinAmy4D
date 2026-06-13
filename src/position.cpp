@@ -738,7 +738,7 @@ void CPosition::StartHelpers() {
         nHelperThreads = 0;
     }
 
-    Print(0, "Multiprocessor support (%d cores, %d helper threads).\n\n",
+    Print(0, "StartHelpers, %d cores, %d helper threads.\n\n",
           NumberOfCores, nHelperThreads);
 
     if (NumberOfCores < 2) {
