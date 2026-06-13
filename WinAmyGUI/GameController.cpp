@@ -1102,6 +1102,49 @@ std::string GameController::ComputeStrategyText(HWND hwndTarget) {
     return oss.str();
 }
 
+std::string GameController::GetLastMoveText() const {
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    if (!m_pPosition) {
+        return std::string();
+    }
+
+    const int nPly = static_cast<int>(m_pPosition->GetPly());
+    if (nPly <= 0) {
+        // No move has been played yet.
+        return std::string();
+    }
+
+    // SAN computation mutates the position (it internally calls DoMove/UndoMove)
+    // and must be evaluated from the position *before* the move was played.
+    // Operate on a clone so the live game position is never disturbed.
+    CPosition *p = CPosition::Clone(m_pPosition);
+    if (!p) {
+        return std::string();
+    }
+
+    // The most recently played move is the last entry in the game log.
+    CMove LastMove = (p->GetActLog() - 1)->gl_Move;
+
+    // Roll the clone back one ply to the position the move was made from, then
+    // render the move's SAN from there.
+    p->UndoMove(LastMove);
+    char szSan[32];
+    const char *pszSan = p->SAN(LastMove, szSan);
+
+    CPosition::Free(p);
+
+    // The move just played sits at ply index nPly-1 (0-based). White plays the
+    // even-indexed plies; the full-move number is the index / 2 + 1.
+    const int nIndex = nPly - 1;
+    const char *pszSide = ((nIndex & 1) == 0) ? "White" : "Black";
+    const int nMoveNumber = (nIndex / 2) + 1;
+
+    char szText[128];
+    _snprintf_s(szText, sizeof(szText), _TRUNCATE, "%s move #%d %s", pszSide,
+                nMoveNumber, pszSan ? pszSan : "");
+    return std::string(szText);
+}
+
 // ---------------------------------------------------------------------------
 // Game state queries
 // ---------------------------------------------------------------------------

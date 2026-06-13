@@ -209,6 +209,14 @@ public:
     // still in progress.
     std::string GetGameResultText() const;
 
+    // Returns a description of the most recently played move for display in the
+    // status bar, formatted as "<Side> move #<N> <SAN>" (e.g.
+    // "White move #7 Phe2he3"), where <Side> is the side that played the move,
+    // <N> is the full-move number it belongs to, and <SAN> is the engine's
+    // level-aware SAN for that move. Returns an empty string when no move has
+    // been played yet (the game is still at its starting position).
+    std::string GetLastMoveText() const;
+
     // Retrieve the best move found by the last engine search.
     CMove GetBestMove() const { return m_BestMove; }
 
@@ -279,7 +287,7 @@ private:
     // no longer wanted (the user moved while it was running) is ignored.
     std::atomic<uint32_t> m_nSearchGen{0};
     std::thread         m_EngineThread;
-    std::mutex          m_PositionMutex;
+    mutable std::mutex  m_PositionMutex;
     CMove               m_BestMove{};
     std::string         m_strStrategy;
     CMove               m_StrategyBestMove{};
