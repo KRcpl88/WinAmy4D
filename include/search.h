@@ -69,7 +69,6 @@ extern bool AbortSearch;
 #if MP
 extern int NumberOfCores;
 #define MAX_SEARCH_THREADS 32
-int ResolveNumberOfCores(void);
 #endif
 
 void setMaxSearchDepth(int);

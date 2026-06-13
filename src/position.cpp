@@ -709,6 +709,7 @@ void CPosition::AnalysisMode() {
 
 void CPosition::StartHelpers() {
     CPosition *p = this;
+    int nHelperThreads;
     int nthread;
 
     if (!HelperThreads.empty()) {
@@ -719,17 +720,26 @@ void CPosition::StartHelpers() {
      * Default the number of search threads to the number of logical CPUs when
      * it has not been set explicitly (e.g. via -cpu or .amyrc). This lets the
      * parallel search engage for both the console engine and the GUI without
-     * any extra configuration. The count is logged once so the chosen thread
-     * count is visible at startup.
+     * any extra configuration.
      */
-    static bool s_fThreadCountLogged = false;
-
-    ResolveNumberOfCores();
-
-    if (!s_fThreadCountLogged) {
-        s_fThreadCountLogged = true;
-        Print(0, "Search threads: %d\n", NumberOfCores);
+    if (NumberOfCores <= 0) {
+        NumberOfCores = (int)std::thread::hardware_concurrency();
+        if (NumberOfCores <= 0) {
+            NumberOfCores = 1;
+        }
     }
+
+    if (NumberOfCores > MAX_SEARCH_THREADS) {
+        NumberOfCores = MAX_SEARCH_THREADS;
+    }
+
+    nHelperThreads = NumberOfCores - 1;
+    if (nHelperThreads < 0) {
+        nHelperThreads = 0;
+    }
+
+    Print(0, "Multiprocessor support (%d cores, %d helper threads).\n\n",
+          NumberOfCores, nHelperThreads);
 
     if (NumberOfCores < 2) {
         return;
