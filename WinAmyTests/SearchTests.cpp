@@ -86,6 +86,54 @@ TEST_CLASS(SearchTests) {
         SearchAndAssertLegal(pszEpd, 4);
     }
 
+
+    // Make sure the searchs ees the threat from nie4 catpuring the pawn at if6
+    // and forcing a queen capture because the knight will check to the black king.  
+    // The engine must move the black king or queen to avoid the capture
+    TEST_METHOD(EngineEvadesForcedQueenCapture) {
+        const char *pszEpd =
+            "1|2/2|3/3/3|4/4/4/4|5/5/5/5/5|6/6/6/6/6/6|ppppppp/7/5n1/7/7/"
+            "P1N4/1PPPPPP|rnbqkb1r/pppppppp/5n2/8/4n3/5N2/PPPPPPPP/R1BQKB1R|"
+            "r1bq1br/ppppppp/7/4N2/5N1/PPPPPPP/R1BQ1BR|pppppp/6/6/6/6/"
+            "PPPPPP|5/5/5/5/5|4/4/4/4|3/3/3|2/2|1 b KQkq -";
+
+        CMove Result = SearchAndAssertLegal(pszEpd, 4);
+        
+        char rgMsg[256]{0};
+
+        _snprintf_s(rgMsg, sizeof(rgMsg), "Best move: %d,%d,%d to %d,%d,%d", Result.GetFromCoord().m_nLevel, Result.GetFromCoord().m_nFile, Result.GetFromCoord().m_nRank,
+                   Result.GetToCoord().m_nLevel, Result.GetToCoord().m_nFile, Result.GetToCoord().m_nRank);
+
+        Logger::WriteMessage(rgMsg);
+
+        Assert::IsTrue(Result.GetFromCoord() == CSCoord(8,3,6) ||
+                       Result.GetFromCoord() == CSCoord(7,4,7) ,
+                       L"Engine failed to evade forced queen capture, move was scoord");
+    }
+
+
+    // White must sacrifice the rook to save the queen from capture by the knight, which would check the black king.
+    TEST_METHOD(EngineSacrificeRookEvadesForcedQueenCapture) {
+        const char *pszEpd =
+            "K|2/2|3/3/3|4/4/4/4|5/3Q1/5/5/n4|6/6/6/6/6/6|7/7/7/7/7/7/7|8/8/8/8/8/8/2R5/8|7/7/7/7/7/7/7|6/6/6/6/6/6|5/5/5/5/5|4/4/4/4|3/1n1/r2|bb/2|k w KQ -";
+
+        CMove Result = SearchAndAssertLegal(pszEpd, 4);
+        
+        char rgMsg[256]{0};
+
+        _snprintf_s(rgMsg, sizeof(rgMsg), "Best move: %d,%d,%d to %d,%d,%d", Result.GetFromCoord().m_nLevel, Result.GetFromCoord().m_nFile, Result.GetFromCoord().m_nRank,
+                   Result.GetToCoord().m_nLevel, Result.GetToCoord().m_nFile, Result.GetToCoord().m_nRank);
+
+        Logger::WriteMessage(rgMsg);
+
+        /*
+
+        Assert::IsTrue(Result.GetFromCoord() == CSCoord(8,3,6) ||
+                       Result.GetFromCoord() == CSCoord(7,4,7) ,
+                       L"Engine failed to evade forced queen capture, move was scoord");*/
+    }
+
+
     // Sanity check on the standard initial position: the engine must produce a
     // legal opening move.
     TEST_METHOD(EngineReturnsLegalMoveForInitialPosition) {

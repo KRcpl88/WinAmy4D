@@ -163,6 +163,13 @@ static void ConfigureLoggingFromCommandLine(LPSTR lpCmdLine) {
 
         OpenLogFile(strFile.c_str());
         Print(0, "WinAmyGUI: logging enabled -> %s\n", strFile.c_str());
+        Print(0, "BUILTIN_POPCOUNTLL = %d, POPCNT = %d, SYS_TIME = %d, UNISTD = %d, SYS_SOCKET = %d, ", HAVE___BUILTIN_POPCOUNTLL, HAVE_POPCNT, HAVE_SYS_TIME_H, HAVE_UNISTD_H, HAVE_SYS_SOCKET_H);
+        Print(0, "NETDB_H = %d, SELECT = %d, GETHOSTNAME = %d, SETBUF = %d\n", HAVE_NETDB_H, HAVE_SELECT, HAVE_GETHOSTNAME, HAVE_SETBUF);
+#if MP
+        Print(0, "Multiprocessor support (%d CPUs).\n\n", NumberOfCPUs);
+#else
+        Print(0, "No multiprocessor support.\n\n");
+#endif
         return;
     }
 }
