@@ -189,6 +189,20 @@ CBitBoard ComputeLeapAttacks(const CSCoord &sq, int pieceType) {
         CUCoord dir = ATTACK_DELTA[pieceType][d];
         CSCoord target = sq.Step(dir);
         if (target.IsValid()) {
+            /* A pawn only ever captures diagonally *forward* (see
+             * HOW_TO_PLAY_4D_CHESS.md): the in-level diagonals as well as the
+             * diagonals carrying it onto a neighbouring level must advance the
+             * pawn toward the opponent's side.  The cross-level diagonal deltas
+             * keep the same (or even a lower) rank on equal/wider neighbouring
+             * levels, which would let a pawn "defend" a square straight up or
+             * down the board — that is not a legal pawn capture, so reject any
+             * target that does not move the pawn forward. */
+            if (pieceType == Pawn && target.m_nRank <= sq.m_nRank) {
+                continue;
+            }
+            if (pieceType == BPawn && target.m_nRank >= sq.m_nRank) {
+                continue;
+            }
             attacks.SetBit(target.BitOffset());
         }
     }
