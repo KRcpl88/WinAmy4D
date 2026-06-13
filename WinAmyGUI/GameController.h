@@ -265,7 +265,7 @@ private:
     CPosition*          m_pPosition{nullptr};
     int                 m_nDepth{3};
     int                 m_nTimeLimit{15};
-    PlayerMode          m_PlayerMode{PlayerMode::OnePlayer};
+    PlayerMode          m_PlayerMode{PlayerMode::TwoPlayers};
     std::atomic<bool>   m_fEngineRunning{false};
     std::atomic<bool>   m_fComputingStrategy{false};
     // Set by PauseEngine() to request that the user cancel an in-progress
