@@ -558,8 +558,11 @@ XMMATRIX D3DBoardRenderer::MakeView() const {
 
     // Point "up" along the up vector for the currently selected outline type,
     // transformed through the same axis order/inversion as the cell geometry so
-    // the camera stays aligned with the board after swaps or inversions.
-    size_t nOutline = static_cast<size_t>(m_eOutlineType);
+    // the camera stays aligned with the board after swaps or inversions. When
+    // grid rotation is disabled the default (OT_full) up vector is used so that
+    // changing the outline type leaves the camera orientation unchanged.
+    size_t nOutline = m_bRotateGrid ? static_cast<size_t>(m_eOutlineType)
+                                    : static_cast<size_t>(CUCoord::OT_full);
     if (nOutline >= ARRAYSIZE(g_rgUpVector)) nOutline = 0;
     XMFLOAT3 vUpDir = ApplyAxisTransform(UCoordToFloat3(g_rgUpVector[nOutline]));
     XMVECTOR vUp    = XMVector3Normalize(XMVectorSet(vUpDir.x, vUpDir.y, vUpDir.z, 0.0f));
@@ -664,6 +667,18 @@ void D3DBoardRenderer::SetOutlineType(CUCoord::EOutlineType eType) {
     // selection is picked up by the first RebuildLineGeometry call in
     // Initialize.
     if (m_pDevice) RebuildLineGeometry();
+}
+
+void D3DBoardRenderer::SetRotateGrid(bool bRotate) {
+    if (m_bRotateGrid == bRotate) {
+        return;
+    }
+    m_bRotateGrid = bRotate;
+    // Only the camera "up" basis depends on this flag, so a repaint is enough —
+    // no geometry needs rebuilding.
+    if (m_hWnd) {
+        InvalidateRect(m_hWnd, nullptr, FALSE);
+    }
 }
 
 void D3DBoardRenderer::ResetView() {
