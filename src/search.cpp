@@ -1105,8 +1105,18 @@ void *IterateInt(void *x) {
      * no best move rather than dereferencing mvs[0] below.
      */
     if (sd->m_wRootMoves == 0) {
+        /*
+         * No legal root moves were generated (stalemate/checkmate, or every
+         * move was excluded above). Log the guard so a search that bails out
+         * with no best move can be distinguished from other early exits when
+         * auditing the log file.
+         */
+        PrintDebug(2, "IterateInt: no legal root moves (%s); returning M_NONE.\n",
+                   sd->m_fMaster ? "master" : "helper");
         sd->m_BestMove = M_NONE;
         if (!sd->m_fMaster) {
+            PrintDebug(2, "IterateInt: freeing helper clone %p.\n",
+                       (void *)sd->m_pPosition);
             CPosition::Free(sd->m_pPosition);
             delete sd;
         }
@@ -1521,6 +1531,8 @@ final:
                sd->m_BestMove.GetToCoord().m_nRank);
 
     if (!sd->m_fMaster) {
+        PrintDebug(2, "IterateInt: freeing helper clone %p.\n",
+                   (void *)sd->m_pPosition);
         CPosition::Free(sd->m_pPosition);
         delete sd;
     }

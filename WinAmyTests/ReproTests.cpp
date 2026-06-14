@@ -177,6 +177,53 @@ TEST_CLASS(ReproTests) {
         Assert::IsFalse(fFailed, w.c_str());
     }
 
+    // Reproduce the exact game recorded in engine-corrupted.pgn4: replay its
+    // move sequence from the initial position, then run a single timed search
+    // at 5 seconds per move - the time control that triggered the original
+    // "engine produced an illegal/corrupt move" repro. The returned best move
+    // must be legal in the resulting position. Engine diagnostics emitted via
+    // Print/PrintDebug during the search are captured to the module log file.
+    TEST_METHOD(EngineCorruptedPgnTimedSearchProducesLegalMove) {
+        // Moves transcribed from engine-corrupted.pgn4 (check annotation on
+        // Nie4xif2+ dropped, matching the SAN the parser accepts).
+        const char *moves[] = {
+            "Phd2hd4", "Phd7hd5", "Phc2hc4", "Phd5xhc4", "Nhg1hf3", "Nie7id5",
+            "Phb2hb3", "Phc4xhb3", "Pha2xhb3", "Nhg8ge6", "Ria1bb2", "Nib7hd6",
+            "Nib1ic3", "Nid5xic3", "Pid2xic3", "Pgg7gg6", "Nhf3he5", "Nhd6ie4",
+            "Rbb2xhh8", "Rig7xhh8", "Nie1jc2", "Nie4xif2", "Khe1ie1"};
+        const int nMoves = sizeof(moves) / sizeof(moves[0]);
+
+        PositionGuard pos(CPosition::Initial());
+        for (int m = 0; m < nMoves; m++) {
+            CMove mv = pos.get()->ParseSAN(moves[m]);
+            Assert::IsTrue(mv != M_NONE, L"move did not parse");
+            pos.get()->DoMove(mv);
+            pos.get()->RecalcAttacks();
+        }
+
+        // Start a timed search at 5 seconds, as used for the repro.
+        setMaxSearchDepth(60);
+        SetFixedTimePerMove(5);
+
+        CPosition *pClone = CPosition::Clone(pos.get());
+        int score = 0, alt = 0;
+        CMove BestMove = pClone->Iterate(&score, M_NONE, &alt);
+        bool fLegal = pos.get()->LegalMove(BestMove);
+        CPosition::Free(pClone);
+
+        std::ostringstream os;
+        os << "best move L" << BestMove.GetFromCoord().m_nLevel << "F"
+           << BestMove.GetFromCoord().m_nFile << "R"
+           << BestMove.GetFromCoord().m_nRank << " -> L"
+           << BestMove.GetToCoord().m_nLevel << "F"
+           << BestMove.GetToCoord().m_nFile << "R"
+           << BestMove.GetToCoord().m_nRank << " legal=" << (int)fLegal << "\n";
+        std::string s = os.str();
+        std::wstring w(s.begin(), s.end());
+        Logger::WriteMessage(w.c_str());
+        Assert::IsTrue(fLegal, w.c_str());
+    }
+
     // Recursively make/unmake every legal move to a fixed depth, verifying that
     // UndoMove fully restores the position - specifically that the occupancy
     // mask m_rgMask[color][0] still matches m_rgPiece, the per-piece masks
