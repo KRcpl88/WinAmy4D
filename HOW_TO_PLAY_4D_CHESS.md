@@ -367,17 +367,17 @@ Although the standard response to decline queen's gambit in 2D chess would be fo
 
 **Nhg8hf6**
 
-Suggested Move #1: Phe2he3
-Opponent's likely counter move: (none)
-Respond with: (none)
-
-Suggested Move #2: Phc4xhd5
+Suggested Move #1: Phc4xhd5
 Opponent's likely counter move: Nhf6xhd5
 Respond with: Nhg1hf3
 
-Suggested Move #3: Phc4hc5
-Opponent's likely counter move: Nib7ic5
-Respond with: Nhb1hc3
+Suggested Move #2: Phe2he3
+Opponent's likely counter move: Phd5xhc4
+Respond with: Bhf1xhc4
+
+Suggested Move #3: Nhb1hd2
+Opponent's likely counter move: Nhb8hc6
+Respond with: Phe2he3
 
 **Nib7ic5**
 
