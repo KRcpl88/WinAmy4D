@@ -1294,7 +1294,19 @@ void CWinAmy4dWnd::UpdateStatusBar() {
     const CPosition* pos = m_Game.GetPosition();
     if (!pos) return;
 
-    wchar_t buf[128];
+    // Prefix the status with the most recently played move (e.g.
+    // "White move #7 Phe2he3 - ") so the user can see what the previous side
+    // just did. Empty at the start of a game (no move played yet).
+    std::wstring strPrefix;
+    std::string strLastMove = m_Game.GetLastMoveText();
+    if (!strLastMove.empty()) {
+        wchar_t wideLast[160]{};
+        MultiByteToWideChar(CP_UTF8, 0, strLastMove.c_str(), -1, wideLast, 160);
+        strPrefix = wideLast;
+        strPrefix += L" - ";
+    }
+
+    wchar_t buf[256];
     const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
     if (m_Game.IsComputingStrategy() || m_Game.IsEngineRunning()) {
         // A search is in progress. Show a countdown of the seconds remaining
@@ -1306,12 +1318,13 @@ void CWinAmy4dWnd::UpdateStatusBar() {
             m_Game.IsComputingStrategy() ? L"Thinking" : L"Engine thinking";
         int nSecs = m_Game.GetSearchCountdownSeconds();
         if (nSecs >= 0) {
-            swprintf_s(buf, 128, L"%s  [%s... %ds]", turn, label, nSecs);
+            swprintf_s(buf, 256, L"%s%s  [%s... %ds]", strPrefix.c_str(), turn,
+                       label, nSecs);
         } else {
-            swprintf_s(buf, 128, L"%s  [%s...]", turn, label);
+            swprintf_s(buf, 256, L"%s%s  [%s...]", strPrefix.c_str(), turn, label);
         }
     } else {
-        swprintf_s(buf, 128, L"%s", turn);
+        swprintf_s(buf, 256, L"%s%s", strPrefix.c_str(), turn);
     }
     SendMessageW(m_hStatus, WM_SETTEXT, 0, (LPARAM)buf);
 }
