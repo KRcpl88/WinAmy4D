@@ -430,6 +430,9 @@ void GameController::SetDepth(int depth) {
 void GameController::SetTimeLimit(int seconds) {
     if (seconds < 0) seconds = 0;
     m_nTimeLimit = seconds;
+    // Record the user's chosen per-move search time so the log file shows what
+    // time control was in effect for any subsequent search.
+    Print(0, "Search time set to %d seconds per move.\n", m_nTimeLimit);
     // Any cached strategy was computed under the previous time limit and is now
     // stale; drop it so the next "recommend strategy" re-searches at the new
     // limit.

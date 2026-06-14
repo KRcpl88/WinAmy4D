@@ -170,6 +170,7 @@
     <ClCompile Include="AttackConsistencyTests.cpp" />
     <ClCompile Include="HashCollisionTests.cpp" />
     <ClCompile Include="SanAndCheckTests.cpp" />
+    <ClCompile Include="ReproTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectCapability Include="TestContainer" />
