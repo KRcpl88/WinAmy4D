@@ -13,7 +13,6 @@
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
-#include <chrono>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -418,52 +417,25 @@ void GameController::SetDepth(int depth) {
     if (depth > 9) depth = 9;
     m_nDepth = depth;
     setMaxSearchDepth(depth);
-    // Search time is derived from the search depth: 10 seconds per ply, so
-    // depth 9 yields a 90 second search.
-    m_nTimeLimit = depth * 10;
     // Any cached strategy was computed at the previous depth and is now stale;
     // drop it so the next "recommend strategy" re-searches at the new depth.
     std::lock_guard<std::mutex> lock(m_PositionMutex);
     InvalidateStrategy();
 }
 
-void GameController::SetTimeLimit(int seconds) {
-    if (seconds < 0) seconds = 0;
-    m_nTimeLimit = seconds;
-    // Any cached strategy was computed under the previous time limit and is now
-    // stale; drop it so the next "recommend strategy" re-searches at the new
-    // limit.
-    std::lock_guard<std::mutex> lock(m_PositionMutex);
-    InvalidateStrategy();
-}
-
 void GameController::ApplySearchLimits() {
-    if (m_nTimeLimit > 0) {
-        // Fixed time-per-move: let the engine search as deeply as it can within
-        // the time budget. MaxSearchDepth is raised to (just under) the engine's
-        // hard ceiling so the wall-clock limit, not the depth, governs.
-        SetFixedTimePerMove(m_nTimeLimit);
-        setMaxSearchDepth(MAX_TREE_SIZE - 2);
-    } else {
-        // Depth-based: restore the default time control (so the clock does not
-        // cut the search short) and cap the search at the configured depth.
-        SetDefaultTimeControl();
-        setMaxSearchDepth(m_nDepth);
-    }
+    // Depth-based search: restore the default time control (so the clock does
+    // not cut the search short) and cap the search at the configured depth.
+    SetDefaultTimeControl();
+    setMaxSearchDepth(m_nDepth);
 }
 
 void GameController::ApplyStrategySearchLimits() {
-    // The strategy runs up to three full-time searches (one per ranked move),
-    // each excluding the previously found best move(s). Use the same fixed
-    // per-move time budget as a single search; the cumulative cost is bounded by
-    // (number of ranked moves) × the per-move limit.
-    if (m_nTimeLimit > 0) {
-        SetFixedTimePerMove(m_nTimeLimit);
-        setMaxSearchDepth(MAX_TREE_SIZE - 2);
-    } else {
-        SetDefaultTimeControl();
-        setMaxSearchDepth(m_nDepth);
-    }
+    // The strategy runs up to kStrategyRanks searches (one per ranked move),
+    // each excluding the previously found best move(s). Every search uses the
+    // same depth limit as a single search.
+    SetDefaultTimeControl();
+    setMaxSearchDepth(m_nDepth);
 }
 
 bool GameController::MakeMove(CMove move) {
@@ -629,22 +601,6 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     // moving — discarded) by the host. See GetSearchGeneration().
     const uint32_t nGen = ++m_nSearchGen;
 
-    // Capture the search start time and per-move time budget so the UI can
-    // report progress for this single-move search (engine move or hint). A
-    // timed search runs until the budget elapses, so elapsed/budget is a smooth,
-    // monotonic progress measure. A pure depth-limited search has no budget
-    // (0), and GetEngineSearchProgressPercent() then reports "indeterminate".
-    {
-        using namespace std::chrono;
-        const long long nNowMs =
-            duration_cast<milliseconds>(steady_clock::now().time_since_epoch())
-                .count();
-        m_nEngineSearchStartMs.store(nNowMs);
-        m_nEngineSearchBudgetMs.store(m_nTimeLimit > 0
-                                          ? static_cast<long long>(m_nTimeLimit) * 1000
-                                          : 0);
-    }
-
     if (m_EngineThread.joinable())
         m_EngineThread.join();
 
@@ -654,7 +610,7 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     // and its score) is emitted in the search thread once Iterate() returns.
     const bool fHint = (uCompletionMsg == WM_APP_ENGINE_HINT);
     const char *pszLabel = fHint ? "Suggest move" : "Engine move";
-    Print(0, "%s: starting search (time limit %ds)...\n", pszLabel, m_nTimeLimit);
+    Print(0, "%s: starting search (depth %d)...\n", pszLabel, m_nDepth);
 
     m_EngineThread = std::thread([this, hwndTarget, uCompletionMsg, pszLabel, nGen]() {
         CMove bestMove = M_NONE;
@@ -733,55 +689,10 @@ void GameController::AbortAndJoinSearch() {
 }
 
 int GameController::GetEngineSearchProgressPercent() const {
-    const long long nBudgetMs = m_nEngineSearchBudgetMs.load();
-    if (nBudgetMs <= 0) {
-        // Pure depth-limited search: no time budget to measure against.
-        return -1;
-    }
-
-    using namespace std::chrono;
-    const long long nNowMs =
-        duration_cast<milliseconds>(steady_clock::now().time_since_epoch())
-            .count();
-    long long nElapsedMs = nNowMs - m_nEngineSearchStartMs.load();
-    if (nElapsedMs < 0) {
-        nElapsedMs = 0;
-    }
-    int nPercent = static_cast<int>((nElapsedMs * 100) / nBudgetMs);
-    if (nPercent > 100) {
-        nPercent = 100;
-    }
-    return nPercent;
-}
-
-int GameController::GetSearchCountdownSeconds() const {
-    // No countdown for very short limits (5s or less) — the number would barely
-    // be readable and the search ends almost immediately.
-    if (m_nTimeLimit <= 5) {
-        return -1;
-    }
-    const long long nBudgetMs = m_nEngineSearchBudgetMs.load();
-    if (nBudgetMs <= 0) {
-        // Pure depth-limited search: no deadline to count down to.
-        return -1;
-    }
-
-    using namespace std::chrono;
-    const long long nNowMs =
-        duration_cast<milliseconds>(steady_clock::now().time_since_epoch())
-            .count();
-    // The countdown tracks the search clock directly (no padding): the engine's
-    // timer is reliable enough that it finishes very close to the limit. If the
-    // search finishes first the host clears the countdown; if the countdown
-    // reaches zero first it simply stays at 0 until the search returns (a couple
-    // of seconds at most).
-    const long long nDeadlineMs = m_nEngineSearchStartMs.load() + nBudgetMs;
-    long long nRemainingMs = nDeadlineMs - nNowMs;
-    if (nRemainingMs < 0) {
-        nRemainingMs = 0;
-    }
-    // Round up so the final partial second still shows "1" rather than "0".
-    return static_cast<int>((nRemainingMs + 999) / 1000);
+    // Progress of the engine's depth-limited search, reported by the engine as a
+    // fraction of the root moves searched across iterative deepening. Returns -1
+    // when no search is active.
+    return SearchProgressPercent();
 }
 
 // ---------------------------------------------------------------------------
@@ -809,23 +720,6 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
     m_nProgressDone.store(0);
     m_nProgressTotal.store(0);
 
-    // Capture the search start time and a cumulative time budget so the UI can
-    // run a single countdown across the whole strategy computation. The strategy
-    // performs up to kStrategyRanks full-time searches, so the upper bound on the
-    // wall-clock cost is kStrategyRanks × the per-move limit. If the searches
-    // finish early the countdown is simply cleared.
-    {
-        using namespace std::chrono;
-        const long long nNowMs =
-            duration_cast<milliseconds>(steady_clock::now().time_since_epoch())
-                .count();
-        m_nEngineSearchStartMs.store(nNowMs);
-        m_nEngineSearchBudgetMs.store(
-            m_nTimeLimit > 0
-                ? static_cast<long long>(m_nTimeLimit) * 1000 * kStrategyRanks
-                : 0);
-    }
-
     if (m_EngineThread.joinable()) {
         m_EngineThread.join();
     }
@@ -834,8 +728,7 @@ void GameController::StartStrategySearch(HWND hwndTarget) {
     // AFTER log (with the strategic results) is emitted in the search thread
     // once ComputeStrategyText() returns, so the log shows what the engine did
     // to determine the optimal strategy.
-    Print(0, "Strategy: starting search (time limit %ds per move)...\n",
-          m_nTimeLimit);
+    Print(0, "Strategy: starting search (depth %d per move)...\n", m_nDepth);
 
     m_EngineThread = std::thread([this, hwndTarget, nGen]() {
         std::string strStrategy = ComputeStrategyText(hwndTarget);
@@ -883,17 +776,12 @@ std::string GameController::ComputeStrategyText(HWND hwndTarget) {
     // The engine is single-PV: each search yields one best move with a reliable
     // score, while the runner-up root moves are searched with narrow windows so
     // their exact scores are not preserved. To report the top kStrategyRanks
-    // moves we therefore emulate MultiPV by running that many full-time searches,
-    // each excluding the best move(s) already found at the root. Every search
-    // uses the full per-move time budget, so the ranking reflects deep evaluation
-    // rather than whatever the move generator happens to emit first.
-    if (m_nTimeLimit > 0) {
-        SetFixedTimePerMove(m_nTimeLimit);
-        setMaxSearchDepth(MAX_TREE_SIZE - 2);
-    } else {
-        SetDefaultTimeControl();
-        setMaxSearchDepth(m_nDepth);
-    }
+    // moves we therefore emulate MultiPV by running that many searches, each
+    // excluding the best move(s) already found at the root. Every search uses
+    // the configured fixed depth, so the ranking reflects deep evaluation rather
+    // than whatever the move generator happens to emit first.
+    SetDefaultTimeControl();
+    setMaxSearchDepth(m_nDepth);
 
     // Enumerate the current player's legal moves only to size the ranking and
     // detect the no-moves case; the searches themselves operate on the position.
@@ -920,9 +808,8 @@ std::string GameController::ComputeStrategyText(HWND hwndTarget) {
         bool        bGameOver;
     };
 
-    // One full-time search per reported rank (bounded by the number of legal
-    // moves). The status-bar countdown spans all of them (see
-    // StartStrategySearch). Progress is reported as completed searches / nRanks.
+    // One search per reported rank (bounded by the number of legal moves).
+    // Progress is reported as completed searches / nRanks.
     const int nRanks = (cnt < kStrategyRanks) ? cnt : kStrategyRanks;
     m_nProgressDone.store(0);
     m_nProgressTotal.store(nRanks);
@@ -962,8 +849,8 @@ std::string GameController::ComputeStrategyText(HWND hwndTarget) {
             ClearExcludedRootMoves();
         }
 
-        Print(0, "Strategy: searching for move #%d of %d (time limit %ds)...\n",
-              r + 1, nRanks, m_nTimeLimit);
+        Print(0, "Strategy: searching for move #%d of %d (depth %d)...\n",
+              r + 1, nRanks, m_nDepth);
 
         // Search the cloned root directly: Iterate returns the best move and a
         // score from the side-to-move (our) perspective, so no negation is
