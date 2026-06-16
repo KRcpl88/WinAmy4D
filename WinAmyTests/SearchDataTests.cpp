@@ -9,6 +9,66 @@
 
 namespace WinAmyTests {
 
+// A single piece placement for BuildBoardEPD: a level/file/rank coordinate plus
+// the EPD piece letter (upper-case = White, lower-case = Black).
+struct SPlacement {
+    uint16_t wLevel;
+    uint16_t wFile;
+    uint16_t wRank;
+    char chPiece;
+};
+
+// Build a full 15-level 3D EPD from an explicit list of piece placements. This
+// lets a test position any piece on any level/file/rank — which the flat
+// main-board helper (CreatePositionFromLegacyMainEPD) cannot do — so cross-level
+// pawn captures can be set up deterministically.
+static std::string BuildBoardEPD(const std::vector<SPlacement> &Placements,
+                                 char chSideToMove) {
+    char rgchPiece[CBitBoard::SIZE];
+    for (uint16_t wSquare = 0; wSquare < CBitBoard::SIZE; ++wSquare) {
+        rgchPiece[wSquare] = 0;
+    }
+    for (const SPlacement &Placement : Placements) {
+        const CSCoord Coord(Placement.wLevel, Placement.wFile, Placement.wRank);
+        rgchPiece[Coord.BitOffset()] = Placement.chPiece;
+    }
+
+    std::string Epd;
+    for (uint16_t wLevel = 0; wLevel < CBitBoard::NUM_LEVELS; ++wLevel) {
+        if (wLevel != 0) {
+            Epd += '|';
+        }
+        const int nWidth = static_cast<int>(CBitBoard::LEVEL_WIDTH[wLevel]);
+        for (int nRank = nWidth - 1; nRank >= 0; --nRank) {
+            if (nRank != nWidth - 1) {
+                Epd += '/';
+            }
+            int nEmpty = 0;
+            for (int nFile = 0; nFile < nWidth; ++nFile) {
+                const CSCoord Coord(wLevel, static_cast<uint16_t>(nFile),
+                                    static_cast<uint16_t>(nRank));
+                const char chPiece = rgchPiece[Coord.BitOffset()];
+                if (chPiece == 0) {
+                    ++nEmpty;
+                } else {
+                    if (nEmpty != 0) {
+                        Epd += static_cast<char>('0' + nEmpty);
+                        nEmpty = 0;
+                    }
+                    Epd += chPiece;
+                }
+            }
+            if (nEmpty != 0) {
+                Epd += static_cast<char>('0' + nEmpty);
+            }
+        }
+    }
+    Epd += ' ';
+    Epd += chSideToMove;
+    Epd += " - -";
+    return Epd;
+}
+
 TEST_CLASS(SearchDataTests) {
   public:
     TEST_CLASS_INITIALIZE(InitializeEngine) {
