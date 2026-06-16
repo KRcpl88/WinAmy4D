@@ -670,6 +670,18 @@ void CPosition::DoMove(CMove move) {
     const uint16_t toOffset = toCoord.BitOffset();
     int8_t tp = TYPE(p->m_rgPiece[fromOffset]);
 
+    /*
+     * The moving piece must exist on the from-square and belong to the side to
+     * move. A move out of an empty square (or out of an opponent's piece) is an
+     * illegal move that should have been rejected by move generation / legality
+     * checking; trap it here before it corrupts the board and the attack maps
+     * (an empty from-square yields tp == Neutral, which later panics in AtkSet).
+     */
+    AMY_ASSERT(tp != Neutral && SAME_COLOR(p->m_rgPiece[fromOffset], p->m_nTurn),
+               "DoMove moving a non-friendly piece (%d) from L%d/F%d/R%d\n",
+               (int)p->m_rgPiece[fromOffset], fromCoord.m_nLevel,
+               fromCoord.m_nFile, fromCoord.m_nRank);
+
     /* save EnPassant and Castling */
     p->m_pActLog->gl_EnPassant = p->m_EnPassant;
     p->m_pActLog->gl_Castle = p->m_bCastle;
@@ -711,19 +723,28 @@ void CPosition::DoMove(CMove move) {
                 p->m_bCastle &= ~(CastleMask[p->m_nTurn][1]);
         }
         if (move.IsCapture()) {
-            int sp = TYPE(p->m_rgPiece[toOffset]);
+            const int8_t capturedPiece = p->m_rgPiece[toOffset];
+            int sp = TYPE(capturedPiece);
 
             /*
-             * Capturing a king is an illegal/invalid scenario: a legal move
-             * generator must never let the opponent's king be taken. Catch it
-             * here so the corrupt state is both logged and trapped in the
-             * debugger (no-op in release builds).
+             * A capture move (M_CAPTURE) must land on a real opposing piece
+             * that is not a King. Capturing a king is illegal (a legal move
+             * generator must never let the opponent's king be taken), and an
+             * M_CAPTURE flag on an empty or own-coloured square indicates a
+             * malformed/mis-encoded move. Either way the resulting state is
+             * corrupt: the matching UndoMove restores p->m_pActLog->gl_Piece via
+             * AtkSet(TYPE(gl_Piece), ...), so a Neutral/invalid captured piece
+             * later panics in AtkSet's default case. Trap it here so the corrupt
+             * state is both logged and trapped in the debugger (no-op in release
+             * builds).
              */
-            AMY_ASSERT(sp != King,
-                       "DoMove capturing a King at L%d/F%d/R%d (from "
-                       "L%d/F%d/R%d) - illegal move reached DoMove\n",
-                       toCoord.m_nLevel, toCoord.m_nFile, toCoord.m_nRank,
-                       fromCoord.m_nLevel, fromCoord.m_nFile, fromCoord.m_nRank);
+            AMY_ASSERT(sp != Neutral && sp != King &&
+                           SAME_COLOR(capturedPiece, OPP(p->m_nTurn)),
+                       "DoMove capturing an invalid piece (%d) at L%d/F%d/R%d "
+                       "(from L%d/F%d/R%d) - illegal move reached DoMove\n",
+                       (int)capturedPiece, toCoord.m_nLevel, toCoord.m_nFile,
+                       toCoord.m_nRank, fromCoord.m_nLevel, fromCoord.m_nFile,
+                       fromCoord.m_nRank);
 
             /* piece looses its attacks */
             p->AtkClr(toCoord);
@@ -916,6 +937,21 @@ void CPosition::UndoMove(CMove move) {
     p->m_pActLog--;
     p->m_wPly--;
 
+    /*
+     * After the turn swap p->m_nTurn is the colour that played the move being
+     * undone, so the to-square must currently hold one of that side's pieces
+     * (the piece that moved there, possibly a promoted piece). If it does not,
+     * the board/attack maps are already corrupt before we start undoing - trap
+     * it here rather than letting AtkSet/AtkClr operate on bogus state. Castling
+     * relocates two pieces and is handled by UndoCastle, so it is exempt.
+     */
+    AMY_ASSERT(move.IsCastle() ||
+                   (tp != Neutral &&
+                    SAME_COLOR(p->m_rgPiece[toOffset], p->m_nTurn)),
+               "UndoMove: no friendly piece (%d) on the to-square L%d/F%d/R%d\n",
+               (int)p->m_rgPiece[toOffset], toCoord.m_nLevel, toCoord.m_nFile,
+               toCoord.m_nRank);
+
     if (move.IsCastle()) {
         UndoCastle(p, move);
     } else {
@@ -951,6 +987,23 @@ void CPosition::UndoMove(CMove move) {
 
         if (move.IsCapture()) {
             int8_t sp = p->m_pActLog->gl_Piece;
+
+            /*
+             * gl_Piece is the piece that DoMove removed from the to-square; on
+             * undo it is restored to the board and re-registered in the attack
+             * maps via AtkSet(TYPE(sp), ...). It must therefore be a real
+             * opposing piece of type Pawn..Queen (never Neutral, never a King -
+             * kings are not capturable). A Neutral/invalid value here is exactly
+             * the corruption that makes AtkSet hit its default case and panic;
+             * trap it before that happens so the failing state is logged and
+             * caught in the debugger (no-op in release builds).
+             */
+            AMY_ASSERT(TYPE(sp) >= Pawn && TYPE(sp) <= Queen &&
+                           SAME_COLOR(sp, OPP(p->m_nTurn)),
+                       "UndoMove restoring an invalid captured piece (%d) at "
+                       "L%d/F%d/R%d - would panic in AtkSet\n",
+                       (int)sp, toCoord.m_nLevel, toCoord.m_nFile,
+                       toCoord.m_nRank);
 
             /* piece gains its attacks */
             p->AtkSet(TYPE(sp), OPP(p->m_nTurn), toCoord);
@@ -1052,6 +1105,17 @@ bool CPosition::Undo() {
 
 void CPosition::DoNull() {
     CPosition *p = this;
+
+    /*
+     * A null move hands the move to the opponent without changing the board, so
+     * it must never be played while the side to move is in check (the opponent
+     * could simply capture the king on the reply). The search only takes the
+     * null-move branch when !incheck; assert the same invariant here so a stray
+     * caller is logged and trapped (no-op in release builds).
+     */
+    AMY_ASSERT(!p->InCheck(p->m_nTurn),
+               "DoNull called while side %d is in check\n", p->m_nTurn);
+
     /* Update SGameLog */
     p->m_pActLog->gl_Move = M_NULL;
     p->m_pActLog->gl_EnPassant = p->m_EnPassant;
@@ -1096,11 +1160,24 @@ void CPosition::DoNull() {
 
 void CPosition::UndoNull() {
     CPosition *p = this;
+
+    /*
+     * UndoNull must balance a prior DoNull: there has to be at least one ply on
+     * the game log and the entry being undone must actually be a null move.
+     * Undoing past ply 0, or undoing a real move as if it were a null move,
+     * would silently corrupt the game log / hash key - trap it here (no-op in
+     * release builds).
+     */
+    AMY_ASSERT(p->m_wPly > 0, "UndoNull called at ply 0 (nothing to undo)\n");
+
     p->m_nTurn = OPP(p->m_nTurn);
 
     /* Decrement ActLog */
     p->m_pActLog--;
     p->m_wPly--;
+
+    AMY_ASSERT(p->m_pActLog->gl_Move == M_NULL,
+               "UndoNull: log entry being undone is not a null move\n");
 
     p->m_EnPassant = p->m_pActLog->gl_EnPassant;
     p->m_ullHKey = p->m_pActLog->gl_HashKey;
