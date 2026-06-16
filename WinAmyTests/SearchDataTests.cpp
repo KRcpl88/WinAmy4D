@@ -466,6 +466,149 @@ TEST_CLASS(SearchDataTests) {
         }
     }
 
+    // Edge case: a white pawn that is NOT on a pre-promotion rank captures
+    // across levels onto a promotion square.  The pawn sits on the h-level (7)
+    // file 1 rank 1 and captures the black knight on the j-level (9) promotion
+    // square file 0 rank 0.  Promotion must be decided from the destination, so
+    // the capture must promote even though the source rank is the white home
+    // rank.  Verified through the FULL legal move generator: it must emit one
+    // legal promotion capture for EACH piece the pawn may become, and DoMove
+    // must replace the pawn with the promoted piece on the target square.
+    TEST_METHOD(LegalMoveGeneratorPromotesCrossLevelCaptureToEachPiece) {
+        const uint16_t wFrom = CSCoord(7, 1, 1).BitOffset();
+        const uint16_t wTo = CSCoord(9, 0, 0).BitOffset();
+        const std::string Epd = BuildBoardEPD(
+            {{7, 4, 0, 'K'}, {7, 4, 7, 'k'}, {7, 1, 1, 'P'}, {9, 0, 0, 'n'}}, 'w');
+        PositionGuard Pos(CPosition::CreateFromEPD(Epd.c_str()));
+        Assert::IsTrue(Pos.get() != nullptr);
+        Assert::IsFalse(Pos.get()->InCheck(White));
+        Assert::IsFalse(Pos.get()->InCheck(Black));
+        Assert::IsTrue(is_promo_square(CSCoord(wTo)));
+        Assert::AreEqual((int)Pawn, (int)Pos.get()->GetPiece(wFrom));
+        Assert::AreEqual((int)-Knight, (int)Pos.get()->GetPiece(wTo));
+
+        std::vector<CMove> Moves = CollectLegalMoves(Pos.get());
+
+        bool rgfSeenPromoType[King + 1] = {false};
+        int nPromoCaptures = 0;
+        for (CMove Move : Moves) {
+            if (Move.GetFromCoord().BitOffset() != wFrom ||
+                Move.GetToCoord().BitOffset() != wTo) {
+                continue;
+            }
+            Assert::IsTrue(Move.IsCapture());
+            Assert::IsTrue(Move.HasPromotion());
+            Assert::IsTrue(is_promo_square(Move.GetToCoord()));
+            const int nType = Move.GetPromotionType();
+            Assert::IsTrue(nType >= Knight && nType <= Queen);
+            rgfSeenPromoType[nType] = true;
+            nPromoCaptures++;
+
+            // DoMove must promote: the target square holds the (white) promoted
+            // piece and the source square is vacated.
+            PositionGuard After(CPosition::Clone(Pos.get()));
+            After.get()->DoMove(Move);
+            Assert::AreEqual((int)nType, (int)After.get()->GetPiece(wTo));
+            Assert::AreEqual((int)Neutral, (int)After.get()->GetPiece(wFrom));
+        }
+
+        Assert::AreEqual(4, nPromoCaptures);
+        Assert::IsTrue(rgfSeenPromoType[Queen]);
+        Assert::IsTrue(rgfSeenPromoType[Rook]);
+        Assert::IsTrue(rgfSeenPromoType[Bishop]);
+        Assert::IsTrue(rgfSeenPromoType[Knight]);
+    }
+
+    // The quiescence generator must also promote a cross-level capture that
+    // lands on a promotion square (it emits the queen promotion as the dominant
+    // capture).  Same position as the legal-move test above.
+    TEST_METHOD(QuiescenceGeneratorPromotesCrossLevelCapture) {
+        const uint16_t wFrom = CSCoord(7, 1, 1).BitOffset();
+        const uint16_t wTo = CSCoord(9, 0, 0).BitOffset();
+        const std::string Epd = BuildBoardEPD(
+            {{7, 4, 0, 'K'}, {7, 4, 7, 'k'}, {7, 1, 1, 'P'}, {9, 0, 0, 'n'}}, 'w');
+        PositionGuard Pos(CPosition::CreateFromEPD(Epd.c_str()));
+        Assert::IsTrue(Pos.get() != nullptr);
+        Assert::IsFalse(Pos.get()->InCheck(White));
+
+        std::vector<CMove> Moves = CollectQuiescenceMoves(Pos.get());
+
+        bool fSeenPromotionCapture = false;
+        for (CMove Move : Moves) {
+            // Every quiescence move must respect the destination-driven
+            // promotion invariant and be legal.
+            Assert::IsTrue(Pos.get()->LegalMove(Move));
+            Assert::IsTrue(PawnPromotionInvariantHolds(Pos.get(), Move));
+            if (Move.GetFromCoord().BitOffset() == wFrom &&
+                Move.GetToCoord().BitOffset() == wTo) {
+                Assert::IsTrue(Move.IsCapture());
+                Assert::IsTrue(Move.HasPromotion());
+                fSeenPromotionCapture = true;
+            }
+        }
+        Assert::IsTrue(fSeenPromotionCapture);
+    }
+
+    // Converse edge case (the other half of the original bug): a white pawn ON
+    // a pre-promotion rank captures across levels onto a NON-promotion square,
+    // which must NOT promote, while its other captures/pushes that land on
+    // promotion squares MUST promote.  The pawn on the g-level (6) file 0 rank 5
+    // (a pre-promotion rank) has three relevant moves:
+    //   * capture onto the g-level (6) file 1 rank 6 promotion square  -> promote
+    //   * capture across to the i-level (8) file 0 rank 5 (non-promo)   -> NO promote
+    //   * non-capturing push onto the g-level (6) file 0 rank 6 promo   -> promote
+    TEST_METHOD(LegalMoveGeneratorPromotionIsDestinationDriven) {
+        const uint16_t wFrom = CSCoord(6, 0, 5).BitOffset();
+        const uint16_t wPromoCapture = CSCoord(6, 1, 6).BitOffset();
+        const uint16_t wNonPromoCapture = CSCoord(8, 0, 5).BitOffset();
+        const uint16_t wPromoPush = CSCoord(6, 0, 6).BitOffset();
+        const std::string Epd = BuildBoardEPD({{7, 4, 0, 'K'},
+                                               {7, 4, 7, 'k'},
+                                               {6, 0, 5, 'P'},
+                                               {6, 1, 6, 'n'},
+                                               {8, 0, 5, 'n'}},
+                                              'w');
+        PositionGuard Pos(CPosition::CreateFromEPD(Epd.c_str()));
+        Assert::IsTrue(Pos.get() != nullptr);
+        Assert::IsFalse(Pos.get()->InCheck(White));
+        Assert::IsFalse(Pos.get()->InCheck(Black));
+        Assert::IsTrue(is_promo_square(CSCoord(wPromoCapture)));
+        Assert::IsFalse(is_promo_square(CSCoord(wNonPromoCapture)));
+        Assert::IsTrue(is_promo_square(CSCoord(wPromoPush)));
+
+        std::vector<CMove> Moves = CollectLegalMoves(Pos.get());
+
+        int nPromoCaptures = 0;
+        int nNonPromoCaptures = 0;
+        int nPromoPushes = 0;
+        for (CMove Move : Moves) {
+            if (Move.GetFromCoord().BitOffset() != wFrom) {
+                continue;
+            }
+            Assert::IsTrue(PawnPromotionInvariantHolds(Pos.get(), Move));
+            const uint16_t wDest = Move.GetToCoord().BitOffset();
+            if (wDest == wPromoCapture) {
+                Assert::IsTrue(Move.IsCapture());
+                Assert::IsTrue(Move.HasPromotion());
+                nPromoCaptures++;
+            } else if (wDest == wNonPromoCapture) {
+                Assert::IsTrue(Move.IsCapture());
+                Assert::IsFalse(Move.HasPromotion());
+                nNonPromoCaptures++;
+            } else if (wDest == wPromoPush) {
+                Assert::IsFalse(Move.IsCapture());
+                Assert::IsTrue(Move.HasPromotion());
+                nPromoPushes++;
+            }
+        }
+
+        // One legal move per promotion piece on the two promotion squares, and
+        // exactly one plain (non-promoting) capture on the non-promotion square.
+        Assert::AreEqual(4, nPromoCaptures);
+        Assert::AreEqual(1, nNonPromoCaptures);
+        Assert::AreEqual(4, nPromoPushes);
+    }
+
     TEST_METHOD(PutKillerTracksAndPromotesByHitCount) {
         PositionGuard position(CPosition::Initial());
         std::unique_ptr<CSearchData> searchData(new CSearchData(position.get()));
