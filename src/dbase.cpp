@@ -1421,6 +1421,19 @@ bool CPosition::LegalMove(CMove move) {
     if (move.HasPromotion() && TYPE(p->m_rgPiece[fr]) != Pawn)
         return false;
 
+    /* A promotion is only legal when the destination is an actual promotion
+     * square.  In the 3D variant promotion depends on the destination square
+     * (is_promo_square), not on the pawn's source rank, so a well-formed
+     * promotion always targets a promotion square.  A promotion onto a
+     * non-promotion square indicates a malformed move (for example a mis-encoded
+     * generator move) and must be rejected before it can corrupt the board. */
+    if (move.HasPromotion() && !is_promo_square(toCoord)) {
+        AMY_ASSERT(false,
+                   "promotion move targets non-promotion square: from %u to %u\n",
+                   fr, to);
+        return false;
+    }
+
     /* if the move is a pawn move to the 1st/8th rank, it must be
      * be a promotion.
      */

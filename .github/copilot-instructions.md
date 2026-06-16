@@ -166,6 +166,11 @@ Moves are encoded as `move_t` (32-bit integer) using `make_move(from, to, flags)
 
 Uses `.clang-format` (LLVM style, 4-space indent, no tabs).
 
+- **Always use braces `{}` for every control-flow body, even single-statement
+  `if`/`else if`/`else`/`for`/`while`/`do` clauses.** Never write a brace-less
+  single-line body (e.g. `if (cond) return false;`). This is mandatory for new or
+  modified code even when adjacent legacy code omits the braces.
+
 ### CI
 
 GitHub Actions workflows build on `windows-latest` with MSBuild. CI generates `Include/config.h` before building since it's gitignored.
