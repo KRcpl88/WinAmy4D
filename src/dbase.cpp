@@ -1552,6 +1552,13 @@ bool CPosition::IsCheckingMove(CMove move) {
      * predicate (e.g. futility pruning) never make the move.
      */
     if (p->IsKingCapture(move)) {
+        const CSCoord &frCoord = move.GetFromCoord();
+        const CSCoord &toCoord = move.GetToCoord();
+        PrintDebug(9,
+                   "IsCheckingMove: king-capture move from L%d/F%d/R%d to "
+                   "L%d/F%d/R%d treated as non-checking (illegal position)\n",
+                   frCoord.m_nLevel, frCoord.m_nFile, frCoord.m_nRank,
+                   toCoord.m_nLevel, toCoord.m_nFile, toCoord.m_nRank);
         return false;
     }
     p->DoMove(move);
