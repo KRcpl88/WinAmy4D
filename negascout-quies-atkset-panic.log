@@ -1,0 +1,689 @@
+WinAmyGUI: logging enabled -> C:\git\WinAmy4D\amy.log
+BUILTIN_POPCOUNTLL = 0, POPCNT = 1, SYS_TIME = 0, UNISTD = 0, SYS_SOCKET = 0, NETDB_H = 0, SELECT = 0, GETHOSTNAME = 0, SETBUF = 1
+No multiprocessor support.
+
+Hashtable sizes: 3584 k, 3584 k, 256 k (17, 15, 15 bits)
+Player made move: Phd2hd4 by White
+Move made: Phd2hd4 by White
+Player made move: Phd7hd5 by Black
+Move made: Phd7hd5 by Black
+Player made move: Phc2hc4 by White
+Move made: Phc2hc4 by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+Single-threaded search (MP not defined)
+ 5     1.0     +++  2. .. Phd5xhc4
+ 5     1.4  -1.328  2. .. Phd5xhc4 3. Phd4hd5 Nhc6id4 4. Pie2ie3 Nid4fd3 
+ 5     2.5  -1.328  2. .. Phd5xhc4 3. Phd4hd5 Nhc6id4 4. Pie2ie3 Nid4fd3 
+Nodes = 62.3k, QPerc: 76 %, time = 2.56 secs, 24.3k nodes/s
+Extensions: Check: 76  DblChk: 0  DiscChk: 0  SingReply: 1
+            Recapture: 169   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 290/14.8k = 2 %   Pawn: 28.6k/33.1k = 86 %
+         Eval: 14.4k/47.5k = 30 %
+Hashtable 1:  entries = 131k, use = 1.38k (1 %)
+              store failed = 12 (1 %)
+Engine move: search complete, best move Phd5xhc4 (score +1.328)
+Move made: Phd5xhc4 by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 5     1.1  -0.912  3. Phe2he4 Nie7id5 4. Nib1ic3 Nhb8hc6 5. Nhb1hc3 
+ 5     2.5  -0.912  3. Phe2he4 Nie7id5 4. Nib1ic3 Nhb8hc6 5. Nhb1hc3 
+Nodes = 62.7k, QPerc: 81 %, time = 2.58 secs, 24.3k nodes/s
+Extensions: Check: 135  DblChk: 0  DiscChk: 0  SingReply: 1
+            Recapture: 63   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 282/12.1k = 2 %   Pawn: 39.1k/43.4k = 90 %
+         Eval: 7.09k/50.5k = 14 %
+Hashtable 1:  entries = 131k, use = 2.48k (2 %)
+              store failed = 2 (0 %)
+Engine move: search complete, best move Phe2he4 (score -0.912)
+Move made: Phe2he4 by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.2  -0.736  3. .. Nib7hd6 4. Phe4he5 Nhd6hb5 5. Bhc1hf4 
+ 5     1.6  -0.848  3. .. Nib7hd6 4. Phe4he5 Nhd6hf5 5. Bhf1xhc4 Nhf5xhd4 
+ 5     4.3     +++  3. .. Nib7ic5
+ 5     5.0  -0.928  3. .. Nib7ic5 4. Nhb1hc3 Nhb8hc6 5. Bhf1xhc4 Nhc6xhd4 
+ 5     6.8  -0.928  3. .. Nib7ic5 4. Nhb1hc3 Nhb8hc6 5. Bhf1xhc4 Nhc6xhd4 
+Nodes = 170k, QPerc: 81 %, time = 6.91 secs, 24.7k nodes/s
+Extensions: Check: 420  DblChk: 0  DiscChk: 0  SingReply: 14
+            Recapture: 121   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 2.05k/33.0k = 6 %   Pawn: 102k/111k = 92 %
+         Eval: 25.7k/137k = 19 %
+Hashtable 1:  entries = 131k, use = 6.35k (5 %)
+              store failed = 53 (1 %)
+Engine move: search complete, best move Nib7ic5 (score +0.928)
+Move made: Nib7ic5 by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.1  -0.784  4. Bhf1xhc4 Nic5xhe4 5. Nie1id3 Nhb8hc6 
+ 5     1.7  -0.976  4. Bhf1xhc4 Nie7hd6 5. Nhb1hd2 Nhd6xhc4 6. Nhd2xhc4 
+ 5     3.6     +++  4. Nhg1hf3
+ 5     4.0  -0.864  4. Nhg1hf3 Nie7id5 5. Nhb1hc3 Bhc8hg4 6. Bhc1he3 
+ 5     5.1     +++  4. Nib1ic3
+ 5     5.7  -0.784  4. Nib1ic3 Nhg8hf6 5. Bhf1xhc4 Nhf6xhe4 6. Nie1fe1 
+ 5     7.4  -0.784  4. Nib1ic3 Nhg8hf6 5. Bhf1xhc4 Nhf6xhe4 6. Nie1fe1 
+Nodes = 204k, QPerc: 84 %, time = 7.5 secs, 27.3k nodes/s
+Extensions: Check: 261  DblChk: 0  DiscChk: 0  SingReply: 71
+            Recapture: 78   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 2.03k/33.5k = 6 %   Pawn: 123k/134k = 91 %
+         Eval: 36.1k/170k = 21 %
+Hashtable 1:  entries = 131k, use = 5.50k (4 %)
+              store failed = 46 (1 %)
+Engine move: search complete, best move Nib1ic3 (score -0.784)
+Move made: Nib1ic3 by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 5     1.5     ---  4. .. Nic5xhe4
+ 5     1.7  +0.816  4. .. Nic5xhe4 5. Nic3ie4 Nhe4xif2+ 6. Nie4xif2 Nie7id5 
+                    7. Bhc1hg5 
+ 5     2.0     +++  4. .. Qid7ea4
+ 5     4.7  -0.512  4. .. Qid7ea4 5. Bhf1xhc4 Nic5xhe4 6. Nic3ie4 Nie7id5 
+ 5     5.5     +++  4. .. Nie7hd6
+ 5     6.2  -0.544  4. .. Nie7hd6 5. Phe4he5 Nhd6ie4 6. Bhf1xhc4 Nie4xif2+ 
+ 5     8.3     +++  4. .. Phc7hc6
+ 5     8.8  -0.576  4. .. Phc7hc6 5. Nhb1hc3 Bhc8he6 6. Bhc1hf4 Nie7hd6 
+ 5     9.4     +++  4. .. Phe7he6
+ 5    10.7  -0.768  4. .. Phe7he6 5. Nhb1hc3 Nhb8hc6 6. Bhf1xhc4 Nhc6xhd4 
+ 5    13.3  -0.768  4. .. Phe7he6 5. Nhb1hc3 Nhb8hc6 6. Bhf1xhc4 Nhc6xhd4 
+Nodes = 317k, QPerc: 85 %, time = 13.34 secs, 23.8k nodes/s
+Extensions: Check: 1.16k  DblChk: 2  DiscChk: 0  SingReply: 527
+            Recapture: 308   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 2.82k/48.3k = 6 %   Pawn: 193k/212k = 91 %
+         Eval: 56.6k/268k = 21 %
+Hashtable 1:  entries = 131k, use = 10.9k (8 %)
+              store failed = 163 (1 %)
+Engine move: search complete, best move Phe7he6 (score +0.768)
+Move made: Phe7he6 by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.2  -0.976  5. Bhf1xhc4 Qhd8xhd4 6. Bhc4hb5+ Nhb8hc6 
+ 5     1.9  -1.152  5. Bhf1xhc4 Qhd8xhd4 6. Qhd1hc2 Nic5xhe4 7. Nie1id3 
+ 5     2.9     +++  5. Qhd1ha4+
+ 5     5.1  -1.088  5. Qhd1ha4+ Bhc8hd7 6. Qha4hc2 Bhd7hc6 7. Bhf1xhc4 
+ 5     5.8     +++  5. Nhb1hc3
+ 5     6.3  -1.008  5. Nhb1hc3 Qhd8xhd4 6. Qhd1ha4+ Nhb8hc6 7. Qha4xhc4 
+ 5     9.8  -1.008  5. Nhb1hc3 Qhd8xhd4 6. Qhd1ha4+ Nhb8hc6 7. Qha4xhc4 
+Nodes = 232k, QPerc: 86 %, time = 9.98 secs, 23.3k nodes/s
+Extensions: Check: 2.09k  DblChk: 0  DiscChk: 0  SingReply: 333
+            Recapture: 351   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 1.45k/31.9k = 5 %   Pawn: 151k/162k = 94 %
+         Eval: 38.3k/200k = 19 %
+Hashtable 1:  entries = 131k, use = 8.17k (6 %)
+              store failed = 117 (1 %)
+Engine move: search complete, best move Nhb1hc3 (score -1.008)
+Move made: Nhb1hc3 by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.1  -0.800  5. .. Bhf8hb4 6. Bhf1xhc4 Nic5xhe4 7. Bhc4hb5+ 
+ 5     2.8  -0.848  5. .. Bhf8hb4 6. Nie1hg3 Nhb8hc6 7. Bhf1xhc4 Nhc6xhd4 
+ 5     5.0  -0.848  5. .. Bhf8hb4 6. Nie1hg3 Nhb8hc6 7. Bhf1xhc4 Nhc6xhd4 
+Nodes = 121k, QPerc: 85 %, time = 5.04 secs, 24.2k nodes/s
+Extensions: Check: 387  DblChk: 0  DiscChk: 0  SingReply: 51
+            Recapture: 352   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 474/18.4k = 3 %   Pawn: 76.5k/83.0k = 92 %
+         Eval: 20.4k/103k = 20 %
+Hashtable 1:  entries = 131k, use = 3.08k (2 %)
+              store failed = 10 (0 %)
+Engine move: search complete, best move Bhf8hb4 (score +0.848)
+Move made: Bhf8hb4 by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     2.3     +++  6. Nic3he5
+ 4     2.6  -1.472  6. Nic3he5 Nie7id5 7. Qhd1ha4+ Nhb8hd7 
+ 4     2.7  -1.472  6. Nic3he5 Nie7id5 7. Qhd1ha4+ Nhb8hd7 
+ 5     3.0     ---  6. Nic3he5
+ 5     3.5  -1.760  6. Nic3he5 Nie7id5 7. Bhh6he3 Nic5xhe4 8. Bhf1xhc4 
+ 5     5.0  -1.760  6. Nic3he5 Nie7id5 7. Bhh6he3 Nic5xhe4 8. Bhf1xhc4 
+Nodes = 127k, QPerc: 84 %, time = 5.16 secs, 24.6k nodes/s
+Extensions: Check: 921  DblChk: 0  DiscChk: 0  SingReply: 401
+            Recapture: 221   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 411/20.6k = 2 %   Pawn: 62.3k/69.3k = 90 %
+         Eval: 37.1k/106k = 35 %
+Hashtable 1:  entries = 131k, use = 2.72k (2 %)
+              store failed = 11 (0 %)
+Engine move: search complete, best move Nic3he5 (score -1.760)
+Move made: Nic3he5 by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.6     +++  6. .. Nic5ie4
+ 4     1.8  -0.560  6. .. Nic5ie4 7. Nie1id3 Bhd6xhe5 8. Phd4xhe5 
+ 4     2.6  -0.560  6. .. Nic5ie4 7. Nie1id3 Bhd6xhe5 8. Phd4xhe5 
+ 5     3.2     +++  6. .. Nic5ie4
+ 5     3.5  -0.864  6. .. Nic5ie4 7. Nie1id3 Bhd6xhe5 8. Phd4xhe5 Nie7id5 
+ 5     5.0  -0.864  6. .. Nic5ie4 7. Nie1id3 Bhd6xhe5 8. Phd4xhe5 Nie7id5 
+Nodes = 132k, QPerc: 86 %, time = 5.06 secs, 26.1k nodes/s
+Extensions: Check: 704  DblChk: 0  DiscChk: 1  SingReply: 371
+            Recapture: 275   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 562/17.9k = 3 %   Pawn: 78.8k/85.0k = 93 %
+         Eval: 29.4k/114k = 26 %
+Hashtable 1:  entries = 131k, use = 2.77k (2 %)
+              store failed = 12 (0 %)
+Engine move: search complete, best move Nic5ie4 (score +0.864)
+Move made: Nic5ie4 by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 6     0.6  -2.640  7. .. Nie4xif6 8. Bhf1xhc4 Nie7id5 9. Qid1he2 Nhg8hf6 
+Nodes = 15.0k, QPerc: 86 %, time = 0.63 secs, 23.8k nodes/s
+Extensions: Check: 186  DblChk: 0  DiscChk: 0  SingReply: 1
+            Recapture: 128   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 130/2.08k = 6 %   Pawn: 8.81k/9.86k = 89 %
+         Eval: 3.05k/12.9k = 24 %
+Hashtable 1:  entries = 131k, use = 576 (0 %)
+              store failed = 0 (0 %)
+Engine move: search complete, best move Nie4xif6 (score +2.640)
+Move rejected (not valid) for White: ie4-if6; turn is unchanged (attempt 1 of 3)
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.4  -3.728  7. .. Nie4xif2+ 8. Khe1he2 Qhd8hf6 9. Qhd1ha4+ Phc7hc6 
+                    10. Qid1gc2 
+ 4     1.7  -3.728  7. .. Nie4xif2+ 8. Khe1he2 Qhd8hf6 9. Qhd1ha4+ Phc7hc6 
+                    10. Qid1gc2 
+ 5     4.9  -3.792  7. .. Nie4xif2+ 8. Khe1he2 Nie7id5 9. Qid1fb2 Bhb4xhc3 
+                    10. Qfb2xhc3 Nif2xhh1 
+Nodes = 97.9k, QPerc: 85 %, time = 4.99 secs, 19.6k nodes/s
+Extensions: Check: 2.49k  DblChk: 0  DiscChk: 2  SingReply: 888
+            Recapture: 197   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 1.20k/14.7k = 8 %   Pawn: 65.0k/70.6k = 92 %
+         Eval: 12.6k/83.2k = 15 %
+Hashtable 1:  entries = 131k, use = 5.41k (4 %)
+              store failed = 82 (1 %)
+Engine move: search complete, best move Nie4xif2+ (score +3.792)
+Move rejected (not valid) for White: ie4-if2; turn is unchanged (attempt 1 of 3)
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.2  +0.112  7. Qhd1ha4+ Nhb8hc6 8. Pid2id3 Nie4ic5 
+ 4     1.5     +++  7. Pid2id3
+ 4     1.8  +1.168  7. Pid2id3 Bhb4xhc3+ 8. Phb2xhc3 Nie4hd3+ 9. Nie1xhd3 
+                    Phc4xhd3 
+ 4     1.9  +1.168  7. Pid2id3 Bhb4xhc3+ 8. Phb2xhc3 Nie4hd3+ 9. Nie1xhd3 
+                    Phc4xhd3 
+ 5     3.6  +1.232  7. Pid2id3 Bhb4xhc3+ 8. Phb2xhc3 Phf7hf6 9. Pid3xie4 
+                    Phf6xhe5 
+ 5     4.2  +1.232  7. Pid2id3 Bhb4xhc3+ 8. Phb2xhc3 Phf7hf6 9. Pid3xie4 
+                    Phf6xhe5 
+Nodes = 102k, QPerc: 86 %, time = 4.44 secs, 23.0k nodes/s
+Extensions: Check: 1.28k  DblChk: 0  DiscChk: 0  SingReply: 347
+            Recapture: 344   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 336/14.4k = 2 %   Pawn: 53.2k/60.0k = 89 %
+         Eval: 27.8k/87.8k = 32 %
+Hashtable 1:  entries = 131k, use = 2.64k (2 %)
+              store failed = 18 (1 %)
+Engine move: search complete, best move Pid2id3 (score +1.232)
+Move made: Pid2id3 by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.5  -3.728  7. .. Nie4xif2+ 8. Khe1he2 Nie7id5 9. Qid1fb2 Bhb4xhc3 
+ 4     1.8  -3.728  7. .. Nie4xif2+ 8. Khe1he2 Nie7id5 9. Qid1fb2 Bhb4xhc3 
+ 5     5.0  -3.728  7. .. Nie4xif2+ 8. Khe1he2 Nie7id5 9. Qid1fb2 Bhb4xhc3 
+                    10. Qfb2xhc3 Nif2xhh1 
+Nodes = 101k, QPerc: 87 %, time = 5.08 secs, 20.0k nodes/s
+Extensions: Check: 1.95k  DblChk: 0  DiscChk: 2  SingReply: 787
+            Recapture: 236   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 624/13.6k = 5 %   Pawn: 70.9k/76.5k = 93 %
+         Eval: 11.4k/87.8k = 13 %
+Hashtable 1:  entries = 131k, use = 5.28k (4 %)
+              store failed = 69 (1 %)
+Engine move: search complete, best move Nie4xif2+ (score +3.728)
+Move made: Nie4xif2+ by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 5     1.0     +++  8. Khe1he2
+ 5     2.0  -4.064  8. Khe1he2 Khe8hf8 9. Qhd1ha4 Bhb4xhc3 10. Bhh6xhg7+ 
+ 5     2.1  -4.064  8. Khe1he2 Khe8hf8 9. Qhd1ha4 Bhb4xhc3 10. Bhh6xhg7+ 
+Nodes = 44.1k, QPerc: 89 %, time = 2.19 secs, 20.1k nodes/s
+Extensions: Check: 583  DblChk: 0  DiscChk: 0  SingReply: 259
+            Recapture: 44   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 507/4.65k = 11 %   Pawn: 27.5k/30.3k = 91 %
+         Eval: 9.13k/39.5k = 23 %
+Hashtable 1:  entries = 131k, use = 2.29k (2 %)
+              store failed = 19 (1 %)
+Engine move: search complete, best move Khe1he2 (score -4.064)
+Move made: Khe1he2 by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 3     1.0  -0.048  8. .. Qid7ee4 9. Nhe5xif6+ Khe8hd7 10. Nif6xhh8 
+ 3     1.0  -0.048  8. .. Qid7ee4 9. Nhe5xif6+ Khe8hd7 10. Nif6xhh8 
+ 4     1.3  -0.016  8. .. Qid7ee4 9. Nhe5xif6+ Khe8he7 10. Nif6xhh8 Rig7xhh8 
+ 4     2.0     +++  8. .. Bhb4xhc3
+ 4     2.2  -1.680  8. .. Bhb4xhc3 9. Nhe5xif6+ Khe8he7 10. Qhd1hc2 Nhe4hg3+ 
+                    11. Nie1xhg3 
+ 4     3.1  -1.680  8. .. Bhb4xhc3 9. Nhe5xif6+ Khe8he7 10. Qhd1hc2 Nhe4hg3+ 
+                    11. Nie1xhg3 
+ 5     3.2     ---  8. .. Bhb4xhc3
+ 5     4.0  -1.424  8. .. Bhb4xhc3 9. Nhe5xif6+ Khe8he7 10. Pge1ge2 Nhe4xhf2 
+                    11. Bhc1hg5+ Phf7hf6 
+ 5     9.4  -1.424  8. .. Bhb4xhc3 9. Nhe5xif6+ Khe8he7 10. Pge1ge2 Nhe4xhf2 
+                    11. Bhc1hg5+ Phf7hf6 
+Nodes = 232k, QPerc: 80 %, time = 9.44 secs, 24.7k nodes/s
+Extensions: Check: 2.99k  DblChk: 2  DiscChk: 35  SingReply: 1.34k
+            Recapture: 330   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 483/47.3k = 1 %   Pawn: 147k/154k = 95 %
+         Eval: 31.3k/185k = 17 %
+Hashtable 1:  entries = 131k, use = 8.90k (7 %)
+              store failed = 188 (2 %)
+Engine move: search complete, best move Bhb4xhc3 (score +1.424)
+Move made: Bhb4xhc3 by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.3     +++  9. Nhe5xif6+
+ 4     1.4  -0.640  9. Nhe5xif6+ Khe8he7 10. Phb2xhc3 Qid7gc6 11. Qid1gc2 
+ 4     1.6  -0.640  9. Nhe5xif6+ Khe8he7 10. Phb2xhc3 Qid7gc6 11. Qid1gc2 
+ 5     2.9     ---  9. Nhe5xif6+
+ 5     4.6  -1.024  9. Nhe5xif6+ Khe8hf8 10. Phb2xhc3 Nie7hd6 11. Khe2hf3 
+                    Nif2xhh1 
+ 5     5.5  -1.024  9. Nhe5xif6+ Khe8hf8 10. Phb2xhc3 Nie7hd6 11. Khe2hf3 
+                    Nif2xhh1 
+Nodes = 109k, QPerc: 88 %, time = 5.61 secs, 19.4k nodes/s
+Extensions: Check: 2.78k  DblChk: 0  DiscChk: 0  SingReply: 1.41k
+            Recapture: 108   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 950/13.6k = 7 %   Pawn: 83.2k/87.3k = 95 %
+         Eval: 8.15k/95.5k = 9 %
+Hashtable 1:  entries = 131k, use = 7.29k (6 %)
+              store failed = 96 (1 %)
+Engine move: search complete, best move Nhe5xif6+ (score -1.024)
+Move made: Nhe5xif6+ by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 5     1.2  -0.688  9. .. Khe8he7 10. Phb2xhc3 Khe7ge6 11. Qid1id2 Qid7he7 
+ 5     1.7     +++  9. .. Khe8hf8
+ 5     2.1  -1.696  9. .. Khe8hf8 10. Phb2xhc3 Nie7hd6 11. Qid1gc2 Nif2xhe4 
+ 5     2.2  -1.696  9. .. Khe8hf8 10. Phb2xhc3 Nie7hd6 11. Qid1gc2 Nif2xhe4 
+Nodes = 47.1k, QPerc: 87 %, time = 2.34 secs, 20.1k nodes/s
+Extensions: Check: 264  DblChk: 0  DiscChk: 0  SingReply: 18
+            Recapture: 1   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 892/6.33k = 14 %   Pawn: 33.2k/36.0k = 92 %
+         Eval: 4.75k/40.8k = 12 %
+Hashtable 1:  entries = 131k, use = 2.61k (2 %)
+              store failed = 15 (0 %)
+Engine move: search complete, best move Khe8hf8 (score +1.696)
+Move made: Khe8hf8 by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 6     0.2  +1.024  10. Pga1ga2 
+Nodes = 2.64k, QPerc: 76 %, time = 0.22 secs, 12.0k nodes/s
+Extensions: Check: 3  DblChk: 0  DiscChk: 0  SingReply: 0
+            Recapture: 0   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 6/641 = 1 %   Pawn: 753/960 = 78 %
+         Eval: 1.04k/2.00k = 52 %
+Hashtable 1:  entries = 131k, use = 15 (0 %)
+              store failed = 0 (0 %)
+Engine move: search complete, best move Pga1ga2 (score +1.024)
+Move made: Pga1ga2 by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.2  -3.232  10. .. Bhc3xhd4 11. Bhc1hg5 Qhd8xhg5 12. Nif6xid7 
+ 4     2.2     +++  10. .. Phe6he5
+ 4     2.3  -3.824  10. .. Phe6he5 11. Nif6xhh8 Rig7xhh8 12. Qid1gc2 
+ 4     2.7     +++  10. .. Nhb8hc6
+ 4     2.7  -3.872  10. .. Nhb8hc6 11. Phb2xhc3 Nif2ff1 
+ 4     2.8     +++  10. .. Qhd8hh4
+ 4     3.1  -4.192  10. .. Qhd8hh4 11. Phf2hf3 Phf7hf5 12. Nif6xid7 
+ 4     3.4     +++  10. .. Qid7fb5
+ 4     4.0  -4.976  10. .. Qid7fb5 11. Nhg1ge2 Bhc3xhb2 12. Nge2gd4 
+ 4     4.2  -4.976  10. .. Qid7fb5 11. Nhg1ge2 Bhc3xhb2 12. Nge2gd4 
+ 5     4.8     ---  10. .. Qid7fb5
+ 5     8.2  -4.720  10. .. Qid7fb5 11. Khe2hf3 Qfb5db3+ 12. Khf3je2 Qdb3na2+ 
+                    13. Kje2ke1 Bhc3xhd4 14. Nie1jc2 
+ 5     9.3     +++  10. .. Qhd8hh4
+ 5    10.4  -4.928  10. .. Qhd8hh4 11. Khe2hf3 Nif2xhh1 12. Nif6xhh8 
+ 5    15.7  -4.928  10. .. Qhd8hh4 11. Khe2hf3 Nif2xhh1 12. Nif6xhh8 
+Nodes = 276k, QPerc: 84 %, time = 15.78 secs, 17.5k nodes/s
+Extensions: Check: 3.04k  DblChk: 3  DiscChk: 39  SingReply: 1.74k
+            Recapture: 133   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 3.42k/45.0k = 8 %   Pawn: 198k/208k = 95 %
+         Eval: 23.1k/231k = 10 %
+Hashtable 1:  entries = 131k, use = 19.1k (15 %)
+              store failed = 586 (2 %)
+Engine move: search complete, best move Qhd8hh4 (score +4.928)
+Move made: Qhd8hh4 by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.3  -5.520  11. Raa1ca3 Qhh4xhe4+ 12. Khe2fd1 Nhg8he7 
+ 4     1.5     +++  11. Raa1da4
+ 4     1.9  -4.784  11. Raa1da4 Bhc3xhd4 12. Bhc1hg5 Nif2xid1 
+ 4     2.9     +++  11. Khe2hf3
+ 4     3.1  -4.752  11. Khe2hf3 Nif2xhh1 12. Nif6xhh8 Qhh4hf6+ 
+ 4     3.6  -4.752  11. Khe2hf3 Nif2xhh1 12. Nif6xhh8 Qhh4hf6+ 
+ 5    10.1     +++  11. Khe2hf3
+ 5    11.1  -4.400  11. Khe2hf3 Nif2xhh1 12. Nif6xhh8 Qhh4hh5+ 13. Khf3je2 
+                    Qhh5xhd1 
+Nodes = 148k, QPerc: 76 %, time = 11.14 secs, 13.3k nodes/s
+Extensions: Check: 13.2k  DblChk: 0  DiscChk: 313  SingReply: 7.42k
+            Recapture: 382   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 3.29k/35.1k = 9 %   Pawn: 92.2k/97.7k = 94 %
+         Eval: 15.1k/112k = 13 %
+Hashtable 1:  entries = 131k, use = 16.5k (13 %)
+              store failed = 445 (2 %)
+Engine move: search complete, best move Khe2hf3 (score -4.400)
+Move made: Khe2hf3 by White
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 3     6.1  -4.688  11. .. Nif2xid1+ 12. Khf3xhe4 Qid7ee4+ 13. Khe4gd4 
+                    Qee4ed4+ 14. Kgd4gc4 Qed4ec4+ 15. Kgc4gb3 Qec4eb3+ 
+ 3    14.5     +++  11. .. Qhe4lc2
+ 3    14.6  -5.712  11. .. Qhe4lc2 12. Qid1gc2 Nif2xhh1 
+ 3    14.6  -5.712  11. .. Qhe4lc2 12. Qid1gc2 Nif2xhh1 
+Nodes = 215k, QPerc: 86 %, time = 14.66 secs, 14.7k nodes/s
+Extensions: Check: 13.9k  DblChk: 10  DiscChk: 172  SingReply: 7.49k
+            Recapture: 42   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 4.36k/31.1k = 14 %   Pawn: 154k/157k = 98 %
+         Eval: 26.7k/184k = 14 %
+Hashtable 1:  entries = 131k, use = 11.8k (9 %)
+              store failed = 402 (3 %)
+Engine move: search complete, best move Qhe4lc2 (score +5.712)
+Move rejected (not valid) for Black: he4-lc2; turn is unchanged (attempt 1 of 3)
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 3     1.0     ---  11. .. Nif2xid1+
+ 3     6.8  -4.688  11. .. Nif2xid1+ 12. Khf3xhe4 Qid7ee4+ 13. Khe4gd4 
+                    Qee4ed4+ 14. Kgd4gc4 Qed4ec4+ 15. Kgc4gb3 Qec4eb3+ 
+ 3     7.9     +++  11. .. Qhe4fd3+
+ 3     8.5  -5.264  11. .. Qhe4fd3+ 12. Khf3je2 Qfd3lc2+ 13. Kje2jf2 Qid7hd7 
+                    14. Nif6xhh8 
+ 3    16.1     +++  11. .. Qhe4ee1
+ 3    16.2  -6.208  11. .. Qhe4ee1 12. Qid1gc2 Nif2xhh1 
+ 3    16.2  -6.208  11. .. Qhe4ee1 12. Qid1gc2 Nif2xhh1 
+Nodes = 237k, QPerc: 85 %, time = 16.36 secs, 14.5k nodes/s
+Extensions: Check: 15.4k  DblChk: 10  DiscChk: 182  SingReply: 7.53k
+            Recapture: 67   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 4.49k/34.7k = 13 %   Pawn: 173k/176k = 98 %
+         Eval: 26.4k/202k = 13 %
+Hashtable 1:  entries = 131k, use = 13.8k (11 %)
+              store failed = 541 (3 %)
+Engine move: search complete, best move Qhe4ee1 (score +6.208)
+Move rejected (not valid) for Black: he4-ee1; turn is unchanged (attempt 1 of 3)
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 4     1.0     ---  11. .. Nif2xhh1
+ 4     1.1  -4.576  11. .. Nif2xhh1 12. Nif6xhh8 Qhh4hh5+ 13. Khf3je2 
+                    Qhh5xhd1 
+ 4     6.1  -4.576  11. .. Nif2xhh1 12. Nif6xhh8 Qhh4hh5+ 13. Khf3je2 
+                    Qhh5xhd1 
+Nodes = 62.3k, QPerc: 65 %, time = 6.2 secs, 10.1k nodes/s
+Extensions: Check: 10.7k  DblChk: 0  DiscChk: 243  SingReply: 6.38k
+            Recapture: 283   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 654/21.9k = 3 %   Pawn: 33.2k/35.4k = 94 %
+         Eval: 4.92k/40.4k = 12 %
+Hashtable 1:  entries = 131k, use = 10.8k (8 %)
+              store failed = 234 (2 %)
+Engine move: search complete, best move Nif2xhh1 (score +4.576)
+Move made: Nif2xhh1 by Black
+Engine move: starting search (depth 6)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+ 3     1.0  -9.056  12. .. Qhh4hf6+ 13. Khf3je2 Qhf6je5+ 14. Kje2hf3 Qje5xif6 
+ 3     1.8  -9.056  12. .. Qhh4hf6+ 13. Khf3je2 Qhf6je5+ 14. Kje2hf3 Qje5xif6 
+ 4     2.2     ---  12. .. Qhh4hf6+
+      Level o
+        +---+
+    > 1 |   |   MateThreat: 0 0
+        +---+
+           a 
+
+      Level n
+        +---+---+
+    > 2 |   |   |   Index: 63
+        +---+---+
+      1 |   |   |   MateThreat: 0 0
+        +---+---+
+           a   b 
+
+      Level m
+        +---+---+---+
+    > 3 |   |   |   |
+        +---+---+---+
+      2 |   |   |   |   Index: 63
+        +---+---+---+
+      1 |   |   |   |   MateThreat: 0 0
+        +---+---+---+
+           a   b   c 
+
+      Level l
+        +---+---+---+---+
+    > 4 |   |   |   |   |   White (80000, 56000)  PNBRQ
+        +---+---+---+---+
+      3 |   |   |   |   |
+        +---+---+---+---+
+      2 |   |   |   |   |   Index: 63
+        +---+---+---+---+
+      1 |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+
+           a   b   c   d 
+
+      Level k
+        +---+---+---+---+---+
+    > 5 |   |   |   |   |   |   Black (87500, 61500)  PNBRQ
+        +---+---+---+---+---+
+      4 |   |   |   |   |   |   White (80000, 56000)  PNBRQ
+        +---+---+---+---+---+
+      3 |   |   |   |   |   |
+        +---+---+---+---+---+
+      2 |   |   |   |   |   |   Index: 63
+        +---+---+---+---+---+
+      1 |   |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+---+
+           a   b   c   d   e 
+
+      Level j
+        +---+---+---+---+---+---+
+    > 6 |*P*|*P*|*P*|*P*|*P*|*P*|
+        +---+---+---+---+---+---+
+      5 |   |   |   |   |   |   |   Black (87500, 61500)  PNBRQ
+        +---+---+---+---+---+---+
+      4 |   |   |   |   |   |   |   White (80000, 56000)  PNBRQ
+        +---+---+---+---+---+---+
+      3 |   |   |   |   |   |   |
+        +---+---+---+---+---+---+
+      2 |   |   |   |   |   |   |   Index: 63
+        +---+---+---+---+---+---+
+      1 | P | P | P | P | P | P |   MateThreat: 0 0
+        +---+---+---+---+---+---+
+           a   b   c   d   e   f 
+
+      Level i
+        +---+---+---+---+---+---+---+
+    > 7 |*R*|   |*B*|   |   |*B*|*R*|   Hashkey: c0990bbb9a063b87
+        +---+---+---+---+---+---+---+
+      6 |*P*|*P*|*P*|*P*|*P*|   |*P*|
+        +---+---+---+---+---+---+---+
+      5 |   |   |   |   |   |   |   |   Black (87500, 61500)  PNBRQ
+        +---+---+---+---+---+---+---+
+      4 |   |   |   |   |   |   |   |   White (80000, 56000)  PNBRQ
+        +---+---+---+---+---+---+---+
+      3 |   |   |   | P |   |   |   |
+        +---+---+---+---+---+---+---+
+      2 | P | P | P |   | P |   | P |   Index: 63
+        +---+---+---+---+---+---+---+
+      1 | R |   | B | Q | N | B |   |   MateThreat: 0 0
+        +---+---+---+---+---+---+---+
+           a   b   c   d   e   f   g 
+
+      Level h
+        +---+---+---+---+---+---+---+---+
+    > 8 |*R*|*N*|*B*|   |   |*K*|*N*|*R*|
+        +---+---+---+---+---+---+---+---+
+      7 |*P*|*P*|*P*|   |   |*P*|*P*|*P*|   Hashkey: c0990bbb9a063b87
+        +---+---+---+---+---+---+---+---+
+      6 |   |   |   |   |   |   |   |   |
+        +---+---+---+---+---+---+---+---+
+      5 |   |   |   |   |*Q*|   |   |   |   Black (87500, 61500)  PNBRQ
+        +---+---+---+---+---+---+---+---+
+      4 |   |   |*P*|   | P |   |   |   |   White (80000, 56000)  PNBRQ
+        +---+---+---+---+---+---+---+---+
+      3 |   |   |   |   |   |   |   |   |
+        +---+---+---+---+---+---+---+---+
+      2 | P |   |   |   |   | P | P | P |   Index: 63
+        +---+---+---+---+---+---+---+---+
+      1 | R |   |   | Q |   | B | N | R |   MateThreat: 0 0
+        +---+---+---+---+---+---+---+---+
+           a   b   c   d   e   f   g   h 
+
+      Level g
+        +---+---+---+---+---+---+---+
+    > 7 |*P*|*P*|*P*|*P*|*P*|*P*|*P*|   Hashkey: c0990bbb9a063b87
+        +---+---+---+---+---+---+---+
+      6 |   |   |*Q*|   |   |   |   |
+        +---+---+---+---+---+---+---+
+      5 |   |   |   |   |   |   |   |   Black (87500, 61500)  PNBRQ
+        +---+---+---+---+---+---+---+
+      4 |   |   |   |   |   |   |   |   White (80000, 56000)  PNBRQ
+        +---+---+---+---+---+---+---+
+      3 |   |   |   |   |   |   |   |
+        +---+---+---+---+---+---+---+
+      2 | P |   |   |   | K |   | P |   Index: 63
+        +---+---+---+---+---+---+---+
+      1 |   | P | P | P | P | P |   |   MateThreat: 0 0
+        +---+---+---+---+---+---+---+
+           a   b   c   d   e   f   g 
+
+      Level f
+        +---+---+---+---+---+---+
+    > 6 |   |   |   |   |   |   |
+        +---+---+---+---+---+---+
+      5 |   |   |   |   |   |   |   Black (87500, 61500)  PNBRQ
+        +---+---+---+---+---+---+
+      4 |   |   |   |   |   |   |   White (80000, 56000)  PNBRQ
+        +---+---+---+---+---+---+
+      3 |   |   |   |   |   |   |
+        +---+---+---+---+---+---+
+      2 |   |   |   |   |   |   |   Index: 63
+        +---+---+---+---+---+---+
+      1 |   |   |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+---+---+
+           a   b   c   d   e   f 
+
+      Level e
+        +---+---+---+---+---+
+    > 5 |   |   |   |   |   |   Black (87500, 61500)  PNBRQ
+        +---+---+---+---+---+
+      4 |   |   |   |   |   |   White (80000, 56000)  PNBRQ
+        +---+---+---+---+---+
+      3 |   |   |   |   |   |
+        +---+---+---+---+---+
+      2 |   |   |   |   |   |   Index: 63
+        +---+---+---+---+---+
+      1 |   |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+---+
+           a   b   c   d   e 
+
+      Level d
+        +---+---+---+---+
+    > 4 |   |   |   |   |   White (80000, 56000)  PNBRQ
+        +---+---+---+---+
+      3 |   |   |   |   |
+        +---+---+---+---+
+      2 |   |   |   |   |   Index: 63
+        +---+---+---+---+
+      1 |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+
+           a   b   c   d 
+
+      Level c
+        +---+---+---+
+    > 3 |   |   |   |
+        +---+---+---+
+      2 |   |   |   |   Index: 63
+        +---+---+---+
+      1 |   |   |   |   MateThreat: 0 0
+        +---+---+---+
+           a   b   c 
+
+      Level b
+        +---+---+
+    > 2 |   |   |   Index: 63
+        +---+---+
+      1 |   |   |   MateThreat: 0 0
+        +---+---+
+           a   b 
+
+      Level a
+        +---+
+    > 1 |   |   MateThreat: 0 0
+        +---+
+           a 
+hd2hd4
+hd7hd5
+hc2hc4
+hd5xhc4
+he2he4
+ib7ic5
+ib1ic3
+he7he6
+hb1hc3
+hf8hb4
+ic3he5
+ic5ie4
+id2id3
+ie4xif2
+he1he2
+hb4xhc3
+he5xif6
+he8hf8
+ga1ga2
+hd8hh4
+he2hf3
+if2xhh1
+hh4hf6
+hc1hf4
+hf6kc3
+hf3hg4
+he6he5
+hg4gf3
+id7gc6
+gf3ge2
+ie7id5
+ig1xhh1
+id5xif6
+hf4xhe5
+if6xhe5
+hb2xhc3
+kc3xhc3
+hd4xhe5
+hc3xhe5
