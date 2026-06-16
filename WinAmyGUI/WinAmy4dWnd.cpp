@@ -1740,7 +1740,7 @@ void CWinAmy4dWnd::UpdateScrollBars(HWND hWnd) {
     si.nMin  = 0;
     si.nMax  = boardSz.cx;
     si.nPage = clientW;
-    if (m_nScrollX > boardSz.cx - (int)si.nPage) m_nScrollX = max(0, boardSz.cx - (int)si.nPage);
+    if (m_nScrollX > boardSz.cx - (int)si.nPage) m_nScrollX = std::max(0, boardSz.cx - (int)si.nPage);
     si.nPos  = m_nScrollX;
     SetScrollInfo(hWnd, SB_HORZ, &si, TRUE);
 
@@ -1748,7 +1748,7 @@ void CWinAmy4dWnd::UpdateScrollBars(HWND hWnd) {
     si.nMin  = 0;
     si.nMax  = boardSz.cy;
     si.nPage = (UINT)clientH;
-    if (m_nScrollY > boardSz.cy - (int)si.nPage) m_nScrollY = max(0, boardSz.cy - (int)si.nPage);
+    if (m_nScrollY > boardSz.cy - (int)si.nPage) m_nScrollY = std::max(0, boardSz.cy - (int)si.nPage);
     si.nPos  = m_nScrollY;
     SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
 }
@@ -1793,7 +1793,7 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         case SB_THUMBTRACK:
         case SB_THUMBPOSITION: m_nScrollX  = HIWORD(wParam); break;
         }
-        m_nScrollX = max(0, min(m_nScrollX, si.nMax - (int)si.nPage));
+        m_nScrollX = std::max(0, std::min(m_nScrollX, si.nMax - (int)si.nPage));
         if (m_nScrollX != oldX) {
             SetScrollPos(hWnd, SB_HORZ, m_nScrollX, TRUE);
             // Confine the scroll to the board area (below the toolbar, above the
@@ -1829,7 +1829,7 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         case SB_THUMBTRACK:
         case SB_THUMBPOSITION: m_nScrollY  = HIWORD(wParam); break;
         }
-        m_nScrollY = max(0, min(m_nScrollY, si.nMax - (int)si.nPage));
+        m_nScrollY = std::max(0, std::min(m_nScrollY, si.nMax - (int)si.nPage));
         if (m_nScrollY != oldY) {
             SetScrollPos(hWnd, SB_VERT, m_nScrollY, TRUE);
             // See the WM_HSCROLL note: confine to the board area and erase the
