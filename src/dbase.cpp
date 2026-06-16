@@ -1421,6 +1421,14 @@ bool CPosition::LegalMove(CMove move) {
     if (move.HasPromotion() && TYPE(p->m_rgPiece[fr]) != Pawn)
         return false;
 
+    /* A promotion is only legal when the destination is an actual promotion
+     * square.  In the 3D variant promotion depends on the destination square
+     * (is_promo_square), not on the pawn's source rank, so a stale move from the
+     * hash/killer/countermove tables that promotes onto a non-promotion square
+     * must be rejected here before it can corrupt the board. */
+    if (move.HasPromotion() && !is_promo_square(toCoord))
+        return false;
+
     /* if the move is a pawn move to the 1st/8th rank, it must be
      * be a promotion.
      */

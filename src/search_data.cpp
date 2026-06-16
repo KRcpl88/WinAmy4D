@@ -758,6 +758,44 @@ CMove CSearchData::NextEvasion() {
     return M_NONE;
 }
 
+/*
+ * Emit a single quiescence capture of the victim on "to" by the attacker on
+ * "from".  Whether the move is a promotion is decided solely by the *destination*
+ * square (is_promo_square), never by the attacker's source rank.
+ *
+ * This matters in the 3-D variant: a pawn can reach a promotion square via a
+ * cross-level capture from a square that is NOT on the pre-promotion rank, and
+ * conversely a pawn on the pre-promotion rank can capture across levels onto a
+ * square that is NOT a promotion square.  Keying promotion off the source rank
+ * (PrePromoRank) — a flat 8x8-board assumption — produced illegal moves such as
+ * a pawn capturing onto a promotion square without promoting, corrupting the
+ * board state during search.
+ */
+static void EmitQCapture(CSearchData *sd, CPosition *p, int from, int to) {
+    heap_section_t section = sd->m_hHeap->current_section;
+    CMove move;
+
+    if (TYPE(p->GetPiece(static_cast<uint16_t>(from))) == Pawn) {
+        const CSCoord toCoord(static_cast<uint16_t>(to));
+        if (is_promo_square(toCoord)) {
+            move = make_promotion(from, to, Queen, M_CAPTURE);
+        } else if (pawn_may_move_to(toCoord)) {
+            move = make_move(from, to, M_CAPTURE);
+        } else {
+            return;
+        }
+    } else {
+        move = make_move(from, to, M_CAPTURE);
+    }
+
+    int sw = SwapOff(p, move);
+    if (sw >= 0) {
+        append_to_heap(sd->m_hHeap, move);
+        GrowDataHeap(sd);
+        sd->m_pnDataHeap[section->end - 1] = sw;
+    }
+}
+
 static void GenerateQCaptures(CSearchData *sd, int alpha) {
     heap_section_t section = sd->m_hHeap->current_section;
     CPosition *p = sd->m_pPosition;
@@ -768,14 +806,17 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
 
     att = p->GetMask(p->GetTurn(), 0);
 
-    /* Handle pawn promotions first */
+    /*
+     * Handle the non-capturing promotion pushes first.  A pawn can only push
+     * forward onto a promotion square from the pre-promotion rank, so iterate
+     * exactly those pawns.  Their *captures* are handled uniformly by the
+     * per-victim loops below (via EmitQCapture), which decide promotion from the
+     * destination square, so the pre-promotion pawns are NOT removed from "att".
+     */
     pwn7th = p->GetMask(p->GetTurn(), Pawn) & PrePromoRank[p->GetTurn()];
-    att &= ~pwn7th;
 
     while (pwn7th) {
         int next;
-        int j;
-        CBitBoard tmp;
 
         i = (pwn7th).FindSetBit();
         pwn7th.ClearLowestBit();
@@ -784,22 +825,9 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
                    ? i + static_cast<int>(CBitBoard::LEVEL_WIDTH[iCoord.m_nLevel])
                    : i - static_cast<int>(CBitBoard::LEVEL_WIDTH[iCoord.m_nLevel]);
 
-        if (p->GetPiece(next) == Neutral) {
+        if (p->GetPiece(next) == Neutral && is_promo_square(CSCoord(static_cast<uint16_t>(next)))) {
             CMove move = make_promotion(i, next, Queen, 0);
             int sw;
-            if ((sw = SwapOff(p, move)) >= 0) {
-                append_to_heap(sd->m_hHeap, move);
-                GrowDataHeap(sd);
-                sd->m_pnDataHeap[section->end - 1] = sw;
-            }
-        }
-
-        tmp = p->GetAtkTo(i) & p->GetMask(OPP(p->GetTurn()), 0);
-        while (tmp) {
-            int sw;
-            j = (tmp).FindSetBit();
-            tmp.ClearLowestBit();
-            CMove move = make_promotion(i, j, Queen, M_CAPTURE);
             if ((sw = SwapOff(p, move)) >= 0) {
                 append_to_heap(sd->m_hHeap, move);
                 GrowDataHeap(sd);
@@ -826,16 +854,7 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
-            if (TYPE(p->GetPiece(static_cast<uint16_t>(j))) == Pawn &&
-                !pawn_may_move_to(CSCoord(static_cast<uint16_t>(i))))
-                continue;
-            CMove move = make_move(j, i, M_CAPTURE);
-            int sw = SwapOff(p, move);
-            if (sw >= 0) {
-                append_to_heap(sd->m_hHeap, move);
-                GrowDataHeap(sd);
-                sd->m_pnDataHeap[section->end - 1] = sw;
-            }
+            EmitQCapture(sd, p, j, i);
         }
     }
     if (score + Value[Rook] <= alpha)
@@ -850,16 +869,7 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
-            if (TYPE(p->GetPiece(static_cast<uint16_t>(j))) == Pawn &&
-                !pawn_may_move_to(CSCoord(static_cast<uint16_t>(i))))
-                continue;
-            CMove move = make_move(j, i, M_CAPTURE);
-            int sw = SwapOff(p, move);
-            if (sw >= 0) {
-                append_to_heap(sd->m_hHeap, move);
-                GrowDataHeap(sd);
-                sd->m_pnDataHeap[section->end - 1] = sw;
-            }
+            EmitQCapture(sd, p, j, i);
         }
     }
     if (score + Value[Bishop] <= alpha)
@@ -874,16 +884,7 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
-            if (TYPE(p->GetPiece(static_cast<uint16_t>(j))) == Pawn &&
-                !pawn_may_move_to(CSCoord(static_cast<uint16_t>(i))))
-                continue;
-            CMove move = make_move(j, i, M_CAPTURE);
-            int sw = SwapOff(p, move);
-            if (sw >= 0) {
-                append_to_heap(sd->m_hHeap, move);
-                GrowDataHeap(sd);
-                sd->m_pnDataHeap[section->end - 1] = sw;
-            }
+            EmitQCapture(sd, p, j, i);
         }
     }
     if (score + Value[Pawn] <= alpha)
@@ -898,16 +899,7 @@ static void GenerateQCaptures(CSearchData *sd, int alpha) {
         while (tmp2) {
             j = (tmp2).FindSetBit();
             tmp2.ClearLowestBit();
-            if (TYPE(p->GetPiece(static_cast<uint16_t>(j))) == Pawn &&
-                !pawn_may_move_to(CSCoord(static_cast<uint16_t>(i))))
-                continue;
-            CMove move = make_move(j, i, M_CAPTURE);
-            int sw = SwapOff(p, move);
-            if (sw >= 0) {
-                append_to_heap(sd->m_hHeap, move);
-                GrowDataHeap(sd);
-                sd->m_pnDataHeap[section->end - 1] = sw;
-            }
+            EmitQCapture(sd, p, j, i);
         }
     }
 }
