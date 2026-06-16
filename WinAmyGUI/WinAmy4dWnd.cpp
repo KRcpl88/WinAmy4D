@@ -1740,7 +1740,9 @@ void CWinAmy4dWnd::UpdateScrollBars(HWND hWnd) {
     si.nMin  = 0;
     si.nMax  = boardSz.cx;
     si.nPage = clientW;
-    if (m_nScrollX > boardSz.cx - (int)si.nPage) m_nScrollX = std::max(0, boardSz.cx - (int)si.nPage);
+    if (m_nScrollX > boardSz.cx - (int)si.nPage) {
+        m_nScrollX = std::max(0, (int)boardSz.cx - (int)si.nPage);
+    }
     si.nPos  = m_nScrollX;
     SetScrollInfo(hWnd, SB_HORZ, &si, TRUE);
 
@@ -1748,7 +1750,9 @@ void CWinAmy4dWnd::UpdateScrollBars(HWND hWnd) {
     si.nMin  = 0;
     si.nMax  = boardSz.cy;
     si.nPage = (UINT)clientH;
-    if (m_nScrollY > boardSz.cy - (int)si.nPage) m_nScrollY = std::max(0, boardSz.cy - (int)si.nPage);
+    if (m_nScrollY > boardSz.cy - (int)si.nPage) {
+        m_nScrollY = std::max(0, (int)boardSz.cy - (int)si.nPage);
+    }
     si.nPos  = m_nScrollY;
     SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
 }
