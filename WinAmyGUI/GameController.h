@@ -167,11 +167,15 @@ public:
         return (nDone * 100) / nTotal;
     }
 
-    // Progress of the in-flight single-move search (engine move or suggest-move
-    // / hint), as a whole-number percent in [0, 100]. The engine reports this as
-    // a fraction of the root moves it has searched across iterative deepening.
-    // Returns -1 when no search is active.
-    int GetEngineSearchProgressPercent() const;
+    // Access the position currently being searched (a clone of the live board)
+    // while an engine move / suggest-move search is running, or null when no
+    // such search is active. The GUI polls its CSearchData (see
+    // CPosition::GetSearchData) to report search progress. The returned object
+    // stays valid until the next engine search starts (or the controller is
+    // destroyed); once the search has finished its GetSearchData() is null.
+    const CPosition* GetEngineSearchPosition() const {
+        return m_pSearchPosition.load(std::memory_order_acquire);
+    }
 
     // Access the current position (read-only while engine is running).
     const CPosition* GetPosition() const { return m_pPosition; }
@@ -249,6 +253,12 @@ private:
     void ApplyStrategySearchLimits();
 
     CPosition*          m_pPosition{nullptr};
+    // The clone searched by the running engine move / suggest-move search, or
+    // null when no such search is active. Set by the engine thread when it
+    // clones the board and cleared (and freed) when the next search starts or
+    // the controller is destroyed. Polled (on the UI thread) via
+    // GetEngineSearchPosition() to read its CSearchData search progress.
+    std::atomic<CPosition*> m_pSearchPosition{nullptr};
     int                 m_nDepth{3};
     PlayerMode          m_PlayerMode{PlayerMode::TwoPlayers};
     std::atomic<bool>   m_fEngineRunning{false};

@@ -167,20 +167,6 @@ static int MaxSearchDepth = MAX_TREE_SIZE - 1;
 int DoneAtRoot;
 
 /*
- * Root-move search progress, for the GUI status bar. Updated by the master
- * thread's root loop in IterateInt and read (on another thread) by the GUI via
- * SearchProgressPercent(). RootProgressTotal is the number of root moves at the
- * current iteration (0 when no search is active), RootProgressDepth is the
- * 1-based iterative-deepening depth currently being searched, and
- * RootProgressDone is how many root moves have been fully searched at that
- * depth. Plain ints: a momentarily torn read only perturbs a progress
- * percentage, which is harmless.
- */
-int RootProgressTotal = 0;
-int RootProgressDepth = 0;
-int RootProgressDone = 0;
-
-/*
  * Root moves to exclude from the next search(es). See SetExcludedRootMoves in
  * search.h. Default-empty, so a normal search is unaffected.
  */
@@ -1132,26 +1118,11 @@ void *IterateInt(void *x) {
 
     MaxDepth = MAX_TREE_SIZE - 1;
 
-    /*
-     * Publish the number of root moves so the GUI can report progress as a
-     * fraction of the moves searched (see SearchProgressPercent).
-     */
-    if (sd->m_fMaster) {
-        RootProgressTotal = sd->m_wRootMoves;
-        RootProgressDepth = 0;
-        RootProgressDone = 0;
-    }
-
     for (sd->m_wDepth = 1; sd->m_wDepth < MaxSearchDepth; sd->m_wDepth++) {
         int alpha = sd->m_nBestScore - PVWindow;
         int beta = sd->m_nBestScore + PVWindow;
         bool is_pv = true;
         bool pv_stable = true;
-
-        if (sd->m_fMaster) {
-            RootProgressDepth = sd->m_wDepth;
-            RootProgressDone = 0;
-        }
 
         for (sd->m_wMoveNum = 0; sd->m_wMoveNum < sd->m_wRootMoves; sd->m_wMoveNum++) {
             int tmp;
@@ -1392,14 +1363,6 @@ void *IterateInt(void *x) {
                     DoneAtRoot = true;
                 }
             }
-
-            /*
-             * One more root move fully searched at this depth: advance the
-             * progress counter read by the GUI status bar.
-             */
-            if (sd->m_fMaster) {
-                RootProgressDone = sd->m_wMoveNum + 1;
-            }
         }
 
         if (sd->m_fMaster && (PrintOK || (sd->m_wDepth > MateDepth &&
@@ -1486,16 +1449,6 @@ final:
     if (CurTime <= StartTime)
         StartTime--;
     elapsed = (double)(CurTime - StartTime) / (double)ONE_SECOND;
-
-    /*
-     * The search is finished; mark progress as inactive so a stale percentage
-     * is not reported for the interval before the next search begins.
-     */
-    if (sd->m_fMaster) {
-        RootProgressTotal = 0;
-        RootProgressDepth = 0;
-        RootProgressDone = 0;
-    }
 
     if (sd->m_fMaster) {
         if (pv_valid && !any_pv_printed) {
@@ -1618,59 +1571,6 @@ void setMaxSearchDepth(int max_search_depth) {
     if (max_search_depth > 0 && max_search_depth < (MAX_TREE_SIZE - 1)) {
         MaxSearchDepth = max_search_depth;
     }
-}
-
-/**
- * Progress of the in-flight root search, expressed as a whole-number percentage
- * of the root moves to be searched, or -1 when no search is active.
- *
- * Iterative deepening searches every root move once per depth, so the total
- * work is (number of iterations) x (root moves). Progress is therefore the root
- * moves already searched at completed depths, plus those searched so far at the
- * current depth, divided by that total. The result climbs smoothly from 0 to
- * 100 across the whole search rather than resetting on each new iteration.
- */
-int SearchProgressPercent(void) {
-    int nTotalMoves = RootProgressTotal;
-    if (nTotalMoves <= 0) {
-        return -1;
-    }
-
-    int nIterations = MaxSearchDepth - 1;
-    if (nIterations < 1) {
-        nIterations = 1;
-    }
-
-    int nDepth = RootProgressDepth;
-    if (nDepth < 1) {
-        nDepth = 1;
-    }
-    if (nDepth > nIterations) {
-        nDepth = nIterations;
-    }
-
-    int nDone = RootProgressDone;
-    if (nDone < 0) {
-        nDone = 0;
-    }
-    if (nDone > nTotalMoves) {
-        nDone = nTotalMoves;
-    }
-
-    long lDone = (long)(nDepth - 1) * nTotalMoves + nDone;
-    long lAll = (long)nIterations * nTotalMoves;
-    if (lAll <= 0) {
-        return -1;
-    }
-
-    int nPercent = (int)((lDone * 100) / lAll);
-    if (nPercent < 0) {
-        nPercent = 0;
-    }
-    if (nPercent > 100) {
-        nPercent = 100;
-    }
-    return nPercent;
 }
 
 void SetExcludedRootMoves(const CMove *pMoves, uint16_t cMoves) {

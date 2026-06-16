@@ -87,6 +87,7 @@ private:
     void OnSquareClick3D(const CSCoord& sq);
     void MaybeStartEngine();
     void UpdateStatusBar();
+    int  SearchProgressPercent() const;
     void StartSearchProgressTimer();
     void StopSearchProgressTimer();
     void MaybeAnnounceGameOver();

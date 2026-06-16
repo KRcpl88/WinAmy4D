@@ -64,6 +64,10 @@ GameController::~GameController() {
 
     if (m_pPosition)
         CPosition::Free(m_pPosition);
+
+    // Release the last engine search clone, if any (see m_pSearchPosition).
+    if (CPosition *pSearch = m_pSearchPosition.exchange(nullptr))
+        CPosition::Free(pSearch);
 }
 
 // ---------------------------------------------------------------------------
@@ -604,6 +608,13 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
     if (m_EngineThread.joinable())
         m_EngineThread.join();
 
+    // Release the previous search clone (if any) now that the thread that owned
+    // it has been joined. The current search's clone is published below and
+    // kept alive until the next search starts (or the controller is destroyed)
+    // so the UI thread can safely poll its progress via GetEngineSearchPosition.
+    if (CPosition *pPrevSearch = m_pSearchPosition.exchange(nullptr))
+        CPosition::Free(pPrevSearch);
+
     // Scenario 2: log the engine search BEFORE it is initiated. Both the
     // engine's own move search and the suggest-move (hint) search run through
     // here; label them distinctly. The matching AFTER log (with the chosen move
@@ -632,12 +643,19 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
         }
 
         if (pSearchPosition) {
+            // Publish the clone so the UI thread can poll its search progress
+            // (see GetEngineSearchPosition). It is NOT freed here: ownership is
+            // retained by the controller, which frees it when the next search
+            // starts or the controller is destroyed. This keeps the object
+            // alive for any concurrent UI-thread progress read.
+            m_pSearchPosition.store(pSearchPosition, std::memory_order_release);
+
             int score = 0, altScore = 0;
             bestMove = pSearchPosition->Iterate(&score, M_NONE, &altScore);
 
             // Scenario 2: log the search AFTER it completes, including the chosen
             // move and its score. SAN is computed on the (restored) root position
-            // the search ran on, before it is freed.
+            // the search ran on.
             char szSan[32];
             const char *pszSan = "(none)";
             if (bestMove != M_NONE)
@@ -646,8 +664,6 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
             FormatScore(score, szScore, sizeof(szScore));
             Print(0, "%s: search complete, best move %s (score %s)\n",
                   pszLabel, pszSan, szScore);
-
-            CPosition::Free(pSearchPosition);
         } else {
             Print(0, "%s: search complete, best move (none)\n", pszLabel);
         }
@@ -686,13 +702,6 @@ void GameController::AbortAndJoinSearch() {
     ++m_nSearchGen;
     m_fEngineRunning.store(false);
     m_fComputingStrategy.store(false);
-}
-
-int GameController::GetEngineSearchProgressPercent() const {
-    // Progress of the engine's depth-limited search, reported by the engine as a
-    // fraction of the root moves searched across iterative deepening. Returns -1
-    // when no search is active.
-    return SearchProgressPercent();
 }
 
 // ---------------------------------------------------------------------------

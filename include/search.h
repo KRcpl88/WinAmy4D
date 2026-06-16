@@ -74,14 +74,6 @@ extern int NumberOfCores;
 void setMaxSearchDepth(int);
 
 /*
- * Progress of the in-flight root search as a whole-number percentage (0-100) of
- * the root moves to be searched across iterative deepening, or -1 when no search
- * is active. Updated by the master search thread and safe to poll from another
- * thread (a momentarily torn read only perturbs the reported percentage).
- */
-int SearchProgressPercent(void);
-
-/*
  * Root-move exclusion (used to emulate MultiPV by repeated searches).
  *
  * SetExcludedRootMoves installs a set of moves that the root search

@@ -42,6 +42,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+class CSearchData;
+
 class CPosition {
   public:
     // Move making/unmaking
@@ -171,6 +173,14 @@ class CPosition {
         return m_rgbMaterialSignature[wSide];
     }
 
+    // Search progress. While Iterate() is running, m_pSearchData points at the
+    // live CSearchData driving that search; the GUI status bar polls it (on
+    // another thread) to report progress as a fraction of the root moves
+    // searched. It is null whenever no search is in flight on this position. A
+    // momentarily torn read only perturbs a progress percentage, which is
+    // harmless.
+    const CSearchData *GetSearchData() const { return m_pSearchData; }
+
   private:
     // Data members
     CBitBoard m_rgAtkTo[CBitBoard::SIZE];
@@ -191,6 +201,11 @@ class CPosition {
     int8_t m_nTurn; /* 0 == white, 1 == black */
     CSCoord m_rgKingSq[2];
     int8_t m_rgbMaterialSignature[2];
+
+    // Non-owning pointer to the CSearchData driving the in-flight Iterate() on
+    // this position, or null when no search is active. Set/cleared by Iterate()
+    // and read by GetSearchData(). Zero-initialised by safe_calloc.
+    CSearchData *m_pSearchData;
 };
 
 // Backward compatibility typedef

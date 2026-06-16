@@ -21,6 +21,7 @@
 #include "dbase.h"
 #include "heap.h"
 #include "move.h"
+#include "searchdata.h"
 #include "utils.h"
 
 // ---------------------------------------------------------------------------
@@ -1275,6 +1276,79 @@ void CWinAmy4dWnd::StopSearchProgressTimer() {
 }
 
 // ---------------------------------------------------------------------------
+// SearchProgressPercent
+// ---------------------------------------------------------------------------
+
+// Progress of the in-flight engine move / suggest-move search, expressed as a
+// whole-number percentage of the root moves to be searched, or -1 when no
+// search is active (or progress is not yet known).
+//
+// Iterative deepening searches every root move once per depth, so the total
+// work is (number of iterations) x (root moves). Progress is therefore the root
+// moves searched at completed depths plus those searched so far at the current
+// depth, divided by that total. The figure climbs smoothly from 0 to 100 across
+// the whole search rather than resetting on each new iteration.
+//
+// The values are read from the live CSearchData of the position being searched
+// (see GameController::GetEngineSearchPosition / CPosition::GetSearchData). A
+// momentarily torn read only perturbs the reported percentage, which is
+// harmless.
+int CWinAmy4dWnd::SearchProgressPercent() const {
+    const CPosition* pSearchPos = m_Game.GetEngineSearchPosition();
+    if (!pSearchPos) {
+        return -1;
+    }
+
+    const CSearchData* pSearchData = pSearchPos->GetSearchData();
+    if (!pSearchData) {
+        return -1;
+    }
+
+    int nTotalMoves = pSearchData->m_wRootMoves;
+    if (nTotalMoves <= 0) {
+        return -1;
+    }
+
+    // The root loop runs depths 1 .. (max depth - 1), so the number of
+    // iterations is one less than the configured search depth.
+    int nIterations = m_Game.GetDepth() - 1;
+    if (nIterations < 1) {
+        nIterations = 1;
+    }
+
+    int nDepth = pSearchData->m_wDepth;
+    if (nDepth < 1) {
+        nDepth = 1;
+    }
+    if (nDepth > nIterations) {
+        nDepth = nIterations;
+    }
+
+    int nDone = pSearchData->m_wMoveNum;
+    if (nDone < 0) {
+        nDone = 0;
+    }
+    if (nDone > nTotalMoves) {
+        nDone = nTotalMoves;
+    }
+
+    long lDone = (long)(nDepth - 1) * nTotalMoves + nDone;
+    long lAll = (long)nIterations * nTotalMoves;
+    if (lAll <= 0) {
+        return -1;
+    }
+
+    int nPercent = (int)((lDone * 100) / lAll);
+    if (nPercent < 0) {
+        nPercent = 0;
+    }
+    if (nPercent > 100) {
+        nPercent = 100;
+    }
+    return nPercent;
+}
+
+// ---------------------------------------------------------------------------
 // UpdateStatusBar
 // ---------------------------------------------------------------------------
 
@@ -1318,7 +1392,7 @@ void CWinAmy4dWnd::UpdateStatusBar() {
         const bool fStrategy = m_Game.IsComputingStrategy();
         const wchar_t* label = fStrategy ? L"Thinking" : L"Engine thinking";
         int nPercent = fStrategy ? m_Game.GetStrategyProgressPercent()
-                                 : m_Game.GetEngineSearchProgressPercent();
+                                 : SearchProgressPercent();
         if (nPercent >= 0) {
             swprintf_s(buf, 256, L"%s%s  [%s... %d%%]", strPrefix.c_str(), turn,
                        label, nPercent);
