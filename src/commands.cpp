@@ -869,6 +869,6 @@ static void SetSearchDepth(char *args) {
         return;
     }
 
-    setMaxSearchDepth(atoi(args));
+    SetMaxSearchDepth(atoi(args));
 }
 

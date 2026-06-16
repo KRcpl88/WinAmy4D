@@ -420,7 +420,7 @@ void GameController::SetDepth(int depth) {
     if (depth < 1) depth = 1;
     if (depth > 9) depth = 9;
     m_nDepth = depth;
-    setMaxSearchDepth(depth);
+    SetMaxSearchDepth(depth);
     // Any cached strategy was computed at the previous depth and is now stale;
     // drop it so the next "recommend strategy" re-searches at the new depth.
     std::lock_guard<std::mutex> lock(m_PositionMutex);
@@ -431,7 +431,7 @@ void GameController::ApplySearchLimits() {
     // Depth-based search: restore the default time control (so the clock does
     // not cut the search short) and cap the search at the configured depth.
     SetDefaultTimeControl();
-    setMaxSearchDepth(m_nDepth);
+    SetMaxSearchDepth(m_nDepth);
 }
 
 void GameController::ApplyStrategySearchLimits() {
@@ -439,7 +439,7 @@ void GameController::ApplyStrategySearchLimits() {
     // each excluding the previously found best move(s). Every search uses the
     // same depth limit as a single search.
     SetDefaultTimeControl();
-    setMaxSearchDepth(m_nDepth);
+    SetMaxSearchDepth(m_nDepth);
 }
 
 bool GameController::MakeMove(CMove move) {
@@ -790,7 +790,7 @@ std::string GameController::ComputeStrategyText(HWND hwndTarget) {
     // the configured fixed depth, so the ranking reflects deep evaluation rather
     // than whatever the move generator happens to emit first.
     SetDefaultTimeControl();
-    setMaxSearchDepth(m_nDepth);
+    SetMaxSearchDepth(m_nDepth);
 
     // Enumerate the current player's legal moves only to size the ranking and
     // detect the no-moves case; the searches themselves operate on the position.
