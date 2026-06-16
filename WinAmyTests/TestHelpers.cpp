@@ -1,9 +1,21 @@
 #include "TestHelpers.h"
 #include "scoord.h"
+#include "utils.h"
 
 #include <sstream>
 
 namespace WinAmyTests {
+
+// Open a log file once for the whole test module so that engine diagnostics
+// emitted via Print / PrintDebug (which are otherwise written only to stdout,
+// or - for PrintDebug - discarded unless debug mode is on) are captured to a
+// file that can be inspected after a test run. Enabling g_nDebugMode makes
+// PrintDebug mirror to the log file as well, so all engine log output during
+// the unit tests is recorded.
+TEST_MODULE_INITIALIZE(ModuleInitializeLogging) {
+    g_nDebugMode = 1;
+    OpenLogFile("WinAmyTests.log");
+}
 
 CBitBoard ReferenceRookAttacks(int sq, CBitBoard occupied) {
     CBitBoard attacks;

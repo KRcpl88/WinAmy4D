@@ -765,6 +765,8 @@ void CPosition::StartHelpers() {
     for (nthread = 0; nthread < (NumberOfCores - 1); nthread++) {
         CSearchData *sd = new CSearchData(CPosition::Clone(p));
         sd->m_fMaster = false;
+        PrintDebug(2, "StartHelpers: created helper clone %p for thread %d.\n",
+                   (void *)sd->m_pPosition, nthread);
         HelperThreads.emplace_back([sd]() {
             SetSearchThreadBackgroundPriority();
             IterateInt(sd);
