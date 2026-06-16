@@ -61,6 +61,7 @@ class CPosition {
     bool MayCastle(CMove move);
     bool LegalMove(CMove move);
     bool IsCheckingMove(CMove move);
+    bool IsKingCapture(CMove move) const;
     int LegalMoves(heap_t heap);
     void PLegalMoves(heap_t heap);
 
