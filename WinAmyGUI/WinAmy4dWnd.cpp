@@ -21,6 +21,7 @@
 #include "dbase.h"
 #include "heap.h"
 #include "move.h"
+#include "searchdata.h"
 #include "utils.h"
 
 // ---------------------------------------------------------------------------
@@ -1258,9 +1259,10 @@ void CWinAmy4dWnd::OnSquareClick(POINT pt) {
 // Search-progress polling timer
 //
 // Single-move searches (the engine's own move and the suggest-move / hint
-// search) and strategy computations all report a time-based countdown. There is
-// no engine event to push such updates to the UI, so a low-frequency timer polls
-// GetSearchCountdownSeconds() and refreshes the status bar while any search runs.
+// search) and strategy computations all report a percentage of completion based
+// on the number of moves searched. There is no engine event to push such
+// updates to the UI, so a low-frequency timer polls the progress percentage and
+// refreshes the status bar while any search runs.
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::StartSearchProgressTimer() {
@@ -1271,6 +1273,79 @@ void CWinAmy4dWnd::StartSearchProgressTimer() {
 
 void CWinAmy4dWnd::StopSearchProgressTimer() {
     KillTimer(m_hWnd, IDT_SEARCH_PROGRESS);
+}
+
+// ---------------------------------------------------------------------------
+// SearchProgressPercent
+// ---------------------------------------------------------------------------
+
+// Progress of the in-flight engine move / suggest-move search, expressed as a
+// whole-number percentage of the root moves to be searched, or -1 when no
+// search is active (or progress is not yet known).
+//
+// Iterative deepening searches every root move once per depth, so the total
+// work is (number of iterations) x (root moves). Progress is therefore the root
+// moves searched at completed depths plus those searched so far at the current
+// depth, divided by that total. The figure climbs smoothly from 0 to 100 across
+// the whole search rather than resetting on each new iteration.
+//
+// The values are read from the live CSearchData of the position being searched
+// (see GameController::GetEngineSearchPosition / CPosition::GetSearchData). A
+// momentarily torn read only perturbs the reported percentage, which is
+// harmless.
+int CWinAmy4dWnd::SearchProgressPercent() const {
+    const CPosition* pSearchPos = m_Game.GetEngineSearchPosition();
+    if (!pSearchPos) {
+        return -1;
+    }
+
+    const CSearchData* pSearchData = pSearchPos->GetSearchData();
+    if (!pSearchData) {
+        return -1;
+    }
+
+    int nTotalMoves = pSearchData->m_wRootMoves;
+    if (nTotalMoves <= 0) {
+        return -1;
+    }
+
+    // The root loop runs depths 1 .. (max depth - 1), so the number of
+    // iterations is one less than the configured search depth.
+    int nIterations = m_Game.GetDepth() - 1;
+    if (nIterations < 1) {
+        nIterations = 1;
+    }
+
+    int nDepth = pSearchData->m_wDepth;
+    if (nDepth < 1) {
+        nDepth = 1;
+    }
+    if (nDepth > nIterations) {
+        nDepth = nIterations;
+    }
+
+    int nDone = pSearchData->m_wMoveNum;
+    if (nDone < 0) {
+        nDone = 0;
+    }
+    if (nDone > nTotalMoves) {
+        nDone = nTotalMoves;
+    }
+
+    long lDone = (long)(nDepth - 1) * nTotalMoves + nDone;
+    long lAll = (long)nIterations * nTotalMoves;
+    if (lAll <= 0) {
+        return -1;
+    }
+
+    int nPercent = (int)((lDone * 100) / lAll);
+    if (nPercent < 0) {
+        nPercent = 0;
+    }
+    if (nPercent > 100) {
+        nPercent = 100;
+    }
+    return nPercent;
 }
 
 // ---------------------------------------------------------------------------
@@ -1309,17 +1384,18 @@ void CWinAmy4dWnd::UpdateStatusBar() {
     wchar_t buf[256];
     const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
     if (m_Game.IsComputingStrategy() || m_Game.IsEngineRunning()) {
-        // A search is in progress. Show a countdown of the seconds remaining
-        // until the engine is expected to finish (time budget + a small overhead
-        // buffer). For very short time limits the countdown is suppressed
-        // (GetSearchCountdownSeconds() returns -1) and an indeterminate
-        // "thinking" message is shown instead.
-        const wchar_t* label =
-            m_Game.IsComputingStrategy() ? L"Thinking" : L"Engine thinking";
-        int nSecs = m_Game.GetSearchCountdownSeconds();
-        if (nSecs >= 0) {
-            swprintf_s(buf, 256, L"%s%s  [%s... %ds]", strPrefix.c_str(), turn,
-                       label, nSecs);
+        // A search is in progress. Show the percentage of the work completed,
+        // measured as the fraction of root moves searched (engine move / hint) or
+        // ranked searches completed (strategy). Until the engine has published a
+        // figure the percentage is indeterminate, so a plain "thinking" message
+        // is shown instead.
+        const bool fStrategy = m_Game.IsComputingStrategy();
+        const wchar_t* label = fStrategy ? L"Thinking" : L"Engine thinking";
+        int nPercent = fStrategy ? m_Game.GetStrategyProgressPercent()
+                                 : SearchProgressPercent();
+        if (nPercent >= 0) {
+            swprintf_s(buf, 256, L"%s%s  [%s... %d%%]", strPrefix.c_str(), turn,
+                       label, nPercent);
         } else {
             swprintf_s(buf, 256, L"%s%s  [%s...]", strPrefix.c_str(), turn, label);
         }
@@ -1567,30 +1643,22 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
 }
 
 // ---------------------------------------------------------------------------
-// SetTimeFromMenu — set the search time limit via menu checkmark
+// SetDepthFromMenu — set the search depth via menu checkmark
 // ---------------------------------------------------------------------------
 
-void CWinAmy4dWnd::SetTimeFromMenu(int nSeconds) {
-    m_Game.SetTimeLimit(nSeconds);
+void CWinAmy4dWnd::SetDepthFromMenu(int nDepth) {
+    m_Game.SetDepth(nDepth);
 
-    HMENU hMenu = GetMenu(m_hWnd);
-    HMENU hOpts = GetSubMenu(hMenu, 1);
-    HMENU hTime = GetSubMenu(hOpts, 0);
+    HMENU hMenu  = GetMenu(m_hWnd);
+    HMENU hOpts  = GetSubMenu(hMenu, 1);
+    HMENU hDepth = GetSubMenu(hOpts, 0);
 
-    // The Search Time menu IDs are not contiguous in their second values, so map
-    // each one explicitly rather than using arithmetic on a base ID.
-    static const struct {
-        int nId;
-        int nSeconds;
-    } kTimeItems[] = {
-        {IDM_TIME_5, 5},     {IDM_TIME_15, 15},   {IDM_TIME_30, 30},
-        {IDM_TIME_60, 60},   {IDM_TIME_120, 120}, {IDM_TIME_180, 180},
-    };
-    for (const auto &item : kTimeItems) {
-        CheckMenuItem(hTime, item.nId,
-                      MF_BYCOMMAND |
-                          (item.nSeconds == nSeconds ? MF_CHECKED : MF_UNCHECKED));
+    // The Search Depth menu IDs are contiguous (IDM_DEPTH_1..IDM_DEPTH_9), so
+    // check the selected depth and clear the rest by arithmetic on the base ID.
+    for (int i = 0; i < 9; ++i) {
+        CheckMenuItem(hDepth, IDM_DEPTH_1 + i, MF_BYCOMMAND | MF_UNCHECKED);
     }
+    CheckMenuItem(hDepth, IDM_DEPTH_1 + (nDepth - 1), MF_BYCOMMAND | MF_CHECKED);
 }
 
 // ---------------------------------------------------------------------------
@@ -1693,7 +1761,7 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     switch (uMsg) {
     case WM_CREATE:
         CreateControls(hWnd);
-        SetTimeFromMenu(15);
+        SetDepthFromMenu(3);
         UpdateScrollBars(hWnd);
         UpdateGridMenuEnabled();
         return 0;
@@ -2002,12 +2070,11 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             }
             break;
 
-        case IDM_TIME_5:   SetTimeFromMenu(5);   break;
-        case IDM_TIME_15:  SetTimeFromMenu(15);  break;
-        case IDM_TIME_30:  SetTimeFromMenu(30);  break;
-        case IDM_TIME_60:  SetTimeFromMenu(60);  break;
-        case IDM_TIME_120: SetTimeFromMenu(120); break;
-        case IDM_TIME_180: SetTimeFromMenu(180); break;
+        case IDM_DEPTH_1: case IDM_DEPTH_2: case IDM_DEPTH_3:
+        case IDM_DEPTH_4: case IDM_DEPTH_5: case IDM_DEPTH_6:
+        case IDM_DEPTH_7: case IDM_DEPTH_8: case IDM_DEPTH_9:
+            SetDepthFromMenu(id - IDM_DEPTH_1 + 1);
+            break;
 
         case IDM_GRID_FULL: case IDM_GRID_SQUARE_Z: case IDM_GRID_SQUARE_Y:
         case IDM_GRID_SQUARE_X: case IDM_GRID_HEX_1: case IDM_GRID_HEX_2:

@@ -32,7 +32,7 @@ TEST_CLASS(SearchTests) {
 
         // Keep the search short and deterministic: cap the iterative-deepening
         // depth and remove any wall-clock budget influence.
-        setMaxSearchDepth(nMaxDepth);
+        SetMaxSearchDepth(nMaxDepth);
         SetFixedTimePerMove(60);
 
         int nScore = 0;
@@ -40,8 +40,8 @@ TEST_CLASS(SearchTests) {
             Position.get()->Iterate(&nScore, M_NONE, nullptr);
 
         // Restore a near-default search depth for any subsequent test.
-        // setMaxSearchDepth only accepts values < MAX_TREE_SIZE - 1.
-        setMaxSearchDepth(MAX_TREE_SIZE - 2);
+        // SetMaxSearchDepth only accepts values < MAX_TREE_SIZE - 1.
+        SetMaxSearchDepth(MAX_TREE_SIZE - 2);
 
         Assert::IsTrue(BestMove != M_NONE,
                        L"Engine returned M_NONE for a position with legal moves");
@@ -169,13 +169,13 @@ TEST_CLASS(SearchTests) {
                          static_cast<int>(Position.get()->GetTurn()),
                          L"Setup did not end with black to move");
 
-        setMaxSearchDepth(4);
+        SetMaxSearchDepth(4);
         SetFixedTimePerMove(60);
 
         int nScore = 0;
         CMove Result = Position.get()->Iterate(&nScore, M_NONE, nullptr);
 
-        setMaxSearchDepth(MAX_TREE_SIZE - 2);
+        SetMaxSearchDepth(MAX_TREE_SIZE - 2);
 
         Assert::IsTrue(Result != M_NONE,
                        L"Engine returned M_NONE for the setup position");
@@ -233,13 +233,13 @@ TEST_CLASS(SearchTests) {
     TEST_METHOD(EngineReturnsLegalMoveForInitialPosition) {
         PositionGuard Position(CPosition::Initial());
 
-        setMaxSearchDepth(4);
+        SetMaxSearchDepth(4);
         SetFixedTimePerMove(60);
 
         int nScore = 0;
         CMove BestMove = Position.get()->Iterate(&nScore, M_NONE, nullptr);
 
-        setMaxSearchDepth(MAX_TREE_SIZE - 2);
+        SetMaxSearchDepth(MAX_TREE_SIZE - 2);
 
         Assert::IsTrue(BestMove != M_NONE,
                        L"Engine returned M_NONE for the initial position");

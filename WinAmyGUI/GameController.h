@@ -75,21 +75,14 @@ public:
     bool LoadFromPGNFile(const wchar_t *pszPath);
     bool SaveToPGNFile(const wchar_t *pszPath);
 
-    // Set the engine search depth (1–9).
+    // Set the engine search depth (1–9). The engine searches to this fixed depth
+    // via iterative deepening. Changing the depth invalidates any cached strategy
+    // result (which was computed at the previous depth) so the next "recommend
+    // strategy" re-searches.
     void SetDepth(int depth);
 
     // Return current search depth.
     int  GetDepth() const { return m_nDepth; }
-
-    // Set a fixed per-move search time limit, in seconds. The engine searches as
-    // deeply as it can within the given number of seconds. Changing the limit
-    // invalidates any cached strategy result (which was computed under the
-    // previous limit) so the next "recommend strategy" re-searches.
-    void SetTimeLimit(int seconds);
-
-    // Return the current fixed per-move time limit in seconds, or 0 if search
-    // is depth-based.
-    int  GetTimeLimit() const { return m_nTimeLimit; }
 
     // Set player mode (0 / 1 / 2 human players).
     void SetPlayerMode(PlayerMode mode) { m_PlayerMode = mode; }
@@ -174,25 +167,15 @@ public:
         return (nDone * 100) / nTotal;
     }
 
-    // Progress of the in-flight single-move search (engine move or suggest-move
-    // / hint), as a whole-number percent in [0, 100]. Because such a search is
-    // bounded by a fixed per-move time budget, progress is measured as elapsed
-    // time divided by that budget. Returns -1 when no time budget is in effect
-    // (a pure depth-limited search), in which case the host shows an
-    // indeterminate "thinking" message instead of a percentage.
-    int GetEngineSearchProgressPercent() const;
-
-    // Number of whole seconds remaining on the current search's countdown, for
-    // display in the status bar. The countdown runs from (search start) to
-    // (search start + time budget), tracking the engine's search clock directly.
-    // If the search finishes first the host clears the countdown; if the
-    // countdown reaches zero first it holds at zero until the search returns
-    // (a couple of seconds at most). Applies to both single-move searches and
-    // strategy computations (whose budget spans all of their internal searches).
-    // Returns -1 when no countdown should be shown — i.e. when the configured
-    // time limit is 5 seconds or less (too short to be worth a countdown) or no
-    // time budget is in effect.
-    int GetSearchCountdownSeconds() const;
+    // Access the position currently being searched (a clone of the live board)
+    // while an engine move / suggest-move search is running, or null when no
+    // such search is active. The GUI polls its CSearchData (see
+    // CPosition::GetSearchData) to report search progress. The returned object
+    // stays valid until the next engine search starts (or the controller is
+    // destroyed); once the search has finished its GetSearchData() is null.
+    const CPosition* GetEngineSearchPosition() const {
+        return m_pSearchPosition.load(std::memory_order_acquire);
+    }
 
     // Access the current position (read-only while engine is running).
     const CPosition* GetPosition() const { return m_pPosition; }
@@ -259,20 +242,24 @@ private:
     void InvalidateStrategy();
 
     // Configure the engine's search-termination limits before starting a search.
-    // A fixed per-move time limit (m_nTimeLimit > 0) is always used: the engine
-    // searches as deeply as the chosen interval allows.
+    // The search is depth-based: the default time control is restored (so the
+    // clock does not cut the search short) and the search is capped at m_nDepth.
     void ApplySearchLimits();
 
     // Configure the search-termination limits for a strategy computation. The
-    // strategy now performs up to three full-time searches (one per ranked move,
-    // see ComputeStrategyText), so this installs the same fixed per-move time
-    // budget used for single searches; the cumulative wall-clock cost is at most
-    // (number of ranked moves) × the per-move limit.
+    // strategy performs up to kStrategyRanks searches (one per ranked move, see
+    // ComputeStrategyText), each capped at the same fixed depth used for single
+    // searches.
     void ApplyStrategySearchLimits();
 
     CPosition*          m_pPosition{nullptr};
+    // The clone searched by the running engine move / suggest-move search, or
+    // null when no such search is active. Set by the engine thread when it
+    // clones the board and cleared (and freed) when the next search starts or
+    // the controller is destroyed. Polled (on the UI thread) via
+    // GetEngineSearchPosition() to read its CSearchData search progress.
+    std::atomic<CPosition*> m_pSearchPosition{nullptr};
     int                 m_nDepth{3};
-    int                 m_nTimeLimit{15};
     PlayerMode          m_PlayerMode{PlayerMode::TwoPlayers};
     std::atomic<bool>   m_fEngineRunning{false};
     std::atomic<bool>   m_fComputingStrategy{false};
@@ -298,13 +285,6 @@ private:
     // (m_nProgressTotal). Read by GetStrategyProgressPercent() on the UI thread.
     std::atomic<int>    m_nProgressDone{0};
     std::atomic<int>    m_nProgressTotal{0};
-    // Timing of the in-flight single-move (engine / hint) search, used by
-    // GetEngineSearchProgressPercent(). m_nEngineSearchStartMs is a
-    // steady_clock timestamp (milliseconds) captured when the search starts;
-    // m_nEngineSearchBudgetMs is the per-move time budget in milliseconds, or 0
-    // for a pure depth-limited search with no time budget.
-    std::atomic<long long> m_nEngineSearchStartMs{0};
-    std::atomic<long long> m_nEngineSearchBudgetMs{0};
     // Number of consecutive times the SAME invalid move has been rejected by
     // MakeMove (tracked in m_LastRejectedMove) since the last valid move (or
     // NewGame). When it reaches kMaxRejectRetries the engine is declared

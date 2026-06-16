@@ -17,14 +17,17 @@ BEGIN
     END
     POPUP "&Options"
     BEGIN
-        POPUP "&Search Time"
+        POPUP "&Search Depth"
         BEGIN
-            MENUITEM "&5 sec",    IDM_TIME_5
-            MENUITEM "&15 sec",   IDM_TIME_15, CHECKED
-            MENUITEM "&30 sec",   IDM_TIME_30
-            MENUITEM "&60 sec",   IDM_TIME_60
-            MENUITEM "&120 sec",  IDM_TIME_120
-            MENUITEM "&180 sec",  IDM_TIME_180
+            MENUITEM "&1",   IDM_DEPTH_1
+            MENUITEM "&2",   IDM_DEPTH_2
+            MENUITEM "&3",   IDM_DEPTH_3, CHECKED
+            MENUITEM "&4",   IDM_DEPTH_4
+            MENUITEM "&5",   IDM_DEPTH_5
+            MENUITEM "&6",   IDM_DEPTH_6
+            MENUITEM "&7",   IDM_DEPTH_7
+            MENUITEM "&8",   IDM_DEPTH_8
+            MENUITEM "&9",   IDM_DEPTH_9
         END
         POPUP "&Players"
         BEGIN

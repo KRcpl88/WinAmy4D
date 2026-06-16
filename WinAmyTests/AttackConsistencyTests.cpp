@@ -106,7 +106,7 @@ TEST_CLASS(AttackConsistencyTests) {
         TEST_METHOD_ATTRIBUTE(L"TestCategory", L"LongRunning")
     END_TEST_METHOD_ATTRIBUTE()
     TEST_METHOD(EngineSelfPlayKeepsBothKings) {
-        setMaxSearchDepth(3);
+        SetMaxSearchDepth(3);
         PositionGuard pos(CPosition::Initial());
         for (int ply = 0; ply < 160; ply++) {
             const char *end = pos.get()->GameEnd();
