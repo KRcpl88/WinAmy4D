@@ -1,0 +1,904 @@
+WinAmyGUI: logging enabled -> C:\github\WinAmy4D\amy.log
+BUILTIN_POPCOUNTLL = 0, POPCNT = 1, 
+Multiprocessor support.
+
+Hashtable sizes: 3584 k, 3584 k, 256 k (17, 15, 15 bits)
+RecalcAttacks: performing full attack recalculation
+Player made move: Phd2hd4 by White
+Move made: Phd2hd4 by White
+RecalcAttacks: performing full attack recalculation
+Player made move: Phd7hd5 by Black
+Move made: Phd7hd5 by Black
+RecalcAttacks: performing full attack recalculation
+Player made move: Phc2hc4 by White
+Move made: Phc2hc4 by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.0   45/79  2. .. Nic5fc5       4     1.0   46/79  2. .. Nic5hb4       4     1.0   47/79  2. .. Nhg8hh6       4     1.0   48/79  2. .. Nic5fb4       4     1.0   49/79  2. .. Pgb7gb6       4     1.0   50/79  2. .. Bhc8hh3       4     1.0   51/79  2. .. Nic5la3       4     1.0   52/79  2. .. Nic5lb3       4     1.0   53/79  2. .. Nic5la4       4     1.1   54/79  2. .. Nic5lb4       4     1.1   55/79  2. .. Pia6ia5       4     1.1   56/79  2. .. Pib6ib5       4     1.1   57/79  2. .. Khe8hd7       4     1.1   58/79  2. .. Nic5ib7       4     1.1   59/79  2. .. Pif6if5       4     1.1   60/79  2. .. Pig6ig5       4     1.2   61/79  2. .. Pgc7gc6       4     1.2   62/79  2. .. Qid7ea4       4     1.2   63/79  2. .. Qid7fb5       4     1.2   64/79  2. .. Pgf7gf6       4     1.2   65/79  2. .. Qid7hd7       4     1.2   66/79  2. .. Nie7fd6       4     1.2   67/79  2. .. Nie7fe6       4     1.2   68/79  2. .. Nic5id3       4     1.2   69/79  2. .. Nic5ia4       4     1.3   70/79  2. .. Phc7hc6       4     1.3   71/79  2. .. Phc7hc5       4     1.3   72/79  2. .. Nic5ja3       4     1.3   73/79  2. .. Nie7jf5       4     1.3   74/79  2. .. Phf7hf6       4     1.3   75/79  2. .. Pjb6jb5       4     1.4   76/79  2. .. Pjc6jc5       4     1.4   77/79  2. .. Pjd6jd5       4     1.4   78/79  2. .. Pje6je5       4     1.4   79/79  2. .. Phh7hh5       4     1.4  -1.056  2. .. Phd5xhc4 3. Nhb1hc3 Bhc8hf5 4. Bhc1hf4 
+ 5     1.4    1/79  2. .. Phd5xhc4       5     1.9     +++  2. .. Phd5xhc4
+ 5     2.3  -1.360  2. .. Phd5xhc4 3. Nhg1hf3 Nie7id5 4. Nie1id3 Nhb8hc6 
+ 5     2.3    2/79  2. .. Qid7fb5       5     2.3    3/79  2. .. Qid7ea4       5     2.3    4/79  2. .. Qid7gc6       5     2.3    5/79  2. .. Nic5ie4       5     2.3    6/79  2. .. Qhd8hd6       5     2.3    7/79  2. .. Pga7ga6       5     2.5    8/79  2. .. Qid7hd7       5     2.5    9/79  2. .. Pie6ie5       5     2.5   10/79  2. .. Ria7ib7       5     2.5   11/79  2. .. Pjd6jd5       5     2.5   12/79  2. .. Pjc6jc5       5     2.5   13/79  2. .. Nhb8hd7       5     2.5   14/79  2. .. Pje6je5       5     2.5   15/79  2. .. Pgf7gf6       5     2.5   16/79  2. .. Nie7fd6       5     2.5   17/79  2. .. Nhg8hf6       5     2.5   18/79  2. .. Phc7hc6       5     2.5   19/79  2. .. Pia6ia5       5     2.5   20/79  2. .. Pig6ig5       5     2.5   21/79  2. .. Nhb8gc6       5     2.5   22/79  2. .. Pjb6jb5       5     2.5   23/79  2. .. Bhc8hf5       5     2.6   24/79  2. .. Pgc7gc6       5     2.6   25/79  2. .. Nie7jf5       5     2.6   26/79  2. .. Nie7fe6       5     2.6   27/79  2. .. Nhg8hh6       5     2.6   28/79  2. .. Pjf6jf5       5     2.6   29/79  2. .. Phf7hf6       5     2.6   30/79  2. .. Nic5fb4       5     2.6   31/79  2. .. Bhc8he6       5     2.6   32/79  2. .. Pgb7gb6       5     2.6   33/79  2. .. Pja6ja5       5     2.6   34/79  2. .. Phh7hh6       5     2.6   35/79  2. .. Phe7he6       5     2.6   36/79  2. .. Pif6if5       5     2.6   37/79  2. .. Nic5lb3       5     2.6   38/79  2. .. Nic5ja3       5     2.6   39/79  2. .. Nic5hb4       5     2.6   40/79  2. .. Pib6ib5       5     2.6   41/79  2. .. Pgd7gd6       5     2.6   42/79  2. .. Nie7hd6       5     2.6   43/79  2. .. Nic5fc4       5     2.6   44/79  2. .. Nic5ia4       5     2.6   45/79  2. .. Bhc8hg4       5     2.6   46/79  2. .. Pha7ha5       5     2.6   47/79  2. .. Nic5lb4       5     2.6   48/79  2. .. Nic5la4       5     2.6   49/79  2. .. Nic5la3       5     2.6   50/79  2. .. Nie7id5       5     2.6   51/79  2. .. Pid6id5       5     2.6   52/79  2. .. Phg7hg6       5     2.6   53/79  2. .. Nic5fb5       5     2.6   54/79  2. .. Nie7hg6       5     2.6   55/79  2. .. Pgg7gg6       5     2.6   56/79  2. .. Pha7ha6       5     2.6   57/79  2. .. Khe8hd7       5     2.6   58/79  2. .. Nie7if5       5     2.6   59/79  2. .. Nie7jc5       5     2.6   60/79  2. .. Nic5ib3       5     2.6   61/79  2. .. Nhb8ha6       5     2.6   62/79  2. .. Phb7hb6       5     2.6   63/79  2. .. Bhc8hd7       5     2.6   64/79  2. .. Nic5he4       5     2.7   65/79  2. .. Nic5jd3       5     2.7   66/79  2. .. Phb7hb5       5     2.7   67/79  2. .. Nic5id3       5     2.7   68/79  2. .. Nhb8hc6       5     2.7   69/79  2. .. Nic5ib7       5     2.7   70/79  2. .. Pge7ge6       5     2.7   71/79  2. .. Phf7hf5       5     2.7   72/79  2. .. Phe7he5       5     2.7   73/79  2. .. Bhc8hh3       5     2.7   74/79  2. .. Qhd8hd7       5     2.7   75/79  2. .. Phc7hc5       5     2.7   76/79  2. .. Phg7hg5       5     2.7   77/79  2. .. Nhg8ge6       5     2.7   78/79  2. .. Nic5fc5       5     2.7   79/79  2. .. Phh7hh5       5     2.7  -1.360  2. .. Phd5xhc4 3. Nhg1hf3 Nie7id5 4. Nie1id3 Nhb8hc6 
+ 6     2.7    1/79  2. .. Phd5xhc4       6     3.0     ---  2. .. Phd5xhc4
+ 6     4.7  -1.104  2. .. Phd5xhc4 3. Nhg1hf3 Nie7id5 4. Nie1id3 Nic5xid3 5. 
+                    Pie2xid3 
+ 6     4.7    2/79  2. .. Nic5ie4       6     5.4    3/79  2. .. Qid7gc6       6     5.4    4/79  2. .. Nic5he4       6     5.6    5/79  2. .. Bhc8hf5       6     5.9    6/79  2. .. Nie7id5       6     6.0    7/79  2. .. Nhg8hf6       6     6.0    8/79  2. .. Phb7hb6       6     6.0    9/79  2. .. Pga7ga6       6     6.0   10/79  2. .. Phb7hb5       6     6.1   11/79  2. .. Pjf6jf5       6     6.1   12/79  2. .. Pid6id5       6     6.1   13/79  2. .. Ria7ib7       6     6.1   14/79  2. .. Nhb8hd7       6     6.1   15/79  2. .. Bhc8hd7       6     6.1   16/79  2. .. Nic5ib3       6     6.1   17/79  2. .. Qid7fb5       6     6.2   18/79  2. .. Pjc6jc5       6     6.2   19/79  2. .. Pje6je5       6     6.2   20/79  2. .. Pig6ig5       6     6.2   21/79  2. .. Pjd6jd5       6     6.2   22/79  2. .. Pjb6jb5       6     6.2   23/79  2. .. Pgf7gf6       6     6.2   24/79  2. .. Pgc7gc6       6     6.2   25/79  2. .. Nic5la4       6     6.2   26/79  2. .. Nic5la3       6     6.2   27/79  2. .. Pia6ia5       6     6.2   28/79  2. .. Qid7hd7       6     6.2   29/79  2. .. Phf7hf6       6     6.2   30/79  2. .. Nic5fb5       6     6.2   31/79  2. .. Nic5fc5       6     6.3   32/79  2. .. Pgb7gb6       6     6.3   33/79  2. .. Pha7ha6       6     6.3   34/79  2. .. Phh7hh6       6     6.3   35/79  2. .. Phc7hc5       6     6.3   36/79  2. .. Pif6if5       6     6.3   37/79  2. .. Qid7ea4       6     6.3   38/79  2. .. Nic5ja3       6     6.3   39/79  2. .. Bhc8hh3       6     6.3   40/79  2. .. Nhg8hh6       6     6.3   41/79  2. .. Phc7hc6       6     6.3   42/79  2. .. Phg7hg6       6     6.3   43/79  2. .. Phg7hg5       6     6.3   44/79  2. .. Nic5ia4       6     6.3   45/79  2. .. Phe7he5       6     6.3   46/79  2. .. Pha7ha5       6     6.3   47/79  2. .. Nic5lb4       6     6.3   48/79  2. .. Phf7hf5       6     6.3   49/79  2. .. Khe8hd7       6     6.3   50/79  2. .. Pge7ge6       6     6.3   51/79  2. .. Nic5ib7       6     6.3   52/79  2. .. Phh7hh5       6     6.3   53/79  2. .. Pgd7gd6       6     6.3   54/79  2. .. Nic5id3       6     6.3   55/79  2. .. Qhd8hd7       6     6.3   56/79  2. .. Phe7he6       6     6.3   57/79  2. .. Nic5fc4       6     6.3   58/79  2. .. Nie7if5       6     6.3   59/79  2. .. Bhc8he6       6     6.3   60/79  2. .. Nie7hd6       6     6.3   61/79  2. .. Nhb8ha6       6     6.4   62/79  2. .. Nic5hb4       6     6.4   63/79  2. .. Bhc8hg4       6     6.4   64/79  2. .. Pib6ib5       6     6.4   65/79  2. .. Pgg7gg6       6     6.4   66/79  2. .. Pie6ie5       6     6.4   67/79  2. .. Qhd8hd6       6     6.4   68/79  2. .. Nhb8hc6       6     6.4   69/79  2. .. Nie7jc5       6     6.4   70/79  2. .. Nic5lb3       6     6.4   71/79  2. .. Nie7jf5       6     6.4   72/79  2. .. Nie7fe6       6     6.4   73/79  2. .. Nie7fd6       6     6.4   74/79  2. .. Nie7hg6       6     6.4   75/79  2. .. Nic5jd3       6     6.5   76/79  2. .. Nic5fb4       6     6.5   77/79  2. .. Nhg8ge6       6     6.5   78/79  2. .. Nhb8gc6       6     6.5   79/79  2. .. Pja6ja5       6     6.5  -1.104  2. .. Phd5xhc4 3. Nhg1hf3 Nie7id5 4. Nie1id3 Nic5xid3 5. 
+                    Pie2xid3 
+Nodes = 486k, QPerc: 66 %, time = 6.56 secs, 74.2k nodes/s
+Extensions: Check: 2.04k  DblChk: 0  DiscChk: 0  SingReply: 540
+            Recapture: 1.12k   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 9.57k/164k = 6 %   Pawn: 152k/165k = 92 %
+         Eval: 158k/320k = 49 %
+Hashtable 1:  entries = 131k, use = 6.34k (5 %)
+              store failed = 74 (1 %)
+Engine move: search complete, best move Phd5xhc4 (score +1.104)
+Move made: Phd5xhc4 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 5     1.5  -0.784  3. Phe2he4 Nie7id5 4. Nib1ic3 Nid5xic3 5. Pid2xic3 
+ 5     1.5    2/70  3. Nhb1hc3       5     1.8     +++  3. Nhb1hc3
+ 5     2.0  -0.752  3. Nhb1hc3 Nie7id5 4. Nie1id3 Nib7ic5 5. Bhc1hg5 
+ 5     2.0    3/70  3. Nhg1hf3       5     2.0    4/70  3. Qhd1ha4+       5     2.1    5/70  3. Nie1if3       5     2.1    6/70  3. Nib1ic3       5     2.2    7/70  3. Qid1gc2       5     2.2    8/70  3. Qhd1hb3       5     2.2    9/70  3. Qhd1hc2       5     2.2   10/70  3. Qhd1hd3       5     2.2   11/70  3. Nie1id3       5     2.2   12/70  3. Nhb1gc2       5     2.2   13/70  3. Nhb1hd2       5     2.3   14/70  3. Bhc1hh6       5     2.3   15/70  3. Pgg1gg2       5     2.3   16/70  3. Nie1hg3       5     2.3   17/70  3. Nhg1ge2       5     2.3   18/70  3. Nib1ha3       5     2.3   19/70  3. Pga1ga2       5     2.3   20/70  3. Nib1hd3       5     2.3   21/70  3. Nie1hd3       5     2.4   22/70  3. Nib1jc2       5     2.4   23/70  3. Pja1ja2       5     2.4   24/70  3. Phb2hb4       5     2.4   25/70  3. Phe2he3       5     2.4   26/70  3. Bhc1hf4       5     2.4   27/70  3. Pjf1jf2       5     2.4   28/70  3. Phd4hd5       5     2.4   29/70  3. Bhc1hd2       5     2.4   30/70  3. Phb2hb3       5     2.4   31/70  3. Bhc1he3       5     2.4   32/70  3. Pha2ha3       5     2.4   33/70  3. Phf2hf4       5     2.4   34/70  3. Bhc1hg5       5     2.4   35/70  3. Phg2hg4       5     2.4   36/70  3. Phh2hh3       5     2.4   37/70  3. Pha2ha4       5     2.4   38/70  3. Pgb1gb2       5     2.4   39/70  3. Nib1fa1       5     2.6   40/70  3. Nib1fb1       5     2.6   41/70  3. Qhd1hd2       5     2.6   42/70  3. Nhb1ha3       5     2.6   43/70  3. Nib1ia3       5     2.6   44/70  3. Phg2hg3       5     2.6   45/70  3. Pgc1gc2       5     2.6   46/70  3. Qid1ea2       5     2.6   47/70  3. Phh2hh4       5     2.6   48/70  3. Nhg1hh3       5     2.6   49/70  3. Qid1hd2       5     2.6   50/70  3. Nie1fd1       5     2.6   51/70  3. Nie1fe1       5     2.6   52/70  3. Pgf1gf2       5     2.6   53/70  3. Pgd1gd2       5     2.6   54/70  3. Pge1ge2       5     2.6   55/70  3. Khe1hd2       5     2.6   56/70  3. Nie1jc2       5     2.6   57/70  3. Nie1jf2       5     2.6   58/70  3. Pia2ia3       5     2.6   59/70  3. Pib2ib3       5     2.7   60/70  3. Pic2ic3       5     2.7   61/70  3. Pid2id3       5     2.7   62/70  3. Pie2ie3       5     2.7   63/70  3. Pif2if3       5     2.7   64/70  3. Pig2ig3       5     2.7   65/70  3. Phf2hf3       5     2.7   66/70  3. Pjb1jb2       5     2.7   67/70  3. Pjc1jc2       5     2.8   68/70  3. Pjd1jd2       5     2.8   69/70  3. Pje1je2       5     2.8   70/70  3. Qid1fb2       5     2.8  -0.752  3. Nhb1hc3 Nie7id5 4. Nie1id3 Nib7ic5 5. Bhc1hg5 
+ 6     2.9    1/70  3. Nhb1hc3       6     3.3     ---  3. Nhb1hc3
+ 6     5.4  -1.024  3. Nhb1hc3 Nhg8hf6 4. Nie1id3 Nhb8hc6 5. Phd4hd5 Nhc6id4 
+ 6     5.4    2/70  3. Phe2he4       6     5.9    3/70  3. Pib2ib3       6     5.9    4/70  3. Nhg1hf3       6     7.6     +++  3. Nhg1hf3
+ 6     8.5  -0.992  3. Nhg1hf3 Nie7id5 4. Nie1id3 Bhc8hg4 5. Nib1ic3 Nhg8hf6 
+ 6     8.5    5/70  3. Nie1jf2       6     8.5    6/70  3. Pic2ic3       6     8.5    7/70  3. Phg2hg3       6     8.5    8/70  3. Pgd1gd2       6     8.5    9/70  3. Nib1ia3       6     8.5   10/70  3. Qhd1ha4+       6     8.8     +++  3. Qhd1ha4+
+ 6     9.1  -0.832  3. Qhd1ha4+ Qid7hd7 4. Qha4xhc4 Qhd7xhd4 5. Qhc4xhd4 
+                    Qhd8xhd4 6. Bhc1hg5 
+ 6     9.1   11/70  3. Pjd1jd2       6     9.1   12/70  3. Nib1ic3       6     9.8   13/70  3. Pje1je2       6     9.8   14/70  3. Pjc1jc2       6     9.8   15/70  3. Pjb1jb2       6     9.8   16/70  3. Pig2ig3       6     9.8   17/70  3. Nie1fd1       6     9.8   18/70  3. Nhg1hh3       6     9.8   19/70  3. Pia2ia3       6     9.8   20/70  3. Nie1if3       6    10.2   21/70  3. Pif2if3       6    10.2   22/70  3. Pge1ge2       6    10.2   23/70  3. Nie1fe1       6    10.2   24/70  3. Bhc1hf4       6    10.2   25/70  3. Bhc1hg5       6    10.2   26/70  3. Pgc1gc2       6    10.2   27/70  3. Nhb1hd2       6    10.2   28/70  3. Nhb1gc2       6    10.2   29/70  3. Pgb1gb2       6    10.2   30/70  3. Bhc1hh6       6    10.2   31/70  3. Nie1hg3       6    10.2   32/70  3. Nib1fa1       6    10.2   33/70  3. Nib1ha3       6    10.2   34/70  3. Pha2ha3       6    10.2   35/70  3. Bhc1hd2       6    10.2   36/70  3. Nie1hd3       6    10.2   37/70  3. Nib1hd3       6    10.2   38/70  3. Phg2hg4       6    10.2   39/70  3. Phf2hf3       6    10.2   40/70  3. Phh2hh4       6    10.2   41/70  3. Qhd1hd2       6    10.2   42/70  3. Qid1ea2       6    10.2   43/70  3. Qid1hd2       6    10.2   44/70  3. Khe1hd2       6    10.2   45/70  3. Phf2hf4       6    10.2   46/70  3. Phh2hh3       6    10.2   47/70  3. Qid1fb2       6    10.2   48/70  3. Nhg1ge2       6    10.2   49/70  3. Nhb1ha3       6    10.2   50/70  3. Pgg1gg2       6    10.2   51/70  3. Pjf1jf2       6    10.2   52/70  3. Phd4hd5       6    10.2   53/70  3. Pgf1gf2       6    10.2   54/70  3. Bhc1he3       6    10.2   55/70  3. Nib1jc2       6    10.2   56/70  3. Nie1jc2       6    10.2   57/70  3. Phb2hb3       6    10.2   58/70  3. Phe2he3       6    10.2   59/70  3. Pga1ga2       6    10.2   60/70  3. Pha2ha4       6    10.2   61/70  3. Pid2id3       6    10.2   62/70  3. Pie2ie3       6    10.2   63/70  3. Nib1fb1       6    10.2   64/70  3. Qid1gc2       6    10.2   65/70  3. Qhd1hb3       6    10.2   66/70  3. Qhd1hc2       6    10.2   67/70  3. Qhd1hd3       6    10.2   68/70  3. Nie1id3       6    10.2   69/70  3. Pja1ja2       6    10.2   70/70  3. Phb2hb4       6    10.2  -0.832  3. Qhd1ha4+ Qid7hd7 4. Qha4xhc4 Qhd7xhd4 5. Qhc4xhd4 
+                    Qhd8xhd4 6. Bhc1hg5 
+Nodes = 669k, QPerc: 68 %, time = 10.22 secs, 65.5k nodes/s
+Extensions: Check: 1.89k  DblChk: 0  DiscChk: 0  SingReply: 143
+            Recapture: 497   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 15.8k/211k = 7 %   Pawn: 293k/316k = 93 %
+         Eval: 142k/457k = 31 %
+Hashtable 1:  entries = 131k, use = 14.9k (11 %)
+              store failed = 388 (2 %)
+Engine move: search complete, best move Qhd1ha4+ (score -0.832)
+Move made: Qhd1ha4+ by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 6     2.3  -0.688  3. .. Qid7hd7 4. Qha4xhc4 Qhd7xhd4 5. Phe2he3 Qhd4id4 6. 
+                    Nie1id3 
+ 6     2.3    2/ 7  3. .. Qhd8hd7       6     2.5    3/ 7  3. .. Nhb8hd7       6     2.7    4/ 7  3. .. Nhb8hc6       6     3.2    5/ 7  3. .. Bhc8hd7       6     3.2    6/ 7  3. .. Phc7hc6       6     3.2    7/ 7  3. .. Phb7hb5       6     3.3  -0.688  3. .. Qid7hd7 4. Qha4xhc4 Qhd7xhd4 5. Phe2he3 Qhd4id4 6. 
+                    Nie1id3 
+Nodes = 195k, QPerc: 64 %, time = 3.4 secs, 57.5k nodes/s
+Extensions: Check: 315  DblChk: 0  DiscChk: 0  SingReply: 50
+            Recapture: 118   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 9.13k/69.9k = 13 %   Pawn: 61.1k/69.9k = 87 %
+         Eval: 56.8k/124k = 46 %
+Hashtable 1:  entries = 131k, use = 4.11k (3 %)
+              store failed = 17 (0 %)
+Engine move: search complete, best move Qid7hd7 (score +0.688)
+Move made: Qid7hd7 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 5     1.1  -1.312  4. Qid1hd1 Nie7id5 5. Nhb1hc3 Qhd7xha4 6. Nhc3xha4 
+ 5     1.1    2/66  4. Phb2hb4       5     1.1    3/66  4. Pig2ig3       5     1.1    4/66  4. Pja1ja2       5     1.2    5/66  4. Pjb1jb2       5     1.2    6/66  4. Pjc1jc2       5     1.2    7/66  4. Pjd1jd2       5     1.2    8/66  4. Pje1je2       5     1.2    9/66  4. Pge1ge2       5     1.2   10/66  4. Pgf1gf2       5     1.2   11/66  4. Pgg1gg2       5     1.2   12/66  4. Nhb1hd2       5     1.2   13/66  4. Nhb1ha3       5     1.2   14/66  4. Bhc1hd2       5     1.2   15/66  4. Bhc1he3       5     1.2   16/66  4. Bhc1hf4       5     1.2   17/66  4. Bhc1hg5       5     1.3   18/66  4. Bhc1hh6       5     1.3   19/66  4. Nie1jc2       5     1.3   20/66  4. Qid1fb2       5     1.3   21/66  4. Nhg1ge2       5     1.3   22/66  4. Nhg1hf3       5     1.3   23/66  4. Nhg1hh3       5     1.3   24/66  4. Pha2ha3       5     1.3   25/66  4. Nie1hd3       5     1.3   26/66  4. Phe2he3       5     1.3   27/66  4. Phe2he4       5     1.3   28/66  4. Nie1if3       5     1.3   29/66  4. Nib1ia3       5     1.3   30/66  4. Phg2hg3       5     1.3   31/66  4. Pib2ib3       5     1.3   32/66  4. Pid2id3       5     1.3   33/66  4. Pic2ic3       5     1.3   34/66  4. Phd4hd5       5     1.3   35/66  4. Nib1fa1       5     1.3   36/66  4. Nib1fb1       5     1.3   37/66  4. Nib1ha3       5     1.4   38/66  4. Nib1hd3       5     1.4   39/66  4. Nie1hg3       5     1.4   40/66  4. Nib1ic3       5     1.4   41/66  4. Nib1jc2       5     1.4   42/66  4. Nie1jf2       5     1.4   43/66  4. Pjf1jf2       5     1.4   44/66  4. Pie2ie3       5     1.4   45/66  4. Qid1hd2       5     1.4   46/66  4. Nie1fd1       5     1.4   47/66  4. Nie1fe1       5     1.4   48/66  4. Nie1id3       5     1.4   49/66  4. Qid1gc2       5     1.4   50/66  4. Khe1hd1       5     1.4   51/66  4. Phf2hf3       5     1.4   52/66  4. Pif2if3       5     1.4   53/66  4. Pia2ia3       5     1.4   54/66  4. Phg2hg4       5     1.4   55/66  4. Phh2hh3       5     1.4   56/66  4. Qid1ea2       5     1.4   57/66  4. Phf2hf4       5     1.4   58/66  4. Phh2hh4       5     1.4   59/66  4. Phb2hb3       5     1.4   60/66  4. Nhb1hc3       5     1.4   61/66  4. Nhb1gc2       5     1.4   62/66  4. Pga1ga2       5     1.4   63/66  4. Pgb1gb2       5     1.4   64/66  4. Pgc1gc2       5     1.4   65/66  4. Pgd1gd2       5     1.4   66/66  4. Khe1hd2       5     1.5  -1.312  4. Qid1hd1 Nie7id5 5. Nhb1hc3 Qhd7xha4 6. Nhc3xha4 
+ 6     1.5    1/66  4. Qid1hd1       6     4.3  -1.152  4. Qid1hd1 Nie7id5 5. Qha4xhd7+ Nhb8xhd7 6. Nib1ic3 
+                    Nid5xic3 
+Nodes = 240k, QPerc: 74 %, time = 4.39 secs, 54.9k nodes/s
+Extensions: Check: 706  DblChk: 0  DiscChk: 1  SingReply: 12
+            Recapture: 1.05k   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 4.32k/63.9k = 7 %   Pawn: 91.5k/99.2k = 92 %
+         Eval: 79.6k/175k = 45 %
+Hashtable 1:  entries = 131k, use = 4.19k (3 %)
+              store failed = 48 (1 %)
+Engine move: search complete, best move Qid1hd1 (score -1.152)
+Move made: Qid1hd1 by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.0   21/62  4. .. Nib7ha6       4     1.0   22/62  4. .. Nie7jf5       4     1.0   23/62  4. .. Nib7ic5       4     1.0   24/62  4. .. Pja6ja5       4     1.0   25/62  4. .. Pie6ie5       4     1.0   26/62  4. .. Qhd8id7       4     1.0   27/62  4. .. Nie7jc5       4     1.0   28/62  4. .. Bif7gf7       4     1.0   29/62  4. .. Nib7fb6       4     1.0   30/62  4. .. Nie7hg6       4     1.0   31/62  4. .. Nie7if5       4     1.0   32/62  4. .. Phc7hc5       4     1.1   33/62  4. .. Nib7hd6       4     1.1     +++  4. .. Nib7hd6
+ 4     1.1  -1.216  4. .. Nib7hd6 5. Qha4hc2 Nhd6ie4 6. Qhc2xhc4 
+ 4     1.1   34/62  4. .. Phf7hf6       4     1.1   35/62  4. .. Pha7ha6       4     1.1   36/62  4. .. Phh7hh5       4     1.1   37/62  4. .. Phc4hc3       4     1.1   38/62  4. .. Pha7ha5       4     1.1   39/62  4. .. Pia6ia5       4     1.1   40/62  4. .. Pif6if5       4     1.1   41/62  4. .. Nhb8hc6       4     1.1   42/62  4. .. Qhd7hb5       4     1.1   43/62  4. .. Pgf6gf5       4     1.1   44/62  4. .. Phe7he5       4     1.1   45/62  4. .. Pic6ic5       4     1.1   46/62  4. .. Phf7hf5       4     1.1   47/62  4. .. Phg7hg6       4     1.1   48/62  4. .. Phg7hg5       4     1.1   49/62  4. .. Nib7ia5       4     1.1   50/62  4. .. Nie7hd6       4     1.1   51/62  4. .. Pig6ig5       4     1.1   52/62  4. .. Nie7id5       4     1.1     +++  4. .. Nie7id5
+ 4     1.5  -1.312  4. .. Nie7id5 5. Nhb1hc3 Qhd7xha4 6. Nhc3xha4 
+ 4     1.5   53/62  4. .. Phh7hh6       4     1.5   54/62  4. .. Pgb7gb6       4     1.5   55/62  4. .. Pgc7gc6       4     1.5   56/62  4. .. Pgd7gd6       4     1.5   57/62  4. .. Pge7ge6       4     1.5   58/62  4. .. Pjb6jb5       4     1.5   59/62  4. .. Pjc6jc5       4     1.5   60/62  4. .. Pjd6jd5       4     1.5   61/62  4. .. Pje6je5       4     1.5   62/62  4. .. Phb7hb5       4     1.5     +++  4. .. Phb7hb5
+ 4     1.7  -1.344  4. .. Phb7hb5 5. Qha4ia4 Qhd7xhd4 6. Qia4xhb5+ Phc7hc6 
+ 4     1.7  -1.344  4. .. Phb7hb5 5. Qha4ia4 Qhd7xhd4 6. Qia4xhb5+ Phc7hc6 
+ 5     1.7    1/62  4. .. Phb7hb5       5     2.3     +++  4. .. Phb7hb5
+ 5     2.5  -1.648  4. .. Phb7hb5 5. Qha4ia4 Nib7ic5 6. Qia4id4 Ria7bb1 
+ 5     2.5    2/62  4. .. Nie7id5       5     2.5    3/62  4. .. Qhd7hc6       5     2.5    4/62  4. .. Qhd7xha4       5     2.7    5/62  4. .. Nhg8hf6       5     2.7    6/62  4. .. Nhg8ge6       5     2.8    7/62  4. .. Nib7jc5       5     2.8    8/62  4. .. Bif7gf7       5     2.8    9/62  4. .. Pie6ie5       5     2.8   10/62  4. .. Nie7jc5       5     2.9   11/62  4. .. Pja6ja5       5     2.9   12/62  4. .. Nie7fd6       5     2.9   13/62  4. .. Nie7if5       5     2.9   14/62  4. .. Pgg7gg6       5     2.9   15/62  4. .. Pga7ga6       5     2.9   16/62  4. .. Nhb8gc6       5     3.0   17/62  4. .. Phe7he6       5     3.0   18/62  4. .. Nib7ic5       5     3.0   19/62  4. .. Khe8id7       5     3.0   20/62  4. .. Nhg8hh6       5     3.0   21/62  4. .. Nib7fb6       5     3.0   22/62  4. .. Pjf6jf5       5     3.0   23/62  4. .. Qhd8id7       5     3.0   24/62  4. .. Nie7hg6       5     3.0   25/62  4. .. Nie7jf5       5     3.0   26/62  4. .. Phb7hb6       5     3.0   27/62  4. .. Nib7fa6       5     3.0   28/62  4. .. Phc7hc6       5     3.0   29/62  4. .. Pib6ib5       5     3.0   30/62  4. .. Nhb8ha6       5     3.0   31/62  4. .. Pid6id5       5     3.0   32/62  4. .. Nib7ha6       5     3.0   33/62  4. .. Phc7hc5       5     3.0   34/62  4. .. Nie7fe6       5     3.0   35/62  4. .. Nib7hd6       5     3.0   36/62  4. .. Phf7hf6       5     3.0   37/62  4. .. Pha7ha6       5     3.0   38/62  4. .. Phh7hh5       5     3.0   39/62  4. .. Phc4hc3       5     3.0   40/62  4. .. Pha7ha5       5     3.0   41/62  4. .. Pia6ia5       5     3.0   42/62  4. .. Pif6if5       5     3.0   43/62  4. .. Nhb8hc6       5     3.0   44/62  4. .. Qhd7hb5       5     3.0   45/62  4. .. Pgf6gf5       5     3.0   46/62  4. .. Phe7he5       5     3.0   47/62  4. .. Pic6ic5       5     3.0   48/62  4. .. Phf7hf5       5     3.0   49/62  4. .. Phg7hg6       5     3.0   50/62  4. .. Phg7hg5       5     3.0   51/62  4. .. Nib7ia5       5     3.0   52/62  4. .. Nie7hd6       5     3.0   53/62  4. .. Pig6ig5       5     3.0   54/62  4. .. Phh7hh6       5     3.0   55/62  4. .. Pgb7gb6       5     3.0   56/62  4. .. Pgc7gc6       5     3.0   57/62  4. .. Pgd7gd6       5     3.0   58/62  4. .. Pge7ge6       5     3.0   59/62  4. .. Pjb6jb5       5     3.0   60/62  4. .. Pjc6jc5       5     3.0   61/62  4. .. Pjd6jd5       5     3.0   62/62  4. .. Pje6je5       5     3.1  -1.648  4. .. Phb7hb5 5. Qha4ia4 Nib7ic5 6. Qia4id4 Ria7bb1 
+ 6     3.1    1/62  4. .. Phb7hb5       6     9.6  -1.456  4. .. Phb7hb5 5. Qha4ga4 Ria7gb6 6. Nhb1ha3 Rgb6lc2 7. 
+                    Qga4xhb5 
+Nodes = 508k, QPerc: 75 %, time = 9.62 secs, 52.8k nodes/s
+Extensions: Check: 941  DblChk: 0  DiscChk: 0  SingReply: 333
+            Recapture: 1.04k   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 13.7k/127k = 11 %   Pawn: 202k/218k = 93 %
+         Eval: 164k/379k = 43 %
+Hashtable 1:  entries = 131k, use = 8.31k (6 %)
+              store failed = 174 (1 %)
+Engine move: search complete, best move Phb7hb5 (score +1.456)
+Move made: Phb7hb5 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.0   51/89  5. Qha4ha3       4     1.0   52/89  5. Qha4hb3       4     1.0   53/89  5. Nie1id3       4     1.0   54/89  5. Nie1if3       4     1.0   55/89  5. Qha4ia3       4     1.0   56/89  5. Qha4ja2       4     1.0   57/89  5. Qha4ja4       4     1.0   58/89  5. Qha4ka1       4     1.1   59/89  5. Pif2if3       4     1.1   60/89  5. Qha4ga4       4     1.1   61/89  5. Pja1ja2       4     1.1   62/89  5. Nie1hg3       4     1.1   63/89  5. Pig2ig3       4     1.1   64/89  5. Pib2ib3       4     1.1   65/89  5. Nie1jc2       4     1.1   66/89  5. Nie1fe1       4     1.1   67/89  5. Nie1hd3       4     1.1   68/89  5. Pid2id3       4     1.1   69/89  5. Nie1fd1       4     1.1   70/89  5. Pic2ic3       4     1.1   71/89  5. Pie2ie3       4     1.1   72/89  5. Nib1ia3       4     1.1   73/89  5. Phh2hh3       4     1.1   74/89  5. Phf2hf4       4     1.1   75/89  5. Nib1ic3       4     1.1   76/89  5. Nib1fa1       4     1.1   77/89  5. Phg2hg4       4     1.1   78/89  5. Phh2hh4       4     1.1   79/89  5. Nib1hd3       4     1.1   80/89  5. Nhb1ha3       4     1.1   81/89  5. Nhb1hc3       4     1.1   82/89  5. Qha4hb4       4     1.1   83/89  5. Phf2hf3       4     1.1   84/89  5. Phd4hd5       4     1.1   85/89  5. Qhd1hb3       4     1.1   86/89  5. Nib1fb1       4     1.1   87/89  5. Nib1ha3       4     1.1   88/89  5. Khe1hd2       4     1.1   89/89  5. Khe1id1       4     1.1  -1.648  5. Qha4ia4 Nib7ic5 6. Qia4id4 Ria7bb1 
+ 5     1.2    1/89  5. Qha4ia4       5     2.2  -1.712  5. Qha4ia4 Nib7ic5 6. Qia4gb3 Qhd7xhd4 7. Qhd1xhd4 
+ 5     2.2    2/89  5. Qha4da4       5     2.2    3/89  5. Qha4fa2       5     2.3    4/89  5. Qha4ga3       5     2.3    5/89  5. Qha4ea1       5     2.6     +++  5. Qha4ea1
+ 5     3.4  -1.600  5. Qha4ea1 Ria7bb1 6. Nib1ha3 Phe7he5 7. Nhg1hf3 
+ 5     3.4    6/89  5. Qha4ha3       5     3.4    7/89  5. Qha4ka4       5     3.6    8/89  5. Qha4ja2       5     3.6    9/89  5. Qha4ka1       5     3.9   10/89  5. Qha4ha5       5     4.7     +++  5. Qha4ha5
+ 5     5.9  -1.488  5. Qha4ha5 Ria7bb1 6. Nib1ic3 Pha7ha6 7. Nic3jd4 
+ 5     5.9   11/89  5. Qha4hc2       5     5.9   12/89  5. Qha4la4       5     5.9   13/89  5. Qha4ga4       5     6.2     +++  5. Qha4ga4
+ 5     6.6  -1.456  5. Qha4ga4 Ria7bb1 6. Nhb1hc3 Pha7ha6 7. Qga4gb5 Nie7hd6 
+ 5     6.6   14/89  5. Qha4xha7       5     6.6   15/89  5. Pgb1gb2       5     6.6   16/89  5. Pgd1gd2       5     6.6   17/89  5. Pgf1gf2       5     6.6   18/89  5. Pib2ib3       5     6.6   19/89  5. Qha4xhc4       5     6.6   20/89  5. Nie1jf2       5     6.6   21/89  5. Bhc1hd2       5     6.6   22/89  5. Bhc1he3       5     6.6   23/89  5. Bhc1hf4       5     6.6   24/89  5. Pig2ig3       5     6.6   25/89  5. Bhc1hh6       5     6.6   26/89  5. Pgg1gg2       5     6.6   27/89  5. Nhb1gc2       5     6.6   28/89  5. Nhb1hd2       5     6.6   29/89  5. Qhd1hd3       5     6.6   30/89  5. Qhd1id1       5     6.6   31/89  5. Pje1je2       5     6.6   32/89  5. Pjf1jf2       5     6.6   33/89  5. Pga1ga2       5     6.6   34/89  5. Nhg1hf3       5     6.6   35/89  5. Pgc1gc2       5     6.6   36/89  5. Pha2ha3       5     6.6   37/89  5. Pge1ge2       5     6.6   38/89  5. Phb2hb4       5     6.6   39/89  5. Phe2he4       5     6.6   40/89  5. Pjc1jc2       5     6.6   41/89  5. Pjd1jd2       5     6.6   42/89  5. Phg2hg3       5     6.6   43/89  5. Pia2ia3       5     6.6   44/89  5. Nie1hd3       5     6.6   45/89  5. Khe1hd2       5     6.6   46/89  5. Nhg1ge2       5     6.6   47/89  5. Bhc1hg5       5     6.6   48/89  5. Pie2ie3       5     6.6   49/89  5. Qhd1hc2       5     6.6   50/89  5. Qhd1hd2       5     6.6   51/89  5. Pjb1jb2       5     6.6   52/89  5. Qha4hb3       5     6.6   53/89  5. Nie1id3       5     6.6   54/89  5. Nib1ha3       5     6.6   55/89  5. Nib1ic3       5     6.6   56/89  5. Nie1fe1       5     6.6   57/89  5. Qha4ja4       5     6.6   58/89  5. Nhg1hh3       5     6.6   59/89  5. Pif2if3       5     6.6   60/89  5. Phb2hb3       5     6.6   61/89  5. Pja1ja2       5     6.6   62/89  5. Qhd1hb3       5     6.6   63/89  5. Phh2hh3       5     6.6   64/89  5. Phd4hd5       5     6.6   65/89  5. Khe1id1       5     6.6   66/89  5. Nib1fa1       5     6.6   67/89  5. Nhb1hc3       5     6.6   68/89  5. Nhb1ha3       5     6.6   69/89  5. Phf2hf3       5     6.6   70/89  5. Pic2ic3       5     6.6   71/89  5. Qha4ha6       5     6.6   72/89  5. Pid2id3       5     6.6   73/89  5. Nib1jc2       5     6.6   74/89  5. Nie1if3       5     6.6   75/89  5. Qha4ia3       5     6.6   76/89  5. Nib1ia3       5     6.6   77/89  5. Phg2hg4       5     6.6   78/89  5. Phh2hh4       5     6.6   79/89  5. Nie1fd1       5     6.6   80/89  5. Qha4ea4       5     6.6   81/89  5. Qha4fa4       5     6.6   82/89  5. Qha4hb4       5     6.6   83/89  5. Phe2he3       5     6.6   84/89  5. Phf2hf4       5     6.6   85/89  5. Nie1hg3       5     6.6   86/89  5. Nib1fb1       5     6.6   87/89  5. Qha4xhb5       5     6.6   88/89  5. Nie1jc2       5     6.6   89/89  5. Nib1hd3       5     6.6  -1.456  5. Qha4ga4 Ria7bb1 6. Nhb1hc3 Pha7ha6 7. Qga4gb5 Nie7hd6 
+Nodes = 326k, QPerc: 77 %, time = 6.69 secs, 48.8k nodes/s
+Extensions: Check: 380  DblChk: 0  DiscChk: 0  SingReply: 223
+            Recapture: 502   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 7.94k/74.3k = 11 %   Pawn: 149k/160k = 93 %
+         Eval: 92.8k/251k = 37 %
+Hashtable 1:  entries = 131k, use = 6.66k (5 %)
+              store failed = 68 (1 %)
+Engine move: search complete, best move Qha4ga4 (score -1.456)
+Move made: Qha4ga4 by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.0  -1.312  5. .. Nib7hd6 6. Nhb1hc3 Ria7cb2 7. Bhc1hf4 
+ 4     1.0    3/66  5. .. Phe7he5       4     1.3     +++  5. .. Phe7he5
+ 4     1.3  -1.328  5. .. Phe7he5 6. Nib1ic3 Qhd7xhd4 7. Qga4xhb5+ 
+ 4     1.3    4/66  5. .. Phc7hc5       4     1.4    5/66  5. .. Ria7db3       4     1.4    6/66  5. .. Pha7ha6       4     1.4    7/66  5. .. Bhc8ha6       4     1.6    8/66  5. .. Ria7bb1       4     1.6     +++  5. .. Ria7bb1
+ 4     1.8  -1.456  5. .. Ria7bb1 6. Nhb1hc3 Pha7ha6 7. Qga4ge4 
+ 4     1.8    9/66  5. .. Ria7hb7       4     1.9   10/66  5. .. Ria7cb2       4     2.0   11/66  5. .. Nhb8gc6       4     2.1   12/66  5. .. Pgf7gf6       4     2.1   13/66  5. .. Pga7ga6       4     2.1   14/66  5. .. Pha7ha5       4     2.1   15/66  5. .. Phc7hc6       4     2.2   16/66  5. .. Phc4hc3       4     2.2   17/66  5. .. Pgc7gc6       4     2.2   18/66  5. .. Pgd7gd6       4     2.2   19/66  5. .. Pge7ge6       4     2.2   20/66  5. .. Phf7hf5       4     2.2   21/66  5. .. Pgg7gg6       4     2.2   22/66  5. .. Phg7hg5       4     2.2   23/66  5. .. Phb5hb4       4     2.2   24/66  5. .. Phh7hh5       4     2.2   25/66  5. .. Nhb8ha6       4     2.2   26/66  5. .. Pgb7gb6       4     2.2   27/66  5. .. Bhc8hb7       4     2.2   28/66  5. .. Qhd8id7       4     2.2   29/66  5. .. Khe8id7       4     2.2   30/66  5. .. Nhg8ge6       4     2.3   31/66  5. .. Phg7hg6       4     2.3   32/66  5. .. Nhg8hh6       4     2.3   33/66  5. .. Pia6ia5       4     2.3   34/66  5. .. Pib6ib5       4     2.3   35/66  5. .. Pic6ic5       4     2.3   36/66  5. .. Pid6id5       4     2.3   37/66  5. .. Pie6ie5       4     2.3   38/66  5. .. Pif6if5       4     2.3   39/66  5. .. Pig6ig5       4     2.3   40/66  5. .. Phe7he6       4     2.3   41/66  5. .. Nhg8hf6       4     2.3   42/66  5. .. Phf7hf6       4     2.3   43/66  5. .. Ria7eb4       4     2.5   44/66  5. .. Ria7fb5       4     2.5   45/66  5. .. Ria7gb6       4     2.5   46/66  5. .. Phh7hh6       4     2.5   47/66  5. .. Nib7fa6       4     2.5   48/66  5. .. Nib7fb6       4     2.5   49/66  5. .. Nib7ha6       4     2.5   50/66  5. .. Nib7ia5       4     2.5   51/66  5. .. Nib7ic5       4     2.6   52/66  5. .. Nib7jc5       4     2.6   53/66  5. .. Nie7fd6       4     2.6   54/66  5. .. Nie7fe6       4     2.6   55/66  5. .. Nie7hd6       4     2.6   56/66  5. .. Nie7hg6       4     2.6   57/66  5. .. Nie7id5       4     2.7   58/66  5. .. Nie7if5       4     2.7   59/66  5. .. Nie7jc5       4     2.9   60/66  5. .. Nie7jf5       4     2.9   61/66  5. .. Pja6ja5       4     2.9   62/66  5. .. Pjb6jb5       4     2.9   63/66  5. .. Pjc6jc5       4     2.9   64/66  5. .. Pjd6jd5       4     2.9   65/66  5. .. Pje6je5       4     2.9   66/66  5. .. Pjf6jf5       4     2.9  -1.456  5. .. Ria7bb1 6. Nhb1hc3 Pha7ha6 7. Qga4ge4 
+ 5     2.9    1/66  5. .. Ria7bb1       5     5.2  -1.552  5. .. Ria7bb1 6. Nib1ic3 Nhb8gc6 7. Nhb1hc3 Nib7hd6 
+Nodes = 245k, QPerc: 82 %, time = 5.28 secs, 46.5k nodes/s
+Extensions: Check: 286  DblChk: 0  DiscChk: 0  SingReply: 14
+            Recapture: 61   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 5.58k/42.9k = 13 %   Pawn: 121k/130k = 93 %
+         Eval: 72.1k/201k = 36 %
+Hashtable 1:  entries = 131k, use = 5.12k (4 %)
+              store failed = 17 (0 %)
+Engine move: search complete, best move Ria7bb1 (score +1.552)
+Move made: Ria7bb1 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     2.8  -1.840  6. Nib1ha3 Nhb8gc6 7. Nhb1hc3 Nie7hd6 
+ 4     2.8    3/68  6. Nhb1hc3       4     2.8     +++  6. Nhb1hc3
+ 4     2.8  -1.616  6. Nhb1hc3 Nie7hd6 
+ 4     2.8    4/68  6. Pgb1gb2       4     2.8    5/68  6. Pgc1gc2       4     2.8    6/68  6. Pid2id3       4     2.8    7/68  6. Pga1ga2       4     2.8    8/68  6. Pgf1gf2       4     2.8    9/68  6. Nhb1gc2       4     2.8   10/68  6. Pgd1gd2       4     2.8   11/68  6. Pge1ge2       4     2.8   12/68  6. Bhc1hd2       4     2.9   13/68  6. Bhc1he3       4     2.9   14/68  6. Bhc1hf4       4     2.9   15/68  6. Bhc1hg5       4     2.9   16/68  6. Bhc1hh6       4     2.9   17/68  6. Qhd1hc2       4     2.9   18/68  6. Qhd1hd2       4     2.9   19/68  6. Nib1fb1       4     2.9   20/68  6. Nhb1hd2       4     2.9   21/68  6. Nib1hd3       4     3.0   22/68  6. Qhd1id1       4     3.0   23/68  6. Nib1ic3       4     3.2     +++  6. Nib1ic3
+ 4     3.4  -1.552  6. Nib1ic3 Nhb8gc6 7. Nhb1hc3 Nie7hd6 
+ 4     3.4   24/68  6. Nib1jc2       4     3.5   25/68  6. Nhg1ge2       4     3.5   26/68  6. Nhg1hf3       4     3.5   27/68  6. Nhg1hh3       4     3.5   28/68  6. Pha2ha3       4     3.5   29/68  6. Pha2ha4       4     3.5   30/68  6. Phb2hb3       4     3.5   31/68  6. Phb2hb4       4     3.5   32/68  6. Phe2he3       4     3.5   33/68  6. Phe2he4       4     3.5   34/68  6. Pib2ib3       4     3.5   35/68  6. Pic2ic3       4     3.5   36/68  6. Phg2hg3       4     3.5   37/68  6. Pie2ie3       4     3.6   38/68  6. Pif2if3       4     3.6   39/68  6. Pig2ig3       4     3.6   40/68  6. Phd4hd5       4     3.6   41/68  6. Nib1fa1       4     3.6   42/68  6. Pjc1jc2       4     3.6   43/68  6. Qhd1hd3       4     3.6   44/68  6. Pje1je2       4     3.6   45/68  6. Nib1ia3       4     3.6   46/68  6. Pia2ia3       4     3.6   47/68  6. Nie1hg3       4     3.6   48/68  6. Nie1fd1       4     3.6   49/68  6. Nie1fe1       4     3.6   50/68  6. Nie1hd3       4     3.6   51/68  6. Nie1jf2       4     3.6   52/68  6. Nie1id3       4     3.6   53/68  6. Nie1if3       4     4.0   54/68  6. Nie1jc2       4     4.0   55/68  6. Pja1ja2       4     4.0   56/68  6. Pjd1jd2       4     4.0   57/68  6. Pjf1jf2       4     4.0   58/68  6. Pjb1jb2       4     4.0   59/68  6. Phf2hf3       4     4.0   60/68  6. Khe1id1       4     4.0   61/68  6. Phh2hh3       4     4.0   62/68  6. Phh2hh4       4     4.0   63/68  6. Pgg1gg2       4     4.0   64/68  6. Phg2hg4       4     4.0   65/68  6. Qhd1hb3       4     4.0   66/68  6. Khe1hd2       4     4.0   67/68  6. Qhd1ha4       4     4.0   68/68  6. Phf2hf4       4     4.0  -1.552  6. Nib1ic3 Nhb8gc6 7. Nhb1hc3 Nie7hd6 
+ 5     4.1    1/68  6. Nib1ic3       5     5.9  -1.472  6. Nib1ic3 Nhb8gc6 7. Nhb1hc3 Nie7id5 8. Nic3xhb5 
+Nodes = 257k, QPerc: 89 %, time = 5.9 secs, 43.6k nodes/s
+Extensions: Check: 203  DblChk: 0  DiscChk: 0  SingReply: 2
+            Recapture: 63   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 5.28k/36.5k = 14 %   Pawn: 135k/149k = 91 %
+         Eval: 71.7k/219k = 33 %
+Hashtable 1:  entries = 131k, use = 5.91k (5 %)
+              store failed = 32 (0 %)
+Engine move: search complete, best move Nib1ic3 (score -1.472)
+Move made: Nib1ic3 by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.3  -1.472  6. .. Nhb8gc6 7. Nhb1hc3 Nie7id5 8. Nic3xhb5 
+ 4     1.3    2/77  6. .. Nie7id5       4     1.5    3/77  6. .. Nie7hd6       4     1.5    4/77  6. .. Nib7hd6       4     1.5    5/77  6. .. Pha7ha6       4     1.6    6/77  6. .. Phc7hc6       4     1.6    7/77  6. .. Nhg8hf6       4     1.7    8/77  6. .. Nib7ic5       4     1.8    9/77  6. .. Phb5hb4       4     1.8   10/77  6. .. Nhb8hc6       4     1.9   11/77  6. .. Nie7if5       4     1.9   12/77  6. .. Nie7hg6       4     1.9   13/77  6. .. Nhg8ge6       4     1.9   14/77  6. .. Nie7jc5       4     1.9   15/77  6. .. Phe7he6       4     1.9   16/77  6. .. Qhd7ea4       4     1.9   17/77  6. .. Bhc8ha6       4     2.1   18/77  6. .. Bhc8hb7       4     2.2   19/77  6. .. Phe7he5       4     2.2   20/77  6. .. Nib7jc5       4     2.2   21/77  6. .. Pgd7gd6       4     2.2   22/77  6. .. Pgc7gc6       4     2.2   23/77  6. .. Qhd7ed4       4     2.2   24/77  6. .. Qhd7fc6       4     2.2   25/77  6. .. Qhd7xhd4       4     2.2   26/77  6. .. Phc7hc5       4     2.2   27/77  6. .. Qhd7dd3       4     2.2   28/77  6. .. Qhd7hg4       4     2.2   29/77  6. .. Qhd7hd5       4     2.2   30/77  6. .. Qhd7hf5       4     2.2   31/77  6. .. Qhd7hc6       4     2.2   32/77  6. .. Qhd7hd6       4     2.2   33/77  6. .. Qhd7he6       4     2.2   34/77  6. .. Qhd7id7       4     2.2   35/77  6. .. Qhd7gc6       4     2.2   36/77  6. .. Pha7ha5       4     2.2   37/77  6. .. Phf7hf6       4     2.2   38/77  6. .. Phf7hf5       4     2.2   39/77  6. .. Phg7hg6       4     2.2   40/77  6. .. Phg7hg5       4     2.2   41/77  6. .. Phh7hh6       4     2.2   42/77  6. .. Phh7hh5       4     2.2   43/77  6. .. Rha8ia7       4     2.3   44/77  6. .. Nhb8ha6       4     2.3   45/77  6. .. Qhd7fb5       4     2.3   46/77  6. .. Qhd7fd5       4     2.3   47/77  6. .. Qhd8id7       4     2.3   48/77  6. .. Khe8id7       4     2.3   49/77  6. .. Qhd7gd6       4     2.3   50/77  6. .. Qhd7hh3       4     2.3   51/77  6. .. Nhg8hh6       4     2.3   52/77  6. .. Pia6ia5       4     2.3   53/77  6. .. Pib6ib5       4     2.3   54/77  6. .. Pic6ic5       4     2.3   55/77  6. .. Pid6id5       4     2.3   56/77  6. .. Pie6ie5       4     2.4   57/77  6. .. Pif6if5       4     2.4   58/77  6. .. Pig6ig5       4     2.4   59/77  6. .. Nib7fa6       4     2.4   60/77  6. .. Nib7fb6       4     2.4   61/77  6. .. Nib7ha6       4     2.4   62/77  6. .. Nib7ia5       4     2.4   63/77  6. .. Pga7ga6       4     2.4   64/77  6. .. Pgb7gb6       4     2.4   65/77  6. .. Nie7fd6       4     2.4   66/77  6. .. Nie7fe6       4     2.4   67/77  6. .. Pge7ge6       4     2.4   68/77  6. .. Pgf7gf6       4     2.4   69/77  6. .. Pgg7gg6       4     2.4   70/77  6. .. Phc4hc3       4     2.4   71/77  6. .. Nie7jf5       4     2.4   72/77  6. .. Pja6ja5       4     2.5   73/77  6. .. Pjb6jb5       4     2.5   74/77  6. .. Pjc6jc5       4     2.5   75/77  6. .. Pjd6jd5       4     2.5   76/77  6. .. Pje6je5       4     2.5   77/77  6. .. Pjf6jf5       4     2.6  -1.472  6. .. Nhb8gc6 7. Nhb1hc3 Nie7id5 8. Nic3xhb5 
+ 5     2.6    1/77  6. .. Nhb8gc6       5     5.2  -1.568  6. .. Nhb8gc6 7. Nhb1hc3 Nib7hd6 8. Pie2ie3 Bhc8hb7 
+Nodes = 257k, QPerc: 80 %, time = 5.28 secs, 48.8k nodes/s
+Extensions: Check: 80  DblChk: 0  DiscChk: 0  SingReply: 16
+            Recapture: 40   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 6.01k/52.8k = 11 %   Pawn: 87.4k/98.5k = 89 %
+         Eval: 109k/204k = 54 %
+Hashtable 1:  entries = 131k, use = 2.81k (2 %)
+              store failed = 8 (0 %)
+Engine move: search complete, best move Nhb8gc6 (score +1.568)
+Move made: Nhb8gc6 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.3     +++  7. Nhb1gc2
+ 4     1.5  -2.032  7. Nhb1gc2 Rbb1xgb1 8. Phe2he4 
+ 4     1.5    4/79  7. Nic3he5       4     1.5    5/79  7. Nic3xhb5       4     1.5    6/79  7. Pgb1gb2       4     1.5    7/79  7. Pgg1gg2       4     1.5    8/79  7. Pgd1gd2       4     1.5    9/79  7. Pge1ge2       4     1.5   10/79  7. Pgf1gf2       4     1.5   11/79  7. Pgc1gc2       4     1.5   12/79  7. Nhb1ha3       4     1.5   13/79  7. Bhc1hd2       4     1.5   14/79  7. Bhc1he3       4     1.5   15/79  7. Bhc1hf4       4     1.5   16/79  7. Bhc1hg5       4     1.5   17/79  7. Bhc1hh6       4     1.5   18/79  7. Qhd1hc2       4     1.5   19/79  7. Qhd1hd2       4     1.5   20/79  7. Qhd1hb3       4     1.5   21/79  7. Qhd1hd3       4     1.5   22/79  7. Qhd1ha4       4     1.5   23/79  7. Qhd1id1       4     1.5   24/79  7. Khe1hd2       4     1.5   25/79  7. Khe1id1       4     1.5   26/79  7. Nhg1ge2       4     1.6   27/79  7. Nhg1hf3       4     1.6   28/79  7. Nhg1hh3       4     1.6   29/79  7. Pha2ha3       4     1.6   30/79  7. Pha2ha4       4     2.0     +++  7. Pha2ha4
+ 4     3.4  -1.824  7. Pha2ha4 Nie7hd6 8. Nic3jd4 Khe8ie7 
+ 4     3.4   31/79  7. Phb2hb3       4     3.4   32/79  7. Phb2hb4       4     3.4   33/79  7. Phe2he3       4     3.4   34/79  7. Phe2he4       4     3.4   35/79  7. Phf2hf3       4     3.4   36/79  7. Phf2hf4       4     3.4   37/79  7. Phg2hg3       4     3.4   38/79  7. Phg2hg4       4     3.4   39/79  7. Phh2hh3       4     3.4   40/79  7. Phh2hh4       4     3.4   41/79  7. Phd4hd5       4     3.4   42/79  7. Ria1ib1       4     3.4   43/79  7. Nie1fd1       4     3.4   44/79  7. Nie1fe1       4     3.4   45/79  7. Nie1hd3       4     3.4   46/79  7. Nie1hg3       4     3.4   47/79  7. Nie1id3       4     3.4   48/79  7. Nie1if3       4     3.4   49/79  7. Nie1jc2       4     3.4   50/79  7. Nie1jf2       4     3.4   51/79  7. Pia2ia3       4     3.4   52/79  7. Pib2ib3       4     3.4   53/79  7. Pid2id3       4     3.4   54/79  7. Pie2ie3       4     3.4   55/79  7. Pif2if3       4     3.4   56/79  7. Pig2ig3       4     3.4   57/79  7. Nic3fb2       4     3.4   58/79  7. Nic3fc2       4     3.4   59/79  7. Nic3fb3       4     3.4   60/79  7. Nic3fc3       4     3.4   61/79  7. Pga1ga2       4     3.4   62/79  7. Nic3ib1       4     3.4   63/79  7. Nic3id1       4     3.4   64/79  7. Nic3ia4       4     3.4   65/79  7. Nic3ie4       4     3.5   66/79  7. Nic3ib5       4     3.5   67/79  7. Nic3id5       4     3.5   68/79  7. Nic3ja4       4     3.5   69/79  7. Nic3jd4       4     3.5   70/79  7. Nic3la1       4     3.5   71/79  7. Nic3lb1       4     3.5   72/79  7. Nic3la2       4     3.5   73/79  7. Nic3lb2       4     3.5   74/79  7. Pja1ja2       4     3.5   75/79  7. Pjb1jb2       4     3.5   76/79  7. Pjc1jc2       4     3.5   77/79  7. Pjd1jd2       4     3.5   78/79  7. Pje1je2       4     3.5   79/79  7. Pjf1jf2       4     3.5  -1.824  7. Pha2ha4 Nie7hd6 8. Nic3jd4 Khe8ie7 
+ 5     3.5    1/79  7. Pha2ha4       5     8.5  -1.760  7. Pha2ha4 Qhd7xhd4 8. Qhd1xhd4 Qhd8xhd4 9. Nic3xhb5 
+Nodes = 391k, QPerc: 90 %, time = 8.58 secs, 45.6k nodes/s
+Extensions: Check: 159  DblChk: 0  DiscChk: 0  SingReply: 99
+            Recapture: 306   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 5.44k/59.1k = 9 %   Pawn: 220k/246k = 89 %
+         Eval: 85.1k/330k = 26 %
+Hashtable 1:  entries = 131k, use = 8.02k (6 %)
+              store failed = 44 (0 %)
+Engine move: search complete, best move Pha2ha4 (score -1.760)
+Move made: Pha2ha4 by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.0    6/84  7. .. Ngc6fd4       4     1.0    7/84  7. .. Ngc6gb4       4     1.0    8/84  7. .. Ngc6gd4       4     1.1    9/84  7. .. Ngc6ga5       4     1.1   10/84  7. .. Ngc6ge5       4     1.2   11/84  7. .. Ngc6he5       4     1.2   12/84  7. .. Ngc6hb8       4     1.3   13/84  7. .. Ngc6jb5       4     1.3   14/84  7. .. Ngc6jc5       4     1.3   15/84  7. .. Pga7ga6       4     1.4   16/84  7. .. Pgb7gb6       4     1.4   17/84  7. .. Pgd7gd6       4     1.4   18/84  7. .. Pge7ge6       4     1.4   19/84  7. .. Pgf7gf6       4     1.5   20/84  7. .. Pgg7gg6       4     1.6   21/84  7. .. Phc4hc3       4     1.6   22/84  7. .. Phb5hb4       4     1.7   23/84  7. .. Pha7ha6       4     1.7   24/84  7. .. Pha7ha5       4     1.8   25/84  7. .. Phc7hc6       4     1.8   26/84  7. .. Phc7hc5       4     1.8   27/84  7. .. Qhd7dd3       4     1.9   28/84  7. .. Qhd7ed4       4     2.0   29/84  7. .. Qhd7fd5       4     2.0   30/84  7. .. Qhd7fc6       4     2.0   31/84  7. .. Qhd7gd6       4     2.0   32/84  7. .. Qhd7hh3       4     2.0   33/84  7. .. Qhd7hg4       4     2.1   34/84  7. .. Qhd7hd5       4     2.1   35/84  7. .. Qhd7hf5       4     2.2   36/84  7. .. Qhd7hc6       4     2.2   37/84  7. .. Qhd7hd6       4     2.2   38/84  7. .. Qhd7he6       4     2.2   39/84  7. .. Qhd7id7       4     2.2   40/84  7. .. Phe7he6       4     2.3   41/84  7. .. Phe7he5       4     2.4   42/84  7. .. Phf7hf6       4     2.4   43/84  7. .. Phf7hf5       4     2.4   44/84  7. .. Phg7hg6       4     2.5   45/84  7. .. Phg7hg5       4     2.5   46/84  7. .. Phh7hh6       4     2.5   47/84  7. .. Phh7hh5       4     2.6   48/84  7. .. Rha8hb8       4     2.6   49/84  7. .. Rha8ia7       4     2.6   50/84  7. .. Bhc8ha6       4     2.7   51/84  7. .. Bhc8hb7       4     2.7   52/84  7. .. Qhd8id7       4     2.8   53/84  7. .. Khe8id7       4     2.8   54/84  7. .. Nhg8ge6       4     2.9   55/84  7. .. Nhg8hf6       4     2.9   56/84  7. .. Nhg8hh6       4     2.9   57/84  7. .. Pia6ia5       4     3.0   58/84  7. .. Pib6ib5       4     3.0   59/84  7. .. Pic6ic5       4     3.1   60/84  7. .. Pid6id5       4     3.2   61/84  7. .. Pie6ie5       4     3.2   62/84  7. .. Pif6if5       4     3.3   63/84  7. .. Pig6ig5       4     3.3   64/84  7. .. Nib7fa6       4     3.3   65/84  7. .. Nib7fb6       4     3.3   66/84  7. .. Nib7ha6       4     3.4   67/84  7. .. Nib7hd6       4     3.6     +++  7. .. Nib7hd6
+ 4     3.8  +0.000  7. .. Nib7hd6 8. Rhh1xgg1 Nhd6ib7 
+ 4     3.8   68/84  7. .. Nib7ia5       4     3.8   69/84  7. .. Nib7ic5       4     3.8   70/84  7. .. Nib7jc5       4     3.8   71/84  7. .. Nie7fd6       4     3.8   72/84  7. .. Nie7fe6       4     3.8   73/84  7. .. Nie7hd6       4     3.8   74/84  7. .. Nie7hg6       4     3.8   75/84  7. .. Nie7id5       4     3.8   76/84  7. .. Nie7if5       4     3.8   77/84  7. .. Nie7jc5       4     3.9   78/84  7. .. Nie7jf5       4     3.9   79/84  7. .. Pja6ja5       4     3.9   80/84  7. .. Pjb6jb5       4     3.9   81/84  7. .. Pjc6jc5       4     3.9   82/84  7. .. Pjd6jd5       4     3.9   83/84  7. .. Pje6je5       4     3.9   84/84  7. .. Pjf6jf5       4     3.9  +0.000  7. .. Nib7hd6 8. Rhh1xgg1 Nhd6ib7 
+ 5     3.9    1/84  7. .. Nib7hd6       5     3.9     ---  7. .. Nib7hd6
+ 5     5.1  +3.136  7. .. Nib7hd6 8. Rhh1xgg1 Nhg8hf6 9. Nhb1hc3 Bhc8ha6 
+Nodes = 299k, QPerc: 81 %, time = 5.19 secs, 57.6k nodes/s
+Extensions: Check: 300  DblChk: 0  DiscChk: 0  SingReply: 171
+            Recapture: 696   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 2.67k/60.5k = 4 %   Pawn: 80.2k/88.8k = 90 %
+         Eval: 154k/238k = 65 %
+Hashtable 1:  entries = 131k, use = 1.63k (1 %)
+              store failed = 8 (0 %)
+Engine move: search complete, best move Nib7hd6 (score -3.136)
+Move made: Nib7hd6 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.2  -1.840  8. Pha4xhb5 Nhd6xhb5 9. Nic3xhb5 Ngc6xhb5 
+ 4     1.2    2/81  8. Pie2ie3       4     1.8     +++  8. Pie2ie3
+ 4     2.4  -1.792  8. Pie2ie3 Pga7ga6 9. Pha4xhb5 Ngc6xhb5 
+ 4     2.4    3/81  8. Nic3jd4       4     2.6    4/81  8. Nie1hg3       4     2.6    5/81  8. Nic3xhb5       4     2.6    6/81  8. Nie1if3       4     2.6    7/81  8. Nic3he5       4     2.8    8/81  8. Nhg1hf3       4     2.9    9/81  8. Nic3id5       4     2.9   10/81  8. Nhg1ge2       4     3.0   11/81  8. Nic3ie4       4     3.0   12/81  8. Pgg1gg2       4     3.1   13/81  8. Nhb1ha3       4     3.2   14/81  8. Rha1ha3       4     3.2   15/81  8. Nhb1gc2       4     3.3   16/81  8. Nhb1hd2       4     3.4   17/81  8. Bhc1hf4       4     3.8   18/81  8. Nhb1hc3       4     3.9   19/81  8. Nic3ib5       4     3.9   20/81  8. Nie1id3       4     4.0   21/81  8. Phe2he3       4     4.1   22/81  8. Bhc1hg5       4     4.2   23/81  8. Phe2he4       4     4.2   24/81  8. Nie1jc2       4     4.3   25/81  8. Nie1hd3       4     4.3   26/81  8. Bhc1hd2       4     4.4   27/81  8. Qhd1hc2       4     4.5   28/81  8. Pge1ge2       4     4.5   29/81  8. Pgd1gd2       4     4.5   30/81  8. Bhc1he3       4     4.7   31/81  8. Pgc1gc2       4     4.7   32/81  8. Qhd1hd2       4     4.7   33/81  8. Pga1ga2       4     4.7   34/81  8. Phb2hb4       4     4.8   35/81  8. Qhd1hb3       4     4.8   36/81  8. Nhg1hh3       4     4.8   37/81  8. Phf2hf3       4     4.8   38/81  8. Phf2hf4       4     4.8   39/81  8. Phg2hg3       4     4.8   40/81  8. Phg2hg4       4     4.8   41/81  8. Phh2hh3       4     4.8   42/81  8. Phh2hh4       4     4.8   43/81  8. Phb2hb3       4     5.0   44/81  8. Phd4hd5       4     5.0   45/81  8. Ria1ha2       4     5.1   46/81  8. Bhc1hh6       4     5.2   47/81  8. Nie1fd1       4     5.2   48/81  8. Nie1fe1       4     5.2   49/81  8. Qhd1hd3       4     5.2   50/81  8. Qhd1id1       4     5.2   51/81  8. Khe1hd2       4     5.2   52/81  8. Khe1id1       4     5.2   53/81  8. Pha4ha5       4     5.2   54/81  8. Nie1jf2       4     5.2   55/81  8. Pia2ia3       4     5.2   56/81  8. Pib2ib3       4     5.2   57/81  8. Pid2id3       4     5.3   58/81  8. Pif2if3       4     5.3   59/81  8. Pig2ig3       4     5.3   60/81  8. Nic3fb2       4     5.3   61/81  8. Nic3fc2       4     5.3   62/81  8. Nic3fb3       4     5.3   63/81  8. Nic3fc3       4     5.3   64/81  8. Pgb1gb2       4     5.3   65/81  8. Nic3ib1       4     5.3   66/81  8. Nic3id1       4     5.3   67/81  8. Nic3ia4       4     5.3   68/81  8. Pgf1gf2       4     5.3   69/81  8. Ria1ib1       4     5.4   70/81  8. Rha1ha2       4     5.4   71/81  8. Nic3ja4       4     5.4   72/81  8. Nic3la1       4     5.4   73/81  8. Nic3lb1       4     5.4   74/81  8. Nic3la2       4     5.4   75/81  8. Nic3lb2       4     5.4   76/81  8. Pja1ja2       4     5.4   77/81  8. Pjb1jb2       4     5.4   78/81  8. Pjc1jc2       4     5.4   79/81  8. Pjd1jd2       4     5.4   80/81  8. Pje1je2       4     5.4   81/81  8. Pjf1jf2       4     5.4  -1.792  8. Pie2ie3 Pga7ga6 9. Pha4xhb5 Ngc6xhb5 
+Nodes = 277k, QPerc: 89 %, time = 5.52 secs, 50.3k nodes/s
+Extensions: Check: 33  DblChk: 0  DiscChk: 0  SingReply: 8
+            Recapture: 552   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 4.01k/31.1k = 13 %   Pawn: 107k/118k = 90 %
+         Eval: 133k/246k = 54 %
+Hashtable 1:  entries = 131k, use = 2.04k (2 %)
+              store failed = 11 (0 %)
+Engine move: search complete, best move Pie2ie3 (score -1.792)
+Move made: Pie2ie3 by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.4  -1.824  8. .. Nhd6he4 9. Nic3ie4 Pif6if5 10. Nie4if6# 
+ 4     1.4    2/116  8. .. Pga7ga6       4     2.0    3/116  8. .. Pib6ib5       4     2.0    4/116  8. .. Rha8ia7       4     2.1    5/116  8. .. Bhc8hb7       4     2.1    6/116  8. .. Pia6ia5       4     2.1    7/116  8. .. Qhd7xha4       4     2.1    8/116  8. .. Rbb1xgb1       4     2.1    9/116  8. .. Rbb1xgg1       4     2.1   10/116  8. .. Phc7hc5       4     2.2   11/116  8. .. Nhd6kb4       4     2.2   12/116  8. .. Qhd7ed4       4     2.3   13/116  8. .. Nhd6ib7       4     2.3   14/116  8. .. Phe7he5       4     2.3   15/116  8. .. Nhd6kc4       4     2.4   16/116  8. .. Nhd6kb5       4     2.4   17/116  8. .. Nhd6eb5       4     2.4   18/116  8. .. Rha8hb8       4     2.4   19/116  8. .. Nhd6gb4       4     2.5   20/116  8. .. Ngc6fd4       4     2.5   21/116  8. .. Nhd6hb5       4     2.5   22/116  8. .. Ngc6gd4       4     2.5   23/116  8. .. Phe7he6       4     2.5   24/116  8. .. Nhd6ib4       4     2.6   25/116  8. .. Nhd6eb4       4     2.6   26/116  8. .. Nhd6ec4       4     2.6   27/116  8. .. Qhd7hb5       4     2.6   28/116  8. .. Nhd6ec5       4     2.6   29/116  8. .. Nie7if5       4     2.6   30/116  8. .. Nhd6kc5       4     2.6   31/116  8. .. Nhd6ie4       4     2.6   32/116  8. .. Nhd6hf5       4     2.7   33/116  8. .. Nhd6hb7       4     2.7   34/116  8. .. Nie7jc5       4     2.7   35/116  8. .. Rbb1dd1       4     2.7   36/116  8. .. Rbb1db1       4     2.7   37/116  8. .. Ngc6hb5       4     2.7   38/116  8. .. Rbb1db3       4     2.8   39/116  8. .. Rbb1aa1       4     2.8   40/116  8. .. Ngc6db4       4     2.8   41/116  8. .. Rbb1fb1       4     2.8   42/116  8. .. Pgb7gb6       4     2.8   43/116  8. .. Rbb1eb4       4     2.8   44/116  8. .. Pge7ge6       4     2.8   45/116  8. .. Rbb1ff1       4     2.8   46/116  8. .. Pgg7gg6       4     2.8   47/116  8. .. Phc4hc3       4     2.8   48/116  8. .. Rbb1gb6       4     2.8   49/116  8. .. Rbb1gg6       4     2.8   50/116  8. .. Rbb1hb7       4     2.8   51/116  8. .. Rbb1ia7       4     2.8   52/116  8. .. Ngc6da4       4     2.8   53/116  8. .. Rbb1ee4       4     2.8   54/116  8. .. Rbb1ba1       4     2.8   55/116  8. .. Rbb1bb2       4     2.8   56/116  8. .. Ngc6gb4       4     2.8   57/116  8. .. Rbb1cb2       4     2.8   58/116  8. .. Ngc6ga5       4     2.8   59/116  8. .. Ngc6ge5       4     2.8   60/116  8. .. Rbb1cb1       4     2.8   61/116  8. .. Ngc6he5       4     2.8   62/116  8. .. Rbb1dd3       4     2.8   63/116  8. .. Nhd6ge4       4     2.8   64/116  8. .. Pha7ha6       4     2.8   65/116  8. .. Pha7ha5       4     2.8   66/116  8. .. Pgd7gd6       4     2.8   67/116  8. .. Rbb1cc1       4     2.8   68/116  8. .. Pgf7gf6       4     2.8   69/116  8. .. Rbb1cc2       4     2.8   70/116  8. .. Qhd7fd5       4     2.8   71/116  8. .. Qhd7fc6       4     2.8   72/116  8. .. Qhd7gd6       4     2.9   73/116  8. .. Qhd7hh3       4     2.9   74/116  8. .. Qhd7hg4       4     2.9   75/116  8. .. Rbb1ee1       4     2.9   76/116  8. .. Qhd7hf5       4     2.9   77/116  8. .. Qhd7hc6       4     2.9   78/116  8. .. Qhd7he6       4     2.9   79/116  8. .. Qhd7id7       4     2.9   80/116  8. .. Rbb1fb5       4     2.9   81/116  8. .. Rbb1ff5       4     2.9   82/116  8. .. Phf7hf6       4     2.9   83/116  8. .. Phf7hf5       4     2.9   84/116  8. .. Phg7hg6       4     2.9   85/116  8. .. Ngc6hb8       4     2.9   86/116  8. .. Rbb1eb1       4     2.9   87/116  8. .. Phh7hh5       4     2.9   88/116  8. .. Ngc6fa4       4     2.9   89/116  8. .. Phc7hc6       4     2.9   90/116  8. .. Bhc8ha6       4     2.9   91/116  8. .. Qhd7dd3       4     2.9   92/116  8. .. Qhd8id7       4     2.9   93/116  8. .. Khe8id7       4     2.9   94/116  8. .. Nhg8ge6       4     2.9   95/116  8. .. Nhg8hf6       4     2.9   96/116  8. .. Nhg8hh6       4     2.9   97/116  8. .. Ngc6jb5       4     2.9   98/116  8. .. Ngc6jc5       4     2.9   99/116  8. .. Pic6ic5       4     2.9   100/116  8. .. Pid6id5       4     2.9   101/116  8. .. Pie6ie5       4     2.9   102/116  8. .. Pif6if5       4     2.9   103/116  8. .. Pig6ig5       4     2.9   104/116  8. .. Nie7fd6       4     2.9   105/116  8. .. Nie7fe6       4     2.9   106/116  8. .. Nie7hg6       4     2.9   107/116  8. .. Nie7id5       4     2.9   108/116  8. .. Phg7hg5       4     2.9   109/116  8. .. Phh7hh6       4     2.9   110/116  8. .. Nie7jf5       4     2.9   111/116  8. .. Pja6ja5       4     2.9   112/116  8. .. Pjb6jb5       4     2.9   113/116  8. .. Pjc6jc5       4     2.9   114/116  8. .. Pjd6jd5       4     2.9   115/116  8. .. Pje6je5       4     2.9   116/116  8. .. Pjf6jf5       4     2.9  -1.824  8. .. Nhd6he4 9. Nic3ie4 Pif6if5 10. Nie4if6# 
+ 5     2.9    1/116  8. .. Nhd6he4       5     7.0  -2.000  8. .. Nhd6he4 9. Nic3ie4 Nie7id5 10. Nhg1hf3 Phe7he5 
+Nodes = 360k, QPerc: 79 %, time = 7.03 secs, 51.3k nodes/s
+Extensions: Check: 347  DblChk: 0  DiscChk: 0  SingReply: 148
+            Recapture: 33   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 7.88k/80.4k = 10 %   Pawn: 115k/126k = 91 %
+         Eval: 157k/280k = 56 %
+Hashtable 1:  entries = 131k, use = 4.24k (3 %)
+              store failed = 46 (1 %)
+Engine move: search complete, best move Nhd6he4 (score +2.000)
+Move made: Nhd6he4 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 3     1.0  -1.872  9. Pgf1gf2 Phe7he5 10. Nhg1hf3 
+ 3     1.0   13/114  9. Pgg1gg2       3     1.0   14/114  9. Qga4da1       3     1.0   15/114  9. Qga4da4       3     1.0   16/114  9. Qga4ea2       3     1.0   17/114  9. Qga4ea4       3     1.0   18/114  9. Qga4fa3       3     1.0   19/114  9. Qga4fa4       3     1.0   20/114  9. Qga4ga2       3     1.0   21/114  9. Qga4gc2       3     1.0   22/114  9. Qga4ga3       3     1.0   23/114  9. Qga4gb3       3     1.0   24/114  9. Qga4gb4       3     1.1   25/114  9. Qga4gc4       3     1.1   26/114  9. Qga4gd4       3     1.1   27/114  9. Qga4ge4       3     1.1   28/114  9. Qga4gf4       3     1.1   29/114  9. Qga4gg4       3     1.1   30/114  9. Qga4ga5       3     1.1   31/114  9. Qga4gb5       3     1.1   32/114  9. Qga4ga6       3     1.1   33/114  9. Qga4hb4       3     1.1   34/114  9. Qga4ha5       3     1.1   35/114  9. Qga4ib3       3     1.1   36/114  9. Qga4ia4       3     1.2   37/114  9. Qga4jb2       3     1.2   38/114  9. Qga4kb1       3     1.2   39/114  9. Rha1ha2       3     1.2   40/114  9. Rha1ha3       3     1.2   41/114  9. Nhb1gc2       3     1.2   42/114  9. Nhb1hd2       3     1.2   43/114  9. Nhb1ha3       3     1.2   44/114  9. Nhb1hc3       3     1.2   45/114  9. Bhc1hd2       3     1.2   46/114  9. Bhc1he3       3     1.2   47/114  9. Bhc1hf4       3     1.2   48/114  9. Bhc1hg5       3     1.2   49/114  9. Bhc1hh6       3     1.2   50/114  9. Qhd1hc2       3     1.2   51/114  9. Qhd1hd2       3     1.4   52/114  9. Qhd1hb3       3     1.4   53/114  9. Qhd1hd3       3     1.4   54/114  9. Qhd1id1       3     1.4   55/114  9. Khe1id1       3     1.4   56/114  9. Nhg1ge2       3     1.4   57/114  9. Nhg1hf3       3     1.4   58/114  9. Nhg1hh3       3     1.4   59/114  9. Nhg1ie2       3     1.4   60/114  9. Phb2hb3       3     1.4   61/114  9. Phb2hb4       3     1.4   62/114  9. Phe2he3       3     1.4   63/114  9. Phf2hf3       3     1.4   64/114  9. Phf2hf4       3     1.4   65/114  9. Phg2hg3       3     1.4   66/114  9. Phg2hg4       3     1.5   67/114  9. Phh2hh3       3     1.5   68/114  9. Phh2hh4       3     1.5   69/114  9. Pha4ha5       3     1.5   70/114  9. Phd4hd5       3     1.5   71/114  9. Ria1ha2       3     1.5   72/114  9. Ria1ib1       3     1.5   73/114  9. Nie1fd1       3     1.5   74/114  9. Nie1fe1       3     1.5   75/114  9. Nie1hd3       3     1.5   76/114  9. Nie1hg3       3     1.6   77/114  9. Nie1id3       3     1.6   78/114  9. Nie1if3       3     1.6   79/114  9. Nie1jc2       3     1.6   80/114  9. Nie1jf2       3     1.6   81/114  9. Bif1ie2       3     1.6   82/114  9. Bif1id3       3     1.6   83/114  9. Bif1ic4       3     1.6   84/114  9. Bif1ib5       3     1.6   85/114  9. Pia2ia3       3     1.6   86/114  9. Pib2ib3       3     1.6   87/114  9. Pid2id3       3     1.7   88/114  9. Pif2if3       3     1.7   89/114  9. Pig2ig3       3     1.7   90/114  9. Nic3fb2       3     1.7   91/114  9. Nic3fc2       3     1.7   92/114  9. Nic3fb3       3     1.7   93/114  9. Nic3fc3       3     1.7   94/114  9. Nic3he5       3     1.7   95/114  9. Nic3ib1       3     1.7   96/114  9. Nic3id1       3     1.7   97/114  9. Nic3ie2       3     1.7   98/114  9. Nic3ia4       3     1.7   99/114  9. Nic3ie4       3     1.8   100/114  9. Nic3ib5       3     1.8   101/114  9. Nic3id5       3     1.8   102/114  9. Nic3ja4       3     1.8   103/114  9. Nic3jd4       3     1.8   104/114  9. Nic3la1       3     1.8   105/114  9. Nic3lb1       3     1.8   106/114  9. Nic3la2       3     1.8   107/114  9. Nic3lb2       3     1.8   108/114  9. Pie3ie4       3     1.8   109/114  9. Pja1ja2       3     1.8   110/114  9. Pjb1jb2       3     1.8   111/114  9. Pjc1jc2       3     1.8   112/114  9. Pjd1jd2       3     1.8   113/114  9. Pje1je2       3     2.0   114/114  9. Pjf1jf2       3     2.0  -1.872  9. Pgf1gf2 Phe7he5 10. Nhg1hf3 
+ 4     2.0    1/114  9. Pgf1gf2       4     3.4  -2.096  9. Pgf1gf2 Qhd7xhd4 10. Qhd1xhd4 Qhd8xhd4 
+ 4     3.4    2/114  9. Pge1ge2       4     3.4    3/114  9. Nic3xhb5       4     3.4    4/114  9. Nic3ie4       4     3.8     +++  9. Nic3ie4
+ 4     4.4  -1.808  9. Nic3ie4 Nie7id5 10. Bif1xia6 Rbb1xgb1 
+ 4     4.4    5/114  9. Pgc1gc2       4     4.4    6/114  9. Bif1xia6       4     4.4    7/114  9. Phf2hf3       4     4.4    8/114  9. Nie1hg3       4     4.4    9/114  9. Nic3he5       4     4.4   10/114  9. Qga4kb1       4     4.4   11/114  9. Nhb1gc2       4     4.4   12/114  9. Nhb1hc3       4     4.4   13/114  9. Qga4xgc6       4     4.4   14/114  9. Phh2hh3       4     4.5   15/114  9. Phe2he3       4     4.7   16/114  9. Qga4ea2       4     4.8   17/114  9. Pgg1gg2       4     4.8   18/114  9. Qga4xga7       4     4.8   19/114  9. Phg2hg4       4     4.8   20/114  9. Qga4ga2       4     5.0   21/114  9. Qga4ea4       4     5.1   22/114  9. Pha4ha5       4     5.1   23/114  9. Qga4gb3       4     5.3   24/114  9. Qga4gb4       4     5.3   25/114  9. Qga4gc4       4     5.4   26/114  9. Qga4gd4       4     5.4   27/114  9. Qga4ge4       4     5.6   28/114  9. Qga4gf4       4     5.8   29/114  9. Qga4gg4       4     5.9   30/114  9. Pid2id3       4     5.9   31/114  9. Qga4gb5       4     6.0   32/114  9. Qga4ga3       4     6.1   33/114  9. Qga4hb4       4     6.3   34/114  9. Qga4ha5       4     6.3   35/114  9. Qga4ib3       4     6.5   36/114  9. Qga4ia4       4     6.7   37/114  9. Qga4da1       4     6.9   38/114  9. Qga4da4       4     6.9   39/114  9. Rha1ha2       4     7.0   40/114  9. Rha1ha3       4     7.2   41/114  9. Qga4fa3       4     7.4   42/114  9. Qga4ga6       4     7.4   43/114  9. Nhb1ha3       4     7.6   44/114  9. Qga4gc2       4     7.6   45/114  9. Bhc1hd2       4     7.7   46/114  9. Bhc1he3       4     7.8   47/114  9. Bhc1hf4       4     8.0   48/114  9. Bhc1hg5       4     8.0   49/114  9. Bhc1hh6       4     8.0   50/114  9. Qhd1hc2       4     8.1   51/114  9. Nie1fe1       4     8.2   52/114  9. Nie1hd3       4     8.3   53/114  9. Qhd1hd3       4     8.3   54/114  9. Qhd1id1       4     8.4   55/114  9. Pjd1jd2       4     8.5   56/114  9. Nhg1ge2       4     8.6   57/114  9. Nhg1hf3       4     8.6   58/114  9. Nhg1hh3       4     8.8   59/114  9. Nhg1ie2       4     8.9   60/114  9. Phb2hb3       4     9.1   61/114  9. Phb2hb4       4     9.1   62/114  9. Pia2ia3       4     9.3   63/114  9. Pib2ib3       4     9.4   64/114  9. Pjb1jb2       4     9.4   65/114  9. Phg2hg3       4     9.5   66/114  9. Pig2ig3       4     9.7   67/114  9. Pje1je2       4     9.7   68/114  9. Nic3fc2       4     9.7   69/114  9. Nie1jc2       4     9.9   70/114  9. Phd4hd5       4     9.9   71/114  9. Ria1ha2       4     9.9   72/114  9. Ria1ib1       4    10.1   73/114  9. Nie1fd1       4    10.3   74/114  9. Bif1ib5       4    10.3   75/114  9. Nic3ia4       4    10.3   76/114  9. Nhb1hd2       4    10.3   77/114  9. Nie1id3       4    10.4   78/114  9. Nie1if3       4    10.7   79/114  9. Bif1ic4       4    10.9   80/114  9. Nie1jf2       4    10.9   81/114  9. Bif1ie2       4    10.9   82/114  9. Bif1id3       4    11.0   83/114  9. Pjf1jf2       4    11.2   84/114  9. Qga4jb2       4    11.2   85/114  9. Nic3fc3       4    11.2   86/114  9. Pif2if3       4    11.2   87/114  9. Pjc1jc2       4    11.3   88/114  9. Qga4xhb5       4    11.3   89/114  9. Pgd1gd2       4    11.3   90/114  9. Pgb1gb2       4    11.3   91/114  9. Phf2hf4       4    11.3   92/114  9. Nic3fb3       4    11.3   93/114  9. Pha4xhb5       4    11.3   94/114  9. Qhd1hd2       4    11.3   95/114  9. Nic3ib1       4    11.3   96/114  9. Nic3id1       4    11.3   97/114  9. Pga1ga2       4    11.3   98/114  9. Qhd1hb3       4    11.3   99/114  9. Qga4fa4       4    11.3   100/114  9. Nic3ib5       4    11.3   101/114  9. Nic3ie2       4    11.3   102/114  9. Nic3ja4       4    11.3   103/114  9. Nic3jd4       4    11.3   104/114  9. Nic3la1       4    11.3   105/114  9. Nic3lb1       4    11.3   106/114  9. Nic3la2       4    11.3   107/114  9. Nic3lb2       4    11.3   108/114  9. Pie3ie4       4    11.3   109/114  9. Pja1ja2       4    11.3   110/114  9. Qga4ga5       4    11.3   111/114  9. Nic3id5       4    11.4   112/114  9. Khe1id1       4    11.4   113/114  9. Nic3fb2       4    11.4   114/114  9. Phh2hh4       4    11.4  -1.808  9. Nic3ie4 Nie7id5 10. Bif1xia6 Rbb1xgb1 
+Nodes = 526k, QPerc: 90 %, time = 11.48 secs, 45.9k nodes/s
+Extensions: Check: 981  DblChk: 0  DiscChk: 0  SingReply: 345
+            Recapture: 185   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 5.44k/54.3k = 10 %   Pawn: 158k/179k = 88 %
+         Eval: 309k/474k = 65 %
+Hashtable 1:  entries = 131k, use = 3.07k (2 %)
+              store failed = 20 (0 %)
+Engine move: search complete, best move Nic3ie4 (score -1.808)
+Move made: Nic3ie4 by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.0  +0.000  9. .. Nhe4xif2+ 10. Nie4xif2 Rgg1gg3 11. Nif2ie4 Qhd7xhd4 
+ 4     1.0    2/101  9. .. Nhe4gc5       4     1.0    3/101  9. .. Pid6id5       4     1.0    4/101  9. .. Qhd7hf5       4     1.0    5/101  9. .. Nhe4hg3       4     1.1    6/101  9. .. Nhe4ic5       4     1.1    7/101  9. .. Ngc6fd4       4     1.1    8/101  9. .. Nhe4gf2+       4     1.1    9/101  9. .. Qhd7he6       4     1.2   10/101  9. .. Qhd7id7       4     1.2   11/101  9. .. Ngc6db4       4     1.2   12/101  9. .. Ngc6fa4       4     1.2   13/101  9. .. Qhd7hc6       4     1.3   14/101  9. .. Ngc6ga5       4     1.3   15/101  9. .. Ngc6ge5       4     1.3   16/101  9. .. Ngc6he5       4     1.4   17/101  9. .. Nhe4xic2+       4     1.5   18/101  9. .. Ngc6jb5       4     1.5   19/101  9. .. Pga7ga6       4     1.6   20/101  9. .. Pgb7gb6       4     1.6   21/101  9. .. Pgd7gd6       4     1.6   22/101  9. .. Pge7ge6       4     1.6   23/101  9. .. Pgf7gf6       4     1.6   24/101  9. .. Pgg7gg6       4     1.6   25/101  9. .. Phc4hc3       4     1.7   26/101  9. .. Nhe4ec2       4     1.7   27/101  9. .. Qhd7hd6       4     1.7   28/101  9. .. Nhe4ec3       4     1.7   29/101  9. .. Nhe4ed3       4     1.8   30/101  9. .. Nhe4gc2+       4     1.8   31/101  9. .. Ngc6da4       4     1.9   32/101  9. .. Nhe4gf5       4     1.9   33/101  9. .. Nhe4hd2       4     1.9   34/101  9. .. Nhe4hc3       4     2.0   35/101  9. .. Phg7hg5       4     2.0   36/101  9. .. Ngc6gd4       4     2.0   37/101  9. .. Nhe4hg5       4     2.0   38/101  9. .. Nhe4ed2       4     2.0   39/101  9. .. Nhe4hf6       4     2.0   40/101  9. .. Ngc6hb8       4     2.0   41/101  9. .. Nhe4if5       4     2.1   42/101  9. .. Nhe4kc2       4     2.1   43/101  9. .. Nhe4kd2       4     2.1   44/101  9. .. Nhe4kc3       4     2.1   45/101  9. .. Nhe4kd3       4     2.1   46/101  9. .. Phb5hb4       4     2.1   47/101  9. .. Pha7ha6       4     2.1   48/101  9. .. Pha7ha5       4     2.2   49/101  9. .. Phc7hc6       4     2.2   50/101  9. .. Phc7hc5       4     2.3   51/101  9. .. Qhd7dd3       4     2.3   52/101  9. .. Qhd7ed4       4     2.3   53/101  9. .. Qhd7fd5       4     2.3   54/101  9. .. Qhd7fc6       4     2.3   55/101  9. .. Qhd7gd6       4     2.3   56/101  9. .. Qhd7hh3       4     2.3   57/101  9. .. Qhd7hg4       4     2.3   58/101  9. .. Qhd7hd5       4     2.4   59/101  9. .. Nhe4hc5       4     2.4   60/101  9. .. Pic6ic5       4     2.4   61/101  9. .. Phh7hh5       4     2.5   62/101  9. .. Rha8hb8       4     2.5   63/101  9. .. Rha8ia7       4     2.5   64/101  9. .. Phe7he6       4     2.5   65/101  9. .. Phe7he5       4     2.5   66/101  9. .. Phf7hf6       4     2.5   67/101  9. .. Phf7hf5       4     2.5   68/101  9. .. Phg7hg6       4     2.6   69/101  9. .. Nhg8hf6       4     2.6   70/101  9. .. Phh7hh6       4     2.6   71/101  9. .. Pia6ia5       4     2.7   72/101  9. .. Pib6ib5       4     2.7   73/101  9. .. Khe8id7       4     2.7   74/101  9. .. Bhc8ha6       4     2.7   75/101  9. .. Bhc8hb7       4     2.7   76/101  9. .. Qhd8id7       4     2.7   77/101  9. .. Pjf6jf5       4     2.7   78/101  9. .. Nhg8ge6       4     2.7   79/101  9. .. Nhg8hh6       4     2.8   80/101  9. .. Pje6je5       4     2.8   81/101  9. .. Ngc6gb4       4     2.8   82/101  9. .. Qhd7xhd4       4     2.8   83/101  9. .. Ngc6jc5       4     2.8   84/101  9. .. Nhe4xhf2       4     2.9   85/101  9. .. Pie6ie5       4     2.9   86/101  9. .. Phb5xha4       4     2.9   87/101  9. .. Pig6ig5       4     3.0   88/101  9. .. Nie7fd6       4     3.0   89/101  9. .. Nie7fe6       4     3.1   90/101  9. .. Pif6if5       4     3.1   91/101  9. .. Nhe4hd6       4     3.1   92/101  9. .. Nie7id5       4     3.1   93/101  9. .. Nie7if5       4     3.1   94/101  9. .. Nie7jc5       4     3.1     +++  9. .. Nie7jc5
+ 4     3.1  -0.672  9. .. Nie7jc5 10. Nie4xif6+ Khe8ie7 11. Nif6id5+ Pie6xid5 
+                    12. Pie3ie4 
+ 4     3.1   95/101  9. .. Nie7jf5       4     3.1   96/101  9. .. Pja6ja5       4     3.1   97/101  9. .. Pjb6jb5       4     3.1   98/101  9. .. Pjc6jc5       4     3.1   99/101  9. .. Pjd6jd5       4     3.1   100/101  9. .. Nie7hd6       4     3.1   101/101  9. .. Nie7hg6       4     3.1  -0.672  9. .. Nie7jc5 10. Nie4xif6+ Khe8ie7 11. Nif6id5+ Pie6xid5 
+                    12. Pie3ie4 
+ 5     3.1    1/101  9. .. Nie7jc5       5     6.9  -0.704  9. .. Nie7jc5 10. Rhh1xgg1 Njc5xie4 11. Pha4xhb5 Qhd7xhd4 
+Nodes = 344k, QPerc: 75 %, time = 6.97 secs, 49.4k nodes/s
+Extensions: Check: 2.62k  DblChk: 0  DiscChk: 0  SingReply: 1.33k
+            Recapture: 352   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 4.76k/77.4k = 6 %   Pawn: 102k/113k = 90 %
+         Eval: 154k/266k = 58 %
+Hashtable 1:  entries = 131k, use = 4.68k (4 %)
+              store failed = 61 (1 %)
+Engine move: search complete, best move Nie7jc5 (score +0.704)
+Move made: Nie7jc5 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 3     1.8     +++  10. Nie1jc2
+ 3     2.6  -1.824  10. Nie1jc2 Qhd7xhd4 11. Qhd1xhd4 
+ 3     2.6   54/89  10. Nie1jf2       3     2.6   55/89  10. Bif1ie2       3     2.6   56/89  10. Bif1id3       3     2.6   57/89  10. Bif1ic4       3     2.6   58/89  10. Bif1ib5       3     2.6   59/89  10. Pia2ia3       3     2.6   60/89  10. Pib2ib3       3     2.6   61/89  10. Pic2ic3       3     2.6   62/89  10. Pid2id3       3     2.6   63/89  10. Pif2if3       3     2.6   64/89  10. Pig2ig3       3     2.6   65/89  10. Nie4fd3       3     2.8   66/89  10. Nie4fe3       3     2.8   67/89  10. Nie4fd4       3     2.8   68/89  10. Nie4fe4       3     2.8   69/89  10. Nie4hd3       3     2.8   70/89  10. Nie4hg3       3     2.8   71/89  10. Nie4hd6+       3     2.8   72/89  10. Nie4hg6       3     2.8   73/89  10. Nie4ic3       3     2.8   74/89  10. Nie4ig3       3     2.8   75/89  10. Nie4ic5       3     2.8   76/89  10. Nie4ig5       3     2.8   77/89  10. Nie4jc2       3     2.8   78/89  10. Nie4jf2       3     2.8   79/89  10. Nie4jf5       3     2.8   80/89  10. Nie4lc2       3     2.8   81/89  10. Nie4ld2       3     2.8   82/89  10. Nie4lc3       3     2.8   83/89  10. Nie4ld3       3     2.8   84/89  10. Pja1ja2       3     2.8   85/89  10. Pjb1jb2       3     2.8   86/89  10. Pjc1jc2       3     2.8   87/89  10. Pjd1jd2       3     2.8   88/89  10. Pje1je2       3     2.8   89/89  10. Pjf1jf2       3     2.9  -1.824  10. Nie1jc2 Qhd7xhd4 11. Qhd1xhd4 
+ 4     2.9    1/89  10. Nie1jc2       4     5.0  -1.808  10. Nie1jc2 Njc5xie4 11. Njc2xie4 Qhd7xhd4 
+Nodes = 216k, QPerc: 96 %, time = 5.03 secs, 43.1k nodes/s
+Extensions: Check: 527  DblChk: 0  DiscChk: 0  SingReply: 242
+            Recapture: 76   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 1.29k/9.18k = 14 %   Pawn: 59.1k/66.2k = 89 %
+         Eval: 144k/207k = 70 %
+Hashtable 1:  entries = 131k, use = 972 (1 %)
+              store failed = 3 (0 %)
+Engine move: search complete, best move Nie1jc2 (score -1.808)
+Move made: Nie1jc2 by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 2     1.1  -1.824  10. .. Qhd7xhd4 11. Qhd1xhd4 
+ 3     1.1    1/108  10. .. Qhd7xhd4       3     1.1     ---  10. .. Qhd7xhd4
+ 3     1.1  +2.944  10. .. Qhd7xhd4 11. Nie4xif6+ Khe8ie7 12. Qhd1xhd4 
+ 3     1.1    2/108  10. .. Rbb1xgb1       3     1.2     +++  10. .. Rbb1xgb1
+ 3     1.3  +3.200  10. .. Rbb1xgb1 11. Nie4xif6+ Khe8ie7 12. Nif6xhh8 
+ 3     1.3    3/108  10. .. Rbb1xgg1       3     1.3     +++  10. .. Rbb1xgg1
+ 3     1.3  +3.184  10. .. Rbb1xgg1 11. Rhh1xgg1 Njc5xie4 
+ 3     1.3    4/108  10. .. Phb5xha4       3     1.4     +++  10. .. Phb5xha4
+ 3     1.6  +3.440  10. .. Phb5xha4 11. Nie4xif6+ Khe8ie7 12. Nif6xhh8 
+ 3     1.6    5/108  10. .. Njc5xie4       3     1.6     +++  10. .. Njc5xie4
+ 3     2.0  -1.808  10. .. Njc5xie4 11. Njc2xie4 Qhd7xhd4 
+ 3     2.0    6/108  10. .. Rbb1aa1       3     2.0    7/108  10. .. Rbb1ba1       3     2.0    8/108  10. .. Rbb1bb2       3     2.0    9/108  10. .. Rbb1cb1       3     2.0   10/108  10. .. Rbb1cc1       3     2.0   11/108  10. .. Rbb1cb2       3     2.0   12/108  10. .. Rbb1cc2       3     2.0   13/108  10. .. Rbb1db1       3     2.0   14/108  10. .. Rbb1dd1       3     2.1   15/108  10. .. Rbb1db3       3     2.1   16/108  10. .. Rbb1dd3       3     2.1   17/108  10. .. Rbb1eb1       3     2.1   18/108  10. .. Rbb1ee1       3     2.1   19/108  10. .. Rbb1eb4       3     2.1   20/108  10. .. Rbb1ee4       3     2.1   21/108  10. .. Rbb1fb1       3     2.1   22/108  10. .. Rbb1ff1       3     2.2   23/108  10. .. Rbb1fb5       3     2.2   24/108  10. .. Rbb1ff5       3     2.2   25/108  10. .. Rbb1gb6       3     2.2   26/108  10. .. Rbb1gg6       3     2.2   27/108  10. .. Rbb1hb7       3     2.2   28/108  10. .. Rbb1ia7       3     2.2   29/108  10. .. Ngc6da4       3     2.2   30/108  10. .. Ngc6db4       3     2.2   31/108  10. .. Ngc6fa4       3     2.2   32/108  10. .. Ngc6fd4       3     2.2   33/108  10. .. Ngc6gb4       3     2.2   34/108  10. .. Ngc6gd4       3     2.2   35/108  10. .. Ngc6ga5       3     2.2   36/108  10. .. Ngc6ge5       3     2.2   37/108  10. .. Ngc6he5       3     2.3   38/108  10. .. Ngc6hb8       3     2.3   39/108  10. .. Ngc6jb5       3     2.3   40/108  10. .. Pga7ga6       3     2.3   41/108  10. .. Pgb7gb6       3     2.3   42/108  10. .. Pgd7gd6       3     2.3   43/108  10. .. Pge7ge6       3     2.5   44/108  10. .. Pgf7gf6       3     2.5   45/108  10. .. Pgg7gg6       3     2.5   46/108  10. .. Phc4hc3       3     2.5   47/108  10. .. Phb5hb4       3     2.5   48/108  10. .. Pha7ha6       3     2.5   49/108  10. .. Pha7ha5       3     2.5   50/108  10. .. Phc7hc6       3     2.6   51/108  10. .. Phc7hc5       3     2.6   52/108  10. .. Qhd7dd3       3     2.6   53/108  10. .. Qhd7ed4       3     2.6   54/108  10. .. Qhd7fd5       3     2.6   55/108  10. .. Qhd7fc6       3     2.6   56/108  10. .. Qhd7gd6       3     2.6   57/108  10. .. Qhd7hh3       3     2.6   58/108  10. .. Qhd7hg4       3     2.6   59/108  10. .. Qhd7hd5       3     2.6   60/108  10. .. Qhd7hf5       3     2.7   61/108  10. .. Qhd7hc6       3     2.7   62/108  10. .. Qhd7hd6       3     2.7   63/108  10. .. Qhd7he6       3     2.7   64/108  10. .. Qhd7id7       3     2.7   65/108  10. .. Phe7he6       3     2.7   66/108  10. .. Phe7he5       3     2.7   67/108  10. .. Phf7hf6       3     2.7   68/108  10. .. Phf7hf5       3     2.7   69/108  10. .. Phg7hg6       3     2.7   70/108  10. .. Phg7hg5       3     2.9   71/108  10. .. Phh7hh6       3     2.9   72/108  10. .. Phh7hh5       3     2.9   73/108  10. .. Rha8hb8       3     2.9   74/108  10. .. Rha8ia7       3     2.9   75/108  10. .. Bhc8ha6       3     2.9   76/108  10. .. Bhc8hb7       3     3.0   77/108  10. .. Qhd8id7       3     3.0   78/108  10. .. Khe8id7       3     3.0   79/108  10. .. Khe8ie7       3     3.0   80/108  10. .. Nhg8ge6       3     3.0   81/108  10. .. Nhg8hf6       3     3.0   82/108  10. .. Nhg8hh6       3     3.0   83/108  10. .. Pia6ia5       3     3.1   84/108  10. .. Pib6ib5       3     3.1   85/108  10. .. Pic6ic5       3     3.1   86/108  10. .. Pid6id5       3     3.1   87/108  10. .. Pie6ie5       3     3.1   88/108  10. .. Pif6if5       3     3.1   89/108  10. .. Pig6ig5       3     3.1   90/108  10. .. Njc5gc5       3     3.2   91/108  10. .. Njc5gd5       3     3.2   92/108  10. .. Njc5gd6       3     3.2   93/108  10. .. Njc5ib4       3     3.2   94/108  10. .. Njc5ib7       3     3.2   95/108  10. .. Njc5ie7       3     3.2   96/108  10. .. Njc5jb3       3     3.2   97/108  10. .. Njc5jd3       3     3.2   98/108  10. .. Njc5ja4       3     3.3   99/108  10. .. Njc5je4       3     3.3   100/108  10. .. Njc5ka3       3     3.3   101/108  10. .. Njc5kd3       3     3.3   102/108  10. .. Njc5ma3       3     3.3   103/108  10. .. Njc5mb3       3     3.3   104/108  10. .. Pja6ja5       3     3.3   105/108  10. .. Pjb6jb5       3     3.3   106/108  10. .. Pjd6jd5       3     3.3   107/108  10. .. Pje6je5       3     3.4   108/108  10. .. Pjf6jf5       3     3.4  -1.808  10. .. Njc5xie4 11. Njc2xie4 Qhd7xhd4 
+ 4     3.5    1/108  10. .. Njc5xie4       4     3.7  -1.616  10. .. Njc5xie4 11. Njc2xie4 Khe8ie7 12. Bif1xia6 
+ 4     3.7    2/108  10. .. Rbb1xgb1       4     4.6     +++  10. .. Rbb1xgb1
+ 4     5.7  -1.664  10. .. Rbb1xgb1 11. Bif1xia6 Qhd7xhd4 12. Nie4xif6+ 
+ 4     5.7    3/108  10. .. Phb5xha4       4     6.2    4/108  10. .. Qhd7xhd4       4     6.3    5/108  10. .. Njc5gc5       4     6.7     +++  10. .. Njc5gc5
+ 4     7.4  -1.696  10. .. Njc5gc5 11. Qga4gc4 Pif6if5 12. Nie4if6+ 
+ 4     7.4    6/108  10. .. Rbb1xgg1       4     7.4    7/108  10. .. Njc5ja4       4     7.4    8/108  10. .. Qhd7hf5       4     7.4    9/108  10. .. Rha8ia7       4     7.4   10/108  10. .. Rbb1cb1       4     7.4   11/108  10. .. Pia6ia5       4     7.4   12/108  10. .. Pib6ib5       4     7.4   13/108  10. .. Pid6id5       4     7.4   14/108  10. .. Pga7ga6       4     7.4   15/108  10. .. Rbb1ff5       4     7.4   16/108  10. .. Rbb1cb2       4     7.6   17/108  10. .. Rbb1db3       4     7.8   18/108  10. .. Rbb1db1       4     7.9   19/108  10. .. Rbb1bb2       4     8.0   20/108  10. .. Bhc8hb7       4     8.4   21/108  10. .. Rbb1fb1       4     8.5   22/108  10. .. Rbb1ff1       4     8.5   23/108  10. .. Nhg8ge6       4     8.8   24/108  10. .. Rbb1cc2       4     8.9   25/108  10. .. Nhg8hh6       4     9.2   26/108  10. .. Rha8hb8       4     9.4   27/108  10. .. Rbb1ba1       4     9.5   28/108  10. .. Pic6ic5       4     9.7   29/108  10. .. Bhc8ha6       4     9.8   30/108  10. .. Qhd8id7       4     9.9   31/108  10. .. Pif6if5       4    10.1   32/108  10. .. Ngc6fd4       4    10.1   33/108  10. .. Rbb1cc1       4    10.2   34/108  10. .. Ngc6gd4       4    10.3   35/108  10. .. Njc5gd6       4    10.3   36/108  10. .. Ngc6ge5       4    10.8   37/108  10. .. Rbb1dd1       4    11.0   38/108  10. .. Qhd7hc6       4    11.1   39/108  10. .. Njc5jb3       4    11.2   40/108  10. .. Pie6ie5       4    11.4   41/108  10. .. Rbb1ee1       4    11.5   42/108  10. .. Njc5je4       4    11.6   43/108  10. .. Njc5ka3       4    11.6   44/108  10. .. Pgf7gf6       4    11.8   45/108  10. .. Pgg7gg6       4    12.0   46/108  10. .. Phc4hc3       4    12.2   47/108  10. .. Pja6ja5       4    12.4   48/108  10. .. Pha7ha6       4    12.5   49/108  10. .. Pha7ha5       4    12.7   50/108  10. .. Phc7hc6       4    12.8   51/108  10. .. Phc7hc5       4    13.0   52/108  10. .. Qhd7hd6       4    13.0   53/108  10. .. Qhd7ed4       4    13.6   54/108  10. .. Qhd7fd5       4    13.8   55/108  10. .. Qhd7fc6       4    14.0   56/108  10. .. Qhd7gd6       4    14.2   57/108  10. .. Ngc6gb4       4    14.2   58/108  10. .. Nhg8hf6       4    14.6   59/108  10. .. Qhd7hd5       4    14.8   60/108  10. .. Ngc6he5       4    15.2   61/108  10. .. Phe7he6       4    15.5   62/108  10. .. Phe7he5       4    15.5   63/108  10. .. Pjf6jf5       4    15.5   64/108  10. .. Qhd7id7       4    15.6   65/108  10. .. Khe8ie7       4    15.8   66/108  10. .. Njc5ib4       4    15.8   67/108  10. .. Njc5gd5       4    15.9   68/108  10. .. Njc5jd3       4    16.3     +++  10. .. Njc5jd3
+ 4    17.0  -1.904  10. .. Njc5jd3 11. Nie4xif6+ Khe8ie7 12. Nif6xhh8 
+                    Njd3xic2+ 13. Nhb1xic2 Nhe4xic2+ 14. Khe1id1 Nic2xia1 
+ 4    17.0   69/108  10. .. Njc5kd3       4    17.2   70/108  10. .. Qhd7he6       4    17.2   71/108  10. .. Ngc6hb8       4    17.2   72/108  10. .. Qhd7hh3       4    17.2   73/108  10. .. Phh7hh5       4    17.2   74/108  10. .. Rbb1dd3       4    17.2   75/108  10. .. Phh7hh6       4    17.3   76/108  10. .. Rbb1eb4       4    17.3   77/108  10. .. Rbb1ee4       4    17.3   78/108  10. .. Rbb1aa1       4    17.3   79/108  10. .. Phg7hg6       4    17.3   80/108  10. .. Rbb1fb5       4    17.3   81/108  10. .. Qhd7hg4       4    17.3   82/108  10. .. Rbb1gb6       4    17.3   83/108  10. .. Rbb1gg6       4    17.4   84/108  10. .. Rbb1hb7       4    17.4   85/108  10. .. Qhd7dd3       4    17.4   86/108  10. .. Ngc6da4       4    17.4   87/108  10. .. Ngc6db4       4    17.4   88/108  10. .. Ngc6fa4       4    17.4   89/108  10. .. Pig6ig5       4    17.4   90/108  10. .. Phf7hf6       4    17.4   91/108  10. .. Phf7hf5      Nodes = 769k, QPerc: 91 %, time = 17.6 secs, 43.7k nodes/s
+Extensions: Check: 2.77k  DblChk: 0  DiscChk: 0  SingReply: 1.56k
+            Recapture: 420   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 8.86k/69.5k = 13 %   Pawn: 221k/244k = 91 %
+         Eval: 482k/708k = 68 %
+Hashtable 1:  entries = 131k, use = 4.14k (3 %)
+              store failed = 104 (1 %)
+Engine move: search complete, best move Njc5jd3 (score +1.904)
+Move made: Njc5jd3 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 3     1.0   95/95  11. Njc2mb1       3     1.0  +1.840  11. Nie4xif6+ Khe8ie7 12. Nif6xhh8 Njd3xic2+ 13. Nhb1xic2 
+                    Nhe4xic2+ 14. Khe1id1 Nic2xia1 
+ 4     1.0    1/95  11. Nie4xif6+       4     1.9  +2.032  11. Nie4xif6+ Khe8ie7 12. Nif6xhh8 Nhe4xif2+ 13. Khe1ie1 
+                    Nif2xhh1 14. Rig1xhh1 
+ 4     1.9    2/95  11. Phf2hf3       4     1.9    3/95  11. Bhc1hf4       4     1.9    4/95  11. Qhd1hc2       4     1.9    5/95  11. Phd4hd5       4     1.9    6/95  11. Nhg1hf3       4     1.9    7/95  11. Bif1ic4       4     1.9    8/95  11. Bif1id3       4     2.0    9/95  11. Nhb1ha3       4     2.0   10/95  11. Phb2hb4       4     2.0   11/95  11. Pje1je2       4     2.2   12/95  11. Pgg1gg2       4     2.2   13/95  11. Nhb1hc3       4     2.2   14/95  11. Qhd1hd3       4     2.2   15/95  11. Nie4jf2       4     2.2   16/95  11. Nie4hg3       4     2.2   17/95  11. Nhg1ge2       4     2.2   18/95  11. Bif1ie2       4     2.2   19/95  11. Rha1ha3       4     2.2   20/95  11. Phb2hb3       4     2.2   21/95  11. Njc2jd4       4     2.2   22/95  11. Khe1ie1       4     2.2   23/95  11. Bhc1he3       4     2.2   24/95  11. Pgf1gf2       4     2.5   25/95  11. Pge1ge2       4     2.5   26/95  11. Bhc1hd2       4     2.5   27/95  11. Bif1ib5       4     2.5   28/95  11. Khe1id1       4     2.5   29/95  11. Pgb1gb2       4     2.5   30/95  11. Pgc1gc2       4     2.5   31/95  11. Pgd1gd2       4     2.5   32/95  11. Nhg1hh3       4     2.5   33/95  11. Nhg1ie2       4     2.5   34/95  11. Qhd1id1       4     2.5   35/95  11. Nie4lc2       4     2.5   36/95  11. Phe2he3       4     2.5   37/95  11. Njc2gc3       4     2.6   38/95  11. Phf2hf4       4     2.6   39/95  11. Phg2hg3       4     2.6   40/95  11. Phg2hg4       4     2.6   41/95  11. Phh2hh3       4     2.6   42/95  11. Phh2hh4       4     2.6   43/95  11. Pha4ha5       4     2.6   44/95  11. Bhc1hg5       4     2.6   45/95  11. Nie4fd4       4     2.6   46/95  11. Ria1ib1       4     2.6   47/95  11. Qhd1hd2       4     2.6   48/95  11. Qhd1hb3       4     2.6   49/95  11. Nie4fe4       4     2.6   50/95  11. Pjf1jf2       4     2.7   51/95  11. Pia2ia3       4     2.7   52/95  11. Pib2ib3       4     2.7   53/95  11. Pic2ic3       4     2.7   54/95  11. Pid2id3       4     2.7   55/95  11. Pif2if3       4     2.9   56/95  11. Pig2ig3       4     2.9   57/95  11. Nie4fd3       4     3.0   58/95  11. Nie4fe3       4     3.0   59/95  11. Njc2gd2       4     3.1   60/95  11. Njc2jb4       4     3.2   61/95  11. Njc2gd3       4     3.2   62/95  11. Pga1ga2       4     3.2   63/95  11. Njc2ie1       4     3.2   64/95  11. Njc2ib4       4     3.2   65/95  11. Nie4ic3       4     3.2   66/95  11. Njc2je3       4     3.2   67/95  11. Nie4ic5       4     3.2   68/95  11. Ria1ha2       4     3.2   69/95  11. Rha1ha2       4     3.2   70/95  11. Nie4lc3       4     3.2   71/95  11. Njc2ma1       4     3.2   72/95  11. Njc2mb1       4     3.2   73/95  11. Pjb1jb2       4     3.2   74/95  11. Pjd1jd2       4     3.2   75/95  11. Njc2ib1       4     3.2   76/95  11. Pja1ja2       4     3.2   77/95  11. Njc2gc2       4     3.2   78/95  11. Njc2ka3       4     3.2   79/95  11. Bhc1hh6       4     3.2   80/95  11. Njc2ja3       4     3.2   81/95  11. Nie4ld2       4     3.2   82/95  11. Nie4xid6       4     3.2   83/95  11. Pha4xhb5       4     3.2   84/95  11. Nhb1gc2       4     3.2   85/95  11. Nie4ld3       4     3.2   86/95  11. Nie4hd6+       4     3.2   87/95  11. Nie4hg6       4     3.2   88/95  11. Nie4hd3       4     3.2   89/95  11. Nie4ig3       4     3.2   90/95  11. Nie4jc5       4     3.2   91/95  11. Nie4ig5       4     3.2   92/95  11. Bif1xia6       4     3.2   93/95  11. Njc2kd3       4     3.2   94/95  11. Nie4jf5       4     3.2   95/95  11. Nhb1hd2       4     3.2  +2.032  11. Nie4xif6+ Khe8ie7 12. Nif6xhh8 Nhe4xif2+ 13. Khe1ie1 
+                    Nif2xhh1 14. Rig1xhh1 
+ 5     3.2    1/95  11. Nie4xif6+       5    11.3  +2.032  11. Nie4xif6+ Khe8ie7 12. Nif6xhh8 Nhe4xif2+ 13. Khe1ie1 
+                    Nif2xhh1 14. Rig1xhh1 Rig7xhh8 
+Nodes = 646k, QPerc: 82 %, time = 11.32 secs, 57.1k nodes/s
+Extensions: Check: 9.67k  DblChk: 0  DiscChk: 0  SingReply: 7.24k
+            Recapture: 475   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 8.89k/114k = 8 %   Pawn: 204k/234k = 87 %
+         Eval: 302k/531k = 57 %
+Hashtable 1:  entries = 131k, use = 9.59k (7 %)
+              store failed = 356 (2 %)
+Engine move: search complete, best move Nie4xif6+ (score +2.032)
+Move made: Nie4xif6+ by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+Engine move: search complete, best move Khe8ie7 (score +0.848)
+Move made: Khe8ie7 by Black
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+ 4     1.8   13/89  12. Njc2mb1       4     1.8   14/89  12. Njc2jb4       4     1.8   15/89  12. Pge1ge2       4     1.8   16/89  12. Pgf1gf2       4     1.8   17/89  12. Bhc1he3       4     1.8   18/89  12. Bhc1hf4       4     1.8   19/89  12. Bhc1hg5       4     1.8   20/89  12. Bhc1hh6       4     1.8   21/89  12. Rha1ha3       4     1.8   22/89  12. Bif1xia6       4     1.8   23/89  12. Qhd1hb3       4     1.8   24/89  12. Nhb1ha3       4     1.8   25/89  12. Qhd1id1       4     1.8   26/89  12. Bhc1hd2       4     1.8   27/89  12. Pgb1gb2       4     1.8   28/89  12. Pgc1gc2       4     1.8   29/89  12. Nhg1hf3       4     1.8   30/89  12. Nhg1hh3       4     1.8   31/89  12. Nhg1ie2       4     1.8   32/89  12. Qhd1hd2       4     1.8   33/89  12. Phb2hb4       4     1.8   34/89  12. Phe2he3       4     1.8   35/89  12. Phf2hf3       4     1.8   36/89  12. Nif6ff6       4     1.8   37/89  12. Phg2hg3       4     1.8   38/89  12. Phg2hg4       4     1.8   39/89  12. Phh2hh3       4     1.8   40/89  12. Phh2hh4       4     1.9   41/89  12. Pha4ha5       4     1.9   42/89  12. Phd4hd5       4     1.9   43/89  12. Ria1ha2       4     1.9   44/89  12. Ria1ib1       4     2.0   45/89  12. Bif1ie2       4     2.0   46/89  12. Bif1id3       4     2.1   47/89  12. Bif1ic4       4     2.1   48/89  12. Bif1ib5       4     2.1   49/89  12. Khe1id1       4     2.1   50/89  12. Pib2ib3       4     2.1   51/89  12. Pic2ic3       4     2.1   52/89  12. Pid2id3       4     2.1   53/89  12. Pif2if3       4     2.1   54/89  12. Pig2ig3       4     2.1   55/89  12. Pie3ie4       4     2.1   56/89  12. Nif6fe5       4     2.1   57/89  12. Nif6ff5       4     2.1   58/89  12. Qhd1hd3       4     2.1   59/89  12. Njc2ja3       4     2.1   60/89  12. Pga1ga2       4     2.1   61/89  12. Nif6hh5       4     2.1   62/89  12. Nif6he8       4     2.1   63/89  12. Pgd1gd2       4     2.1   64/89  12. Nif6ig4       4     2.1   65/89  12. Nif6id5+       4     2.1   66/89  12. Nif6id7       4     2.1   67/89  12. Rha1ha2       4     2.1   68/89  12. Nif6ld4       4     2.1   69/89  12. Pja1ja2       4     2.1   70/89  12. Pjb1jb2       4     2.1   71/89  12. Pjd1jd2       4     2.1   72/89  12. Pia2ia3       4     2.1   73/89  12. Pjf1jf2       4     2.1   74/89  12. Njc2gc2       4     2.1   75/89  12. Njc2gd2       4     2.1   76/89  12. Njc2gc3       4     2.1   77/89  12. Njc2gd3       4     2.1   78/89  12. Njc2ib1       4     2.1   79/89  12. Njc2ie1       4     2.1   80/89  12. Njc2ib4       4     2.1   81/89  12. Nhg1ge2       4     2.2   82/89  12. Njc2ka3       4     2.2   83/89  12. Njc2je3       4     2.2   84/89  12. Khe1ie1       4     2.2   85/89  12. Phb2hb3       4     2.2   86/89  12. Njc2kd3       4     2.2   87/89  12. Njc2ma1       4     2.2   88/89  12. Phf2hf4       4     2.2   89/89  12. Nif6fe6+       4     2.2  -0.608  12. Nif6xhh8 Nhe4xif2+ 13. Khe1ie1 Nif2xhh1 14. Nhh8xhf7 
+ 5     2.2    1/89  12. Nif6xhh8       5     3.3  -0.656  12. Nif6xhh8 Nhe4xif2+ 13. Khe1ie1 Nif2xhh1 14. Nhh8xhf7 
+                    Nhh1xhf2 
+ 5     3.3    2/89  12. Njc2jd4       5     5.6    3/89  12. Nhg1ge2       5     5.6    4/89  12. Bif1ic4       5     5.6    5/89  12. Bif1ie2       5     5.6    6/89  12. Phb2hb3       5     5.6    7/89  12. Pic2ic3       5     5.6    8/89  12. Pib2ib3       5     5.6    9/89  12. Bif1ib5       5     5.6   10/89  12. Bif1id3       5     5.6   11/89  12. Phh2hh3       5     5.6   12/89  12. Phd4hd5       5     5.6   13/89  12. Ria1ha2       5     5.6   14/89  12. Phh2hh4       5     5.6   15/89  12. Pha4ha5       5     5.6   16/89  12. Ria1ib1       5     5.6   17/89  12. Phf2hf3       5     6.0   18/89  12. Nif6ie4       5     6.1   19/89  12. Nif6he5       5     6.4   20/89  12. Pgg1gg2       5     6.4   21/89  12. Nif6jd4       5     6.4   22/89  12. Nhb1gc2       5     6.6   23/89  12. Nhb1hd2       5     6.7   24/89  12. Nhb1hc3       5     6.8   25/89  12. Pje1je2       5     6.8   26/89  12. Bhc1hd2       5     6.8   27/89  12. Njc2mb1       5     6.9   28/89  12. Njc2jb4       5     6.9   29/89  12. Njc2ie4       5     6.9   30/89  12. Nhg1hh3       5     6.9   31/89  12. Nhg1ie2       5     6.9   32/89  12. Qhd1hd2       5     6.9   33/89  12. Nhg1hf3       5     6.9   34/89  12. Phe2he3       5     6.9   35/89  12. Pge1ge2       5     6.9   36/89  12. Nif6ff6       5     6.9   37/89  12. Phb2hb4       5     6.9   38/89  12. Phg2hg4       5     6.9   39/89  12. Pgf1gf2       5     6.9   40/89  12. Bhc1he3       5     6.9   41/89  12. Bhc1hf4       5     6.9   42/89  12. Bhc1hg5       5     6.9   43/89  12. Bhc1hh6       5     6.9   44/89  12. Rha1ha3       5     6.9   45/89  12. Bif1xia6       5     6.9   46/89  12. Qhd1hb3       5     6.9   47/89  12. Phg2hg3       5     6.9   48/89  12. Qhd1id1       5     6.9   49/89  12. Khe1id1       5     6.9   50/89  12. Pgb1gb2       5     6.9   51/89  12. Qhd1hc2       5     6.9   52/89  12. Pid2id3       5     6.9   53/89  12. Pif2if3       5     6.9   54/89  12. Pig2ig3       5     6.9   55/89  12. Pie3ie4       5     6.9   56/89  12. Nif6fe5       5     6.9   57/89  12. Nif6ff5       5     6.9   58/89  12. Qhd1hd3       5     6.9   59/89  12. Njc2ja3       5     6.9   60/89  12. Pga1ga2       5     6.9   61/89  12. Nif6hh5       5     6.9   62/89  12. Nif6he8       5     6.9   63/89  12. Pgd1gd2       5     6.9   64/89  12. Nif6ig4       5     6.9   65/89  12. Nif6id5+       5     6.9   66/89  12. Nif6id7       5     6.9   67/89  12. Rha1ha2       5     7.0   68/89  12. Nif6ld4       5     7.0   69/89  12. Pja1ja2       5     7.0   70/89  12. Pjb1jb2       5     7.0   71/89  12. Pjd1jd2       5     7.0   72/89  12. Pia2ia3       5     7.0   73/89  12. Pjf1jf2       5     7.0   74/89  12. Njc2gc2       5     7.0   75/89  12. Njc2gd2       5     7.0   76/89  12. Njc2gc3       5     7.0   77/89  12. Njc2gd3       5     7.1   78/89  12. Njc2ib1       5     7.1   79/89  12. Njc2ie1       5     7.1   80/89  12. Njc2ib4       5     7.1   81/89  12. Nhb1ha3       5     7.1   82/89  12. Njc2ka3       5     7.1   83/89  12. Njc2je3       5     7.1   84/89  12. Khe1ie1       5     7.1   85/89  12. Pgc1gc2       5     7.1   86/89  12. Njc2kd3       5     7.1   87/89  12. Njc2ma1       5     7.1   88/89  12. Phf2hf4       5     7.1   89/89  12. Nif6fe6+       5     7.1  -0.656  12. Nif6xhh8 Nhe4xif2+ 13. Khe1ie1 Nif2xhh1 14. Nhh8xhf7 
+                    Nhh1xhf2 
+Nodes = 347k, QPerc: 87 %, time = 7.11 secs, 48.8k nodes/s
+Extensions: Check: 6.54k  DblChk: 0  DiscChk: 0  SingReply: 4.11k
+            Recapture: 211   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 3.47k/67.0k = 5 %   Pawn: 171k/186k = 92 %
+         Eval: 94.2k/279k = 34 %
+Hashtable 1:  entries = 131k, use = 6.78k (5 %)
+              store failed = 113 (1 %)
+Engine move: search complete, best move Nif6xhh8 (score -0.656)
+Move made: Nif6xhh8 by White
+RecalcAttacks: performing full attack recalculation
+Engine move: starting search (depth 7)...
+TC: 60 moves in   5:00
+TL: 4.38/17.50
+It    Time   Score  principal Variation
+StartHelpers, 4 cores, 3 helper threads.
+
+      Level o
+        +---+
+    > 1 |   |   MateThreat: 0 0
+        +---+
+           a 
+
+      Level n
+        +---+---+
+      2 |   |   |   Index: 63
+        +---+---+
+    > 1 |   |   |   MateThreat: 0 0
+        +---+---+
+           a   b 
+
+      Level m
+        +---+---+---+
+      3 |   |   |   |
+        +---+---+---+
+      2 |   |   |   |   Index: 63
+        +---+---+---+
+    > 1 |   |   |   |   MateThreat: 0 0
+        +---+---+---+
+           a   b   c 
+
+      Level l
+        +---+---+---+---+
+      4 |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---+
+      3 |   |   |   |   |
+        +---+---+---+---+
+      2 |   |   |   |   |   Index: 63
+        +---+---+---+---+
+    > 1 |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+
+           a   b   c   d 
+
+      Level k
+        +---+---+---+---+---+
+      5 |   |   |   |   |   |   Black (90000, 63000)  PNBRQ
+        +---+---+---+---+---+
+      4 |   |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---+---+
+      3 |   |   |   |   |   |
+        +---+---+---+---+---+
+      2 |   |   |   |   |   |   Index: 63
+        +---+---+---+---+---+
+    > 1 |   |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+---+
+           a   b   c   d   e 
+
+      Level j
+        +---+---+---+---+---+---+
+      6 |*P*|*P*|*P*|*P*|*P*|*P*|
+        +---+---+---+---+---+---+
+      5 |   |   |   |   |   |   |   Black (90000, 63000)  PNBRQ
+        +---+---+---+---+---+---+
+      4 |   |   |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---+---+---+
+      3 |   |   |   |   |   |   |
+        +---+---+---+---+---+---+
+      2 |   |   | N |   |   |   |   Index: 63
+        +---+---+---+---+---+---+
+    > 1 | P | P | P | P | P | P |   MateThreat: 0 0
+        +---+---+---+---+---+---+
+           a   b   c   d   e   f 
+
+      Level i
+        +---+---+---+---+---+---+---+
+      7 |   |   |*B*|   |*K*|*B*|*R*|   Hashkey: 400e8a477ffb235
+        +---+---+---+---+---+---+---+
+      6 |*P*|*P*|*P*|*P*|*P*|   |*P*|
+        +---+---+---+---+---+---+---+
+      5 |   |   |   |   |   |   |   |   Black (90000, 63000)  PNBRQ
+        +---+---+---+---+---+---+---+
+      4 |   |   |   |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---+---+---+---+
+      3 |   |   |   |   | P |   |   |
+        +---+---+---+---+---+---+---+
+      2 | P | P |*N*| P |   | P | P |   Index: 63
+        +---+---+---+---+---+---+---+
+    > 1 | R |   | B |   |   | B | R |   MateThreat: 0 0
+        +---+---+---+---+---+---+---+
+           a   b   c   d   e   f   g 
+
+      Level h
+        +---+---+---+---+---+---+---+---+
+      8 |*R*|   |*B*|*Q*|   |*B*|*N*| N |
+        +---+---+---+---+---+---+---+---+
+      7 |*P*|   |*P*|*Q*|*P*|*P*|*P*|*P*|   Hashkey: 400e8a477ffb235
+        +---+---+---+---+---+---+---+---+
+      6 |   |   |   |   |   |   |   |   |
+        +---+---+---+---+---+---+---+---+
+      5 |   |*P*|   |   |   |   |   |   |   Black (90000, 63000)  PNBRQ
+        +---+---+---+---+---+---+---+---+
+      4 | P |   |*P*| P |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---      Level o
++---        +---+---+---+
++---    > 1 +
+      3 ||      | |   MateThreat: 0 0
+          |+--- +
+             a |
+ 
+       Level n
+ |        +--- +--- +
+       2 ||      ||      ||   Index: 63
+          +--- +---|
++
+            > 1 +---+---|+--- +--- +--- +---|+--- +--- +
+       2 ||   MateThreat: 0 0
+           +---+---|+
+          P  a    b |
+ 
+       Level m
+         |+--- +--- +--- +
+|      3  P|   |  |P   |  |P   |  |
+P         |   Index: 63
++---        +---+---+---+---+
++---      2 +---+---|+--- +---  +---|+
+     > 1   | |R   |  |   Index: 63
+          |+--- +---B+--- +
+|    > 1  |Q   |  |K   |  |B   |  N|   MateThreat: 0 0
+ |        +--- R+--- +---+
+|   MateThreat: 0 0
+                   a +---  b +---  c +---
++---
++---      Level l
++---        +---+---+---+---+
++---         +---  a +
+  b       4   c |  d    e    f    g |  h  
+ 
+       Level g
+|         +--- +--- +---|+--- +--- +--- +---|   White (94500, 68500)  +
+P      7 N|*BPR*Q|
+*        P+---*+---|+---*+---P+
+*      3 ||* P * ||* P * ||* P * ||* P * |   Hashkey: 400e8a477ffb235
+|
+                +---+---+---+---+---+---+---+---+
++---      2 +---+---|+
+       6  |  |    |  |    | *|N * |  |   Index: 63
+          +---|+--- +--- +--- +
+|    > 1  |    |  |    |
+         |+--- +--- +--- +---|+--- +--- +--- +
+      5 ||   MateThreat: 0 0
+          +--- +---|+--- +--- +
+          |  a    b    c    d |
+ 
+       Level k
+ |         +--- +--- +---|+--- +--- +
+       5 | |    |   Black (90000, 63000)   P|N B R Q|
+          +--- +---|+--- +--- +--- +---|+--- +
+       4  ||   Black (90000, 63000)   PQ NB|R Q 
+         |+--- +--- +--- +---|+--- +
+       4  ||      ||      ||      ||   White (94500, 68500)   P N B| R Q 
+|   White (94500, 68500)          P+---N+---B+---R+---Q+---
++---        +---+---+
++---      3 +---|+--- +--- +
+       3 ||      ||      ||      ||      ||      ||
+          +--- +---|
++---        +---+---+---+---+
++---      2 +---+---| +--- +--- +
+|      2   |  |    |  |    |  |    |  |   Index: 63
+          |+--- +--- +--- +---|+--- +
+     > 1  ||      ||   Index: 63
+          +--- +---|+--- +--- +--- +---|+--- +
+     > 1  ||  P   | P|   MateThreat: 0 0
+         |+--- +---P +---|+--- +---P+
+          |  a    b P  c  |  d  P  e  
+
+|       Level j
+         +--- +---+---|   MateThreat: 0 0
++---+---        +---+---+
++---      6 +---+---|+---*+---P+---*+
+|         *  a P  b *  c |  d *  e P  f *  g |
+*P
+*      Level f
+|        *+---P+---*+---+---|+---*+---P*+
+|
+      6         |+--- +--- +--- +---|+--- +--- +
+       5 | |     ||     |  |    |  |     |
+        |+--- +--- +--- +---|+--- +--- +
+       5 |   Black (90000, 63000)  |P N B R|Q 
+          +---|+--- +--- +--- +---|+--- +
+       4  ||      ||      |   Black (90000, 63000)  |P N B R|Q  
+         |+--- +--- +--- +---|+--- +--- +
+       4 |   White (94500, 68500)  |P N B R|Q 
+          +---|+--- +--- +--- +---| +--- +
+       3 ||      ||      |   White (94500, 68500)  |P N B R| Q 
+         +---|+--- +--- +--- +---|+--- +
+       3  |
+|          +--- +---|+--- +--- +--- +---|+
+       2  |  |    |  |    |  |N   |  |
+          +---|+--- +--- +--- +---|+--- +
+       2  ||   Index: 63
+          +--- +---|+--- +--- +--- +---|+
+     > 1  |  P|  |   P|  |   P|  |   P|   Index: 63
+         |+--- +---P+--- +---|+--- +---P+
+     > 1 ||   MateThreat: 0 0
+           +---+---|+---  +--- +---+---|+
+              a   b |  c    d    e    f |
+ 
+       Level i
+         |+--- +---  +---+---+---|   MateThreat: 0 0
++---        +---+---+
++---      7 +---|+--- +--- +--- +
+|            a    b    c |  d *  e B  f *
+|
+       Level e
+          +---|+---*+---K*+---+---|+
+*      5 B*| | * R*||   Hashkey: 400e8a477ffb235
+          +--- +---| +--- +--- +---|+--- +--- +
+       6 || * P *|   Black (90000, 63000)  |P*NPB*R|Q*
+P        *+---|+---*+---P+---*+---|+
+*      4 P|* |    |  | * P|* |
+          +---|+--- +--- +--- +---|+--- +--- +
+       5 |   White (94500, 68500)  |P  N BR|Q 
+          +---|+--- +---  +---+---|+
+       3   ||      ||      ||      ||   Black (90000, 63000)   P N |B R Q 
+|
+                +---+---+---+---+---+---+---+---+---+---+---+
++---      2 +
+      4 | |     | |     | |     ||      ||      |   Index: 63
+|         +--- +--- +---| +--- +--- +
+|   White (94500, 68500)      > 1 P| N B RQ|
+          +--- +---|+--- +--- +--- +---|+--- +
+        3 | |     ||   MateThreat: 0 0
+           +---|+---+--- +--- +--- +
+|            a    b    c |  d    e P 
+|
+       Level d
+          +---+---|+--- +--- +
+       4 |
+|         +--- +--- +---|+--- +--- +--- +---|+
+       2  |  |P   |  |   White (94500, 68500)  PP N|B*RNQ*
+|         +---P+--- +---|+--- +
+       3  ||   P  ||  P   |   Index: 63
+|         +---  +---+---|+--- +--- +--- |
++---        +
++---    > 1 |+--- +---+---R+
+       2 | |     | |B   |  |    |  |    |  |   Index: 63
+B         +---| +---R+--- +---+
+    > 1 |   MateThreat: 0 0
+|         +---  +---|+--- +--- +--- +---|+--- +
+             a |  b    c    d    e   f |   MateThreat: 0 0
+  g         
+
++---      Level h
++---        +---+---+---+---+
++---         +---  a +---  b +---  c +---  d +---
++
+
+      8       Level c
+|        *+---R+---*+---|+
+       3   | | * B*| | *Q *| |    |
+         |+---*+---B+---*+
+|      2 *N|*  |  N|   |
+         +---|+--- +--- +--- +---|   Index: 63
++---        +---+---+---+---+
++---      7 +
+    > 1 |*|P *  | |     ||* P * |*Q|   MateThreat: 0 0
+*        +---|+---*+---P+
+*|         *  a P  b *  c |
+*
+P      Level b
+*        |+---*+---P+
+*      2 |   Hashkey: 400e8a477ffb235
+        |+--- +--- +--- +---|+--- +--- +--- +---|   Index: 63
++
+              6 +---|+--- +
+     > 1  ||      ||      | |   MateThreat: 0 0
+          +---|+--- +
+             a |  b  
+ 
+       Level a
+|          +---+
+     > 1 | |     |
+        +---|   MateThreat: 0 0
++---        +---+---+---+
++---         +---  a +---
++---hd2hd4
++
+hd7hd5
+      5 hc2hc4
+|hd5xhc4
+ hd1ha4
+ id7hd7
+ id1hd1
+|hb7hb5
+*ha4ga4
+Pia7bb1
+*ib1ic3
+|hb8gc6
+ ha2ha4
+ ib7hd6
+ ie2ie3
+|hd6he4
+ ic3ie4
+ ie7jc5
+ ie1jc2
+|jc5jd3
+ ie4xif6
+ he8ie7
+ if6xhh8
+|he4xic2
+ hb1xic2
+ jd3xic2
+ |   |   |   Black (90000, 63000)  PNBRQ
+        +---+---+---+---+---+---+---+---+
+      4 | P |   |*P*| P |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---+---+---+---+---+
+      3 |   |   |   |   |   |   |   |   |
+        +---+---+---+---+---+---+---+---+
+      2 |   | P |   |   | P | P | P | P |   Index: 63
+        +---+---+---+---+---+---+---+---+
+    > 1 | R |   | B | Q | K | B | N | R |   MateThreat: 0 0
+        +---+---+---+---+---+---+---+---+
+           a   b   c   d   e   f   g   h 
+
+      Level g
+        +---+---+---+---+---+---+---+
+      7 |*P*|*P*|*P*|*P*|*P*|*P*|*P*|   Hashkey: 400e8a477ffb235
+        +---+---+---+---+---+---+---+
+      6 |   |   |*N*|   |   |   |   |
+        +---+---+---+---+---+---+---+
+      5 |   |   |   |   |   |   |   |   Black (90000, 63000)  PNBRQ
+        +---+---+---+---+---+---+---+
+      4 | Q |   |   |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---+---+---+---+
+      3 |   |   |   |   |   |   |   |
+        +---+---+---+---+---+---+---+
+      2 |   |   |   |   |   |   |   |   Index: 63
+        +---+---+---+---+---+---+---+
+    > 1 | P | P | P | P | P | P |   |   MateThreat: 0 0
+        +---+---+---+---+---+---+---+
+           a   b   c   d   e   f   g 
+
+      Level f
+        +---+---+---+---+---+---+
+      6 |   |   |   |   |   |   |
+        +---+---+---+---+---+---+
+      5 |   |   |   |   |   |   |   Black (90000, 63000)  PNBRQ
+        +---+---+---+---+---+---+
+      4 |   |   |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---+---+---+
+      3 |   |   |   |   |   |   |
+        +---+---+---+---+---+---+
+      2 |   |   |   |   |   |   |   Index: 63
+        +---+---+---+---+---+---+
+    > 1 |   |   |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+---+---+
+           a   b   c   d   e   f 
+
+      Level e
+        +---+---+---+---+---+
+      5 |   |   |   |   |   |   Black (90000, 63000)  PNBRQ
+        +---+---+---+---+---+
+      4 |   |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---+---+
+      3 |   |   |   |   |   |
+        +---+---+---+---+---+
+      2 |   |   |   |   |   |   Index: 63
+        +---+---+---+---+---+
+    > 1 |   |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+---+
+           a   b   c   d   e 
+
+      Level d
+        +---+---+---+---+
+      4 |   |   |   |   |   White (94500, 68500)  PNBRQ
+        +---+---+---+---+
+      3 |   |   |   |   |
+        +---+---+---+---+
+      2 |   |   |   |   |   Index: 63
+        +---+---+---+---+
+    > 1 |   |   |   |   |   MateThreat: 0 0
+        +---+---+---+---+
+           a   b   c   d 
+
+      Level c
+        +---+---+---+
+      3 |   |   |   |
+        +---+---+---+
+      2 |   |   |   |   Index: 63
+        +---+---+---+
+    > 1 |   |   |   |   MateThreat: 0 0
+        +---+---+---+
+           a   b   c 
+
+      Level b
+        +---+---+
+      2 |   |   |   Index: 63
+        +---+---+
+    > 1 |   |   |   MateThreat: 0 0
+        +---+---+
+           a   b 
+
+      Level a
+        +---+
+    > 1 |   |   MateThreat: 0 0
+        +---+
+           a 
+hd2hd4
+hd7hd5
+hc2hc4
+hd5xhc4
+hd1ha4
+id7hd7
+id1hd1
+hb7hb5
+ha4ga4
+ia7bb1
+ib1ic3
+hb8gc6
+ha2ha4
+ib7hd6
+ie2ie3
+hd6he4
+ic3ie4
+ie7jc5
+ie1jc2
+jc5jd3
+ie4xif6
+he8ie7
+if6xhh8
+he4xic2
+hb1xic2
+jd3xic2
+ 5     3.9  -1.216  12. .. Nhe4xif2+ 13. Khe1ie1 Nif2xhh1 14. Rig1xhh1 
+                    Rig7xhh8 15. Nhg1hf3 
+ 5     3.9    2/121  12. .. Njd3xif2+       5     4.9    3/121  12. .. Njd3xic2+       5     5.0    4/121  12. .. Qhd7xhd4       5     5.0    5/121  12. .. Nhe4gc5       5     5.0    6/121  12. .. Nhe4gc2+       5     5.1    7/121  12. .. Nhe4xhf2       5     5.1    8/121  12. .. Nhe4hc3       5     5.1    9/121  12. .. Phb5xha4       5     5.1   10/121  12. .. Njd3xje1       5     5.1   11/121  12. .. Ngc6da4       5     5.1   12/121  12. .. Rig7xhh8       5     5.1   13/121  12. .. Njd3xjc1       5     5.1   14/121  12. .. Nhe4xic2+       5     5.1   15/121  12. .. Ngc6gb4       5     5.1   16/121  12. .. Ngc6gd4       5     5.1   17/121  12. .. Ngc6fa4       5     5.1   18/121  12. .. Ngc6ge5       5     5.1   19/121  12. .. Ngc6he5       5     5.1   20/121  12. .. Ngc6hb8       5     5.1   21/121  12. .. Ngc6he8       5     5.1   22/121  12. .. Ngc6jb5       5     5.1   23/121  12. .. Ngc6jc5       5     5.1   24/121  12. .. Pga7ga6       5     5.1   25/121  12. .. Pgb7gb6       5     5.1   26/121  12. .. Pgd7gd6       5     5.1   27/121  12. .. Pge7ge6       5     5.1   28/121  12. .. Pgf7gf6       5     5.1   29/121  12. .. Pgg7gg6       5     5.1   30/121  12. .. Phc4hc3       5     5.1   31/121  12. .. Nhe4ec2       5     5.1   32/121  12. .. Nhe4ed2       5     5.1   33/121  12. .. Nhe4ec3       5     5.1   34/121  12. .. Nhe4ed3       5     5.1   35/121  12. .. Ngc6db4       5     5.1   36/121  12. .. Nhe4gf2+       5     5.1   37/121  12. .. Ngc6fd4       5     5.1   38/121  12. .. Nhe4gf5       5     5.1   39/121  12. .. Nhe4hd2       5     5.1   40/121  12. .. Ngc6ga5       5     5.1   41/121  12. .. Nhe4hg3       5     5.1   42/121  12. .. Nhe4hc5       5     5.1   43/121  12. .. Nhe4hg5       5     5.1   44/121  12. .. Nhe4hd6       5     5.1   45/121  12. .. Nhe4hf6       5     5.1   46/121  12. .. Nhe4ic5       5     5.1   47/121  12. .. Nhe4if5       5     5.1   48/121  12. .. Nhe4kc2       5     5.1   49/121  12. .. Nhe4kd2       5     5.1   50/121  12. .. Nhe4kc3       5     5.1   51/121  12. .. Nhe4kd3       5     5.1   52/121  12. .. Phb5hb4       5     5.1   53/121  12. .. Pha7ha6       5     5.1   54/121  12. .. Pha7ha5       5     5.1   55/121  12. .. Phc7hc6       5     5.1   56/121  12. .. Phc7hc5       5     5.1   57/121  12. .. Qhd7dd3       5     5.1   58/121  12. .. Qhd7ed4       5     5.1   59/121  12. .. Qhd7fd5       5     5.1   60/121  12. .. Qhd7fc6       5     5.1   61/121  12. .. Qhd7gd6       5     5.1   62/121  12. .. Qhd7hh3       5     5.1   63/121  12. .. Qhd7hg4       5     5.1   64/121  12. .. Qhd7hd5       5     5.1   65/121  12. .. Qhd7hf5       5     5.1   66/121  12. .. Qhd7hc6       5     5.1   67/121  12. .. Qhd7hd6       5     5.1   68/121  12. .. Qhd7he6       5     5.1   69/121  12. .. Qhd7he8       5     5.1   70/121  12. .. Qhd7id7       5     5.1   71/121  12. .. Phe7he6       5     5.1   72/121  12. .. Phe7he5       5     5.1   73/121  12. .. Phf7hf6       5     5.1   74/121  12. .. Phf7hf5       5     5.1   75/121  12. .. Phg7hg6       5     5.1   76/121  12. .. Phg7hg5       5     5.1   77/121  12. .. Phh7hh6       5     5.1   78/121  12. .. Phh7hh5       5     5.4   79/121  12. .. Rha8hb8       5     5.4   80/121  12. .. Rha8ia7       5     5.4   81/121  12. .. Bhc8ha6       5     5.4   82/121  12. .. Bhc8hb7       5     5.4   83/121  12. .. Qhd8he8       5     5.4   84/121  12. .. Qhd8id7       5     5.4   85/121  12. .. Nhg8ge6       5     5.4   86/121  12. .. Nhg8hf6       5     5.4   87/121  12. .. Nhg8hh6       5     5.4   88/121  12. .. Pia6ia5       5     5.4   89/121  12. .. Pib6ib5       5     5.4   90/121  12. .. Pic6ic5       5     5.4   91/121  12. .. Pid6id5       5     5.4   92/121  12. .. Pie6ie5       5     5.4   93/121  12. .. Pig6ig5       5     5.4   94/121  12. .. Kie7he8       5     5.4   95/121  12. .. Kie7id7       5     5.4   96/121  12. .. Njd3gd3       5     5.4   97/121  12. .. Njd3ge3       5     5.4   98/121  12. .. Njd3gd4       5     5.4   99/121  12. .. Njd3ge4       5     5.4   100/121  12. .. Njd3ic5       5     5.4   101/121  12. .. Njd3if5       5     5.4   102/121  12. .. Njd3jb2       5     5.4   103/121  12. .. Njd3jf2       5     5.4   104/121  12. .. Njd3jb4       5     5.4   105/121  12. .. Njd3jf4       5     5.4   106/121  12. .. Njd3jc5       5     5.4   107/121  12. .. Njd3je5       5     5.4   108/121  12. .. Njd3kb1       5     5.4   109/121  12. .. Njd3ke1       5     5.4   110/121  12. .. Njd3kb4       5     5.4   111/121  12. .. Njd3ke4       5     5.4   112/121  12. .. Njd3mb1       5     5.4   113/121  12. .. Njd3mc1       5     5.4   114/121  12. .. Njd3mb2       5     5.4   115/121  12. .. Njd3mc2       5     5.4   116/121  12. .. Pja6ja5       5     5.4   117/121  12. .. Pjb6jb5       5     5.4   118/121  12. .. Pjc6jc5       5     5.4   119/121  12. .. Pjd6jd5       5     5.4   120/121  12. .. Pje6je5       5     5.4   121/121  12. .. Pjf6jf5       5     5.4  -1.216  12. .. Nhe4xif2+ 13. Khe1ie1 Nif2xhh1 14. Rig1xhh1 
+                    Rig7xhh8 15. Nhg1hf3 
+Nodes = 101k, QPerc: 78 %, time = 5.53 secs, 18.4k nodes/s
+Extensions: Check: 5.20k  DblChk: 0  DiscChk: 3  SingReply: 3.23k
+            Recapture: 201   Passed Pawn: 0   Zugzwang: 0
+Hashing: Trans: 1.46k/22.5k = 7 %   Pawn: 30.4k/35.9k = 85 %
+         Eval: 42.0k/77.8k = 54 %
+Hashtable 1:  entries = 131k, use = 3.74k (3 %)
+              store failed = 29 (1 %)

@@ -71,7 +71,7 @@ extern int NumberOfCores;
 #define MAX_SEARCH_THREADS 32
 #endif
 
-void setMaxSearchDepth(int);
+void SetMaxSearchDepth(int);
 
 /*
  * Root-move exclusion (used to emulate MultiPV by repeated searches).

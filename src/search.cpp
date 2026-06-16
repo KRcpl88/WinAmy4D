@@ -1579,7 +1579,7 @@ void StopHelpers(void) {
 /**
  * Set the maximum depth for the root search.
  */
-void setMaxSearchDepth(int max_search_depth) {
+void SetMaxSearchDepth(int max_search_depth) {
     if (max_search_depth > 0 && max_search_depth < (MAX_TREE_SIZE - 1)) {
         MaxSearchDepth = max_search_depth;
     }

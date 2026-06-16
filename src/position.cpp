@@ -497,6 +497,14 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
     sd = new CSearchData(p);
     sd->m_fMaster = true;
     sd->m_AlternateMove = alternate_move;
+
+    /*
+     * Publish the search data so the GUI can poll root-move progress while the
+     * search runs (see CPosition::GetSearchData). Cleared before the data is
+     * destroyed so a stale pointer is never read.
+     */
+    p->m_pSearchData = sd;
+
     IterateInt(sd);
 
     CMove best_move = sd->m_BestMove;
@@ -508,6 +516,7 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
         *alternate_score_ptr = sd->m_nAlternateScore;
     }
 
+    p->m_pSearchData = NULL;
     delete sd;
 
 #if MP

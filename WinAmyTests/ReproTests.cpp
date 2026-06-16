@@ -35,7 +35,7 @@ TEST_CLASS(ReproTests) {
         for (unsigned int i = 0; i < CBitBoard::SIZE; i++)
             before[i] = pos.get()->GetPiece(i);
 
-        setMaxSearchDepth(7);
+        SetMaxSearchDepth(7);
         bool fFailed = false;
         for (int iter = 0; iter < 60 && !fFailed; iter++) {
             CPosition *pClone = CPosition::Clone(pos.get());
@@ -153,7 +153,7 @@ TEST_CLASS(ReproTests) {
             pos.get()->RecalcAttacks();
         }
 
-        setMaxSearchDepth(60);
+        SetMaxSearchDepth(60);
         SetFixedTimePerMove(5);
         bool fFailed = false;
         for (int iter = 0; iter < 20 && !fFailed; iter++) {
@@ -202,7 +202,7 @@ TEST_CLASS(ReproTests) {
         }
 
         // Start a timed search at 5 seconds, as used for the repro.
-        setMaxSearchDepth(60);
+        SetMaxSearchDepth(60);
         SetFixedTimePerMove(5);
 
         CPosition *pClone = CPosition::Clone(pos.get());
