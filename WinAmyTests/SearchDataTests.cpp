@@ -306,30 +306,29 @@ TEST_CLASS(SearchDataTests) {
     }
 
     // Targeted edge-case coverage for the 3D quiescence capture generator
-    // (EmitQCapture).  These EPDs are engine-produced (round-tripping) and each
-    // contains at least one PAWN cross-level CAPTURE whose destination is a
-    // promotion square.  Regardless of the pawn's source rank/level, such a
-    // capture must promote, and the quiescence generator must emit the promoting
-    // capture exactly like the authoritative LegalMoves generator.  Applying the
-    // move must leave a (queen) promotion piece on the destination.
+    // (EmitQCapture).  Each position is built explicitly with BuildBoardEPD so
+    // the geometry is readable: a pawn captures ACROSS LEVELS onto a promotion
+    // square.  Regardless of the pawn's source rank/level, such a capture must
+    // promote, and the quiescence generator must emit the promoting capture
+    // exactly like the authoritative LegalMoves generator.  Applying the move
+    // must leave the promoted piece on the destination square.
     TEST_METHOD(QuiescenceGeneratesCrossLevelPromotionCaptures) {
-        static const char *const rgpszEpd[] = {
-            // White pawn (offset 150) captures cross-level onto promotion
-            // square offset 56.
-            "1|2/2|3/3/3|4/4/4/4|5/1n3/5/5/5|6/6/Q5/6/6/1q4|ppppppp/7/7/7/7/"
-            "3P2P/PPP1PP1|r2qkbnr/ppp2ppp/2n1p3/8/3p4/7b/PPPPPPPP/RNB1KBNR|"
-            "r1b2br/ppppppp/n6/7/7/PPPPPPP/RNBQNBR|pppppp/6/6/6/4P1/PPPP1P|"
-            "5/5/5/5/5|4/4/4/4|3/3/3|2/2|1 w KQkq -",
-            // Black pawn (offset 189) captures cross-level onto promotion
-            // square offset 85.
-            "1|2/2|3/3/3|4/4/4/4|5/1n3/5/5/5|Q5/6/6/6/6/6|ppppppp/7/7/7/7/"
-            "3PN1P/PPP1PP1|r2qkbnr/ppp2ppp/2n1p3/8/3p4/7b/PPPPPPPP/RNB1KB1R|"
-            "r1b2br/ppppppp/n6/7/7/PPPPPPP/RNBQNBR|pppppp/6/6/6/4P1/PPPP1P|"
-            "5/5/3q1/5/5|4/4/4/4|3/3/3|2/2|1 b KQkq -",
-        };
+        // White pawn on the main level (7) at file 2 / rank 1 captures across
+        // levels onto promotion square level f (5) / file 1 / rank 0, which is
+        // occupied by a black queen.  The pawn's source is NOT on a
+        // pre-promotion rank, yet the capture must still promote.
+        const std::string EpdWhite = BuildBoardEPD(
+            {{7, 2, 1, 'P'}, {5, 1, 0, 'q'}, {7, 4, 0, 'K'}, {7, 4, 7, 'k'}},
+            'w');
+        // Black pawn on the main level (7) at file 1 / rank 6 captures across
+        // levels onto promotion square level f (5) / file 0 / rank 5, occupied
+        // by a white queen.
+        const std::string EpdBlack = BuildBoardEPD(
+            {{7, 1, 6, 'p'}, {5, 0, 5, 'Q'}, {7, 4, 0, 'K'}, {7, 4, 7, 'k'}},
+            'b');
 
-        for (const char *pszEpd : rgpszEpd) {
-            PositionGuard Pos(CPosition::CreateFromEPD(pszEpd));
+        for (const std::string &Epd : {EpdWhite, EpdBlack}) {
+            PositionGuard Pos(CPosition::CreateFromEPD(Epd.c_str()));
             Assert::IsTrue(Pos.get() != nullptr, L"EPD must parse");
 
             const std::vector<CMove> LegalMoves = CollectLegalMoves(Pos.get());
@@ -373,7 +372,8 @@ TEST_CLASS(SearchDataTests) {
             }
 
             Assert::IsTrue(nCrossLevelPromoCaptures > 0,
-                           L"EPD must expose a cross-level promotion capture");
+                           L"position must expose a cross-level promotion "
+                           L"capture");
         }
     }
 
@@ -383,16 +383,23 @@ TEST_CLASS(SearchDataTests) {
     // wrongly promote here; the destination-driven generator must emit a plain
     // capture, matching the authoritative LegalMoves generator.
     TEST_METHOD(QuiescencePrePromotionPawnCrossLevelNonPromoCaptureDoesNotPromote) {
-        // White pawn (offset 277, on the pre-promotion rank) captures
-        // cross-level onto NON-promotion square offset 181.
-        const char *pszEpd =
-            "1|1q/r1|3/3/3|4/4/4/4|5/3q1/5/5/5|4n1/6/6/5N/6/6|p2p3/2p2pp/4p2/"
-            "1p5/3P3/6P/1PP1PP1|rnb2b2/p2pppp1/1pp5/1N4np/1P3P2/3P4/P1PBP1PP/"
-            "1Q2QB1R|r1bk1br/ppppppp/2n1B2/7/P1PPPP1/1P1KN1P/5BR|pp3p/P1p3/4p1/"
-            "6/1P3P/2PPP1|5/5/5/5/5|4/4/4/1R2|3/3/3|2/2|1 w - -";
+        // White pawn on level j (9) at file 0 / rank 4 — the pre-promotion rank
+        // of that 6-wide level — captures across levels onto the main level (7)
+        // at file 1 / rank 5, which is a NON-promotion square occupied by a
+        // black queen.
+        const std::string Epd = BuildBoardEPD(
+            {{9, 0, 4, 'P'}, {7, 1, 5, 'q'}, {7, 4, 0, 'K'}, {7, 4, 7, 'k'}},
+            'w');
 
-        PositionGuard Pos(CPosition::CreateFromEPD(pszEpd));
+        PositionGuard Pos(CPosition::CreateFromEPD(Epd.c_str()));
         Assert::IsTrue(Pos.get() != nullptr, L"EPD must parse");
+
+        // The source pawn must really sit on the pre-promotion rank, otherwise
+        // the test would not exercise the source-rank assumption it guards.
+        const CSCoord PawnCoord(9, 0, 4);
+        Assert::IsTrue(
+            PrePromoRank[Pos.get()->GetTurn()].TstBit(PawnCoord.BitOffset()),
+            L"source pawn must sit on the pre-promotion rank");
 
         const std::vector<CMove> LegalMoves = CollectLegalMoves(Pos.get());
         const std::vector<CMove> QMoves = CollectQuiescenceMoves(Pos.get());
@@ -425,32 +432,31 @@ TEST_CLASS(SearchDataTests) {
 
         Assert::IsTrue(
             nCrossLevelNonPromoCaptures > 0,
-            L"EPD must expose a pre-promotion-rank cross-level non-promotion "
-            L"capture");
+            L"position must expose a pre-promotion-rank cross-level "
+            L"non-promotion capture");
     }
 
-    // Every move the quiescence generator emits must also be a legal capture,
-    // and no move it emits may violate the promotion invariant.
+    // Every move the quiescence generator emits must be legal and respect the
+    // promotion invariant.  The quiescence generator produces tactical moves:
+    // captures plus non-capturing promotion pushes, so each move is either a
+    // capture or a promotion.
     TEST_METHOD(QuiescenceMovesAreLegalCapturesRespectingInvariant) {
-        static const char *const rgpszEpd[] = {
-            "1|2/2|3/3/3|4/4/4/4|5/1n3/5/5/5|6/6/Q5/6/6/1q4|ppppppp/7/7/7/7/"
-            "3P2P/PPP1PP1|r2qkbnr/ppp2ppp/2n1p3/8/3p4/7b/PPPPPPPP/RNB1KBNR|"
-            "r1b2br/ppppppp/n6/7/7/PPPPPPP/RNBQNBR|pppppp/6/6/6/4P1/PPPP1P|"
-            "5/5/5/5/5|4/4/4/4|3/3/3|2/2|1 w KQkq -",
-            "1|1q/r1|3/3/3|4/4/4/4|5/3q1/5/5/5|4n1/6/6/5N/6/6|p2p3/2p2pp/4p2/"
-            "1p5/3P3/6P/1PP1PP1|rnb2b2/p2pppp1/1pp5/1N4np/1P3P2/3P4/P1PBP1PP/"
-            "1Q2QB1R|r1bk1br/ppppppp/2n1B2/7/P1PPPP1/1P1KN1P/5BR|pp3p/P1p3/4p1/"
-            "6/1P3P/2PPP1|5/5/5/5/5|4/4/4/1R2|3/3/3|2/2|1 w - -",
-        };
+        const std::string EpdPromo = BuildBoardEPD(
+            {{7, 2, 1, 'P'}, {5, 1, 0, 'q'}, {7, 4, 0, 'K'}, {7, 4, 7, 'k'}},
+            'w');
+        const std::string EpdNonPromo = BuildBoardEPD(
+            {{9, 0, 4, 'P'}, {7, 1, 5, 'q'}, {7, 4, 0, 'K'}, {7, 4, 7, 'k'}},
+            'w');
 
-        for (const char *pszEpd : rgpszEpd) {
-            PositionGuard Pos(CPosition::CreateFromEPD(pszEpd));
+        for (const std::string &Epd : {EpdPromo, EpdNonPromo}) {
+            PositionGuard Pos(CPosition::CreateFromEPD(Epd.c_str()));
             Assert::IsTrue(Pos.get() != nullptr, L"EPD must parse");
 
             const std::vector<CMove> QMoves = CollectQuiescenceMoves(Pos.get());
             for (CMove QMove : QMoves) {
-                Assert::IsTrue(QMove.IsCapture(),
-                               L"quiescence move must be a capture");
+                Assert::IsTrue(QMove.IsCapture() || QMove.HasPromotion(),
+                               L"quiescence move must be a capture or a "
+                               L"promotion");
                 Assert::IsTrue(Pos.get()->LegalMove(QMove),
                                L"quiescence move must be legal");
                 Assert::IsTrue(PawnPromotionInvariantHolds(Pos.get(), QMove),
