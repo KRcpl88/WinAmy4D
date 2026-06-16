@@ -464,10 +464,13 @@ Move made: Nhf3he5 by White
 
 
 # future cleanup:
-CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
-Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
-Rename all structs to begine with S, for example SGameLog instead of GameLog.
-Add CBitBoard FindSetBitCoord which returns CSCoord
+- CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
+- Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
+- Rename all structs to begine with S, for example SGameLog instead of GameLog.
+- Add CBitBoard FindSetBitCoord which returns CSCoord
+- Fix C++ class refactor not assign this to a local var and reuse the "old" c code.  Do a proper C++ class
+- Eliminate single statemtn clauses with no {}
+- global fix hungarian
 
 
 
