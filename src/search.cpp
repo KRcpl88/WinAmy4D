@@ -400,6 +400,16 @@ int CSearchData::Quies(int alpha, int beta, int depth) {
     talpha = MAX(alpha, best);
 
     while ((move = sd->NextMoveQ(alpha)) != M_NONE) {
+        /*
+         * A move that captures the opponent's king signals an illegal position
+         * (the previous move left a king in check). Capturing the king wins, so
+         * return a winning score instead of making the king-capturing move,
+         * which would assert in DoMove.
+         */
+        if (p->IsKingCapture(move)) {
+            best = INF - sd->m_wPly;
+            goto EXIT;
+        }
         p->DoMove(move);
         if (p->InCheck(OPP(p->GetTurn())))
             p->UndoMove(move);
@@ -710,6 +720,20 @@ int CSearchData::NegaScout(int alpha, int beta,
 
         if (move.IsCastle() && !p->MayCastle(move))
             continue;
+
+        /*
+         * If this move captures the opponent's king the position is illegal:
+         * the previous (opponent) move left its king in check and slipped past
+         * the legality filter. Capturing the king wins outright, so return a
+         * winning score immediately. This also avoids calling IsCheckingMove
+         * or DoMove on a king-capturing move, both of which assert on this
+         * illegal scenario.
+         */
+
+        if (p->IsKingCapture(move)) {
+            best = INF - sd->m_wPly;
+            goto EXIT;
+        }
 
         /*
          * recapture extension

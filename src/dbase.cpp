@@ -1543,10 +1543,40 @@ bool CPosition::LegalMove(CMove move) {
 
 bool CPosition::IsCheckingMove(CMove move) {
     CPosition *p = this;
+    /*
+     * A move that captures the opponent's king is illegal and must never be
+     * passed to DoMove (which asserts on king captures). Abstractly it is not
+     * a "checking" move either: if the side to move has just captured the
+     * enemy king it has already won the game and therefore cannot itself be
+     * left in check. Report it as a non-checking move so callers that use this
+     * predicate (e.g. futility pruning) never make the move.
+     */
+    if (p->IsKingCapture(move)) {
+        const CSCoord &frCoord = move.GetFromCoord();
+        const CSCoord &toCoord = move.GetToCoord();
+        PrintDebug(9,
+                   "IsCheckingMove: king-capture move from L%d/F%d/R%d to "
+                   "L%d/F%d/R%d treated as non-checking (illegal position)\n",
+                   frCoord.m_nLevel, frCoord.m_nFile, frCoord.m_nRank,
+                   toCoord.m_nLevel, toCoord.m_nFile, toCoord.m_nRank);
+        return false;
+    }
     p->DoMove(move);
     const bool fGivesCheck = p->InCheck(p->m_nTurn);
     p->UndoMove(move);
     return fGivesCheck;
+}
+
+/*
+ * Test whether a move captures the opponent's king. Reaching such a move means
+ * the position is illegal (the previous move left a king in check), so this is
+ * used by the search to recognise and prune the offending branch before any
+ * king-capturing DoMove is attempted.
+ */
+
+bool CPosition::IsKingCapture(CMove move) const {
+    return move.IsCapture() &&
+           TYPE(m_rgPiece[move.GetToCoord().BitOffset()]) == King;
 }
 
 /*
