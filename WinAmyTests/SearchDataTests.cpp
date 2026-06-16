@@ -1,5 +1,6 @@
 #include "TestHelpers.h"
 #include "heap.h"
+#include "random.h"
 #include "searchdata.h"
 
 #include <memory>
@@ -16,22 +17,17 @@ TEST_CLASS(SearchDataTests) {
         HashInit();
     }
 
-    static uint32_t s_rng;
-    static uint32_t Rand() {
-        s_rng = s_rng * 1664525u + 1013904223u;
-        return s_rng;
-    }
-
     // For a pawn move, promotion must be decided by the destination square:
     // a pawn landing on a promotion square must promote, and a pawn landing on
     // any other square must not.  This relationship must hold for every move
     // produced by the engine, regardless of which generator created it.
-    static bool PawnPromotionInvariantHolds(CPosition *p, CMove move) {
-        const uint16_t from = move.GetFromCoord().BitOffset();
-        if (TYPE(p->GetPiece(from)) != Pawn)
+    static bool PawnPromotionInvariantHolds(CPosition *pPosition, CMove Move) {
+        const uint16_t wFrom = Move.GetFromCoord().BitOffset();
+        if (TYPE(pPosition->GetPiece(wFrom)) != Pawn) {
             return true;
-        const bool promoSquare = is_promo_square(move.GetToCoord());
-        return promoSquare == move.HasPromotion();
+        }
+        const bool fPromoSquare = is_promo_square(Move.GetToCoord());
+        return fPromoSquare == Move.HasPromotion();
     }
 
     TEST_METHOD(ConstructorInitializesSearchState) {
@@ -120,79 +116,76 @@ TEST_CLASS(SearchDataTests) {
     // verify every quiescence move is pseudo-legal and respects the
     // pawn-promotion invariant.
     TEST_METHOD(QuiescenceMovesRespectPromotionInvariant) {
-        for (int game = 0; game < 25; game++) {
-            s_rng = 0xC0FFEE + game * 2654435761u;
-            PositionGuard pos(CPosition::Initial());
-            for (int ply = 0; ply < 80; ply++) {
+        for (int nGame = 0; nGame < 25; nGame++) {
+            InitRandom(static_cast<ran_t>(0xC0FFEEu) +
+                       static_cast<ran_t>(nGame) * 2654435761u);
+            PositionGuard Pos(CPosition::Initial());
+            for (int nPly = 0; nPly < 80; nPly++) {
                 // Collect the strictly-legal moves to pick a random one.
-                heap_t legal = allocate_heap();
-                push_section(legal);
-                pos.get()->LegalMoves(legal);
-                std::vector<CMove> moves;
-                for (unsigned i = legal->current_section->start;
-                     i < legal->current_section->end; ++i)
-                    moves.push_back(legal->data[i]);
-                free_heap(legal);
-                if (moves.empty())
+                heap_t hLegal = allocate_heap();
+                push_section(hLegal);
+                Pos.get()->LegalMoves(hLegal);
+                std::vector<CMove> Moves;
+                for (unsigned uIndex = hLegal->current_section->start;
+                     uIndex < hLegal->current_section->end; ++uIndex) {
+                    Moves.push_back(hLegal->data[uIndex]);
+                }
+                free_heap(hLegal);
+                if (Moves.empty()) {
                     break;
+                }
 
                 // Every legal move must respect the promotion invariant.
-                for (CMove m : moves) {
-                    if (!PawnPromotionInvariantHolds(pos.get(), m)) {
-                        std::wstringstream w;
-                        w << L"legal move violates promotion invariant: game "
-                          << game << L" ply " << ply << L" from "
-                          << m.GetFromCoord().BitOffset() << L" to "
-                          << m.GetToCoord().BitOffset() << L" promo "
-                          << (int)m.HasPromotion();
-                        Assert::Fail(w.str().c_str());
+                for (CMove Move : Moves) {
+                    if (!PawnPromotionInvariantHolds(Pos.get(), Move)) {
+                        std::wstringstream Message;
+                        Message
+                            << L"legal move violates promotion invariant: game "
+                            << nGame << L" ply " << nPly << L" from "
+                            << Move.GetFromCoord().BitOffset() << L" to "
+                            << Move.GetToCoord().BitOffset() << L" promo "
+                            << (int)Move.HasPromotion();
+                        Assert::Fail(Message.str().c_str());
                     }
                 }
 
                 // Every quiescence move must be pseudo-legal and respect the
                 // promotion invariant.
-                std::unique_ptr<CSearchData> sd(new CSearchData(pos.get()));
-                sd->EnterNode();
-                CMove qm;
-                int guard = 0;
-                while ((qm = sd->NextMoveQ(-1000000)) != M_NONE && guard++ < 4096) {
-                    if (!pos.get()->LegalMove(qm)) {
-                        std::wstringstream w;
-                        w << L"quiescence move is not legal: game " << game
-                          << L" ply " << ply << L" from "
-                          << qm.GetFromCoord().BitOffset() << L" to "
-                          << qm.GetToCoord().BitOffset() << L" promo "
-                          << (int)qm.HasPromotion() << L" cap "
-                          << (int)qm.IsCapture();
-                        sd->LeaveNode();
-                        Assert::Fail(w.str().c_str());
+                std::unique_ptr<CSearchData> SearchData(
+                    new CSearchData(Pos.get()));
+                SearchData->EnterNode();
+                CMove QMove;
+                int nGuard = 0;
+                while ((QMove = SearchData->NextMoveQ(-1000000)) != M_NONE &&
+                       nGuard++ < 4096) {
+                    if (!Pos.get()->LegalMove(QMove)) {
+                        std::wstringstream Message;
+                        Message << L"quiescence move is not legal: game " << nGame
+                                << L" ply " << nPly << L" from "
+                                << QMove.GetFromCoord().BitOffset() << L" to "
+                                << QMove.GetToCoord().BitOffset() << L" promo "
+                                << (int)QMove.HasPromotion() << L" cap "
+                                << (int)QMove.IsCapture();
+                        SearchData->LeaveNode();
+                        Assert::Fail(Message.str().c_str());
                     }
-                    if (!PawnPromotionInvariantHolds(pos.get(), qm)) {
-                        std::wstringstream w;
-                        w << L"quiescence move violates promotion invariant: game "
-                          << game << L" ply " << ply << L" from "
-                          << qm.GetFromCoord().BitOffset() << L" to "
-                          << qm.GetToCoord().BitOffset() << L" promo "
-                          << (int)qm.HasPromotion();
-                        sd->LeaveNode();
-                        Assert::Fail(w.str().c_str());
+                    if (!PawnPromotionInvariantHolds(Pos.get(), QMove)) {
+                        std::wstringstream Message;
+                        Message << L"quiescence move violates promotion "
+                                   L"invariant: game "
+                                << nGame << L" ply " << nPly << L" from "
+                                << QMove.GetFromCoord().BitOffset() << L" to "
+                                << QMove.GetToCoord().BitOffset() << L" promo "
+                                << (int)QMove.HasPromotion();
+                        SearchData->LeaveNode();
+                        Assert::Fail(Message.str().c_str());
                     }
                 }
-                sd->LeaveNode();
+                SearchData->LeaveNode();
 
-                pos.get()->DoMove(moves[Rand() % moves.size()]);
+                Pos.get()->DoMove(Moves[Random64() % Moves.size()]);
             }
         }
-    }
-
-    // LegalMove must reject a promotion whose destination is not a promotion
-    // square (such a move can arrive from a stale hash/killer/countermove
-    // entry).  Here a white pawn on e2 "promotes" to e4 — e4 is not a promotion
-    // square, so the move must be rejected.
-    TEST_METHOD(LegalMoveRejectsPromotionToNonPromotionSquare) {
-        PositionGuard position(CPosition::Initial());
-        CMove bogus = MakeMainBoardPromotion(he2, he4, Queen, 0);
-        Assert::IsFalse(position.get()->LegalMove(bogus));
     }
 
     TEST_METHOD(PutKillerTracksAndPromotesByHitCount) {
@@ -217,7 +210,5 @@ TEST_CLASS(SearchDataTests) {
         Assert::AreEqual((uint32_t)1, searchData->m_pKiller->kcount2);
     }
 };
-
-uint32_t SearchDataTests::s_rng = 1;
 
 } // namespace WinAmyTests

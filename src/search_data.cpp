@@ -771,28 +771,33 @@ CMove CSearchData::NextEvasion() {
  * a pawn capturing onto a promotion square without promoting, corrupting the
  * board state during search.
  */
-static void EmitQCapture(CSearchData *sd, CPosition *p, int from, int to) {
-    heap_section_t section = sd->m_hHeap->current_section;
-    CMove move;
+static void EmitQCapture(CSearchData *sd, CPosition *p, int nFrom, int nTo) {
+    heap_section_t Section = sd->m_hHeap->current_section;
+    CMove Move;
 
-    if (TYPE(p->GetPiece(static_cast<uint16_t>(from))) == Pawn) {
-        const CSCoord toCoord(static_cast<uint16_t>(to));
-        if (is_promo_square(toCoord)) {
-            move = make_promotion(from, to, Queen, M_CAPTURE);
-        } else if (pawn_may_move_to(toCoord)) {
-            move = make_move(from, to, M_CAPTURE);
+    if (TYPE(p->GetPiece(static_cast<uint16_t>(nFrom))) == Pawn) {
+        const CSCoord ToCoord(static_cast<uint16_t>(nTo));
+        if (is_promo_square(ToCoord)) {
+            Move = make_promotion(nFrom, nTo, Queen, M_CAPTURE);
+        } else if (pawn_may_move_to(ToCoord)) {
+            Move = make_move(nFrom, nTo, M_CAPTURE);
         } else {
+            /* A cross-level capture can land a pawn on the edge rank of a
+             * non-promotion level, which is an illegal pawn target.  This is a
+             * legal, expected situation that the authoritative GenTo generator
+             * also silently skips (see dbase.cpp), not an internal error, so do
+             * not assert here. */
             return;
         }
     } else {
-        move = make_move(from, to, M_CAPTURE);
+        Move = make_move(nFrom, nTo, M_CAPTURE);
     }
 
-    int sw = SwapOff(p, move);
-    if (sw >= 0) {
-        append_to_heap(sd->m_hHeap, move);
+    int nSwap = SwapOff(p, Move);
+    if (nSwap >= 0) {
+        append_to_heap(sd->m_hHeap, Move);
         GrowDataHeap(sd);
-        sd->m_pnDataHeap[section->end - 1] = sw;
+        sd->m_pnDataHeap[Section->end - 1] = nSwap;
     }
 }
 
