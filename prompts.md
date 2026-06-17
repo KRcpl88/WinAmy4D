@@ -571,15 +571,13 @@ Please consider this proposal and offer other recommendations that may help isol
 # future cleanup:
 - Remove tbindex.cpp, it uses 8x8 fixed board sizes to compute well known endgames for 2D chess, irrelvant for 4D, not even sure how this compiles.  This is fundamentally broken
 - . src/recog.cpp:183–251 — KBNKTab[64] indexed by BitOffset ⚠️ BUGGY
-
 ```
    static int KBNKTab[] = { ... 64 entries ... };
    sqx = KBNKTab[p->GetKingSq(OPP(color)).BitOffset()];      // line 247
    sqx = KBNKTab[7 ^ p->GetKingSq(OPP(color)).BitOffset()];  // line 251
 ```
-   - BitOffset() returns 0–343 → out-of-bounds array access. The 7 ^ offset also assumes file extraction via XOR on a 0–7 range.
-   - This code is reachable — it fires whenever the position has a KBN-vs-K material signature.
-
+    - BitOffset() returns 0–343 → out-of-bounds array access. The 7 ^ offset also assumes file extraction via XOR on a 0–7 range.
+    - This code is reachable — it fires whenever the position has a KBN-vs-K material signature.
 - CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 - Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
 - Rename all structs to begine with S, for example SGameLog instead of GameLog.
