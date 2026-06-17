@@ -1382,7 +1382,10 @@ void CWinAmy4dWnd::UpdateStatusBar() {
     }
 
     wchar_t buf[256];
-    const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
+    const int nMoveNumber = (pos->GetPly() / 2) + 1;
+    wchar_t szTurn[64];
+    swprintf_s(szTurn, 64, L"%s to move (move %d)",
+               (pos->GetTurn() == 0) ? L"White" : L"Black", nMoveNumber);
     if (m_Game.IsComputingStrategy() || m_Game.IsEngineRunning()) {
         // A search is in progress. Show the percentage of the work completed,
         // measured as the fraction of root moves searched (engine move / hint) or
@@ -1394,13 +1397,13 @@ void CWinAmy4dWnd::UpdateStatusBar() {
         int nPercent = fStrategy ? m_Game.GetStrategyProgressPercent()
                                  : SearchProgressPercent();
         if (nPercent >= 0) {
-            swprintf_s(buf, 256, L"%s%s  [%s... %d%%]", strPrefix.c_str(), turn,
+            swprintf_s(buf, 256, L"%s%s  [%s... %d%%]", strPrefix.c_str(), szTurn,
                        label, nPercent);
         } else {
-            swprintf_s(buf, 256, L"%s%s  [%s...]", strPrefix.c_str(), turn, label);
+            swprintf_s(buf, 256, L"%s%s  [%s...]", strPrefix.c_str(), szTurn, label);
         }
     } else {
-        swprintf_s(buf, 256, L"%s%s", strPrefix.c_str(), turn);
+        swprintf_s(buf, 256, L"%s%s", strPrefix.c_str(), szTurn);
     }
     SendMessageW(m_hStatus, WM_SETTEXT, 0, (LPARAM)buf);
 }
