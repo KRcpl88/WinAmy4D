@@ -464,15 +464,23 @@ Move made: Nhf3he5 by White
 
 # Unfixable bug (m_pActLog buffer reaolocation / buffer overflow)
 
-There is an ongoing bug in UndoMove
+There is an ongoing bug in UndoMove.  This bug will repor if you set search depth to 7 and let the engine self play, for about 20-30 moves.  A more concise repro could be built in a unit test but it takes several minutes of self play at depth 7 to reach the bug.  Not sure if it repros in console mode, it appears to be a DoMove/UndoMove imballance that leaves m_pActLog pointing one move PAST the end of the game log, to an empty SGameLog that is all 0s.  The interesting part is copilot tried to fix this twice, both unsuccesfully, but with the second fix the response was absurdly overconfident but in reality it just increased the size of m_pActLog so it was large enough that the realloc buffer riesize is never called, which seems to work.  It also zero initializes the buffer, but thats not strictly necessary because if there is no bug, then the m_pActLog should never point off the end of the initialized portion of the buffer, so while zero initializing is good, its not the cause of this bug.
 
 There is another Panic from AtkSet, this time from UndoMove inside Quies on line 418 in search.cpp.  Pleas see negascout-quies-atkset-panic.log for full logs, including current board position and move history from Panic.  The last move was by black in this CPosition was Qhc3xhe5.  It looks like sd->NextMoveQ on line 402 returned a move from hc3 to he5, that would be the Qhc3xhe5 in the logs.  The current position (from Panic logs) shows the black queen at he5 where it should be, but it looks like p->m_pActLog has been wiped or corrupted, because all the data currently in p->m_pActLog (after UndoMove moved it back to the previous move on line 916) contains all 0s
 
 ```
-p->m_pActLog: 0x000001fb3601b150 {gl_Move={m_From={m_nLevel=0 m_nRank=0 m_nFile=0 } m_To={m_nLevel=0 m_nRank=0 m_nFile=0 } m_dwBits=0 } gl_Piece=0 '\0' gl_Castle=0 '\0' gl_EnPassant = {m_From={m_nLevel=0 m_nRank=0 m_nFile=0 } gl_IrrevCount = 0 gl_HashKey = 0 gl_PawnKey = 0}
+p->m_pActLog: 0x000001fb3601b150 {
+gl_Move={m_From={m_nLevel=0 m_nRank=0 m_nFile=0 }
+m_To={m_nLevel=0 m_nRank=0 m_nFile=0 } m_dwBits=0 }
+gl_Piece=0 '\0'
+gl_Castle=0 '\0'
+gl_EnPassant = {m_From={m_nLevel=0 m_nRank=0 m_nFile=0 }
+gl_IrrevCount = 0
+gl_HashKey = 0
+gl_PawnKey = 0}
 ```
 
-The previous move appears to be invalif
+The previous move appears to be invalid
 
 ```
 (SGameLog*)((SGameLog*)(p->m_pActLog) - 1): 0x000001fb3601b120 {gl_Move={m_From={...} m_To={...} m_dwBits=121902882 } gl_Piece=1 '\x1' gl_Castle=...}
