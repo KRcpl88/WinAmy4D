@@ -577,8 +577,8 @@ Please consider this proposal and offer other recommendations that may help isol
    sqx = KBNKTab[p->GetKingSq(OPP(color)).BitOffset()];      // line 247
    sqx = KBNKTab[7 ^ p->GetKingSq(OPP(color)).BitOffset()];  // line 251
 ```
-  - BitOffset() returns 0–343 → out-of-bounds array access. The 7 ^ offset also assumes file extraction via XOR on a 0–7 range.
-  - This code is reachable — it fires whenever the position has a KBN-vs-K material signature.
+   - BitOffset() returns 0–343 → out-of-bounds array access. The 7 ^ offset also assumes file extraction via XOR on a 0–7 range.
+   - This code is reachable — it fires whenever the position has a KBN-vs-K material signature.
 
 - CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 - Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
