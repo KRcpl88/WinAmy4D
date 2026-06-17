@@ -569,6 +569,7 @@ This may be an imbalance between DoMove and UndoMove.  p->m_pActLog is pointing 
 Please consider this proposal and offer other recommendations that may help isolate where this bug is coming from.
 
 # future cleanup:
+- Remove tbindex.cpp, it uses 8x8 fixed board sizes to compute well known endgames for 2D chess, irrelvant for 4D, not even sure how this compiles.  This is fundamentally broken
 - CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
 - Rename member variables m_ with correct Hungarian, m_n for an integer type, m_f for Boolean, m_ for a struct or class type like GameLog, CSCoord or CMove
 - Rename all structs to begine with S, for example SGameLog instead of GameLog.
