@@ -462,6 +462,103 @@ Move made: Nhf3he5 by White
 ```
 
 
+# Unfixable bug (m_pActLog buffer reaolocation / buffer overflow)
+
+There is an ongoing bug in UndoMove
+
+There is another Panic from AtkSet, this time from UndoMove inside Quies on line 418 in search.cpp.  Pleas see negascout-quies-atkset-panic.log for full logs, including current board position and move history from Panic.  The last move was by black in this CPosition was Qhc3xhe5.  It looks like sd->NextMoveQ on line 402 returned a move from hc3 to he5, that would be the Qhc3xhe5 in the logs.  The current position (from Panic logs) shows the black queen at he5 where it should be, but it looks like p->m_pActLog has been wiped or corrupted, because all the data currently in p->m_pActLog (after UndoMove moved it back to the previous move on line 916) contains all 0s
+
+```
+p->m_pActLog: 0x000001fb3601b150 {gl_Move={m_From={m_nLevel=0 m_nRank=0 m_nFile=0 } m_To={m_nLevel=0 m_nRank=0 m_nFile=0 } m_dwBits=0 } gl_Piece=0 '\0' gl_Castle=0 '\0' gl_EnPassant = {m_From={m_nLevel=0 m_nRank=0 m_nFile=0 } gl_IrrevCount = 0 gl_HashKey = 0 gl_PawnKey = 0}
+```
+
+The previous move appears to be invalif
+
+```
+(SGameLog*)((SGameLog*)(p->m_pActLog) - 1): 0x000001fb3601b120 {gl_Move={m_From={...} m_To={...} m_dwBits=121902882 } gl_Piece=1 '\x1' gl_Castle=...}
+{m_From={...} m_To={...} m_dwBits=121902882 }
+{...}
+{m_nLevel=7 m_nRank=2 m_nFile=2 }
+{...}
+{m_nLevel=7 m_nRank=4 m_nFile=4 }
+121902882
+1 '\x1'
+0 '\0'
+{...}
+{m_nLevel=65535 m_nRank=0 m_nFile=0 }
+0 '\0'
+13058752711742622188
+2352929114753597059
+```
+
+Here is the move from the CPosition::UndoMove stack frame
+
+```
+move:
+m_From {m_nLevel=7 m_nRank=2 m_nFile=2 }
+m_To {m_nLevel=7 m_nRank=4 m_nFile=4 }
+m_dwBits 121902882
+```
+
+Here are the local vars from CPosition::AtkSet and the call stack from the first repro
+
+```
+type 0
+color 0
+square 176
+*((CSCoordBase*)&squareCoord),nd {m_nLevel=7 m_nRank=4 m_nFile=4 }
+
+ucrtbased.dll!00007ff98d454805() (Unknown Source:0)
+ucrtbased.dll!00007ff98d4549a3() (Unknown Source:0)
+ucrtbased.dll!00007ff98d46ba9d() (Unknown Source:0)
+WinAmyGUI.exe!Panic(CPosition * p) Line 326 (c:\git\WinAmy4D\src\dbase.cpp:326)
+WinAmyGUI.exe!CPosition::AtkSet(int type, int color, const CSCoord & squareCoord) Line 421 (c:\git\WinAmy4D\src\dbase.cpp:421)
+WinAmyGUI.exe!CPosition::UndoMove(CMove move) Line 958 (c:\git\WinAmy4D\src\dbase.cpp:958)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 418 (c:\git\WinAmy4D\src\search.cpp:418)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 846 (c:\git\WinAmy4D\src\search.cpp:846)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 857 (c:\git\WinAmy4D\src\search.cpp:857)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 857 (c:\git\WinAmy4D\src\search.cpp:857)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 857 (c:\git\WinAmy4D\src\search.cpp:857)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 857 (c:\git\WinAmy4D\src\search.cpp:857)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 857 (c:\git\WinAmy4D\src\search.cpp:857)
+```
+
+
+After adding several assert conditions, the same issue was caught in more or less the same place, this time by an assert which was added before we call AtkSet.  The logs are in negascout-quies-undomove-assert.log
+
+```
+ucrtbased.dll!00007ff99da5f575() (Unknown Source:0)
+ucrtbased.dll!00007ff99da5f393() (Unknown Source:0)
+ucrtbased.dll!00007ff99da61c7f() (Unknown Source:0)
+WinAmyGUI.exe!CPosition::UndoMove(CMove move) Line 1001 (c:\git\WinAmy4D\src\dbase.cpp:1001)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 415 (c:\git\WinAmy4D\src\search.cpp:415)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::Quies(int alpha, int beta, int depth) Line 417 (c:\git\WinAmy4D\src\search.cpp:417)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 846 (c:\git\WinAmy4D\src\search.cpp:846)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 857 (c:\git\WinAmy4D\src\search.cpp:857)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 869 (c:\git\WinAmy4D\src\search.cpp:869)
+WinAmyGUI.exe!CSearchData::NegaScout(int alpha, int beta, int depth, int node_type) Line 869 (c:\git\WinAmy4D\src\search.cpp:869)
+WinAmyGUI.exe!IterateInt(void * x) Line 1206 (c:\git\WinAmy4D\src\search.cpp:1206)
+WinAmyGUI.exe!CPosition::Iterate(int * score_ptr, CMove alternate_move, int * alternate_score_ptr) Line 510 (c:\git\WinAmy4D\src\position.cpp:510)
+WinAmyGUI.exe!GameController::StartSearchInternal::__l2::<lambda_1>::operator()() Line 654 (c:\git\WinAmy4D\WinAmyGUI\GameController.cpp:654)
+```
+
+This may be an imbalance between DoMove and UndoMove.  p->m_pActLog is pointing to an empty SGameLog struct object populated with all ulls, so that either somehow DoMove has been called and has appended an empty SGameLog to m_pActLog, or UndoMove has removed the last SGameLog from m_pActLog without decrementing m_pActLog so that it points to an empty SGameLog.  When UndoMove is called, does it reset the final SGameLog tyo all null values after it decrements m_pActLog?  IF not, the UndoMove scenario seems impossible.  Otherwise, is it possible for DoMove to append an empty (all null) SGameLog to the end of m_pActLog?  Both scenario's seem unlikely.  Please consider this proposal, whenever UndoMove is called, m_pActLog will be decremented, and the NEXT SGameLog struct will be seeded with a specific tage value based on WHERE UndoMove was called from, that way the various asserts which check for an invalid SGameLog in m_pActLog will be able to tell where UndoMove was called form incorrectly.  Converseley, each time we call DoMove, we will check m_pActLog at the end after it has been incremented to be sure that the last SGameLog in m_pActLog is valid.  A third idea is to check where we grow m_pActLog itself.  A simple fix is to start with a much larger m_pActLog and grow it by larger increments each time more room is needed. Initializing to 512 SGameLog objects should be sufficient for an entire game.
+
+Please consider this proposal and offer other recommendations that may help isolate where this bug is coming from.
 
 # future cleanup:
 - CPosition piece should be an Enum type PAWN, ROOK, QUEEN, etc. instead of uchar
