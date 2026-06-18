@@ -1299,63 +1299,14 @@ void CWinAmy4dWnd::StopSearchProgressTimer() {
 // depth, divided by that total. The figure climbs smoothly from 0 to 100 across
 // the whole search rather than resetting on each new iteration.
 //
-// The values are read from the live CSearchData of the position being searched
-// (see GameController::GetEngineSearchPosition / CPosition::GetSearchData). A
-// momentarily torn read only perturbs the reported percentage, which is
-// harmless.
+// The figure is computed by the shared engine status channel from the live
+// CSearchData of the position being searched (see GameController::GetEngineStatus
+// / CEngineStatus::GetProgressPercent), the same mechanism the console engine
+// exposes. A momentarily torn read only perturbs the reported percentage, which
+// is harmless.
 int CWinAmy4dWnd::SearchProgressPercent() const {
-    const CPosition* pSearchPos = m_Game.GetEngineSearchPosition();
-    if (!pSearchPos) {
-        return -1;
-    }
-
-    const CSearchData* pSearchData = pSearchPos->GetSearchData();
-    if (!pSearchData) {
-        return -1;
-    }
-
-    int nTotalMoves = pSearchData->m_wRootMoves;
-    if (nTotalMoves <= 0) {
-        return -1;
-    }
-
-    // The root loop runs depths 1 .. (max depth - 1), so the number of
-    // iterations is one less than the configured search depth.
-    int nIterations = m_Game.GetDepth() - 1;
-    if (nIterations < 1) {
-        nIterations = 1;
-    }
-
-    int nDepth = pSearchData->m_wDepth;
-    if (nDepth < 1) {
-        nDepth = 1;
-    }
-    if (nDepth > nIterations) {
-        nDepth = nIterations;
-    }
-
-    int nDone = pSearchData->m_wMoveNum;
-    if (nDone < 0) {
-        nDone = 0;
-    }
-    if (nDone > nTotalMoves) {
-        nDone = nTotalMoves;
-    }
-
-    long lDone = (long)(nDepth - 1) * nTotalMoves + nDone;
-    long lAll = (long)nIterations * nTotalMoves;
-    if (lAll <= 0) {
-        return -1;
-    }
-
-    int nPercent = (int)((lDone * 100) / lAll);
-    if (nPercent < 0) {
-        nPercent = 0;
-    }
-    if (nPercent > 100) {
-        nPercent = 100;
-    }
-    return nPercent;
+    return m_Game.GetEngineStatus().GetProgressPercent(nullptr, nullptr,
+                                                       nullptr);
 }
 
 // ---------------------------------------------------------------------------

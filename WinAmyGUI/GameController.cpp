@@ -5,6 +5,10 @@
 
 #include "GameController.h"
 
+#include "learn.h"
+#include "probe.h"
+#include "random.h"
+#include "recog.h"
 #include "utils.h"
 
 #include <cassert>
@@ -52,15 +56,21 @@ const char *CapturedPieceName(int8_t nPiece) {
 // ---------------------------------------------------------------------------
 
 void GameController::InitEngine() {
+    // Mirror the console WinAmy.exe main() engine-initialisation sequence so the
+    // GUI runs the game engine through identical setup: move tables, evaluation
+    // and hash tables, the endgame tablebase access path, the interior-node
+    // endgame recognizers, opening-book learning, and the RNG seed. Keeping this
+    // in lock-step with main() means both executables play identically.
     InitMoves();
     InitAll();
     HashInit();
     AllocateHT();
-    // TODO: Also call RecogInit() here so the GUI engine has the interior-node
-    // endgame recognizers (KK/KBK/KBNK/KNK/...) that the console build sets up
-    // in main().  Without it ProbeRecognizer() always returns Useless, so the
-    // engine is weaker in simple endgames.  Deferred for now to avoid
-    // introducing new behaviour/bugs in this change.
+    InitEGTB((char *)"TB");
+    RecogInit();
+    DoBookLearning();
+
+    // Ensure true random behavior (matches main()).
+    InitRandom(GetTime());
 }
 
 // ---------------------------------------------------------------------------
@@ -687,8 +697,14 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
             // alive for any concurrent UI-thread progress read.
             m_pSearchPosition.store(pSearchPosition, std::memory_order_release);
 
+            // Publish the searched position to the status channel and let
+            // Iterate report its live CSearchData progress through it, so the
+            // UI thread can poll search progress via GetEngineStatus().
+            m_EngineStatus.SetPosition(pSearchPosition);
+
             int score = 0, altScore = 0;
-            bestMove = pSearchPosition->Iterate(&score, M_NONE, &altScore);
+            bestMove = pSearchPosition->Iterate(&score, M_NONE, &altScore,
+                                                &m_EngineStatus);
 
             // Scenario 2: log the search AFTER it completes, including the chosen
             // move and its score. SAN is computed on the (restored) root position

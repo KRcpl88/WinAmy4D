@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include "dbase.h"
+#include "enginestatus.h"
 #include "hashtable.h"
 #include "heap.h"
 #include "init.h"
@@ -169,13 +170,19 @@ public:
 
     // Access the position currently being searched (a clone of the live board)
     // while an engine move / suggest-move search is running, or null when no
-    // such search is active. The GUI polls its CSearchData (see
-    // CPosition::GetSearchData) to report search progress. The returned object
+    // such search is active. The GUI polls the engine status (see
+    // GetEngineStatus) to report search progress. The returned object
     // stays valid until the next engine search starts (or the controller is
-    // destroyed); once the search has finished its GetSearchData() is null.
+    // destroyed).
     const CPosition* GetEngineSearchPosition() const {
         return m_pSearchPosition.load(std::memory_order_acquire);
     }
+
+    // The thread-safe status channel the engine search publishes its progress
+    // (and the played move) to. The GUI polls it on the UI thread (e.g. for the
+    // status-bar progress percentage) via the same CEngineStatus API the
+    // console state machine uses. Always valid for the controller's lifetime.
+    const CEngineStatus& GetEngineStatus() const { return m_EngineStatus; }
 
     // Access the current position (read-only while engine is running).
     const CPosition* GetPosition() const { return m_pPosition; }
@@ -259,6 +266,11 @@ private:
     // the controller is destroyed. Polled (on the UI thread) via
     // GetEngineSearchPosition() to read its CSearchData search progress.
     std::atomic<CPosition*> m_pSearchPosition{nullptr};
+    // Thread-safe status channel shared with the engine search. The engine
+    // thread publishes the searched position and live CSearchData here (via
+    // CPosition::Iterate); the UI thread reads progress from it. This is the
+    // same status mechanism the console state machine uses.
+    CEngineStatus       m_EngineStatus;
     int                 m_nDepth{3};
     PlayerMode          m_PlayerMode{PlayerMode::TwoPlayers};
     std::atomic<bool>   m_fEngineRunning{false};
