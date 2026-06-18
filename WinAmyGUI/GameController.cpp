@@ -24,6 +24,27 @@
 namespace {
 // Number of ranked moves reported by a strategy computation.
 constexpr int kStrategyRanks = 3;
+
+// Map a (possibly signed/coloured) piece code to its full English name.
+// Returns nullptr for an empty/Neutral square or an unrecognised code.
+const char *CapturedPieceName(int8_t nPiece) {
+    switch (TYPE(nPiece)) {
+    case Pawn:
+        return "Pawn";
+    case Knight:
+        return "Knight";
+    case Bishop:
+        return "Bishop";
+    case Rook:
+        return "Rook";
+    case Queen:
+        return "Queen";
+    case King:
+        return "King";
+    default:
+        return nullptr;
+    }
+}
 } // namespace
 
 // ---------------------------------------------------------------------------
@@ -505,7 +526,23 @@ bool GameController::MakeMove(CMove move) {
             char szSan[32];
             const char *pszSan = m_pPosition->SAN(move, szSan);
             const char *pszSide = (m_pPosition->GetTurn() == 0) ? "White" : "Black";
-            Print(0, "Move made: %s by %s\n", pszSan, pszSide);
+
+            // Determine the captured piece (if any). The move has not been made
+            // yet, so for an ordinary capture the victim still sits on the
+            // destination square; an en passant capture always removes a pawn.
+            int8_t nCapturedPiece = Neutral;
+            if (move.IsCapture()) {
+                nCapturedPiece = m_pPosition->GetPiece(move.GetToCoord().BitOffset());
+            } else if (move.IsEnPassant()) {
+                nCapturedPiece = Pawn;
+            }
+            const char *pszCaptured = CapturedPieceName(nCapturedPiece);
+            if (pszCaptured) {
+                Print(0, "Move made: %s by %s (captured %s)\n", pszSan, pszSide,
+                      pszCaptured);
+            } else {
+                Print(0, "Move made: %s by %s\n", pszSan, pszSide);
+            }
         }
 
         m_pPosition->DoMove(move);
@@ -1019,7 +1056,16 @@ std::string GameController::GetLastMoveText() const {
     }
 
     // The most recently played move is the last entry in the game log.
-    CMove LastMove = (p->GetActLog() - 1)->gl_Move;
+    const SGameLog *pLastLog = p->GetActLog() - 1;
+    CMove LastMove = pLastLog->gl_Move;
+
+    // gl_Piece records the captured piece, but only for capture/en passant
+    // moves; for any other move it holds a stale value, so guard on the move
+    // flags before reading it.
+    int8_t nCapturedPiece = Neutral;
+    if (LastMove.IsCapture() || LastMove.IsEnPassant()) {
+        nCapturedPiece = pLastLog->gl_Piece;
+    }
 
     // Roll the clone back one ply to the position the move was made from, then
     // render the move's SAN from there.
@@ -1035,9 +1081,16 @@ std::string GameController::GetLastMoveText() const {
     const char *pszSide = ((nIndex & 1) == 0) ? "White" : "Black";
     const int nMoveNumber = (nIndex / 2) + 1;
 
-    char szText[128];
-    _snprintf_s(szText, sizeof(szText), _TRUNCATE, "%s move #%d %s", pszSide,
-                nMoveNumber, pszSan ? pszSan : "");
+    const char *pszCaptured = CapturedPieceName(nCapturedPiece);
+    char szText[160];
+    if (pszCaptured) {
+        _snprintf_s(szText, sizeof(szText), _TRUNCATE,
+                    "%s move #%d %s (captured %s)", pszSide, nMoveNumber,
+                    pszSan ? pszSan : "", pszCaptured);
+    } else {
+        _snprintf_s(szText, sizeof(szText), _TRUNCATE, "%s move #%d %s", pszSide,
+                    nMoveNumber, pszSan ? pszSan : "");
+    }
     return std::string(szText);
 }
 

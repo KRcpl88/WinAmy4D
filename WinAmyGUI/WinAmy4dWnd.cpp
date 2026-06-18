@@ -1381,8 +1381,23 @@ void CWinAmy4dWnd::UpdateStatusBar() {
         strPrefix += L" - ";
     }
 
-    wchar_t buf[256];
+    wchar_t buf[512];
     const wchar_t* turn = (pos->GetTurn() == 0) ? L"White to move" : L"Black to move";
+
+    // Current material score, shown in pawns (the engine stores it internally in
+    // milli-pawns, so divide by 1000). Report each side's total material and its
+    // non-pawn material, plus the net balance from White's point of view.
+    const double dWhiteTotal = pos->GetMaterial(0) / 1000.0;
+    const double dBlackTotal = pos->GetMaterial(1) / 1000.0;
+    const double dWhiteNonPawn = pos->GetNonPawn(0) / 1000.0;
+    const double dBlackNonPawn = pos->GetNonPawn(1) / 1000.0;
+    wchar_t szMaterial[192];
+    swprintf_s(szMaterial, 192,
+               L"  |  Material: W %.1f (non-pawn %.1f) / B %.1f (non-pawn %.1f), "
+               L"net %+.1f",
+               dWhiteTotal, dWhiteNonPawn, dBlackTotal, dBlackNonPawn,
+               dWhiteTotal - dBlackTotal);
+
     if (m_Game.IsComputingStrategy() || m_Game.IsEngineRunning()) {
         // A search is in progress. Show the percentage of the work completed,
         // measured as the fraction of root moves searched (engine move / hint) or
@@ -1394,13 +1409,14 @@ void CWinAmy4dWnd::UpdateStatusBar() {
         int nPercent = fStrategy ? m_Game.GetStrategyProgressPercent()
                                  : SearchProgressPercent();
         if (nPercent >= 0) {
-            swprintf_s(buf, 256, L"%s%s  [%s... %d%%]", strPrefix.c_str(), turn,
-                       label, nPercent);
+            swprintf_s(buf, 512, L"%s%s  [%s... %d%%]%s", strPrefix.c_str(), turn,
+                       label, nPercent, szMaterial);
         } else {
-            swprintf_s(buf, 256, L"%s%s  [%s...]", strPrefix.c_str(), turn, label);
+            swprintf_s(buf, 512, L"%s%s  [%s...]%s", strPrefix.c_str(), turn, label,
+                       szMaterial);
         }
     } else {
-        swprintf_s(buf, 256, L"%s%s", strPrefix.c_str(), turn);
+        swprintf_s(buf, 512, L"%s%s%s", strPrefix.c_str(), turn, szMaterial);
     }
     SendMessageW(m_hStatus, WM_SETTEXT, 0, (LPARAM)buf);
 }
