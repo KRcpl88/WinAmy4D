@@ -29,8 +29,8 @@
 
 */
 
-#ifndef ENGINE_STATUS_H
-#define ENGINE_STATUS_H
+#ifndef ENGINESTATUS_H
+#define ENGINESTATUS_H
 
 #include "dbase.h"          // CPosition, CMove
 #include "state_machine.h"  // ui_state_t
@@ -148,4 +148,4 @@ class CEngineStatus {
     ui_state_t m_State;
 };
 
-#endif // ENGINE_STATUS_H
+#endif // ENGINESTATUS_H

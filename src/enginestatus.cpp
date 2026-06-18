@@ -30,10 +30,10 @@
 */
 
 /*
- * engine_status.cpp - thread-safe engine status channel (see engine_status.h)
+ * enginestatus.cpp - thread-safe engine status channel (see enginestatus.h)
  */
 
-#include "engine_status.h"
+#include "enginestatus.h"
 
 #include "position.h"
 #include "search.h"

@@ -160,7 +160,7 @@
     <ClInclude Include="..\include\poly.h" />
     <ClInclude Include="..\include\hcoord.h" />
     <ClInclude Include="..\include\move.h" />
-    <ClInclude Include="..\include\engine_status.h" />
+    <ClInclude Include="..\include\enginestatus.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bitboard.cpp" />
@@ -169,7 +169,7 @@
     <ClCompile Include="commands.cpp" />
     <ClCompile Include="dbase.cpp" />
     <ClCompile Include="eco.cpp" />
-    <ClCompile Include="engine_status.cpp" />
+    <ClCompile Include="enginestatus.cpp" />
     <ClCompile Include="evaluation.cpp" />
     <ClCompile Include="evaluation_config.cpp" />
     <ClCompile Include="filter.cpp" />

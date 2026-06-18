@@ -42,7 +42,7 @@
 #include <string.h>
 
 #include "evaluation_config.h"
-#include "engine_status.h"
+#include "enginestatus.h"
 #include "hashtable.h"
 #include "init.h"
 #include "learn.h"

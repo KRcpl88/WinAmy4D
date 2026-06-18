@@ -32,7 +32,7 @@
 #include "dbase.h"
 
 #include "bookup.h"
-#include "engine_status.h"
+#include "enginestatus.h"
 #include "evaluation.h"
 #include "hashtable.h"
 #include "heap.h"

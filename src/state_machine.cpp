@@ -38,7 +38,7 @@
 #include "state_machine.h"
 #include "commands.h"
 #include "dbase.h"
-#include "engine_status.h"
+#include "enginestatus.h"
 #include "pgn.h"
 #include "search.h"
 #include "utils.h"
