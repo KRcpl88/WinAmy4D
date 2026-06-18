@@ -45,9 +45,6 @@
 #define MAX_EPD_STRING 1024
 #define MAX_EPD_LINE 1024
 
-// used in tbindex.cpp
-//#define T41_INCLUDE 
-
 #ifdef _WIN32
 /*
  * Windows stuff by Dann Corbit.

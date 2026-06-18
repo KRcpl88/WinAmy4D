@@ -179,12 +179,10 @@
     <ClCompile Include="mates.cpp" />
     <ClCompile Include="movedata.cpp" />
     <ClCompile Include="move.cpp" />
-    <ClCompile Include="mytb.cpp" />
     <ClCompile Include="search_data.cpp" />
     <ClCompile Include="pgn.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="probe.cpp" />
-    <ClCompile Include="tbindex.cpp" />
     <ClCompile Include="random.cpp" />
     <ClCompile Include="recog.cpp" />
     <ClCompile Include="search.cpp" />
