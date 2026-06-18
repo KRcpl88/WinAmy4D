@@ -568,6 +568,26 @@ This may be an imbalance between DoMove and UndoMove.  p->m_pActLog is pointing 
 
 Please consider this proposal and offer other recommendations that may help isolate where this bug is coming from.
 
+
+
+# engine updates
+
+WinAmyGUI uses a different search function and gameplay loop than WinAMy.exe, the console version.  Please refactor WinAmyGUI.exe so it uses as much as possible the same engine and engine logic as WinAMy.exe,  Use as much of the game engine implementation as possible from the SRC lib.  One problem is the SRC Lib assumes in and out communication are driven by the console IO and uses stdout to send move information and updates to the user.  So, some changes may be needed, but try to make as few changes as possible in the SRC lib and any changes should not modify how the engine works, just how it reports status and receives updates.
+
+1. Use src/state_machine.cpp as the core engine loop and the same functions used by commands  in src/commands.cpp to drive play, set player modes, and save as EPD or PGN file
+2. Because the SRC lib uses stdout to report game status, we need to add a new class CEngineStatus that will be periodically updated by the game engine or state machine.   CEngineStatus  should use threadsafe access methods with thread signaling like a mutex of other lock mechanism
+3. Sill hold a CSearchData and CPosition which can be set using a thread lock using SetSearchData and SetPosition.  CPosition will no longer need m_pSearchData because it will be tracked separately through CEngineStatus and can be removed.
+4. CEngineStatus  will not support direct access to CPosition, but will have GetPositionClone which will clone the current CPosition and return a clone.
+5. Add a new struct SEngineStastusSnapshot which will retrieve current engine status as a snapshot, including the most recent move, piece captured, current side to move, move number, state machine state, search data total moves, search depth, and iteration.  The snapshot will be returned using a lock with a single operation so that the GUI can get all the current info and only hold the lock once
+6. CEngineStatus will not expose CSearchData directly, but support retrieving data through a snapshot
+7. CEngineStatus wil have a helper function to return the current search progress percentage as an integer to display in the GUI status bar, the GUI will poll these periodically not more than 5 times per second.  When waiting for a move update from the game, the search progress helper will also get move number, side to move and engine state machine state so the GUI knows when to refresh the UI and also call GetPositionClone to get the updates position. and GetStatsuSnapshot to get the last move and piece captured.
+8. The GUI will create a CEngineStatus  and pass a pointer to it in to StateMachine, And StateMachine will pass the CEngineStatus*  in to SearchRoot so SearchRoot can update the status with the last move and piece captured if it makes a move.
+9.  SearchRoot will pass the CEngineStastus* in to Iterate so that Iterate can set CSearchData so that it can be used to return search progress updates to the GUI.
+10.  WinAmy.exe will need to create a "dummy" CEngineStatus object which will be passed in to StateMachine but never used other than that.
+
+
+
+
 # future cleanup:
 - Remove tbindex.cpp, it uses 8x8 fixed board sizes to compute well known endgames for 2D chess, irrelvant for 4D, not even sure how this compiles.  This is fundamentally broken
 - . src/recog.cpp:183–251 — KBNKTab[64] indexed by BitOffset ⚠️ BUGGY
