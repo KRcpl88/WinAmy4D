@@ -32,6 +32,7 @@
 #include "dbase.h"
 
 #include "bookup.h"
+#include "engine_status.h"
 #include "evaluation.h"
 #include "hashtable.h"
 #include "heap.h"
@@ -406,7 +407,7 @@ CMove CPosition::ProbeBestMove() {
  *  alternate_score_ptr: a pointer to return the alternate score in
  */
 CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
-                         int *alternate_score_ptr) {
+                         int *alternate_score_ptr, CEngineStatus *pStatus) {
     CPosition *p = this;
     float soft, hard;
     int cnt;
@@ -500,10 +501,12 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
 
     /*
      * Publish the search data so the GUI can poll root-move progress while the
-     * search runs (see CPosition::GetSearchData). Cleared before the data is
-     * destroyed so a stale pointer is never read.
+     * search runs (see CEngineStatus::GetProgressPercent). Cleared before the
+     * data is destroyed so a stale pointer is never read.
      */
-    p->m_pSearchData = sd;
+    if (pStatus != NULL) {
+        pStatus->SetSearchData(sd);
+    }
 
     IterateInt(sd);
 
@@ -516,7 +519,9 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
         *alternate_score_ptr = sd->m_nAlternateScore;
     }
 
-    p->m_pSearchData = NULL;
+    if (pStatus != NULL) {
+        pStatus->SetSearchData(NULL);
+    }
     delete sd;
 
 #if MP
@@ -529,7 +534,7 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
 /**
  * Search the root node.
  */
-void CPosition::SearchRoot() {
+void CPosition::SearchRoot(CEngineStatus *pStatus) {
     CPosition *p = this;
     CMove move = M_NONE;
     CPosition *q;
@@ -552,7 +557,7 @@ void CPosition::SearchRoot() {
 
     if (move == M_NONE) {
         q = CPosition::Clone(p);
-        move = q->Iterate(NULL, M_NONE, NULL);
+        move = q->Iterate(NULL, M_NONE, NULL, pStatus);
         CPosition::Free(q);
     }
 
@@ -569,6 +574,20 @@ void CPosition::SearchRoot() {
             PrintDebug(0, "move %s\n", ICS_SAN(move));
 
         p->DoMove(move);
+
+        /*
+         * Publish the move just played to the status channel so a non-console
+         * host (e.g. the GUI) can report it. gl_Piece only records a captured
+         * piece for capture / en-passant moves, so guard on the move flags
+         * before reading it.
+         */
+        if (pStatus != NULL) {
+            int8_t nCaptured = Neutral;
+            if (move.IsCapture() || move.IsEnPassant()) {
+                nCaptured = (p->GetActLog() - 1)->gl_Piece;
+            }
+            pStatus->SetLastMove(move, nCaptured);
+        }
     }
 }
 

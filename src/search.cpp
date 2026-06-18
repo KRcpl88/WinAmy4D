@@ -1609,6 +1609,8 @@ void SetMaxSearchDepth(int max_search_depth) {
     }
 }
 
+int GetMaxSearchDepth(void) { return MaxSearchDepth; }
+
 void SetExcludedRootMoves(const CMove *pMoves, uint16_t cMoves) {
     if (cMoves > MAX_EXCLUDED_ROOT_MOVES) {
         cMoves = MAX_EXCLUDED_ROOT_MOVES;

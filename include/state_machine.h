@@ -54,6 +54,12 @@ extern int ComputerSide;
 extern CPosition *CurrentPosition;
 extern bool AutoSave;
 
-void StateMachine(void);
+class CEngineStatus;
+
+// Run the engine's interactive state machine. The pStatus channel receives
+// status updates (current position, last move, search progress, state) so a
+// non-console host such as the GUI can observe play without reading stdout; it
+// must not be null (the console passes a dummy CEngineStatus it never reads).
+void StateMachine(CEngineStatus *pStatus);
 
 #endif

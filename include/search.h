@@ -73,6 +73,12 @@ extern int NumberOfCores;
 
 void SetMaxSearchDepth(int);
 
+// Return the configured iterative-deepening target depth (MaxSearchDepth). The
+// root search loop runs iterations 1 .. (this value - 1), so observers (e.g.
+// CEngineStatus) use it to express search progress as a fraction of the total
+// work.
+int GetMaxSearchDepth(void);
+
 /*
  * Root-move exclusion (used to emulate MultiPV by repeated searches).
  *

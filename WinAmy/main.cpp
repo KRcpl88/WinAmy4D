@@ -42,6 +42,7 @@
 #include <string.h>
 
 #include "evaluation_config.h"
+#include "engine_status.h"
 #include "hashtable.h"
 #include "init.h"
 #include "learn.h"
@@ -248,7 +249,13 @@ int main(int argc, char *argv[]) {
     /* Ensure true random behavior. */
     InitRandom(GetTime());
 
-    StateMachine();
+    /*
+     * The console driver does not observe engine status (it reports via
+     * stdout), but StateMachine requires a status channel. Pass a dummy one
+     * that is never read.
+     */
+    CEngineStatus dummyStatus;
+    StateMachine(&dummyStatus);
 
     return 0;
 }

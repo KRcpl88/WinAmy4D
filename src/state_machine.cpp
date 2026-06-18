@@ -38,6 +38,7 @@
 #include "state_machine.h"
 #include "commands.h"
 #include "dbase.h"
+#include "engine_status.h"
 #include "pgn.h"
 #include "search.h"
 #include "utils.h"
@@ -58,7 +59,7 @@ int ComputerSide;
 /**
  * Implements the state machine.
  */
-void StateMachine(void) {
+void StateMachine(CEngineStatus *pStatus) {
     const char *gameend;
 
     NewGame(NULL);
@@ -66,6 +67,14 @@ void StateMachine(void) {
     ComputerSide = Black;
 
     while (State != STATE_END) {
+
+        /*
+         * Publish the current position and state-machine state so a non-console
+         * host (e.g. the GUI) can observe play. The console passes a dummy
+         * status object it never reads, so this is harmless there.
+         */
+        pStatus->SetPosition(CurrentPosition);
+        pStatus->SetState(State);
 
         if (AutoSave) {
             SaveGame(CurrentPosition, AutoSaveFileName);
@@ -94,7 +103,7 @@ void StateMachine(void) {
             break;
         case STATE_CALCULATING:
             ComputerSide = CurrentPosition->GetTurn();
-            CurrentPosition->SearchRoot();
+            CurrentPosition->SearchRoot(pStatus);
             if (EasyMode || ForceMode) {
                 State = STATE_WAITING;
             } else if (!SelfPlayMode) {
