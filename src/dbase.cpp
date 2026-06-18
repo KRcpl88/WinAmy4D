@@ -53,7 +53,7 @@
 #include "ucoord.h"
 #include "move.h"
 
-#define INITIAL_GAME_LOG_SIZE 40 /* Initial size of game history */
+#define INITIAL_GAME_LOG_SIZE 128 /* Initial size of game history */
 
 /* Maximum number of EPD ops we attempt to parse */
 #define MAX_EPD_OPS 15
@@ -887,9 +887,13 @@ void CPosition::DoMove(CMove move) {
 
     /* Grow gameLog if needed. */
     if (p->m_wPly >= p->m_cGameLog) {
+        size_t oldSize = p->m_cGameLog;
         p->m_cGameLog *= 2;
-        p->m_pGameLog =
-            (SGameLog *)(SGameLog *)realloc(p->m_pGameLog, sizeof(SGameLog) * p->m_cGameLog);
+        p->m_pGameLog = (SGameLog *)(SGameLog *)realloc(
+            p->m_pGameLog, sizeof(SGameLog) * p->m_cGameLog);
+        /* Zero the newly allocated portion (realloc does not initialize) */
+        memset(p->m_pGameLog + oldSize, 0,
+               sizeof(SGameLog) * (p->m_cGameLog - oldSize));
         p->m_pActLog = p->m_pGameLog + p->m_wPly;
     } else {
         p->m_pActLog++;
@@ -1123,9 +1127,13 @@ void CPosition::DoNull() {
 
     /* Grow gameLog if needed. */
     if (p->m_wPly >= p->m_cGameLog) {
+        size_t oldSize = p->m_cGameLog;
         p->m_cGameLog *= 2;
-        p->m_pGameLog =
-            (SGameLog *)(SGameLog *)realloc(p->m_pGameLog, sizeof(SGameLog) * p->m_cGameLog);
+        p->m_pGameLog = (SGameLog *)(SGameLog *)realloc(
+            p->m_pGameLog, sizeof(SGameLog) * p->m_cGameLog);
+        /* Zero the newly allocated portion (realloc does not initialize) */
+        memset(p->m_pGameLog + oldSize, 0,
+               sizeof(SGameLog) * (p->m_cGameLog - oldSize));
         p->m_pActLog = p->m_pGameLog + p->m_wPly;
     } else {
         p->m_pActLog++;
