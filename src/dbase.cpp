@@ -3410,6 +3410,15 @@ CPosition *CPosition::Initial() {
 }
 
 CPosition *CPosition::Clone(const CPosition *src) {
+    if (src == NULL) {
+        Print(0, "CPosition::Clone: source position is null.\n");
+        return NULL;
+    }
+
+    PrintDebug(9,
+               "CPosition::Clone: cloning %p (ply %u, turn %d, gameLog %u).\n",
+               (const void *)src, src->m_wPly, src->m_nTurn, src->m_cGameLog);
+
     CPosition *p = (CPosition *)safe_calloc(1, sizeof(CPosition));
     memcpy(p, src, sizeof(CPosition));
 
@@ -3418,6 +3427,9 @@ CPosition *CPosition::Clone(const CPosition *src) {
     memcpy(p->m_pGameLog, src->m_pGameLog, sizeof(SGameLog) * p->m_cGameLog);
 
     p->m_pActLog = p->m_pGameLog + (src->m_pActLog - src->m_pGameLog);
+
+    PrintDebug(9, "CPosition::Clone: created clone %p from %p.\n", (void *)p,
+               (const void *)src);
 
     return p;
 }

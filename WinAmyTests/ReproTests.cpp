@@ -224,6 +224,46 @@ TEST_CLASS(ReproTests) {
         Assert::IsTrue(fLegal, w.c_str());
     }
 
+    TEST_METHOD(Issue129SelfPlayPositionSearchProducesLegalMove) {
+        const char *pszEpd =
+            "1|2/1r|3/3/3|4/4/4/4|5/5/5/5/3K1|6/6/6/2p3/6/6|pppnppp/7/4q2/7/"
+            "7/7/PPPPPPP|2b4r/p4ppp/8/8/2B5/8/P4PPP/3Q3R|1nb2br/pppppkp/7/7/"
+            "7/PPPPPPP/2B2BR|pppp1p/4p1/6/6/3P2/PPP1PP|5/5/5/5/5|4/4/4/4|3/3/"
+            "3|2/2|1 w - -";
+
+        CPosition *pPosition = CPosition::CreateFromEPD(pszEpd);
+        Assert::IsNotNull(pPosition, L"EPD did not parse");
+        PositionGuard Position(pPosition);
+
+        const char *pszGameEnd = Position.get()->GameEnd();
+        Assert::IsTrue(pszGameEnd == nullptr,
+                       L"Issue #129 repro position must still be in progress");
+
+        SetMaxSearchDepth(8);
+
+        PositionGuard SearchPosition(CPosition::Clone(Position.get()));
+        Assert::IsNotNull(SearchPosition.get(), L"Clone failed");
+
+        int nScore = 0;
+        int nAltScore = 0;
+        CMove BestMove = SearchPosition.get()->Iterate(&nScore, M_NONE, &nAltScore);
+        bool fLegal = Position.get()->LegalMove(BestMove);
+
+        std::ostringstream Stream;
+        Stream << "best move L" << BestMove.GetFromCoord().m_nLevel << "F"
+               << BestMove.GetFromCoord().m_nFile << "R"
+               << BestMove.GetFromCoord().m_nRank << " -> L"
+               << BestMove.GetToCoord().m_nLevel << "F"
+               << BestMove.GetToCoord().m_nFile << "R"
+               << BestMove.GetToCoord().m_nRank << " legal=" << (int)fLegal
+               << " score=" << nScore << "\n";
+        std::string Message = Stream.str();
+        std::wstring WideMessage(Message.begin(), Message.end());
+        Logger::WriteMessage(WideMessage.c_str());
+        Assert::IsTrue(BestMove != M_NONE, WideMessage.c_str());
+        Assert::IsTrue(fLegal, WideMessage.c_str());
+    }
+
     // Recursively make/unmake every legal move to a fixed depth, verifying that
     // UndoMove fully restores the position - specifically that the occupancy
     // mask m_rgMask[color][0] still matches m_rgPiece, the per-piece masks
