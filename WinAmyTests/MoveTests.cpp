@@ -331,6 +331,52 @@ TEST_CLASS(MoveTests) {
         }
     }
 
+    // Regression: search can push the game-log well past the initial allocation
+    // (128 plies) before unwinding. Verify that repeated DoMove growth and the
+    // corresponding UndoMove path still round-trip the full position state.
+    TEST_METHOD(DoMoveUndoMoveRoundTripsAfterGameLogGrowth) {
+        uint32_t nRng = 0xBADC0DEu;
+        auto Rand = [&nRng]() {
+            nRng = nRng * 1664525u + 1013904223u;
+            return nRng;
+        };
+
+        PositionGuard position(CPosition::Initial());
+        std::vector<CMove> rgMovesPlayed;
+        std::vector<CPosition *> rgSnapshots;
+
+        for (int nPly = 0; nPly < 180; nPly++) {
+            PositionGuard snapshot(CPosition::Clone(position.get()));
+
+            heap_t heap = allocate_heap();
+            push_section(heap);
+            position.get()->LegalMoves(heap);
+            std::vector<CMove> rgMoves;
+            for (unsigned int i = heap->current_section->start;
+                 i < heap->current_section->end; ++i) {
+                rgMoves.push_back(heap->data[i]);
+            }
+            free_heap(heap);
+            if (rgMoves.empty()) {
+                break;
+            }
+
+            CMove move = rgMoves[Rand() % rgMoves.size()];
+            position.get()->DoMove(move);
+            rgMovesPlayed.push_back(move);
+            rgSnapshots.push_back(CPosition::Clone(snapshot.get()));
+        }
+
+        for (int i = (int)rgMovesPlayed.size() - 1; i >= 0; i--) {
+            position.get()->UndoMove(rgMovesPlayed[i]);
+            AssertPositionsEqual(position.get(), rgSnapshots[i]);
+            CPosition::Free(rgSnapshots[i]);
+        }
+
+        Assert::IsTrue((int)rgMovesPlayed.size() > 128,
+                       L"Test must exceed initial game-log size to exercise growth");
+    }
+
     TEST_METHOD(SANRoundTripsForAllLegalMovesInReportedStrategyEPD) {
         const char *pszEpd =
             "1|2/1r|3/3/3|4/4/4/4|4R/5/5/5/5|6/6/6/6/6/4N1|ppppppp/7/7/7/7/2NPN2/PPPQPPP|"

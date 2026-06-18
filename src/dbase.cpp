@@ -681,6 +681,15 @@ void CPosition::DoMove(CMove move) {
                "DoMove moving a non-friendly piece (%d) from L%d/F%d/R%d\n",
                (int)p->m_rgPiece[fromOffset], fromCoord.m_nLevel,
                fromCoord.m_nFile, fromCoord.m_nRank);
+    AMY_ASSERT(p->m_pActLog >= p->m_pGameLog &&
+                   p->m_pActLog < p->m_pGameLog + p->m_cGameLog,
+               "DoMove: m_pActLog out of range (ply=%u size=%u act=%p base=%p)\n",
+               (unsigned)p->m_wPly, p->m_cGameLog, (void *)p->m_pActLog,
+               (void *)p->m_pGameLog);
+    AMY_ASSERT(p->m_pActLog == p->m_pGameLog + p->m_wPly,
+               "DoMove: m_pActLog/ply mismatch (ply=%u index=%u)\n",
+               (unsigned)p->m_wPly,
+               (unsigned)(p->m_pActLog - p->m_pGameLog));
 
     /* save EnPassant and Castling */
     p->m_pActLog->gl_EnPassant = p->m_EnPassant;
@@ -887,17 +896,27 @@ void CPosition::DoMove(CMove move) {
 
     /* Grow gameLog if needed. */
     if (p->m_wPly >= p->m_cGameLog) {
-        size_t oldSize = p->m_cGameLog;
-        p->m_cGameLog *= 2;
-        p->m_pGameLog = (SGameLog *)(SGameLog *)realloc(
-            p->m_pGameLog, sizeof(SGameLog) * p->m_cGameLog);
+        const unsigned int nOldSize = p->m_cGameLog;
+        const unsigned int nNewSize = p->m_cGameLog * 2;
+        SGameLog *pNewGameLog = (SGameLog *)safe_realloc(
+            p->m_pGameLog, sizeof(SGameLog) * nNewSize);
+        PrintDebug(9,
+                   "DoMove: game log growth %u -> %u at ply %u (old=%p new=%p)\n",
+                   nOldSize, nNewSize, (unsigned)p->m_wPly,
+                   (void *)p->m_pGameLog, (void *)pNewGameLog);
+        p->m_cGameLog = nNewSize;
+        p->m_pGameLog = pNewGameLog;
         /* Zero the newly allocated portion (realloc does not initialize) */
-        memset(p->m_pGameLog + oldSize, 0,
-               sizeof(SGameLog) * (p->m_cGameLog - oldSize));
+        memset(p->m_pGameLog + nOldSize, 0,
+               sizeof(SGameLog) * (nNewSize - nOldSize));
         p->m_pActLog = p->m_pGameLog + p->m_wPly;
     } else {
         p->m_pActLog++;
     }
+    AMY_ASSERT(p->m_pActLog == p->m_pGameLog + p->m_wPly,
+               "DoMove: post-update m_pActLog/ply mismatch (ply=%u index=%u)\n",
+               (unsigned)p->m_wPly,
+               (unsigned)(p->m_pActLog - p->m_pGameLog));
 
     /* Check if reversible move */
     if (move.IsCapture() || move.HasPromotion() || move.IsCastle() || tp == Pawn) {
@@ -1104,6 +1123,15 @@ void CPosition::DoNull() {
      */
     AMY_ASSERT(!p->InCheck(p->m_nTurn),
                "DoNull called while side %d is in check\n", p->m_nTurn);
+    AMY_ASSERT(p->m_pActLog >= p->m_pGameLog &&
+                   p->m_pActLog < p->m_pGameLog + p->m_cGameLog,
+               "DoNull: m_pActLog out of range (ply=%u size=%u act=%p base=%p)\n",
+               (unsigned)p->m_wPly, p->m_cGameLog, (void *)p->m_pActLog,
+               (void *)p->m_pGameLog);
+    AMY_ASSERT(p->m_pActLog == p->m_pGameLog + p->m_wPly,
+               "DoNull: m_pActLog/ply mismatch (ply=%u index=%u)\n",
+               (unsigned)p->m_wPly,
+               (unsigned)(p->m_pActLog - p->m_pGameLog));
 
     /* Update SGameLog */
     p->m_pActLog->gl_Move = M_NULL;
@@ -1127,17 +1155,27 @@ void CPosition::DoNull() {
 
     /* Grow gameLog if needed. */
     if (p->m_wPly >= p->m_cGameLog) {
-        size_t oldSize = p->m_cGameLog;
-        p->m_cGameLog *= 2;
-        p->m_pGameLog = (SGameLog *)(SGameLog *)realloc(
-            p->m_pGameLog, sizeof(SGameLog) * p->m_cGameLog);
+        const unsigned int nOldSize = p->m_cGameLog;
+        const unsigned int nNewSize = p->m_cGameLog * 2;
+        SGameLog *pNewGameLog = (SGameLog *)safe_realloc(
+            p->m_pGameLog, sizeof(SGameLog) * nNewSize);
+        PrintDebug(9,
+                   "DoNull: game log growth %u -> %u at ply %u (old=%p new=%p)\n",
+                   nOldSize, nNewSize, (unsigned)p->m_wPly,
+                   (void *)p->m_pGameLog, (void *)pNewGameLog);
+        p->m_cGameLog = nNewSize;
+        p->m_pGameLog = pNewGameLog;
         /* Zero the newly allocated portion (realloc does not initialize) */
-        memset(p->m_pGameLog + oldSize, 0,
-               sizeof(SGameLog) * (p->m_cGameLog - oldSize));
+        memset(p->m_pGameLog + nOldSize, 0,
+               sizeof(SGameLog) * (nNewSize - nOldSize));
         p->m_pActLog = p->m_pGameLog + p->m_wPly;
     } else {
         p->m_pActLog++;
     }
+    AMY_ASSERT(p->m_pActLog == p->m_pGameLog + p->m_wPly,
+               "DoNull: post-update m_pActLog/ply mismatch (ply=%u index=%u)\n",
+               (unsigned)p->m_wPly,
+               (unsigned)(p->m_pActLog - p->m_pGameLog));
 
     /* treat null move as irreversible */
     p->m_pActLog->gl_IrrevCount = 0;
