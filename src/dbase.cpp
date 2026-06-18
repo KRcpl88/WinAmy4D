@@ -394,6 +394,20 @@ static void DebugEngine(CPosition *p) {
 
 void CPosition::AtkSet(int type, int color, const CSCoord& squareCoord) {
     const unsigned int square = squareCoord.BitOffset();
+
+    /*
+     * The piece at squareCoord must already be on the board and must match
+     * the type/color arguments.  If m_rgPiece[square] is Neutral (0) or the
+     * wrong colour the attack maps will be corrupted – trap that here before
+     * it propagates silently.
+     */
+    AMY_ASSERT(TYPE(m_rgPiece[square]) == type && SAME_COLOR(m_rgPiece[square], color),
+               "AtkSet: piece at L%d/F%d/R%d (offset %u) is %d, "
+               "expected type=%d color=%d\n",
+               (int)squareCoord.m_nLevel, (int)squareCoord.m_nFile,
+               (int)squareCoord.m_nRank, (unsigned)square,
+               (int)m_rgPiece[square], type, color);
+
     CBitBoard attacks;
     const CBitBoard occupied = m_rgMask[0][0] | m_rgMask[1][0];
 
@@ -450,6 +464,17 @@ void CPosition::AtkClr(const CSCoord& squareCoord) {
 void CPosition::GainAttack(const CSCoord& fromCoord,
                        const CSCoord& toCoord) {
     const uint16_t from = fromCoord.BitOffset();
+
+    /*
+     * GainAttack is only ever called for a sliding piece whose ray was
+     * unblocked (a piece was removed from its path).  The sliding piece at
+     * fromCoord must therefore still be on the board.
+     */
+    AMY_ASSERT(m_rgPiece[from] != Neutral,
+               "GainAttack: from square L%d/F%d/R%d (offset %u) is empty\n",
+               (int)fromCoord.m_nLevel, (int)fromCoord.m_nFile,
+               (int)fromCoord.m_nRank, (unsigned)from);
+
     const uint16_t to = toCoord.BitOffset();
     const uint16_t *nsq = NextSQ[from];
     uint16_t sq = to;
@@ -474,8 +499,19 @@ void CPosition::GainAttack(const CSCoord& fromCoord,
  */
 
 void CPosition::LooseAttack(const CSCoord& fromCoord,
-                        const CSCoord& toCoord) {
+                         const CSCoord& toCoord) {
     const uint16_t from = fromCoord.BitOffset();
+
+    /*
+     * LooseAttack is only ever called for a sliding piece whose ray was
+     * blocked by a newly placed piece.  The sliding piece at fromCoord must
+     * therefore still be on the board.
+     */
+    AMY_ASSERT(m_rgPiece[from] != Neutral,
+               "LooseAttack: from square L%d/F%d/R%d (offset %u) is empty\n",
+               (int)fromCoord.m_nLevel, (int)fromCoord.m_nFile,
+               (int)fromCoord.m_nRank, (unsigned)from);
+
     const uint16_t to = toCoord.BitOffset();
     const uint16_t *nsq = NextSQ[from];
     uint16_t sq = to;
@@ -1244,6 +1280,16 @@ void CPosition::RecalcAttacks() {
     while (tmp) {
         int i = (tmp).FindSetBit();
         int pc = p->m_rgPiece[i];
+        /*
+         * m_rgMask[White][0] must only have bits set for squares that actually
+         * hold a white piece.  A stale bit (pc <= 0) means the occupancy mask
+         * and the piece array have diverged — catch it before the downstream
+         * mask/attack tables are built on corrupted data.
+         */
+        AMY_ASSERT(pc > 0,
+                   "RecalcAttacks: m_rgMask[White][0] bit %u set but "
+                   "m_rgPiece[%u]=%d (not a white piece)\n",
+                   (unsigned)i, (unsigned)i, pc);
         tmp.ClearLowestBit();
         p->m_rgMask[White][pc].SetBit(i);
         if (is_sliding(pc))
@@ -1265,6 +1311,15 @@ void CPosition::RecalcAttacks() {
     while (tmp) {
         int i = (tmp).FindSetBit();
         int pc = -p->m_rgPiece[i];
+        /*
+         * m_rgMask[Black][0] must only have bits set for squares that actually
+         * hold a black piece (stored as negative values).  A stale bit means
+         * the occupancy mask and the piece array have diverged.
+         */
+        AMY_ASSERT(p->m_rgPiece[i] < 0,
+                   "RecalcAttacks: m_rgMask[Black][0] bit %u set but "
+                   "m_rgPiece[%u]=%d (not a black piece)\n",
+                   (unsigned)i, (unsigned)i, (int)p->m_rgPiece[i]);
         tmp.ClearLowestBit();
         p->m_rgMask[Black][pc].SetBit(i);
         if (is_sliding(pc))
@@ -1299,6 +1354,29 @@ void CPosition::RecalcAttacks() {
     p->m_rgKingSq[White] = (p->m_rgMask[White][King]).FindSetBitCoord();
     p->m_rgKingSq[Black] = (p->m_rgMask[Black][King]).FindSetBitCoord();
 
+    /*
+     * Post-build invariant: every bit recorded in m_rgAtkFr must correspond to
+     * a real piece.  A stale bit from an empty square means either the occupancy
+     * masks (m_rgMask[side][0]) fed into this function were already corrupted, or
+     * a bug in AtkSet generated a bogus entry.  Either way, if GenTo ever sees
+     * such a bit it will emit a move from an empty square and DoMove will assert.
+     */
+    for (unsigned int nSq = 0; nSq < CBitBoard::SIZE; nSq++) {
+        CBitBoard frBits = p->m_rgAtkFr[nSq];
+        while (frBits) {
+            const uint16_t nFrom = frBits.FindSetBit();
+            frBits.ClearLowestBit();
+            AMY_ASSERT(p->m_rgPiece[nFrom] != Neutral,
+                       "RecalcAttacks: m_rgAtkFr[%u] bit %u set from empty "
+                       "square (from L%d/F%d/R%d attacking L%d/F%d/R%d)\n",
+                       (unsigned)nSq, (unsigned)nFrom,
+                       (int)CSCoord(nFrom).m_nLevel, (int)CSCoord(nFrom).m_nFile,
+                       (int)CSCoord(nFrom).m_nRank,
+                       (int)CSCoord(nSq).m_nLevel, (int)CSCoord(nSq).m_nFile,
+                       (int)CSCoord(nSq).m_nRank);
+        }
+    }
+
     p->m_ullHKey ^= HashKeysCastle[p->m_bCastle];
     if (p->m_nTurn == Black)
         p->m_ullHKey ^= STMKey;
@@ -1314,11 +1392,36 @@ void CPosition::RecalcAttacks() {
 void CPosition::GenTo(const CSCoord& squareCoord, heap_t heap) {
     CPosition *p = this;
     const unsigned int square = squareCoord.BitOffset();
+
+    /*
+     * GenTo generates capture moves TO squareCoord.  The target square must
+     * hold a real (non-empty) piece for the capture to be valid.
+     */
+    AMY_ASSERT(p->m_rgPiece[square] != Neutral,
+               "GenTo: target square L%d/F%d/R%d (offset %u) is empty\n",
+               (int)squareCoord.m_nLevel, (int)squareCoord.m_nFile,
+               (int)squareCoord.m_nRank, (unsigned)square);
+
     CBitBoard tmp = p->m_rgAtkFr[square] & p->m_rgMask[p->m_nTurn][0];
 
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
+
+        /*
+         * The bit in m_rgAtkFr & m_rgMask[turn][0] must correspond to a real
+         * friendly piece.  A stale bit in either table (occupancy mask or attack
+         * map) would produce a move out of an empty square, which DoMove traps.
+         */
+        AMY_ASSERT(p->m_rgPiece[coord.BitOffset()] != Neutral &&
+                       SAME_COLOR(p->m_rgPiece[coord.BitOffset()], p->m_nTurn),
+                   "GenTo: m_rgAtkFr/m_rgMask indicate an attack from empty or "
+                   "wrong-color square (from L%d/F%d/R%d to L%d/F%d/R%d), "
+                   "piece=%d\n",
+                   (int)coord.m_nLevel, (int)coord.m_nFile, (int)coord.m_nRank,
+                   (int)squareCoord.m_nLevel, (int)squareCoord.m_nFile,
+                   (int)squareCoord.m_nRank,
+                   (int)p->m_rgPiece[coord.BitOffset()]);
         if (TYPE(p->m_rgPiece[coord.BitOffset()]) == Pawn) {
             if (is_promo_square(squareCoord)) {
                 append_to_heap(heap, make_promotion(coord, squareCoord, Queen, M_CAPTURE));
