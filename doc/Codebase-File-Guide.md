@@ -140,7 +140,7 @@ A standalone Win32 + Direct3D 11 desktop EXE that links the `src` engine library
 - Evaluation/config: `evaluation.cpp`, `evaluation_config.cpp`, `yaml.cpp`, `tree.cpp`, `heap.cpp`.
 - Command/protocol loop: `state_machine.cpp`, `commands.cpp`.
 - Book/analysis tools: `pgn.cpp`, `eco.cpp`, `bookup.cpp`, `learn.cpp`, `filter.cpp`, `blunder.cpp`.
-- Tablebase support: `probe.cpp`, `mytb.cpp`, `tbindex.cpp`, `tbdecode.c`.
+- Endgame tablebase probing: `probe.cpp` (disabled stub; the original 8x8/2D tablebase index code was removed as invalid for 4D).
 - Internal engine tests: `test_blunder.cpp`, `test_dbase.cpp`, `test_yaml.cpp`.
 - `src/main.cpp` exists but is not the active executable entrypoint in `WinAmy.vcxproj`.
 

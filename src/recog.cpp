@@ -53,7 +53,6 @@ static int RecognizerAvailable[32];
 
 static RECOGNIZER RecognizerKK;
 static RECOGNIZER RecognizerKBK;
-static RECOGNIZER RecognizerKBNK;
 static RECOGNIZER RecognizerKNK;
 static RECOGNIZER RecognizerKBKP;
 static RECOGNIZER RecognizerKNKP;
@@ -87,8 +86,6 @@ void RecogInit(void) {
 
     RegisterRecognizer(RecognizerKK, sig(0, 0, 0, 0, 0), sig(0, 0, 0, 0, 0));
     RegisterRecognizer(RecognizerKBK, sig(0, 0, 1, 0, 0), sig(0, 0, 0, 0, 0));
-    RegisterRecognizer(RecognizerKBNK, sig(0, 1, 1, 0, 0), sig(0, 0, 0, 0, 0));
-    RegisterRecognizer(RecognizerKBNK, sig(0, 0, 1, 0, 0), sig(0, 1, 0, 0, 0));
     RegisterRecognizer(RecognizerKNK, sig(0, 1, 0, 0, 0), sig(0, 0, 0, 0, 0));
     RegisterRecognizer(RecognizerKNK, sig(0, 0, 0, 0, 0), sig(0, 1, 0, 0, 0));
     RegisterRecognizer(RecognizerKNK, sig(0, 1, 0, 0, 0), sig(0, 1, 0, 0, 0));
@@ -178,89 +175,6 @@ static int RecognizerKBK(const CPosition *p, int *score) {
     }
 
     return LowerBound;
-}
-
-static int KBNKTab[] = {500, 450, 425, 400, 375, 350, 325, 300, 450, 300, 300,
-                        300, 300, 300, 300, 325, 425, 300, 100, 100, 100, 100,
-                        300, 350, 400, 300, 100, 0,   0,   100, 300, 375, 375,
-                        300, 100, 0,   0,   100, 300, 400, 350, 300, 100, 100,
-                        100, 100, 300, 425, 325, 300, 300, 300, 300, 300, 300,
-                        450, 300, 325, 350, 375, 400, 425, 450, 500};
-
-static int RecognizerKBNK(const CPosition *p, int *score) {
-    if (p->GetMaterialSignature(White) && p->GetMaterialSignature(Black)) {
-
-        /*
-         * This is knkb
-         */
-
-        if ((p->GetMask(White, 0) | p->GetMask(Black, 0)).CountBits() > 4) {
-            return Useless;
-        }
-
-        if (EdgeMask & (p->GetMask(White, King) | p->GetMask(Black, King))) {
-            return Useless;
-        }
-
-        *score = 0;
-        return ExactScore;
-    } else {
-
-        /*
-         * This is kbnk
-         */
-
-        CBitBoard atkd;
-        int color = White;
-        int sqx = 0;
-
-        if (p->GetMaterialSignature(Black)) {
-            color = Black;
-        }
-
-        /*
-         * do not recognize when losers king attacks a piece
-         */
-
-        atkd = p->GetAtkTo(p->GetKingSq(OPP(color)).BitOffset()) & p->GetMask(color, 0);
-        if (atkd) {
-            if (p->GetTurn() != color || (atkd).CountBits() > 1) {
-                return Useless;
-            }
-        }
-
-        /*
-         * do not recognize when losers king is on the and the winners king
-         * is close enough to stalemate
-         */
-
-        if (p->GetTurn() != color && (p->GetMask(OPP(color), King) & EdgeMask) &&
-            (KingDist(p->GetKingSq(White), p->GetKingSq(Black)) == 2)) {
-            return Useless;
-        }
-
-        /*
-         * This is a win. Calculate a score which guarantuess progress.
-         */
-
-        if (p->GetMask(color, Bishop) & BlackSquaresMask) {
-            sqx = KBNKTab[p->GetKingSq(OPP(color)).BitOffset()];
-        }
-
-        if (p->GetMask(color, Bishop) & WhiteSquaresMask) {
-            sqx = KBNKTab[7 ^ p->GetKingSq(OPP(color)).BitOffset()];
-        }
-
-        *score = p->GetMaterial(color) + 3 * Value[Pawn] + sqx -
-                 125 * KingDist(p->GetKingSq(White), p->GetKingSq(Black));
-
-        if (p->GetTurn() != color) {
-            *score = -*score;
-            return UpperBound;
-        }
-
-        return LowerBound;
-    }
 }
 
 static int RecognizerKNK(const CPosition *p, int *score) {

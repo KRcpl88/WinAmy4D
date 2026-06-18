@@ -68,9 +68,6 @@
     <ClCompile Include="movedata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mytb.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="search_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
