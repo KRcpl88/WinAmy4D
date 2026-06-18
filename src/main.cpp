@@ -33,6 +33,7 @@
  * main.c - main program for Amy
  */
 
+#include <ctype.h>
 #include <string.h>
 
 #include "evaluation_config.h"
@@ -93,6 +94,15 @@ static void ProcessOptions(int argc, char *argv[]) {
 
         if (!strcmp(argv[i], "-debug")) {
             g_nDebugMode = 1;
+            /*
+             * An optional verbosity level may follow -debug. When the next
+             * token is a number it is consumed and used to set g_nVerbosity;
+             * otherwise the verbosity is left unchanged.
+             */
+            if (i + 1 < argc && isdigit((unsigned char)argv[i + 1][0])) {
+                i++;
+                g_nVerbosity = (uint16_t)atoi(argv[i]);
+            }
         }
 #if MP
         if (!strcmp(argv[i], "-cpu")) {
