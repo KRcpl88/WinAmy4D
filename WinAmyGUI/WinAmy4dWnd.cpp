@@ -14,6 +14,8 @@
 #include <commdlg.h>
 #include <wchar.h>
 #include <cstring>
+#include <cctype>
+#include <cstdlib>
 #include <string>
 
 #include "resource.h"
@@ -67,6 +69,9 @@ static constexpr UINT     SEARCH_PROGRESS_MS  = 250;
 // The -debug switch additionally enables PrintDebug output to the log file:
 //
 //     WinAmyGUI.exe -log -debug          -> also mirrors PrintDebug to the log
+//     WinAmyGUI.exe -log -debug 5        -> as above, and sets verbosity to 5
+//
+// An optional numeric verbosity level may follow -debug as a separate token.
 //
 // "-", "--" and "/" prefixes are all accepted and the switch is case-insensitive.
 // ---------------------------------------------------------------------------
@@ -137,11 +142,16 @@ static void ConfigureLoggingFromCommandLine(LPSTR lpCmdLine) {
         }
     }
 
-    // First pass: enable debug mode if requested. This is order-independent and
-    // does not consume any other tokens.
+    // First pass: enable debug mode if requested. An optional verbosity level
+    // may follow the -debug switch as a separate numeric token, e.g.
+    // "-debug 5"; when present it is consumed and used to set g_nVerbosity.
     for (size_t nIndex = 0; nIndex < Tokens.size(); ++nIndex) {
         if (MatchDebugSwitch(Tokens[nIndex].c_str())) {
             g_nDebugMode = 1;
+            if ((nIndex + 1 < Tokens.size()) &&
+                (isdigit((unsigned char)Tokens[nIndex + 1][0]))) {
+                g_nVerbosity = (uint16_t)atoi(Tokens[++nIndex].c_str());
+            }
         }
     }
 
