@@ -589,6 +589,8 @@ WinAmyGUI uses a different search function and gameplay loop than WinAMy.exe, th
 
 # m_pActLog issue
 
+(rleated to https://github.com/KRcpl88/WinAmy4D/issues/120#issuecomment-4753899253)
+
 A new repro has been found, please see most recent comments and impossiblebug.log attached.  Please investigate the new information and recommend additional logging or asserts if needed.  Please carefully review the log for any clues how or why this corruption has occured.  We caught the corruption in m_pActLog in DoMove, but it is likely it happened some point earlier , m,aybe very recently.  Please review the logs carefully, focusing on the most recent activity to find any suspicious information which may be a clue to how m_pActLog has become corrupted and any clues to where the bug is happening.  Follow the investigation into any new areas, as the root cause may be an unrelated bug thats causing this issue elsewhere in the code.
 
 
