@@ -1364,6 +1364,38 @@ int CWinAmy4dWnd::SearchProgressPercent() const {
 
 void CWinAmy4dWnd::UpdateStatusBar() {
     if (!m_hStatus) return;
+
+    if (m_Game.IsComputingStrategy() || m_Game.IsEngineRunning()) {
+        // A search is in progress. Refresh ONLY the lightweight progress suffix:
+        // the percentage of the work completed, measured as the fraction of root
+        // moves searched (engine move / hint) or ranked searches completed
+        // (strategy). Deliberately do NOT call GetGameEndMessage /
+        // GetGameResultText / GetLastMoveText here: those clone the board under
+        // m_PositionMutex (touching m_pActLog), which is needless work on every
+        // progress tick. Instead reuse the base status text (last-move prefix +
+        // side-to-move + material) captured the last time a move completed, and
+        // append the "% complete" figure. Until the engine has published a
+        // figure the percentage is indeterminate, so a plain "thinking" message
+        // is shown instead.
+        const bool fStrategy = m_Game.IsComputingStrategy();
+        const wchar_t* label = fStrategy ? L"Thinking" : L"Engine thinking";
+        int nPercent = fStrategy ? m_Game.GetStrategyProgressPercent()
+                                 : SearchProgressPercent();
+        wchar_t buf[512];
+        if (nPercent >= 0) {
+            swprintf_s(buf, 512, L"%s  [%s... %d%%]", m_wstrStatusBase.c_str(),
+                       label, nPercent);
+        } else {
+            swprintf_s(buf, 512, L"%s  [%s...]", m_wstrStatusBase.c_str(), label);
+        }
+        SendMessageW(m_hStatus, WM_SETTEXT, 0, (LPARAM)buf);
+        return;
+    }
+
+    // No search is running, so a move (or game state change) has just completed.
+    // Recompute the full status text, cloning the board as needed for the
+    // game-end check and last-move SAN, and cache the resulting base text so the
+    // in-search progress refresh above can reuse it without cloning.
     const char* gameEnd = m_Game.GetGameEndMessage();
     if (gameEnd) {
         // Show the friendly result text (outcome, winner, move count).
@@ -1372,6 +1404,7 @@ void CWinAmy4dWnd::UpdateStatusBar() {
             strResult = gameEnd;
         wchar_t wide[256]{};
         MultiByteToWideChar(CP_UTF8, 0, strResult.c_str(), -1, wide, 256);
+        m_wstrStatusBase = wide;
         SendMessageW(m_hStatus, WM_SETTEXT, 0, (LPARAM)wide);
         return;
     }
@@ -1408,26 +1441,8 @@ void CWinAmy4dWnd::UpdateStatusBar() {
                dWhiteTotal, dWhiteNonPawn, dBlackTotal, dBlackNonPawn,
                dWhiteTotal - dBlackTotal);
 
-    if (m_Game.IsComputingStrategy() || m_Game.IsEngineRunning()) {
-        // A search is in progress. Show the percentage of the work completed,
-        // measured as the fraction of root moves searched (engine move / hint) or
-        // ranked searches completed (strategy). Until the engine has published a
-        // figure the percentage is indeterminate, so a plain "thinking" message
-        // is shown instead.
-        const bool fStrategy = m_Game.IsComputingStrategy();
-        const wchar_t* label = fStrategy ? L"Thinking" : L"Engine thinking";
-        int nPercent = fStrategy ? m_Game.GetStrategyProgressPercent()
-                                 : SearchProgressPercent();
-        if (nPercent >= 0) {
-            swprintf_s(buf, 512, L"%s%s  [%s... %d%%]%s", strPrefix.c_str(), turn,
-                       label, nPercent, szMaterial);
-        } else {
-            swprintf_s(buf, 512, L"%s%s  [%s...]%s", strPrefix.c_str(), turn, label,
-                       szMaterial);
-        }
-    } else {
-        swprintf_s(buf, 512, L"%s%s%s", strPrefix.c_str(), turn, szMaterial);
-    }
+    swprintf_s(buf, 512, L"%s%s%s", strPrefix.c_str(), turn, szMaterial);
+    m_wstrStatusBase = buf;
     SendMessageW(m_hStatus, WM_SETTEXT, 0, (LPARAM)buf);
 }
 
