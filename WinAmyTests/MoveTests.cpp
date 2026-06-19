@@ -77,6 +77,50 @@ TEST_CLASS(MoveTests) {
         AssertPositionsEqual(position.get(), snapshot.get());
     }
 
+    // Regression for the AtkSet ordering bug in UndoMove (issue #131): on undo of
+    // a capture, AtkSet must run AFTER the captured piece is placed back on the
+    // board, otherwise it reads a Neutral square and corrupts the attack maps
+    // (and trips the AtkSet assertion in debug builds).
+    //
+    // The captured square (hd4) is deliberately attacked by other pieces (white
+    // bishop ha1 and black bishop hg7) so GetAtkFr(hd4) is non-trivial, and the
+    // captured piece is a sliding rook so GetAtkTo(hd4) covers several squares.
+    // Both maps must be byte-for-byte restored after UndoMove.
+    TEST_METHOD(UndoMoveAfterCaptureRestoresCapturedSquareAttacks) {
+        char epd[] = "4k3/6b1/8/8/3r4/8/8/B2RK3 w - -";
+        PositionGuard position(CreatePositionFromLegacyMainEPD(epd));
+        PositionGuard snapshot(CPosition::Clone(position.get()));
+
+        const uint16_t nCaptureOffset = MainBoardOffset(hd4);
+
+        // Pre-conditions: other pieces attack the capture square, and the
+        // captured rook attacks other squares (so both maps are meaningful).
+        Assert::IsTrue(position.get()->GetAtkFr(nCaptureOffset).IsNotEmpty(),
+                       L"Other pieces must attack the capture square");
+        Assert::IsTrue(position.get()->GetAtkTo(nCaptureOffset).IsNotEmpty(),
+                       L"Captured rook must attack other squares");
+        Assert::IsTrue(position.get()->GetAtkTo(nCaptureOffset).TstBit(MainBoardOffset(hd5)),
+                       L"Captured rook should attack hd5");
+        Assert::IsTrue(position.get()->GetAtkFr(MainBoardOffset(hd5)).TstBit(nCaptureOffset),
+                       L"hd5 should be attacked from the captured rook's square");
+
+        CMove move = MakeMainBoardMove(hd1, hd4, M_CAPTURE);
+        position.get()->DoMove(move);
+        position.get()->UndoMove(move);
+
+        // The whole position (which includes every square's AtkTo/AtkFr) must be
+        // identical to the snapshot taken before the capture.
+        AssertPositionsEqual(position.get(), snapshot.get());
+
+        // Explicitly assert AtkTo and AtkFr at the captured square are restored.
+        Assert::IsTrue(position.get()->GetAtkTo(nCaptureOffset) ==
+                           snapshot.get()->GetAtkTo(nCaptureOffset),
+                       L"GetAtkTo at the captured square must be restored");
+        Assert::IsTrue(position.get()->GetAtkFr(nCaptureOffset) ==
+                           snapshot.get()->GetAtkFr(nCaptureOffset),
+                       L"GetAtkFr at the captured square must be restored");
+    }
+
     TEST_METHOD(DoMoveEnPassantCapturesCorrectly) {
         // White pawn on he5, black pawn just moved hd7-hd5, en passant on hd6
         char epd[] = "4k3/8/8/3pP3/8/8/8/4K3 w - d6";

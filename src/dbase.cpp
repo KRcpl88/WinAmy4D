@@ -1049,15 +1049,20 @@ void CPosition::UndoMove(CMove move) {
                        (int)sp, toCoord.m_nLevel, toCoord.m_nFile,
                        toCoord.m_nRank);
 
-            /* piece gains its attacks */
-            p->AtkSet(TYPE(sp), OPP(p->m_nTurn), toCoord);
-
             p->m_rgPiece[toOffset] = sp;
             sp = TYPE(sp);
             p->m_rgMask[OPP(p->m_nTurn)][0].SetBit(toOffset);
             p->m_rgMask[OPP(p->m_nTurn)][sp].SetBit(toOffset);
-            if (is_sliding(sp))
+            if (is_sliding(sp)) {
                 p->m_SlidingPieces.SetBit(toOffset);
+            }
+
+            /*
+             * piece gains its attacks - must run AFTER the captured piece is
+             * placed back on the board (m_rgPiece[toOffset] = sp above), since
+             * AtkSet reads m_rgPiece[square] to validate/seed the attack maps.
+             */
+            p->AtkSet(sp, OPP(p->m_nTurn), toCoord);
 
             /* Update oppponents material and PawnCount */
             p->m_rgnMaterial[OPP(p->m_nTurn)] += Value[sp];
@@ -1072,18 +1077,22 @@ void CPosition::UndoMove(CMove move) {
                 p->m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
             const uint16_t capturedPawnOffset = capturedPawnCoord.BitOffset();
 
-            /* piece looses its attacks */
-            p->AtkSet(Pawn, OPP(p->m_nTurn), capturedPawnCoord);
-
             p->m_rgMask[OPP(p->m_nTurn)][0].SetBit(capturedPawnOffset);
             p->m_rgMask[OPP(p->m_nTurn)][Pawn].SetBit(capturedPawnOffset);
 
             /* re-calculate attacks through to-square */
             p->LooseAttacks(capturedPawnCoord);
 
-            /* remove captured pawn from the board */
+            /* restore captured pawn to the board */
             p->m_rgPiece[capturedPawnOffset] = (OPP(p->m_nTurn) == White) ? Pawn : -Pawn;
             p->m_rgPiece[toOffset] = Neutral;
+
+            /*
+             * piece gains its attacks - must run AFTER the captured pawn is
+             * placed back on the board (m_rgPiece[capturedPawnOffset] above),
+             * since AtkSet reads m_rgPiece[square] to validate the attack maps.
+             */
+            p->AtkSet(Pawn, OPP(p->m_nTurn), capturedPawnCoord);
 
             /* re-calculate attacks through to-square */
             p->GainAttacks(toCoord);
