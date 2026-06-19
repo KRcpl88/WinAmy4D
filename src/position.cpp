@@ -422,27 +422,6 @@ CMove CPosition::Iterate(int *score_ptr, CMove alternate_move,
 
     heap_t heap = allocate_heap();
     cnt = p->LegalMoves(heap);
-    if (cnt == 0) {
-        PrintDebug(9,
-                   "Iterate: no legal root moves at ply %u for turn %d; "
-                   "recalculating attacks and retrying.\n",
-                   p->GetPly(), p->GetTurn());
-        free_heap(heap);
-        p->RecalcAttacks();
-        heap = allocate_heap();
-        cnt = p->LegalMoves(heap);
-        if (cnt > 0) {
-            Print(0,
-                  "Iterate: recovered %d legal root moves after recalculating "
-                  "attacks.\n",
-                  cnt);
-        } else {
-            PrintDebug(9,
-                       "Iterate: retry after RecalcAttacks still found no "
-                       "legal root moves at ply %u for turn %d.\n",
-                       p->GetPly(), p->GetTurn());
-        }
-    }
 
     AbortSearch = false;
     NeedTime = false;
