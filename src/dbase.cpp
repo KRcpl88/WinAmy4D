@@ -3411,7 +3411,7 @@ CPosition *CPosition::Initial() {
 
 CPosition *CPosition::Clone(const CPosition *src) {
     if (src == NULL) {
-        Print(0, "CPosition::Clone: source position is null.\n");
+        AMY_ASSERT(src != NULL, "CPosition::Clone: source position is null.\n");
         return NULL;
     }
 
