@@ -3513,7 +3513,14 @@ CPosition *CPosition::Initial() {
 }
 
 CPosition *CPosition::Clone(const CPosition *src) {
+    if (src == NULL) {
+        AMY_ASSERT(src != NULL, "CPosition::Clone: source position is null.\n");
+        return NULL;
+    }
+
     CPosition *p = (CPosition *)safe_calloc(1, sizeof(CPosition));
+    AMY_ASSERT(p != NULL, "CPosition::Clone: allocation failed for source %p.\n",
+               (const void *)src);
     memcpy(p, src, sizeof(CPosition));
 
     p->m_cGameLog = src->m_cGameLog;

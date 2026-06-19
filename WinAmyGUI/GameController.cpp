@@ -675,8 +675,16 @@ void GameController::StartSearchInternal(HWND hwndTarget, UINT uCompletionMsg) {
         CPosition *pSearchPosition = nullptr;
         {
             std::lock_guard<std::mutex> lock(m_PositionMutex);
-            if (m_pPosition)
-                pSearchPosition = CPosition::Clone(m_pPosition);
+            const CPosition *pSourcePosition = m_pPosition;
+            AMY_ASSERT(pSourcePosition != nullptr,
+                       "GameController::StartSearchInternal: position is null.\n");
+            if (pSourcePosition != nullptr) {
+                pSearchPosition = CPosition::Clone(pSourcePosition);
+                AMY_ASSERT(
+                    pSearchPosition != nullptr,
+                    "GameController::StartSearchInternal: clone failed for position %p.\n",
+                    static_cast<const void *>(pSourcePosition));
+            }
         }
 
         if (pSearchPosition) {
