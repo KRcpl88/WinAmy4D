@@ -1111,24 +1111,54 @@ bool GameController::IsGameOver() const {
 }
 
 const char* GameController::GetGameEndMessage() const {
-    if (!m_pPosition)
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    if (!m_pPosition) {
         return nullptr;
-    return m_pPosition->GameEnd();
+    }
+
+    // GameEnd() temporarily MUTATES the position: it calls LegalMoves(), which
+    // does DoMove/UndoMove on the board and may reallocate the game log. Running
+    // it on the live m_pPosition without the lock races the engine thread's
+    // CPosition::Clone(m_pPosition) (which holds the lock) when the status-bar
+    // timer polls while a search is running, producing a torn snapshot whose
+    // m_pActLog/m_wPly are off by one (the m_pActLog corruption in issue #120).
+    // Operate on a clone under the lock instead; GameEnd returns a string
+    // literal, so the pointer remains valid after the clone is freed.
+    CPosition *p = CPosition::Clone(m_pPosition);
+    if (!p) {
+        return nullptr;
+    }
+    const char *pszEnd = p->GameEnd();
+    CPosition::Free(p);
+    return pszEnd;
 }
 
 std::string GameController::GetGameResultText() const {
-    if (!m_pPosition)
+    std::lock_guard<std::mutex> lock(m_PositionMutex);
+    if (!m_pPosition) {
         return std::string();
+    }
 
-    const char *pszEnd = m_pPosition->GameEnd();
-    if (!pszEnd)
+    // GameEnd() temporarily mutates the position (see GetGameEndMessage), so it
+    // must run on a clone under the lock, never on the live board while the
+    // engine thread may be cloning it.
+    CPosition *p = CPosition::Clone(m_pPosition);
+    if (!p) {
         return std::string();
+    }
+
+    const char *pszEnd = p->GameEnd();
+    if (!pszEnd) {
+        CPosition::Free(p);
+        return std::string();
+    }
 
     // m_wPly counts half-moves (plies) played.  The number of full moves the
     // game lasted is therefore ceil(plies / 2).
-    const int nMoves = (static_cast<int>(m_pPosition->GetPly()) + 1) / 2;
+    const int nMoves = (static_cast<int>(p->GetPly()) + 1) / 2;
 
     std::string strResult(pszEnd);
+    CPosition::Free(p);
     std::string strText;
 
     if (strResult.rfind("1-0", 0) == 0) {
