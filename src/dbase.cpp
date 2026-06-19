@@ -446,6 +446,21 @@ void CPosition::AtkSet(int type, int color, const CSCoord& squareCoord) {
 
 void CPosition::AtkClr(const CSCoord& squareCoord) {
     const unsigned int square = squareCoord.BitOffset();
+
+    /*
+     * AtkClr removes the attacks of the piece standing on squareCoord and is
+     * always called while that piece is still on the board (just before it is
+     * moved or captured).  An empty square here means a piece was removed
+     * without its attacks ever being registered, or AtkClr is being run twice
+     * for the same square — either way the attack maps are about to be left
+     * inconsistent (a stale m_rgAtkTo row), so trap it at the source (no-op in
+     * release builds).
+     */
+    AMY_ASSERT(m_rgPiece[square] != Neutral,
+               "AtkClr: square L%d/F%d/R%d (offset %u) is empty\n",
+               (int)squareCoord.m_nLevel, (int)squareCoord.m_nFile,
+               (int)squareCoord.m_nRank, (unsigned)square);
+
     CBitBoard tmp = m_rgAtkTo[square];
     m_rgAtkTo[square] = {};
 
@@ -1386,6 +1401,24 @@ void CPosition::RecalcAttacks() {
         }
     }
 
+    /*
+     * Symmetric post-build invariant on m_rgAtkTo: a non-empty attack row for
+     * square nFrom means "the piece on nFrom attacks these squares", so nFrom
+     * itself must hold a real piece.  A bit set in m_rgAtkTo from an empty
+     * square is exactly the corruption that makes GenFrom emit a move out of an
+     * empty square (which then trips the DoMove guard).  Catch it here so the
+     * stale attack row is logged and trapped (no-op in release builds).
+     */
+    for (unsigned int nFrom = 0; nFrom < CBitBoard::SIZE; nFrom++) {
+        if (p->m_rgAtkTo[nFrom].IsNotEmpty()) {
+            AMY_ASSERT(p->m_rgPiece[nFrom] != Neutral,
+                       "RecalcAttacks: m_rgAtkTo[%u] is non-empty but square "
+                       "L%d/F%d/R%d is empty\n",
+                       (unsigned)nFrom, (int)CSCoord(nFrom).m_nLevel,
+                       (int)CSCoord(nFrom).m_nFile, (int)CSCoord(nFrom).m_nRank);
+        }
+    }
+
     p->m_ullHKey ^= HashKeysCastle[p->m_bCastle];
     if (p->m_nTurn == Black)
         p->m_ullHKey ^= STMKey;
@@ -1469,6 +1502,23 @@ void CPosition::GenEnpas(heap_t heap) {
 void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
     CPosition *p = this;
     const unsigned int square = squareCoord.BitOffset();
+
+    /*
+     * GenFrom generates non-capturing moves OUT of squareCoord, so that square
+     * must hold a real friendly piece.  For a non-pawn it derives the move
+     * targets from m_rgAtkTo[square]; if that attack row is stale for an empty
+     * (or wrong-colour) square it would emit a move out of an empty square,
+     * which DoMove traps.  Catch the corrupt attack table here, at its point of
+     * use, before the bad move is ever generated (no-op in release builds).
+     */
+    AMY_ASSERT(p->m_rgPiece[square] != Neutral &&
+                   SAME_COLOR(p->m_rgPiece[square], p->m_nTurn),
+               "GenFrom: source square L%d/F%d/R%d (offset %u) holds no friendly "
+               "piece (piece=%d)\n",
+               (int)squareCoord.m_nLevel, (int)squareCoord.m_nFile,
+               (int)squareCoord.m_nRank, (unsigned)square,
+               (int)p->m_rgPiece[square]);
+
     if (TYPE(p->m_rgPiece[square]) != Pawn) {
         CBitBoard tmp;
 

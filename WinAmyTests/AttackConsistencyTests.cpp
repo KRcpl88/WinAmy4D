@@ -42,6 +42,62 @@ TEST_CLASS(AttackConsistencyTests) {
         return true;
     }
 
+    // Every bit recorded in the attack tables must reference a square that
+    // actually holds a piece: m_rgAtkTo[sq] (the squares attacked BY the piece
+    // on sq) is only meaningful when sq is occupied, and every "from" bit in
+    // m_rgAtkFr[sq] must point at an occupied square.  A stale row from an empty
+    // square is the corruption behind issue #133 (GenFrom emitting a move out of
+    // an empty square, tripping the DoMove guard).  Verify the invariant holds
+    // for the incrementally maintained tables after every move of random games.
+    static bool AttackRowsReferenceRealPieces(const CPosition *pos, std::string &msg) {
+        for (unsigned int sq = 0; sq < CBitBoard::SIZE; sq++) {
+            if (pos->GetAtkTo(sq).IsNotEmpty() && pos->GetPiece(sq) == Neutral) {
+                std::ostringstream os; os << "AtkTo[" << sq << "] non-empty on empty square";
+                msg = os.str(); return false;
+            }
+            CBitBoard frBits = pos->GetAtkFr(sq);
+            while (frBits) {
+                const uint16_t from = frBits.FindSetBit();
+                frBits.ClearLowestBit();
+                if (pos->GetPiece(from) == Neutral) {
+                    std::ostringstream os;
+                    os << "AtkFr[" << sq << "] bit " << from << " from empty square";
+                    msg = os.str(); return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    TEST_METHOD(AttackTablesNeverReferenceEmptySquares) {
+        for (int game = 0; game < 40; game++) {
+            s_rng = 0x54321 + game * 2654435761u;
+            PositionGuard pos(CPosition::Initial());
+            for (int ply = 0; ply < 80; ply++) {
+                heap_t heap = allocate_heap();
+                push_section(heap);
+                pos.get()->LegalMoves(heap);
+                std::vector<CMove> moves;
+                for (unsigned i = heap->current_section->start; i < heap->current_section->end; ++i)
+                    moves.push_back(heap->data[i]);
+                free_heap(heap);
+                if (moves.empty()) break;
+                CMove mv = moves[Rand() % moves.size()];
+                pos.get()->DoMove(mv);
+
+                std::string msg;
+                if (!AttackRowsReferenceRealPieces(pos.get(), msg)) {
+                    std::ostringstream os;
+                    os << "game " << game << " ply " << ply << ": " << msg
+                       << " from=" << (int)mv.GetFromCoord().BitOffset()
+                       << " to=" << (int)mv.GetToCoord().BitOffset();
+                    std::wstring w(os.str().begin(), os.str().end());
+                    Assert::Fail(w.c_str());
+                }
+            }
+        }
+    }
+
     // Play many random legal games; after every move, compare the incrementally
     // maintained attack tables against an independent full recompute.
     TEST_METHOD(IncrementalAttacksMatchRecomputeOverRandomGames) {
