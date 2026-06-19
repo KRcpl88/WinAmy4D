@@ -17,6 +17,7 @@
 #include <windows.h>
 
 #include <vector>
+#include <string>
 
 #include "GameController.h"
 #include "BoardRenderer.h"
@@ -160,4 +161,11 @@ private:
     // Tracks whether the end-of-game result has already been announced (so the
     // MessageBox is shown only once per game). Reset on each new game.
     bool m_fGameOverAnnounced = false;
+
+    // Base status-bar text (last-move prefix + side-to-move + material) captured
+    // the last time a move completed, i.e. while no search was running. While a
+    // search is in progress the progress-timer refresh appends only the
+    // "thinking %" suffix to this cached text, so it never has to clone the
+    // board or hold m_PositionMutex on every tick (see UpdateStatusBar).
+    std::wstring m_wstrStatusBase;
 };
