@@ -42,8 +42,8 @@
 #include "time_ctl.h"
 #include "utils.h"
 
-int TMoves = 60, TTime = 5 * 60;
-int Moves[3] = {60, 60}, Time[3] = {5 * 60, 5 * 60};
+int TMoves = 250, TTime = 2 * 60 * 60;
+int Moves[3] = {250, 250}, Time[3] = {2 * 60 * 60, 2 * 60 * 60};
 int TMoves2, TTime2;
 int TwoTimeControls = false;
 
@@ -63,7 +63,7 @@ struct TimeControl {
 
 /** Stores the single global time control. */
 static struct TimeControl globalTimeControl = {
-    {60, 5 * 60, 0},
+    {250, 2 * 60 * 60, 0},
     {0, 0, 0},
     false,
 };
@@ -327,14 +327,14 @@ void SetFixedTimePerMove(int seconds) {
 }
 
 /**
- * Restore the default time control (60 moves in 5 minutes).
+ * Restore the default time control (250 moves in 2 hours).
  *
  * Used to leave fixed time-per-move mode so that search termination is governed
  * by the configured search depth rather than a wall-clock budget.
  */
 void SetDefaultTimeControl(void) {
-    globalTimeControl.first.moves = 60;
-    globalTimeControl.first.total_time = 5 * 60;
+    globalTimeControl.first.moves = 250;
+    globalTimeControl.first.total_time = 2 * 60 * 60;
     globalTimeControl.first.increment = 0;
     globalTimeControl.second.moves = 0;
     globalTimeControl.second.total_time = 0;
