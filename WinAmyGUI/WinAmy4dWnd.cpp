@@ -626,6 +626,10 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
     // Label is kept in sync with m_eViewMode by UpdateViewToggleButton.
     m_hBtnViewToggle = makeBtn(L"Switch to 3D", IDC_BTN_VIEW_TOGGLE, 110);
 
+    // Enter-move button — opens a dialog to type a move in SAN notation.
+    // Available in both 2D and 3D views, so it is never hidden by SetViewMode.
+    m_hBtnEnterMove = makeBtn(L"Enter Move", IDC_BTN_ENTER_MOVE, 90);
+
     // Grid-type dropdown — only enabled in 3D mode. The list contents map
     // 1:1 onto CUCoord::EOutlineType in declaration order, so combobox
     // index N == (EOutlineType)(OT_full + N).
@@ -1548,6 +1552,153 @@ void CWinAmy4dWnd::OnUndoMove() {
     UpdateSuggestMoveButton();
 }
 
+// ---------------------------------------------------------------------------
+// Enter Move (SAN) — modal dialog that lets the user type a move
+// ---------------------------------------------------------------------------
+
+// Modal dialog procedure for the "Enter Move" dialog. The address of a
+// wchar_t buffer (capacity 64) is passed via DialogBoxParam's lParam; on OK
+// the typed move text is copied into it.
+INT_PTR CALLBACK CWinAmy4dWnd::EnterMoveDlgProc(HWND hDlg, UINT uMsg,
+                                                WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+    case WM_INITDIALOG:
+        // Stash the caller's output buffer so IDOK can read the edit text.
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, static_cast<LONG_PTR>(lParam));
+        SetFocus(GetDlgItem(hDlg, IDC_EDIT_MOVE));
+        return FALSE; // focus already set explicitly above.
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam)) {
+        case IDOK: {
+            wchar_t *pszBuf = reinterpret_cast<wchar_t *>(
+                GetWindowLongPtr(hDlg, GWLP_USERDATA));
+            if (pszBuf) {
+                GetDlgItemTextW(hDlg, IDC_EDIT_MOVE, pszBuf, 64);
+            }
+            EndDialog(hDlg, IDOK);
+            return TRUE;
+        }
+        case IDCANCEL:
+            EndDialog(hDlg, IDCANCEL);
+            return TRUE;
+        }
+        break;
+    }
+    return FALSE;
+}
+
+// Opens the SAN-input dialog and, if the user enters a legal move, applies it
+// to the current position. Available in both 2D and 3D views.
+void CWinAmy4dWnd::OnEnterMove() {
+    if (m_Game.IsGameOver()) {
+        MessageBoxW(m_hWnd, L"The game is over; no further moves can be made.",
+                    L"Enter Move", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    if (m_Game.GetPlayerMode() == PlayerMode::ZeroPlayers) {
+        MessageBoxW(m_hWnd,
+                    L"The engine is playing both sides. Switch to a 1- or "
+                    L"2-player mode to enter your own moves.",
+                    L"Enter Move", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    CPosition *pPos = m_Game.GetPosition();
+    if (!pPos) {
+        return;
+    }
+    if (!IsHumanAllowedToMove(pPos)) {
+        MessageBoxW(m_hWnd, L"It is not your turn to move.", L"Enter Move",
+                    MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    wchar_t wszMove[64] = {0};
+    HINSTANCE hInst = reinterpret_cast<HINSTANCE>(
+        GetWindowLongPtr(m_hWnd, GWLP_HINSTANCE));
+    INT_PTR nResult = DialogBoxParamW(hInst, MAKEINTRESOURCEW(IDD_ENTER_MOVE),
+                                      m_hWnd, EnterMoveDlgProc,
+                                      reinterpret_cast<LPARAM>(wszMove));
+    if (nResult != IDOK) {
+        return;
+    }
+
+    // Trim leading / trailing whitespace from the typed text.
+    wchar_t *pszStart = wszMove;
+    while (*pszStart == L' ' || *pszStart == L'\t') {
+        ++pszStart;
+    }
+    size_t nLen = wcslen(pszStart);
+    while (nLen > 0 && (pszStart[nLen - 1] == L' '
+                        || pszStart[nLen - 1] == L'\t')) {
+        pszStart[--nLen] = L'\0';
+    }
+    if (nLen == 0) {
+        return; // empty input — nothing to do.
+    }
+
+    char szMove[64] = {0};
+    WideCharToMultiByte(CP_ACP, 0, pszStart, -1, szMove,
+                        static_cast<int>(sizeof(szMove)), nullptr, nullptr);
+
+    // The user is committing a move. Abort any in-flight search and wait for
+    // the engine thread to finish before touching the live position (mirrors
+    // TryMakeSelectedMove). ParseSAN mutates and restores the position, so it
+    // must not run concurrently with the engine.
+    if (m_Game.IsEngineRunning()) {
+        m_Game.AbortAndJoinSearch();
+    }
+
+    CMove mv = pPos->ParseSAN(szMove);
+    if (mv == M_NONE) {
+        MessageBoxW(m_hWnd,
+                    L"That is not a legal move in the current position.\n\n"
+                    L"Use SAN notation such as Phe2he4 (piece letter followed "
+                    L"by the from-square and to-square).",
+                    L"Enter Move", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    // Log that the human player initiated this move (see TryMakeSelectedMove).
+    {
+        char szSan[32];
+        const char *pszSan = pPos->SAN(mv, szSan);
+        const char *pszSide = (pPos->GetTurn() == 0) ? "White" : "Black";
+        Print(0, "Player made move: %s by %s\n", pszSan, pszSide);
+    }
+
+    if (!m_Game.MakeMove(mv)) {
+        MessageBoxW(m_hWnd, L"The move could not be applied.", L"Enter Move",
+                    MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    // Refresh interaction / UI state exactly as a board-click move does.
+    m_fHaveSelection = false;
+    m_rgLegalDests.clear();
+    m_fHaveHint = false;
+    m_fStrategyHints = false;
+    m_HintSquares.clear();
+
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
+
+    RefreshLegalMoveHighlights();
+    UpdateSuggestMoveButton();
+    UpdateStatusBar();
+    if (!m_Game.IsGameOver()) {
+        MaybeStartEngine();
+    } else {
+        MaybeAnnounceGameOver();
+    }
+    // The move may have aborted an in-flight search; refresh the pause menu so
+    // it reflects whether the engine is now running again.
+    UpdatePauseMenu();
+}
+
 void CWinAmy4dWnd::SetPlayerModeAction(PlayerMode mode) {
     m_Game.SetPlayerMode(mode);
     UpdatePlayerMenu();
@@ -2052,6 +2203,10 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         case IDC_BTN_VIEW_TOGGLE:
             SetViewMode(m_eViewMode == ViewMode::Mode2D
                             ? ViewMode::Mode3D : ViewMode::Mode2D);
+            break;
+
+        case IDC_BTN_ENTER_MOVE:
+            OnEnterMove();
             break;
 
         case IDM_VIEW_SHOW_GRIDLINES:
