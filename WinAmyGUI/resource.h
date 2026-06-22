@@ -78,6 +78,7 @@
 #define IDC_BTN_ZOOM_OUT    2011
 #define IDC_BTN_VIEW_TOGGLE 2012
 #define IDC_CB_GRID_TYPE    2013
+#define IDC_BTN_ENTER_MOVE  2014
 #define IDC_CB_SWAP_AXES    2017
 #define IDC_BTN_ROTATE_GRID 2018
 
@@ -86,3 +87,13 @@
 
 // Menus
 #define IDR_MAINMENU        100
+
+// Dialogs
+#define IDD_ENTER_MOVE      200
+
+// Dialog controls
+#define IDC_EDIT_MOVE       2100
+
+#ifndef IDC_STATIC
+#define IDC_STATIC          (-1)
+#endif

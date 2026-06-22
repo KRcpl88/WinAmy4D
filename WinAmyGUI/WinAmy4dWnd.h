@@ -96,6 +96,9 @@ private:
     void UpdatePauseMenu();
     void UpdateUndoMenu();
     void OnUndoMove();
+    void OnEnterMove();
+    static INT_PTR CALLBACK EnterMoveDlgProc(HWND hDlg, UINT uMsg,
+                                             WPARAM wParam, LPARAM lParam);
     void SetPlayerModeAction(PlayerMode mode);
     void TogglePause();
     void SetDepthFromMenu(int nDepth);
@@ -117,6 +120,7 @@ private:
     HWND m_hRender3D     = nullptr; // Child window the D3D swap chain renders into.
     HWND m_hStatus       = nullptr;
     HWND m_hBtnViewToggle = nullptr;
+    HWND m_hBtnEnterMove  = nullptr;
     HWND m_hCbGridType   = nullptr;
     HWND m_hBtnZoomIn    = nullptr;
     HWND m_hBtnZoomOut    = nullptr;
