@@ -7,8 +7,8 @@ BEGIN
     BEGIN
         MENUITEM "&New Game\tCtrl+N",   IDM_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Load Game from EPD...", IDM_FILE_LOAD_EPD
-        MENUITEM "&Save Game to EPD...",   IDM_FILE_SAVE_EPD
+        MENUITEM "&Load Game from EPD4...", IDM_FILE_LOAD_EPD
+        MENUITEM "&Save Game to EPD4...",   IDM_FILE_SAVE_EPD
         MENUITEM SEPARATOR
         MENUITEM "Load &Game from PGN4...", IDM_FILE_LOAD_PGN
         MENUITEM "Save Game &to PGN4...",   IDM_FILE_SAVE_PGN
