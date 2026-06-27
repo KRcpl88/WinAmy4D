@@ -594,6 +594,42 @@ WinAmyGUI uses a different search function and gameplay loop than WinAMy.exe, th
 A new repro has been found, please see most recent comments and impossiblebug.log attached.  Please investigate the new information and recommend additional logging or asserts if needed.  Please carefully review the log for any clues how or why this corruption has occured.  We caught the corruption in m_pActLog in DoMove, but it is likely it happened some point earlier , m,aybe very recently.  Please review the logs carefully, focusing on the most recent activity to find any suspicious information which may be a clue to how m_pActLog has become corrupted and any clues to where the bug is happening.  Follow the investigation into any new areas, as the root cause may be an unrelated bug thats causing this issue elsewhere in the code.
 
 
+
+
+# Look feature
+
+Please add a new button labeled "look" for a new feature for both 2D and 3D mode to allow the player to look at attacks for any piece from any location.  
+
+1. Add a button labeled "Look" with a checkbox that operates as a pushbutton, press once to activate the fature and press again to turn it off.  When activated, the checkbox on the button will be checked.  The button will appear to the right of the board perspective rotation dropdown.
+2. When active, add a dropdown selection to the right of the button which allows the use to selecte a piece type.
+3. When lookmode is active, the user may select any location, either with or without a piece on it, and the view will highlight all squares the selected piece type can attack from that position, including capturing any white or black pieces.  The look mode does not specify which side the piece is from, it may be either white or black, so any pieces whihc could be captured from that location will be highlighted, regardless of which side they belong to.
+4. If the user switched form 2D to 3D while a look mode is enabled, the same piece type and location selection will be highlighted from both views.
+5. If the user turns off look mode and then turns it on again, the previous selection for the piece type and location will be remebered.
+
+
+
+
+# hungarian
+
+Please review all the variable names and add correct hungarian notation if the variable names don’t already have  hungarian notation.  This will include legacy code in the src and include directories.   Also please rename any multi word variables with ubderscores to use pascal case instead and remove underscores.   However, you may ignore variables if the already have correct hungarian nitation and the only issue is the case is incorrect.   If a variable has correct hungarian notation , including for class objects where correct hungarian notation is no notation, then you may leave the name unchanged.   Also if any variable names have hungarian notation but it is not correct you may also leave it unchanged.   As long as there is hungarian notation , even if its not correct, you may leave it unchanged.
+
+
+
+Please create a plan to make these improvements to the program:
+
+1. Add a new menu option to switch to a 3D mode.
+2. The new 3D mode will use direct X to rneder the chessboard in 3D
+3. Instead of rendering the board squares, enumarate all the valid coords in CSCoord, compute the CSCoord center using a CUCoord, and then use GetOutline to get the outline of the coord as a collection of CChord objects.  Render these chords in 3 D as green vector lines on a black background
+4. Render chess prices using unicode chars.  The black pieces must be rendered in a qhite circle to be visible on the black background
+5. The user should be able to rotate the chessboard view to change the point of view to view the board from any angle. 
+
+
+# IterateInt
+
+Please make IterateInt a member of the CSearchData class.   Remove the  void* x param, and replace sd with invoking implicit member functions on the current CSearchData this object , and move the code into search_data.cpp
+
+
+
 # future cleanup:
 - Remove tbindex.cpp, it uses 8x8 fixed board sizes to compute well known endgames for 2D chess, irrelvant for 4D, not even sure how this compiles.  This is fundamentally broken
 - . src/recog.cpp:183–251 — KBNKTab[64] indexed by BitOffset ⚠️ BUGGY
@@ -613,34 +649,6 @@ A new repro has been found, please see most recent comments and impossiblebug.lo
 - Fix C++ class refactor not assign this to a local var and reuse the "old" c code.  Do a proper C++ class
 - Eliminate single statemtn clauses with no {}
 - global fix hungarian
-
-
-# Look feature
-
-Please add a new button labeled "look" for a new feature for both 2D and 3D mode to allow the player to look at attacks for any piece from any location.  
-
-1. Add a button labeled "Look" with a checkbox that operates as a pushbutton, press once to activate the fature and press again to turn it off.  When activated, the checkbox on the button will be checked.  The button will appear to the right of the board perspective rotation dropdown.
-2. When active, add a dropdown selection to the right of the button which allows the use to selecte a piece type.
-3. When lookmode is active, the user may select any location, either with or without a piece on it, and the view will highlight all squares the selected piece type can attack from that position, including capturing any white or black pieces.  The look mode does not specify which side the piece is from, it may be either white or black, so any pieces whihc could be captured from that location will be highlighted, regardless of which side they belong to.
-4. If the user switched form 2D to 3D while a look mode is enabled, the same piece type and location selection will be highlighted from both views.
-5. If the user turns off look mode and then turns it on again, the previous selection for the piece type and location will be remebered.
-
-
-
-
-#hungarian
-
-Please review all the variable names and add correct hungarian notation if the variable names don’t already have  hungarian notation.  This will include legacy code in the src and include directories.   Also please rename any multi word variables with ubderscores to use pascal case instead and remove underscores.   However, you may ignore variables if the already have correct hungarian nitation and the only issue is the case is incorrect.   If a variable has correct hungarian notation , including for class objects where correct hungarian notation is no notation, then you may leave the name unchanged.   Also if any variable names have hungarian notation but it is not correct you may also leave it unchanged.   As long as there is hungarian notation , even if its not correct, you may leave it unchanged.
-
-
-
-Please create a plan to make these improvements to the program:
-
-1. Add a new menu option to switch to a 3D mode.
-2. The new 3D mode will use direct X to rneder the chessboard in 3D
-3. Instead of rendering the board squares, enumarate all the valid coords in CSCoord, compute the CSCoord center using a CUCoord, and then use GetOutline to get the outline of the coord as a collection of CChord objects.  Render these chords in 3 D as green vector lines on a black background
-4. Render chess prices using unicode chars.  The black pieces must be rendered in a qhite circle to be visible on the black background
-5. The user should be able to rotate the chessboard view to change the point of view to view the board from any angle. 
 
 
 
