@@ -5,13 +5,13 @@
 
 #include "bitboard.h"
 
-CSCoordBase::CSCoordBase(std::uint16_t wLevel, std::uint16_t file, std::uint16_t wRank)
-    : m_nLevel(wLevel), m_nRank(wRank), m_nFile(file) {
+CSCoordBase::CSCoordBase(std::uint16_t wLevel, std::uint16_t wFile, std::uint16_t wRank)
+    : m_nLevel(wLevel), m_nRank(wRank), m_nFile(wFile) {
     Validate();
 }
 
-CSCoord::CSCoord(std::uint16_t wLevel, std::uint16_t file, std::uint16_t wRank)
-    : CSCoordBase(wLevel, file, wRank) {
+CSCoord::CSCoord(std::uint16_t wLevel, std::uint16_t wFile, std::uint16_t wRank)
+    : CSCoordBase(wLevel, wFile, wRank) {
 }
 
 CSCoord::CSCoord(std::uint16_t wOffset) {
@@ -52,13 +52,13 @@ bool CSCoordBase::IsValid() const {
     return IsValid(m_nLevel, m_nFile, m_nRank);
 }
 
-bool CSCoordBase::IsValid(std::uint16_t wLevel, std::uint16_t file, std::uint16_t wRank) {
+bool CSCoordBase::IsValid(std::uint16_t wLevel, std::uint16_t wFile, std::uint16_t wRank) {
     if (wLevel >= CBitBoard::NUM_LEVELS) {
         return false;
     }
 
     const unsigned int dwLevelWidth = CBitBoard::LEVEL_WIDTH[wLevel];
-    if ((wRank >= dwLevelWidth) || (file >= dwLevelWidth)) {
+    if ((wRank >= dwLevelWidth) || (wFile >= dwLevelWidth)) {
         return false;
     }
 

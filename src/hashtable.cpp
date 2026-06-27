@@ -154,25 +154,25 @@ static inline struct HTEntry GetHTEntry(hash_t qwKey) {
     acquire_read_lock(pMutex);
 #endif /* MP */
 
-    struct HTEntry entry = TranspositionTable[(qwKey >> 32) & HT_Mask];
+    struct HTEntry Entry = TranspositionTable[(qwKey >> 32) & HT_Mask];
 
 #if MP
     release_read_lock(pMutex);
 #endif /* MP */
 
-    return entry;
+    return Entry;
 }
 
 /**
  * Puts an entry to the global transposition table.
  */
-static inline void PutHTEntry(hash_t qwKey, struct HTEntry entry) {
+static inline void PutHTEntry(hash_t qwKey, struct HTEntry Entry) {
 #if MP
     std::atomic<int> *pMutex = TranspositionMutex + ((qwKey >> 32) & MUTEX_MASK);
     acquire_write_lock(pMutex);
 #endif /* MP */
 
-    TranspositionTable[(qwKey >> 32) & HT_Mask] = entry;
+    TranspositionTable[(qwKey >> 32) & HT_Mask] = Entry;
 
 #if MP
     release_write_lock(pMutex);
@@ -182,52 +182,52 @@ static inline void PutHTEntry(hash_t qwKey, struct HTEntry entry) {
 /**
  *
  */
-static inline bool PutHTEntryBestEffort(hash_t qwKey, struct HTEntry entry,
+static inline bool PutHTEntryBestEffort(hash_t qwKey, struct HTEntry Entry,
                                         int nDepth) {
     const hash_t qwKey1 = qwKey;
     const hash_t qwKey2 = qwKey + 1;
 
-    struct HTEntry entry1 = GetHTEntry(qwKey1);
-    struct HTEntry entry2 = GetHTEntry(qwKey2);
+    struct HTEntry Entry1 = GetHTEntry(qwKey1);
+    struct HTEntry Entry2 = GetHTEntry(qwKey2);
 
     /* Overwrite any matching entry. */
-    if (entry1.ht_Signature == (unsigned int)qwKey) {
-        PutHTEntry(qwKey1, entry);
+    if (Entry1.ht_Signature == (unsigned int)qwKey) {
+        PutHTEntry(qwKey1, Entry);
         return true;
     }
-    if (entry2.ht_Signature == (unsigned int)qwKey) {
-        PutHTEntry(qwKey2, entry);
+    if (Entry2.ht_Signature == (unsigned int)qwKey) {
+        PutHTEntry(qwKey2, Entry);
         return true;
     }
 
     /* Overwrite entries with lower depth. */
-    if (entry1.ht_Depth <= entry2.ht_Depth) {
-        if (entry1.ht_Depth <= nDepth) {
-            PutHTEntry(qwKey1, entry);
+    if (Entry1.ht_Depth <= Entry2.ht_Depth) {
+        if (Entry1.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey1, Entry);
             return true;
         }
-        if (entry2.ht_Depth <= nDepth) {
-            PutHTEntry(qwKey2, entry);
+        if (Entry2.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey2, Entry);
             return true;
         }
     } else {
-        if (entry2.ht_Depth <= nDepth) {
-            PutHTEntry(qwKey2, entry);
+        if (Entry2.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey2, Entry);
             return true;
         }
-        if (entry1.ht_Depth <= nDepth) {
-            PutHTEntry(qwKey1, entry);
+        if (Entry1.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey1, Entry);
             return true;
         }
     }
 
     /* Overwrite entries from older generation. */
-    if ((entry1.ht_Flags & HT_AGE) != HTGeneration) {
-        PutHTEntry(qwKey1, entry);
+    if ((Entry1.ht_Flags & HT_AGE) != HTGeneration) {
+        PutHTEntry(qwKey1, Entry);
         return true;
     }
-    if ((entry2.ht_Flags & HT_AGE) != HTGeneration) {
-        PutHTEntry(qwKey2, entry);
+    if ((Entry2.ht_Flags & HT_AGE) != HTGeneration) {
+        PutHTEntry(qwKey2, Entry);
         return true;
     }
 
@@ -371,20 +371,20 @@ void StoreHT(hash_t qwKey, int best, int nAlpha, int beta, CMove bestm, int nDep
 #endif
 ) {
     hash_t qwEffectiveKey = qwKey;
-    struct HTEntry entry = GetHTEntry(qwEffectiveKey);
-    bool fFound = entry.ht_Signature == (unsigned int)qwKey;
+    struct HTEntry Entry = GetHTEntry(qwEffectiveKey);
+    bool fFound = Entry.ht_Signature == (unsigned int)qwKey;
 
     if (!fFound) {
         qwEffectiveKey++;
-        entry = GetHTEntry(qwEffectiveKey);
-        fFound = entry.ht_Signature == (unsigned int)qwKey;
+        Entry = GetHTEntry(qwEffectiveKey);
+        fFound = Entry.ht_Signature == (unsigned int)qwKey;
     }
 
     HTStoreTried++;
 
 #if MP
     if (!fFound) {
-        entry = pLocalHT[(qwKey >> 32) & L_HT_Mask];
+        Entry = pLocalHT[(qwKey >> 32) & L_HT_Mask];
     }
 #endif
 
@@ -404,41 +404,41 @@ void StoreHT(hash_t qwKey, int best, int nAlpha, int beta, CMove bestm, int nDep
     }
 
 #if MP
-    if (entry.ht_Signature == (unsigned int)qwKey && nDepth == entry.ht_Depth) {
-        if ((entry.ht_Flags & HT_NCPU) > 0) {
-            entry.ht_Flags = (entry.ht_Flags & HT_NCPU) - HT_NCPU_INCREMENT;
+    if (Entry.ht_Signature == (unsigned int)qwKey && nDepth == Entry.ht_Depth) {
+        if ((Entry.ht_Flags & HT_NCPU) > 0) {
+            Entry.ht_Flags = (Entry.ht_Flags & HT_NCPU) - HT_NCPU_INCREMENT;
         }
     } else {
-        entry.ht_Signature = (unsigned int)qwKey;
-        entry.ht_Flags = 0;
+        Entry.ht_Signature = (unsigned int)qwKey;
+        Entry.ht_Flags = 0;
     }
 #else
-    entry.ht_Signature = (unsigned int)qwKey;
+    Entry.ht_Signature = (unsigned int)qwKey;
 #endif /* MP */
 
-    entry.ht_Move = bestm;
-    entry.ht_Depth = (short)nDepth;
-    entry.ht_Score = nReduced;
+    Entry.ht_Move = bestm;
+    Entry.ht_Depth = (short)nDepth;
+    Entry.ht_Score = nReduced;
 #if MP
-    entry.ht_Flags |= (short)HTGeneration;
+    Entry.ht_Flags |= (short)HTGeneration;
 #else
-    entry.ht_Flags = (short)HTGeneration;
+    Entry.ht_Flags = (short)HTGeneration;
 #endif /* MP */
     if (best <= nAlpha)
-        entry.ht_Flags |= HT_UBOUND;
+        Entry.ht_Flags |= HT_UBOUND;
     else if (best >= beta)
-        entry.ht_Flags |= HT_LBOUND;
+        Entry.ht_Flags |= HT_LBOUND;
     else
-        entry.ht_Flags |= HT_EXACT;
+        Entry.ht_Flags |= HT_EXACT;
 
     if (nThreat)
-        entry.ht_Flags |= HT_THREAT;
+        Entry.ht_Flags |= HT_THREAT;
 
-    bool fSuccess = PutHTEntryBestEffort(qwKey, entry, nDepth);
+    bool fSuccess = PutHTEntryBestEffort(qwKey, Entry, nDepth);
     if (!fSuccess) {
         HTStoreFailed++;
 #if MP
-        pLocalHT[(qwKey >> 32) & L_HT_Mask] = entry;
+        pLocalHT[(qwKey >> 32) & L_HT_Mask] = Entry;
 #endif
     }
 }
@@ -577,21 +577,21 @@ void AllocateHT(void) {
 
 void ShowHashStatistics(void) {
     unsigned int dwI;
-    unsigned int cnt = 0;
+    unsigned int dwCnt = 0;
     struct HTEntry *h = TranspositionTable;
 
     for (dwI = 0; dwI < HT_Size; dwI++, h++) {
         if ((h->ht_Flags & HT_AGE) == HTGeneration)
-            cnt++;
+            dwCnt++;
     }
 
-    char buf1[16], buf2[16];
+    char szBuf1[16], szBuf2[16];
 
     Print(1, "Hashtable 1:  entries = %s, use = %s (%d %%)\n",
-          FormatCount(dwI, buf1, sizeof(buf1)),
-          FormatCount(cnt, buf2, sizeof(buf2)), Percentage(cnt, dwI));
+          FormatCount(dwI, szBuf1, sizeof(szBuf1)),
+          FormatCount(dwCnt, szBuf2, sizeof(szBuf2)), Percentage(dwCnt, dwI));
     Print(1, "              store failed = %s (%d %%)\n",
-          FormatCount(HTStoreFailed, buf1, sizeof(buf1)),
+          FormatCount(HTStoreFailed, szBuf1, sizeof(szBuf1)),
           Percentage(HTStoreFailed, HTStoreTried));
 }
 

@@ -155,9 +155,9 @@ static struct SCommandEntry Commands[] = {
 char AutoSaveFileName[64];
 
 struct SCommand *ParseInput(char *pszLine) {
-    static struct SCommand theCommand;
+    static struct SCommand TheCommand;
     char *pszToken;
-    CMove move;
+    CMove Move;
     struct SCommandEntry *pEntry;
 
     pszToken = nextToken(&pszLine, " \t\n\r");
@@ -168,27 +168,27 @@ struct SCommand *ParseInput(char *pszLine) {
      * Try to interpret as move.
      */
 
-    move = CurrentPosition->ParseSAN(pszToken);
-    if (move == M_NONE) {
-        move = CurrentPosition->ParseGSAN(pszToken);
+    Move = CurrentPosition->ParseSAN(pszToken);
+    if (Move == M_NONE) {
+        Move = CurrentPosition->ParseGSAN(pszToken);
     }
 
-    if (move != M_NONE) {
-        theCommand.move = move;
-        theCommand.command_func = NULL;
-        theCommand.args = NULL;
-        return &theCommand;
+    if (Move != M_NONE) {
+        TheCommand.move = Move;
+        TheCommand.command_func = NULL;
+        TheCommand.args = NULL;
+        return &TheCommand;
     }
 
     pEntry = Commands;
     while (pEntry->name) {
         if (!strcmp(pEntry->name, pszToken)) {
-            theCommand.move = M_NONE;
-            theCommand.command_func = pEntry->command_func;
-            theCommand.allowed_during_search = pEntry->allowed_during_search;
-            theCommand.interrupts_search = pEntry->interrupts_search;
-            theCommand.args = nextToken(&pszLine, "\n\r");
-            return &theCommand;
+            TheCommand.move = M_NONE;
+            TheCommand.command_func = pEntry->command_func;
+            TheCommand.allowed_during_search = pEntry->allowed_during_search;
+            TheCommand.interrupts_search = pEntry->interrupts_search;
+            TheCommand.args = nextToken(&pszLine, "\n\r");
+            return &TheCommand;
         }
         pEntry++;
     }
@@ -234,9 +234,9 @@ static void Test(char *pszFname) {
     int nSolved = 0, nTotal = 0;
     FILE *fin, *fout;
     int nI;
-    int btav = 0;
-    int btval;
-    int bsval;
+    int nBtav = 0;
+    int nBtval;
+    int nBsval;
     int nLctval = 1900;
     char szLine[256];
 
@@ -254,7 +254,7 @@ static void Test(char *pszFname) {
     fout = fopen("nsolved.epd", "w");
 
     for (nI = 1;; nI++) {
-        CMove move;
+        CMove Move;
         int nJ;
         bool fCorrect = false;
 
@@ -270,16 +270,16 @@ static void Test(char *pszFname) {
 
         /* TestSwap(); */
 
-        move = p->Iterate(NULL, M_NONE, NULL);
+        Move = p->Iterate(NULL, M_NONE, NULL);
         for (nJ = 0; goodmove[nJ] != M_NONE; nJ++)
-            if (move == goodmove[nJ])
+            if (Move == goodmove[nJ])
                 fCorrect = true;
 
         if (!fCorrect && badmove[0] != M_NONE) {
             fCorrect = true;
 
             for (nJ = 0; badmove[nJ] != M_NONE; nJ++)
-                if (move == badmove[nJ])
+                if (Move == badmove[nJ])
                     fCorrect = false;
         }
 
@@ -288,7 +288,7 @@ static void Test(char *pszFname) {
             Print(0, "solved!\n");
             nSolved++;
 
-            btav += (FHTime < 900) ? FHTime : 900;
+            nBtav += (FHTime < 900) ? FHTime : 900;
 
             if (FHTime < 10)
                 nLctval += 30;
@@ -304,17 +304,17 @@ static void Test(char *pszFname) {
                 nLctval += 5;
         } else {
             Print(0, "not solved!\n");
-            btav += 900;
+            nBtav += 900;
             if (fout)
                 fprintf(fout, "%s", szLine);
         }
 
-        btval = 2630 - (btav / nTotal);
-        bsval = (btav / (17 * 60));
-        bsval = 2830 - bsval * bsval;
+        nBtval = 2630 - (nBtav / nTotal);
+        nBsval = (nBtav / (17 * 60));
+        nBsval = 2830 - nBsval * nBsval;
 
         Print(0, "solved %d out of %d  (BT2630 = %d, LCT2 = %d, BS2830 = %d)\n",
-              nSolved, nTotal, btval, nLctval, bsval);
+              nSolved, nTotal, nBtval, nLctval, nBsval);
         Print(0, "-----------------------------------------------\n\n");
 
         CPosition::Free(p);
@@ -563,23 +563,23 @@ static void RunAnnotate(char *pszFname, int nSide) {
     CPosition *p;
 
     if (fin) {
-        struct PGNHeader header;
+        struct PGNHeader Header;
         char szMove[16];
 
-        while (!scanHeader(fin, &header)) {
+        while (!scanHeader(fin, &Header)) {
             p = CPosition::Initial();
             while (!scanMove(fin, szMove)) {
-                CMove themove = p->ParseSAN(szMove);
-                if (themove != M_NONE) {
+                CMove TheMove = p->ParseSAN(szMove);
+                if (TheMove != M_NONE) {
                     char szSanBuffer[16];
                     p->ShowPosition();
                     Print(0, "%s(%d): ", p->GetTurn() == White ? "White" : "Black",
                           (p->GetPly() / 2) + 1);
-                    Print(0, "%s\n", p->SAN(themove, szSanBuffer));
+                    Print(0, "%s\n", p->SAN(TheMove, szSanBuffer));
                     if (nSide == -1 || (nSide == p->GetTurn())) {
                         p->Iterate(NULL, M_NONE, NULL);
                     }
-                    p->DoMove(themove);
+                    p->DoMove(TheMove);
                 }
             }
             CPosition::Free(p);
@@ -685,7 +685,7 @@ static void Help(char *pszArgs) {
 
 static void Benchmark(char *pszArgs) {
     (void)pszArgs;
-    CMove move = make_move(hg1, hf3, 0);
+    CMove Move = make_move(hg1, hf3, 0);
     int nI;
     const int nCycles = 10000000;
     unsigned long dwStart, dwEnd;
@@ -697,8 +697,8 @@ static void Benchmark(char *pszArgs) {
     dwStart = GetTime();
 
     for (nI = nCycles; nI > 0; nI--) {
-        p->DoMove(move);
-        p->UndoMove(move);
+        p->DoMove(Move);
+        p->UndoMove(Move);
     }
 
     dwEnd = GetTime();
@@ -723,15 +723,15 @@ static BitBoardBits SearchFully(CPosition *p, BitBoardBits qwCnt, int nDepth,
 
     for (dwI = heap->current_section->start; dwI < heap->current_section->end;
          dwI++) {
-        CMove move = heap->data[dwI];
-        if (move.IsCastle() && !p->MayCastle(move))
+        CMove Move = heap->data[dwI];
+        if (Move.IsCastle() && !p->MayCastle(Move))
             continue;
 
-        p->DoMove(move);
+        p->DoMove(Move);
         if (!p->InCheck(OPP(p->GetTurn()))) {
             qwCnt = SearchFully(p, qwCnt, nDepth - 1, heap);
         }
-        p->UndoMove(move);
+        p->UndoMove(Move);
     }
     pop_section(heap);
 
@@ -871,4 +871,3 @@ static void SetSearchDepth(char *pszArgs) {
 
     SetMaxSearchDepth(atoi(pszArgs));
 }
-

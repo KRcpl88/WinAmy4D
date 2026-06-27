@@ -57,16 +57,16 @@ static RECOGNIZER RecognizerKNK;
 static RECOGNIZER RecognizerKBKP;
 static RECOGNIZER RecognizerKNKP;
 
-static void RegisterRecognizer(RECOGNIZER *funct, int white_sig,
-                               int black_sig) {
-    Recognizers[CALCULATE_INDEX(white_sig, black_sig)] = funct;
+static void RegisterRecognizer(RECOGNIZER *pFunct, int nWhiteSig,
+                               int nBlackSig) {
+    Recognizers[CALCULATE_INDEX(nWhiteSig, nBlackSig)] = pFunct;
 
-    RecognizerAvailable[white_sig] |= (1 << black_sig);
-    RecognizerAvailable[black_sig] |= (1 << white_sig);
+    RecognizerAvailable[nWhiteSig] |= (1 << nBlackSig);
+    RecognizerAvailable[nBlackSig] |= (1 << nWhiteSig);
 }
 
-static int sig(int pawn, int knight, int bishop, int nRook, int nQueen) {
-    return pawn | (knight << 1) | (bishop << 2) | (nRook << 3) | (nQueen << 4);
+static int sig(int nPawn, int nKnight, int nBishop, int nRook, int nQueen) {
+    return nPawn | (nKnight << 1) | (nBishop << 2) | (nRook << 3) | (nQueen << 4);
 }
 
 void RecogInit(void) {
@@ -116,20 +116,20 @@ static int RecognizerKK(const CPosition *p, int *pScore) {
 }
 
 static int RecognizerKBK(const CPosition *p, int *pScore) {
-    CBitBoard pcs;
-    int color = White;
+    CBitBoard Pcs;
+    int nColor = White;
 
     if (p->GetMaterialSignature(Black)) {
-        color = Black;
+        nColor = Black;
     }
 
-    pcs = p->GetMask(color, Bishop);
+    Pcs = p->GetMask(nColor, Bishop);
 
     /*
      * drawn if there is only one bishop
      */
 
-    if ((pcs).CountBits() < 2) {
+    if ((Pcs).CountBits() < 2) {
         *pScore = 0;
         return ExactScore;
     }
@@ -138,7 +138,7 @@ static int RecognizerKBK(const CPosition *p, int *pScore) {
      * drawn if the bishops are all of the same color
      */
 
-    if (!((pcs & WhiteSquaresMask) && (pcs & BlackSquaresMask))) {
+    if (!((Pcs & WhiteSquaresMask) && (Pcs & BlackSquaresMask))) {
         *pScore = 0;
         return ExactScore;
     }
@@ -147,7 +147,7 @@ static int RecognizerKBK(const CPosition *p, int *pScore) {
      * do not recognize when losers king attacks a piece
      */
 
-    if (p->GetAtkTo(p->GetKingSq(OPP(color)).BitOffset()) & p->GetMask(color, 0)) {
+    if (p->GetAtkTo(p->GetKingSq(OPP(nColor)).BitOffset()) & p->GetMask(nColor, 0)) {
         return Useless;
     }
 
@@ -156,7 +156,7 @@ static int RecognizerKBK(const CPosition *p, int *pScore) {
      * is close enough to stalemate
      */
 
-    if (p->GetTurn() != color && (p->GetMask(OPP(color), King) & EdgeMask) &&
+    if (p->GetTurn() != nColor && (p->GetMask(OPP(nColor), King) & EdgeMask) &&
         (KingDist(p->GetKingSq(White), p->GetKingSq(Black)) == 2)) {
         return Useless;
     }
@@ -165,11 +165,11 @@ static int RecognizerKBK(const CPosition *p, int *pScore) {
      * This is a win. Calculate a score which guarantuess progress.
      */
 
-    *pScore = p->GetMaterial(color) + 2 * Value[Pawn] -
-              250 * EdgeDist(p->GetKingSq(OPP(color))) -
+    *pScore = p->GetMaterial(nColor) + 2 * Value[Pawn] -
+              250 * EdgeDist(p->GetKingSq(OPP(nColor))) -
               125 * KingDist(p->GetKingSq(White), p->GetKingSq(Black));
 
-    if (p->GetTurn() != color) {
+    if (p->GetTurn() != nColor) {
         *pScore = -*pScore;
         return UpperBound;
     }
@@ -181,15 +181,15 @@ static int RecognizerKNK(const CPosition *p, int *pScore) {
     if (p->GetMaterialSignature(White) && p->GetMaterialSignature(Black)) {
         return Useless;
     } else {
-        int cnt;
+        int nCnt;
 
         if (p->GetMaterialSignature(White)) {
-            cnt = (p->GetMask(White, Knight)).CountBits();
+            nCnt = (p->GetMask(White, Knight)).CountBits();
         } else {
-            cnt = (p->GetMask(Black, Knight)).CountBits();
+            nCnt = (p->GetMask(Black, Knight)).CountBits();
         }
 
-        if (cnt < 3) {
+        if (nCnt < 3) {
             *pScore = 0;
             return ExactScore;
         }
@@ -205,14 +205,14 @@ static int RecognizerKBKP(const CPosition *p, int *pScore) {
          * This is KBKP or KBPKP
          */
 
-        int color = White;
+        int nColor = White;
 
         if (p->GetMaterialSignature(Black) & SIGNATURE_BIT(Bishop)) {
-            color = Black;
+            nColor = Black;
         }
 
-        if (p->GetMaterialSignature(color) & SIGNATURE_BIT(Pawn)) {
-            if (color == White) {
+        if (p->GetMaterialSignature(nColor) & SIGNATURE_BIT(Pawn)) {
+            if (nColor == White) {
                 if (!(p->GetMask(White, Pawn) & NotAFileMask) &&
                     !(p->GetMask(White, Bishop) & WhiteSquaresMask) &&
                     (p->GetMask(Black, King) & CornerMaskA8)) {
@@ -242,14 +242,14 @@ static int RecognizerKBKP(const CPosition *p, int *pScore) {
 
             return Useless;
         } else {
-            if ((p->GetMask(color, Bishop)).CountBits() > 1 ||
-                p->GetMask(OPP(color), King) & EdgeMask) {
+            if ((p->GetMask(nColor, Bishop)).CountBits() > 1 ||
+                p->GetMask(OPP(nColor), King) & EdgeMask) {
                 return Useless;
             }
 
             *pScore = 0;
 
-            if (color == p->GetTurn()) {
+            if (nColor == p->GetTurn()) {
                 return UpperBound;
             } else {
                 return LowerBound;
@@ -296,20 +296,20 @@ static int RecognizerKBKP(const CPosition *p, int *pScore) {
 }
 
 static int RecognizerKNKP(const CPosition *p, int *pScore) {
-    int color = White;
+    int nColor = White;
 
     if (p->GetMaterialSignature(Black) & SIGNATURE_BIT(Knight)) {
-        color = Black;
+        nColor = Black;
     }
 
-    if ((p->GetMask(color, Knight)).CountBits() > 1 ||
-        p->GetMask(OPP(color), King) & EdgeMask) {
+    if ((p->GetMask(nColor, Knight)).CountBits() > 1 ||
+        p->GetMask(OPP(nColor), King) & EdgeMask) {
         return Useless;
     }
 
     *pScore = 0;
 
-    if (color == p->GetTurn()) {
+    if (nColor == p->GetTurn()) {
         return UpperBound;
     } else {
         return LowerBound;

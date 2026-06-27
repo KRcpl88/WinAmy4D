@@ -42,21 +42,21 @@
 #include "utils.h"
 
 void DoBookLearning(void) {
-    int cnt = 0;
-    char save_file_name[32];
+    int nCnt = 0;
+    char szSaveFileName[32];
 
-    for (cnt = 0;; cnt++) {
-        int result;
-        struct stat dummy;
+    for (nCnt = 0;; nCnt++) {
+        int nResult;
+        struct stat StatBuffer;
 
-        snprintf(save_file_name, sizeof(save_file_name), "save_%03d.pgn", cnt);
-        result = stat(save_file_name, &dummy);
+        snprintf(szSaveFileName, sizeof(szSaveFileName), "save_%03d.pgn", nCnt);
+        nResult = stat(szSaveFileName, &StatBuffer);
 
-        if (result < 0) {
+        if (nResult < 0) {
             break;
         }
-        Print(2, "Book learning with save file %s\n", save_file_name);
-        BookupQuiet(save_file_name);
-        remove(save_file_name);
+        Print(2, "Book learning with save file %s\n", szSaveFileName);
+        BookupQuiet(szSaveFileName);
+        remove(szSaveFileName);
     }
 }

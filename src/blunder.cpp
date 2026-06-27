@@ -45,53 +45,53 @@
 
 #define THRESHOLD 2000
 
-CMove get_best_move_from_comment(char *comment, CPosition *p,
+CMove get_best_move_from_comment(char *pszComment, CPosition *p,
                                   char *pszEvalBuf) {
-    char *ptr = comment;
+    char *pszPtr = pszComment;
 
     CMove best_move = M_NONE;
     int best_count = -1;
 
-    while (*ptr && *ptr != '=') {
-        ptr++;
+    while (*pszPtr && *pszPtr != '=') {
+        pszPtr++;
     }
-    ptr++;
+    pszPtr++;
 
-    char *pszStartEval = ptr;
+    char *pszStartEval = pszPtr;
 
-    while (*ptr && *ptr != ';') {
-        ptr++;
+    while (*pszPtr && *pszPtr != ';') {
+        pszPtr++;
     }
-    ptr++;
+    pszPtr++;
 
-    size_t qwEvalLen = ptr - pszStartEval - 1;
+    size_t qwEvalLen = pszPtr - pszStartEval - 1;
     strncpy(pszEvalBuf, pszStartEval, qwEvalLen);
     pszEvalBuf[qwEvalLen] = '\0';
 
-    while (*ptr && *ptr != '[') {
-        ptr++;
+    while (*pszPtr && *pszPtr != '[') {
+        pszPtr++;
     }
-    ptr++;
+    pszPtr++;
 
-    size_t qwLen = strlen(ptr);
+    size_t qwLen = strlen(pszPtr);
 
-    char *buffer = (char *)safe_malloc(qwLen + 1);
+    char *pszBuffer = (char *)safe_malloc(qwLen + 1);
 
-    strncpy(buffer, ptr, qwLen + 1);
+    strncpy(pszBuffer, pszPtr, qwLen + 1);
 
-    char *brko;
+    char *pszBrko;
 
-    for (char *pszElem = strtok_r(buffer, ", ]", &brko); pszElem;
-         pszElem = strtok_r(NULL, ", ]", &brko)) {
-        char *brki;
+    for (char *pszElem = strtok_r(pszBuffer, ", ]", &pszBrko); pszElem;
+         pszElem = strtok_r(NULL, ", ]", &pszBrko)) {
+        char *pszBrki;
 
-        char *pszMove = strtok_r(pszElem, ":", &brki);
-        char *count = strtok_r(NULL, ":", &brki);
+        char *pszMove = strtok_r(pszElem, ":", &pszBrki);
+        char *pszCount = strtok_r(NULL, ":", &pszBrki);
 
         CMove parsed_move = p->ParseSAN(pszMove);
 
         if (parsed_move != M_NONE) {
-            int parsed_count = atoi(count);
+            int parsed_count = atoi(pszCount);
             if (parsed_count > best_count) {
                 best_move = parsed_move;
                 best_count = parsed_count;
@@ -99,7 +99,7 @@ CMove get_best_move_from_comment(char *comment, CPosition *p,
         }
     }
 
-    free(buffer);
+    free(pszBuffer);
 
     return best_move;
 }
@@ -107,7 +107,7 @@ CMove get_best_move_from_comment(char *comment, CPosition *p,
 void BlunderCheck(char *file_name) {
     struct PGNHeader header;
     char szMove[12];
-    char comment[2048];
+    char szComment[2048];
     char szSanBuffer[16];
 
     FILE *fin = fopen(file_name, "r");
@@ -134,7 +134,7 @@ void BlunderCheck(char *file_name) {
 
         print_header(fout, &header);
 
-        CMove last_move = M_NONE;
+        CMove LastMove = M_NONE;
 
         while (!scanMove(fin, szMove)) {
             if (!(strlen(szMove) < 12)) {
@@ -142,59 +142,59 @@ void BlunderCheck(char *file_name) {
                 exit(1);
             }
 
-            get_and_reset_comment(comment, sizeof(comment) - 1);
+            get_and_reset_comment(szComment, sizeof(szComment) - 1);
 
-            if (last_move != M_NONE && strlen(comment) != 0) {
+            if (LastMove != M_NONE && strlen(szComment) != 0) {
                 char szSanbuf[16], szEvalbuf[16];
 
-                p->UndoMove(last_move);
+                p->UndoMove(LastMove);
 
                 CMove best_move =
-                    get_best_move_from_comment(comment, p, szEvalbuf);
+                    get_best_move_from_comment(szComment, p, szEvalbuf);
 
                 int nSearchEvaluation;
                 int nAlternateEvaluation;
 
-                CMove optimal_move = p->Iterate(&nSearchEvaluation, best_move,
+                CMove OptimalMove = p->Iterate(&nSearchEvaluation, best_move,
                                                 &nAlternateEvaluation);
                 int nScoreDiff = nSearchEvaluation - nAlternateEvaluation;
 
-                if (optimal_move != best_move && nScoreDiff >= 1500) {
+                if (OptimalMove != best_move && nScoreDiff >= 1500) {
                     p->ShowPosition();
                     Print(1, ">>> best move from comment: %s\n",
                           p->SAN(best_move, szSanbuf));
                     Print(1, ">>> optimal move: %s\n",
-                          p->SAN(optimal_move, szSanbuf));
+                          p->SAN(OptimalMove, szSanbuf));
                     Print(1, ">>> score diff: %d\n",
                           nSearchEvaluation - nAlternateEvaluation);
 
                     fprintf(fout, "{ q=%s; p=[%s:100] } ", szEvalbuf,
-                            p->SAN(optimal_move, szSanbuf));
+                            p->SAN(OptimalMove, szSanbuf));
                 }
 
-                p->DoMove(last_move);
+                p->DoMove(LastMove);
             }
 
-            CMove themove = p->ParseSAN(szMove);
+            CMove TheMove = p->ParseSAN(szMove);
 
-            if (themove == M_NONE)
+            if (TheMove == M_NONE)
                 break;
 
             if ((p->GetPly() % 2) == 0) {
                 fprintf(fout, "%d. ", 1 + p->GetPly() / 2);
             }
-            fprintf(fout, "%s ", p->SAN(themove, szSanBuffer));
+            fprintf(fout, "%s ", p->SAN(TheMove, szSanBuffer));
 
-            if (themove != M_NONE) {
-                p->DoMove(themove);
-                last_move = themove;
+            if (TheMove != M_NONE) {
+                p->DoMove(TheMove);
+                LastMove = TheMove;
             } else {
                 break;
             }
         }
 
         fprintf(fout, "%s\n\n", header.result);
-        get_and_reset_comment(comment, sizeof(comment) - 1);
+        get_and_reset_comment(szComment, sizeof(szComment) - 1);
 
         CPosition::Free(p);
     }

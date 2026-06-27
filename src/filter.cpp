@@ -43,7 +43,7 @@
 void FilterQuiescentPositions(char *file_name) {
     struct PGNHeader header;
     char szMove[12];
-    char comment[2048];
+    char szComment[2048];
     char szSanBuffer[16];
 
     FILE *fin = fopen(file_name, "r");
@@ -78,21 +78,21 @@ void FilterQuiescentPositions(char *file_name) {
                 exit(1);
             }
 
-            get_and_reset_comment(comment, sizeof(comment) - 1);
+            get_and_reset_comment(szComment, sizeof(szComment) - 1);
 
             if (fLastPositionWasQuiet) {
-                fprintf(fout, "{ %s }\n", strip(comment));
+                fprintf(fout, "{ %s }\n", strip(szComment));
             }
 
-            CMove themove = p->ParseSAN(szMove);
+            CMove TheMove = p->ParseSAN(szMove);
 
-            if (themove == M_NONE)
+            if (TheMove == M_NONE)
                 break;
 
             if ((p->GetPly() % 2) == 0) {
                 fprintf(fout, "%d. ", 1 + p->GetPly() / 2);
             }
-            fprintf(fout, "%s ", p->SAN(themove, szSanBuffer));
+            fprintf(fout, "%s ", p->SAN(TheMove, szSanBuffer));
 
             fLastPositionWasQuiet = true;
 
@@ -100,9 +100,9 @@ void FilterQuiescentPositions(char *file_name) {
                 const int nStaticEvaluation = EvaluatePosition(p);
                 const int nDynamicEvaluation = p->QuiescenceSearch();
 
-                const int diff = ABS(nStaticEvaluation - nDynamicEvaluation);
+                const int nDiff = ABS(nStaticEvaluation - nDynamicEvaluation);
 
-                if (diff > THRESHOLD) {
+                if (nDiff > THRESHOLD) {
                     // p->ShowPosition();
                     // Print(0, "Static: %d Dynamic: %d\n", nStaticEvaluation,
                     //      nDynamicEvaluation);
@@ -120,15 +120,15 @@ void FilterQuiescentPositions(char *file_name) {
                 }
             }
 
-            if (themove != M_NONE) {
-                p->DoMove(themove);
+            if (TheMove != M_NONE) {
+                p->DoMove(TheMove);
             } else {
                 break;
             }
         }
 
         fprintf(fout, "%s\n\n", header.result);
-        get_and_reset_comment(comment, sizeof(comment) - 1);
+        get_and_reset_comment(szComment, sizeof(szComment) - 1);
 
         CPosition::Free(p);
     }

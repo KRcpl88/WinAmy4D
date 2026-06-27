@@ -23,9 +23,9 @@ CUCoord::CUCoord(const CSCoordBase& scoord) {
     SetZ(scoord.m_nLevel);
     const unsigned int dwLevelIndex = static_cast<unsigned int>(scoord.m_nLevel);
     const int nLevelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH - CBitBoard::LEVEL_WIDTH[dwLevelIndex]);
-    const int fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[dwLevelIndex]) - 1;
+    const int nFileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[dwLevelIndex]) - 1;
     SetX(nLevelOffset + scoord.m_nFile + scoord.m_nRank);
-    SetY(nLevelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
+    SetY(nLevelOffset + scoord.m_nRank - scoord.m_nFile + nFileOffset);
 }
 
 CChord g_krgFullCellOutline[24]
@@ -257,30 +257,30 @@ CUCoord::operator CSCoord() const {
     const std::uint16_t wInvalidCoord = (std::numeric_limits<std::uint16_t>::max)();
 
     int nLevelOffset;
-    int fileOffset;
+    int nFileOffset;
     if ((nLevel >= 0) && (static_cast<unsigned int>(nLevel) < CBitBoard::NUM_LEVELS)) {
         scoord.m_nLevel = static_cast<std::uint16_t>(nLevel);
         const unsigned int dwLevelIndex = static_cast<unsigned int>(nLevel);
         nLevelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH - CBitBoard::LEVEL_WIDTH[dwLevelIndex]);
-        fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[dwLevelIndex]) - 1;
+        nFileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[dwLevelIndex]) - 1;
     } else {
         scoord.m_nLevel = wInvalidCoord;
         nLevelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH);
-        fileOffset = 0;
+        nFileOffset = 0;
     }
 
-    const int doubleFile = GetX() - GetY() + fileOffset;
-    if ((doubleFile & 1) != 0) {
+    const int nDoubleFile = GetX() - GetY() + nFileOffset;
+    if ((nDoubleFile & 1) != 0) {
         scoord.m_nFile = wInvalidCoord;
     } else {
-        scoord.m_nFile = static_cast<std::uint16_t>(doubleFile >> 1);
+        scoord.m_nFile = static_cast<std::uint16_t>(nDoubleFile >> 1);
     }
 
-    const int doubleRank = GetX() + GetY() - fileOffset;
-    if ((doubleRank & 1) != 0) {
+    const int nDoubleRank = GetX() + GetY() - nFileOffset;
+    if ((nDoubleRank & 1) != 0) {
         scoord.m_nRank = wInvalidCoord;
     } else {
-        scoord.m_nRank = static_cast<std::uint16_t>((doubleRank >> 1) - nLevelOffset);
+        scoord.m_nRank = static_cast<std::uint16_t>((nDoubleRank >> 1) - nLevelOffset);
     }
 
     return scoord;

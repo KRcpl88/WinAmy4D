@@ -86,7 +86,7 @@ void DoTC(CPosition *p, int nMtime) {
     }
 }
 
-void CalcTime(CPosition *p, float *pSoft, float *hard) {
+void CalcTime(CPosition *p, float *pSoft, float *pHard) {
     char szTimeAsText[16];
     if (TMoves >= 0) {
         if (Moves[p->GetTurn()] > 0) {
@@ -112,7 +112,7 @@ void CalcTime(CPosition *p, float *pSoft, float *hard) {
                 *pSoft = 0.5f * ((*pSoft) + (float)nSoft2);
                 Print(1, "Adjusted timing to %.4f secs\n", *pSoft);
             }
-            *hard = 4.0f * (*pSoft);
+            *pHard = 4.0f * (*pSoft);
         } else {
             /*  expect additional game length of 60 moves beyond current move */
             /*  use equations from section above with fixed Moves[p->GetTurn()] of 60
@@ -128,16 +128,16 @@ void CalcTime(CPosition *p, float *pSoft, float *hard) {
             *pSoft = 0.0146f * (float)Time[p->GetTurn()] + (0.85f * Increment);
             if (*pSoft > fLimit)
                 *pSoft = fLimit;
-            *hard = 4.0f * (*pSoft);
+            *pHard = 4.0f * (*pSoft);
         }
-        if (*hard > Time[p->GetTurn()])
-            *hard = 0.5f * (float)Time[p->GetTurn()];
-        if (*pSoft > *hard)
-            *pSoft = 0.67f * (*hard);
+        if (*pHard > Time[p->GetTurn()])
+            *pHard = 0.5f * (float)Time[p->GetTurn()];
+        if (*pSoft > *pHard)
+            *pSoft = 0.67f * (*pHard);
 
-        Print(1, "TL: %.2f/%.2f\n", *pSoft, *hard);
+        Print(1, "TL: %.2f/%.2f\n", *pSoft, *pHard);
     } else {
-        *pSoft = *hard = (float)TTime;
+        *pSoft = *pHard = (float)TTime;
     }
 }
 
@@ -145,8 +145,8 @@ static struct TimeControl parse_timecontrol_xboard(char *rgArgs[]) {
     int nTtmoves, nTtime, nTminutes, nTseconds, nInc = 0;
 
     sscanf(rgArgs[0], "%d", &nTtmoves);
-    char *colon = strchr(rgArgs[1], ':'); /* check for time in xx:yy format */
-    if (colon) {
+    char *pszColon = strchr(rgArgs[1], ':'); /* check for time in xx:yy format */
+    if (pszColon) {
         sscanf(rgArgs[1], "%d:%d", &nTminutes, &nTseconds);
         nTtime = (nTminutes * 60) + nTseconds;
     } else {
@@ -155,13 +155,13 @@ static struct TimeControl parse_timecontrol_xboard(char *rgArgs[]) {
     }
     sscanf(rgArgs[2], "%d", &nInc);
 
-    struct TimeControl result = {};
-    result.first.moves = nTtmoves;
-    result.first.total_time = nTtime;
-    result.first.increment = nInc;
-    result.hasSecondTimeControl = false;
+    struct TimeControl Result = {};
+    Result.first.moves = nTtmoves;
+    Result.first.total_time = nTtime;
+    Result.first.increment = nInc;
+    Result.hasSecondTimeControl = false;
 
-    return result;
+    return Result;
 }
 
 /** Literal for 'sudden death' time control. */
@@ -174,7 +174,7 @@ static struct TimeControl parse_timecontrol(char *rgArgs[]) {
     int nTtmoves, nTtime, nInc = 0;
     int nTtmoves2, nTtime2;
 
-    struct TimeControl result = globalTimeControl;
+    struct TimeControl Result = globalTimeControl;
 
     char *pszX = strtok(rgArgs[0], "/+ \t\n\r");
     if (pszX) {
@@ -209,26 +209,26 @@ static struct TimeControl parse_timecontrol(char *rgArgs[]) {
                 }
             }
             if (nTtmoves >= 0) {
-                result.first.moves = nTtmoves;
-                result.first.total_time = nTtime * 60;
-                result.first.increment = nInc;
-                result.hasSecondTimeControl = false;
+                Result.first.moves = nTtmoves;
+                Result.first.total_time = nTtime * 60;
+                Result.first.increment = nInc;
+                Result.hasSecondTimeControl = false;
 
             } else {
-                result.first.moves = -1;
-                result.first.total_time = nTtime;
-                result.first.increment = 0;
-                result.hasSecondTimeControl = false;
+                Result.first.moves = -1;
+                Result.first.total_time = nTtime;
+                Result.first.increment = 0;
+                Result.hasSecondTimeControl = false;
             }
             if (TwoTimeControls) {
-                result.second.moves = nTtmoves2;
-                result.second.total_time = nTtime2 * 60;
-                result.second.increment = 0;
-                result.hasSecondTimeControl = true;
+                Result.second.moves = nTtmoves2;
+                Result.second.total_time = nTtime2 * 60;
+                Result.second.increment = 0;
+                Result.hasSecondTimeControl = true;
             }
         }
     }
-    return result;
+    return Result;
 }
 
 /**

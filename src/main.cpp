@@ -117,7 +117,7 @@ static void ProcessOptions(int nArgc, char *pArgv[]) {
 
 static void ProcessRCFile(void) {
     FILE *pRcFile = fopen(".amyrc", "r");
-    char buf[1024];
+    char szBuf[1024];
 
     if (!pRcFile) {
 
@@ -132,11 +132,11 @@ static void ProcessRCFile(void) {
     if (!pRcFile)
         return;
 
-    while (fgets(buf, 1023, pRcFile)) {
-        char *pX = buf;
+    while (fgets(szBuf, 1023, pRcFile)) {
+        char *pX = szBuf;
         char *pszKey, *pszValue;
 
-        if (buf[0] == '#')
+        if (szBuf[0] == '#')
             continue;
 
         pszKey = nextToken(&pX, "=\t\n\r");

@@ -65,12 +65,12 @@ static char HostNameBuf[256];
 
 static void MakeDateTime(void) {
     time_t nTnow;
-    struct tm *now;
+    struct tm *pNow;
 
     time(&nTnow);
-    now = localtime(&nTnow);
-    strftime(DateBuf, 15, "%Y.%m.%d", now);
-    strftime(TimeBuf, 15, "%H:%M:%S", now);
+    pNow = localtime(&nTnow);
+    strftime(DateBuf, 15, "%Y.%m.%d", pNow);
+    strftime(TimeBuf, 15, "%H:%M:%S", pNow);
 }
 
 static void MakeHostName(void) {
@@ -89,14 +89,14 @@ static const char *getBlackName(void) {
     return (ComputerSide == Black) ? (AMY_NAME) : (OpponentName);
 }
 
-void SaveGame(CPosition *p, char *file_name) {
+void SaveGame(CPosition *p, char *pszFileName) {
     /* Do not save if no move made yet. */
     if (p->GetPly() > 0) {
-        FILE *fout = fopen(file_name, "w");
-        if (fout) {
+        FILE *pFout = fopen(pszFileName, "w");
+        if (pFout) {
             int nI;
-            int ply = p->GetPly();
-            int width = 0;
+            int nPly = p->GetPly();
+            int nWidth = 0;
             const char *pszGameend;
             char szShortgameend[8] = "1/2-1/2";
             char szEco[128] = "";
@@ -112,116 +112,116 @@ void SaveGame(CPosition *p, char *file_name) {
                 }
             }
 
-            fprintf(fout, "[Event \"Amy game\"]\n");
+            fprintf(pFout, "[Event \"Amy game\"]\n");
             MakeHostName();
-            fprintf(fout, "[Site \"%s\"]\n", HostNameBuf);
+            fprintf(pFout, "[Site \"%s\"]\n", HostNameBuf);
             MakeDateTime();
-            fprintf(fout, "[Date \"%s\"]\n", DateBuf);
-            fprintf(fout, "[Time \"%s\"]\n", TimeBuf);
-            fprintf(fout, "[Round \"?\"]\n");
+            fprintf(pFout, "[Date \"%s\"]\n", DateBuf);
+            fprintf(pFout, "[Time \"%s\"]\n", TimeBuf);
+            fprintf(pFout, "[Round \"?\"]\n");
             if (FindEcoCode(p, szEco)) {
-                fprintf(fout, "[ECO \"%c%c%c\"]\n", szEco[0], szEco[1], szEco[2]);
+                fprintf(pFout, "[ECO \"%c%c%c\"]\n", szEco[0], szEco[1], szEco[2]);
             }
-            fprintf(fout, "[White \"%s\"]\n", getWhiteName());
-            fprintf(fout, "[Black \"%s\"]\n", getBlackName());
-            fprintf(fout, "[Result \"%s\"]\n\n", szShortgameend);
+            fprintf(pFout, "[White \"%s\"]\n", getWhiteName());
+            fprintf(pFout, "[Black \"%s\"]\n", getBlackName());
+            fprintf(pFout, "[Result \"%s\"]\n\n", szShortgameend);
 
-            for (nI = ply; nI > 0; nI--) {
-                CMove move = (p->GetActLog() - 1)->gl_Move;
-                PGNMoveHistory[nI - 1] = move;
-                p->UndoMove(move);
+            for (nI = nPly; nI > 0; nI--) {
+                CMove Move = (p->GetActLog() - 1)->gl_Move;
+                PGNMoveHistory[nI - 1] = Move;
+                p->UndoMove(Move);
             }
 
-            for (nI = 0; nI < ply; nI++) {
-                CMove move = PGNMoveHistory[nI];
+            for (nI = 0; nI < nPly; nI++) {
+                CMove Move = PGNMoveHistory[nI];
                 if ((nI & 1) == 0) {
-                    fprintf(fout, "%d. ", (nI / 2) + 1);
-                    width += 3;
+                    fprintf(pFout, "%d. ", (nI / 2) + 1);
+                    nWidth += 3;
                     if (nI > 18)
-                        width++;
+                        nWidth++;
                     if (nI > 98)
-                        width++;
+                        nWidth++;
                 }
 
                 char szSanBuffer[16];
-                char *pszSan = p->SAN(move, szSanBuffer);
-                fprintf(fout, "%s ", pszSan);
-                width += (int)strlen(pszSan) + 1;
-                if (width > 67) {
-                    width = 0;
-                    fprintf(fout, "\n");
+                char *pszSan = p->SAN(Move, szSanBuffer);
+                fprintf(pFout, "%s ", pszSan);
+                nWidth += (int)strlen(pszSan) + 1;
+                if (nWidth > 67) {
+                    nWidth = 0;
+                    fprintf(pFout, "\n");
                 }
-                p->DoMove(move);
+                p->DoMove(Move);
             }
-            fprintf(fout, "\n%s\n\n", pszGameend);
-            fclose(fout);
+            fprintf(pFout, "\n%s\n\n", pszGameend);
+            fclose(pFout);
         }
     }
 }
 
-void LoadGame(CPosition *p, char *file_name) {
-    FILE *fin = fopen(file_name, "r");
+void LoadGame(CPosition *p, char *pszFileName) {
+    FILE *pFin = fopen(pszFileName, "r");
 
-    if (fin) {
-        struct PGNHeader header;
+    if (pFin) {
+        struct PGNHeader Header;
         char szMove[16];
-        if (!scanHeader(fin, &header)) {
-            while (!scanMove(fin, szMove)) {
-                CMove themove = p->ParseSAN(szMove);
-                if (themove != M_NONE) {
-                    p->DoMove(themove);
+        if (!scanHeader(pFin, &Header)) {
+            while (!scanMove(pFin, szMove)) {
+                CMove TheMove = p->ParseSAN(szMove);
+                if (TheMove != M_NONE) {
+                    p->DoMove(TheMove);
                 }
             }
         }
-        fclose(fin);
+        fclose(pFin);
     }
 }
 
-int scanHeader(FILE *fin, struct PGNHeader *header) {
-    static char buffer[1024];
+int scanHeader(FILE *pFin, struct PGNHeader *pHeader) {
+    static char szBuffer[1024];
     int nState = 0;
 
     /* Clear it */
-    memset(header, 0, sizeof(struct PGNHeader));
+    memset(pHeader, 0, sizeof(struct PGNHeader));
 
-    while (fgets(buffer, 1024, fin)) {
-        if (buffer[0] == '[') {
-            char *pszX = buffer + 1;
+    while (fgets(szBuffer, 1024, pFin)) {
+        if (szBuffer[0] == '[') {
+            char *pszX = szBuffer + 1;
             char *pszKey = nextToken(&pszX, " \"");
             char *pszValue = nextToken(&pszX, "\"");
 
             if (!strcmp("Event", pszKey)) {
-                strncpy(header->event, pszValue, sizeof(header->event) - 1);
+                strncpy(pHeader->event, pszValue, sizeof(pHeader->event) - 1);
             }
             if (!strcmp("Site", pszKey)) {
-                strncpy(header->site, pszValue, sizeof(header->site) - 1);
+                strncpy(pHeader->site, pszValue, sizeof(pHeader->site) - 1);
             }
             if (!strcmp("Date", pszKey)) {
-                strncpy(header->date, pszValue, sizeof(header->date) - 1);
+                strncpy(pHeader->date, pszValue, sizeof(pHeader->date) - 1);
             }
             if (!strcmp("Round", pszKey)) {
-                strncpy(header->round, pszValue, sizeof(header->round) - 1);
+                strncpy(pHeader->round, pszValue, sizeof(pHeader->round) - 1);
             }
             if (!strcmp("White", pszKey)) {
-                strncpy(header->white, pszValue, sizeof(header->white) - 1);
+                strncpy(pHeader->white, pszValue, sizeof(pHeader->white) - 1);
             }
             if (!strcmp("Black", pszKey)) {
-                strncpy(header->black, pszValue, sizeof(header->black) - 1);
+                strncpy(pHeader->black, pszValue, sizeof(pHeader->black) - 1);
             }
             if (!strcmp("Result", pszKey)) {
-                strncpy(header->result, pszValue, sizeof(header->result) - 1);
+                strncpy(pHeader->result, pszValue, sizeof(pHeader->result) - 1);
             }
             if (!strcmp("WhiteElo", pszKey)) {
-                header->white_elo = atoi(pszValue);
+                pHeader->white_elo = atoi(pszValue);
             }
             if (!strcmp("BlackElo", pszKey)) {
-                header->black_elo = atoi(pszValue);
+                pHeader->black_elo = atoi(pszValue);
             }
             if (!strcmp("FEN", pszKey)) {
-                strncpy(header->fen, pszValue, sizeof(header->fen) - 1);
+                strncpy(pHeader->fen, pszValue, sizeof(pHeader->fen) - 1);
             }
             if (!strcmp("SetUp", pszKey)) {
-                header->is_setup = atoi(pszValue);
+                pHeader->is_setup = atoi(pszValue);
             }
 
             nState = 1;
@@ -238,25 +238,25 @@ int scanHeader(FILE *fin, struct PGNHeader *header) {
 static char comment_buffer[2048] = "";
 static char *comment_ptr = comment_buffer;
 
-int scanMove(FILE *fin, char *nextMove) {
-    static char buffer[1024];
+int scanMove(FILE *pFin, char *pszNextMove) {
+    static char szBuffer[1024];
     static int haveLine = 0;
     static char *pszX;
 
     char *pszToken;
 
-    int braces = 0;
-    int parens = 0;
+    int nBraces = 0;
+    int nParens = 0;
 
     do {
         if (!haveLine) {
-            if (!fgets(buffer, 1024, fin))
+            if (!fgets(szBuffer, 1024, pFin))
                 return 1;
             haveLine = 1;
-            pszX = buffer;
+            pszX = szBuffer;
         }
 
-        if (braces) {
+        if (nBraces) {
             if (*pszX == '\0') {
                 haveLine = 0;
                 continue;
@@ -266,36 +266,36 @@ int scanMove(FILE *fin, char *nextMove) {
 
             if (*(pszX++) == '}') {
                 *comment_ptr = 0;
-                braces = 0;
+                nBraces = 0;
             }
 
             comment_ptr++;
 
             continue;
-        } else if (parens) {
+        } else if (nParens) {
             if (*pszX == '\0') {
                 haveLine = 0;
                 continue;
             }
 
             if (*pszX == ')') {
-                parens--;
+                nParens--;
             }
             if (*pszX == '(') {
-                parens++;
+                nParens++;
             }
             pszX++;
 
             continue;
         } else {
             if (pszX && *pszX == '{') {
-                braces = 1;
+                nBraces = 1;
                 pszX++;
                 comment_ptr = comment_buffer;
                 continue;
             }
             if (pszX && *pszX == '(') {
-                parens = 1;
+                nParens = 1;
                 pszX++;
                 continue;
             }
@@ -318,31 +318,31 @@ int scanMove(FILE *fin, char *nextMove) {
                 continue;
         }
 
-        strcpy(nextMove, pszToken);
+        strcpy(pszNextMove, pszToken);
         return 0;
     } while (1);
 
     return 1;
 }
 
-void get_and_reset_comment(char *destination, unsigned int dwLength) {
-    strncpy(destination, comment_buffer, dwLength);
+void get_and_reset_comment(char *pszDestination, unsigned int dwLength) {
+    strncpy(pszDestination, comment_buffer, dwLength);
 
     comment_ptr = comment_buffer;
     *comment_buffer = 0;
 }
 
-void print_header(FILE *fout, struct PGNHeader *header) {
-    fprintf(fout, "[Event \"%s\"]\n", header->event);
-    fprintf(fout, "[Site \"%s\"]\n", header->site);
-    fprintf(fout, "[Date \"%s\"]\n", header->date);
-    fprintf(fout, "[Round \"%s\"]\n", header->round);
-    fprintf(fout, "[White \"%s\"]\n", header->white);
-    fprintf(fout, "[Black \"%s\"]\n", header->black);
-    fprintf(fout, "[Result \"%s\"]\n", header->result);
-    if (header->is_setup) {
-        fprintf(fout, "[SetUp \"1\"]\n");
-        fprintf(fout, "[FEN \"%s\"]\n", header->fen);
+void print_header(FILE *pFout, struct PGNHeader *pHeader) {
+    fprintf(pFout, "[Event \"%s\"]\n", pHeader->event);
+    fprintf(pFout, "[Site \"%s\"]\n", pHeader->site);
+    fprintf(pFout, "[Date \"%s\"]\n", pHeader->date);
+    fprintf(pFout, "[Round \"%s\"]\n", pHeader->round);
+    fprintf(pFout, "[White \"%s\"]\n", pHeader->white);
+    fprintf(pFout, "[Black \"%s\"]\n", pHeader->black);
+    fprintf(pFout, "[Result \"%s\"]\n", pHeader->result);
+    if (pHeader->is_setup) {
+        fprintf(pFout, "[SetUp \"1\"]\n");
+        fprintf(pFout, "[FEN \"%s\"]\n", pHeader->fen);
     }
-    fprintf(fout, "\n");
+    fprintf(pFout, "\n");
 }

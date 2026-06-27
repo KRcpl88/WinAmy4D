@@ -1,9 +1,9 @@
 #include "move.h"
 
-CMove::CMove(const CSCoord& from, const CSCoord& to, std::uint32_t flags)
-    : m_From(from), m_To(to),
-      m_dwBits(static_cast<std::uint32_t>(from.GetBitField()) |
-              (static_cast<std::uint32_t>(to.GetBitField()) << 16) | flags) {
+CMove::CMove(const CSCoord& From, const CSCoord& To, std::uint32_t dwFlags)
+    : m_From(From), m_To(To),
+      m_dwBits(static_cast<std::uint32_t>(From.GetBitField()) |
+              (static_cast<std::uint32_t>(To.GetBitField()) << 16) | dwFlags) {
 }
 
 const CSCoord& CMove::GetFromCoord() const {
@@ -77,9 +77,9 @@ void CMove::SetEnPassant(bool fValue) {
     SetFlag(FLAG_ENPASSANT, fValue);
 }
 
-void CMove::SetPromotionType(int promotionType) {
+void CMove::SetPromotionType(int nPromotionType) {
     m_dwBits &= ~PROMOTION_MASK;
-    m_dwBits |= (static_cast<std::uint32_t>(promotionType) << PROMOTION_OFFSET) &
+    m_dwBits |= (static_cast<std::uint32_t>(nPromotionType) << PROMOTION_OFFSET) &
               PROMOTION_MASK;
 }
 
@@ -87,12 +87,12 @@ void CMove::ClearPromotion() {
     m_dwBits &= ~PROMOTION_MASK;
 }
 
-bool CMove::operator==(const CMove& other) const {
-    return m_dwBits == other.m_dwBits;
+bool CMove::operator==(const CMove& Other) const {
+    return m_dwBits == Other.m_dwBits;
 }
 
-bool CMove::operator!=(const CMove& other) const {
-    return !(*this == other);
+bool CMove::operator!=(const CMove& Other) const {
+    return !(*this == Other);
 }
 
 bool CMove::HasFlag(std::uint32_t dwMask) const {

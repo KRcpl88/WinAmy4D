@@ -67,28 +67,28 @@ uint16_t g_nDebugMode = 0;
 /**
  * Open a log file, remember fp in global variable LogFile
  */
-void OpenLogFile(const char *name) {
+void OpenLogFile(const char *pszName) {
     if (LogFile) {
         fclose(LogFile);
     }
-    LogFile = fopen(name, "w");
+    LogFile = fopen(pszName, "w");
 }
 
 /**
  * Print something to stdout and to the logfile.
  */
-void CDECL Print(int nVb, const char *fmt, ...) {
+void CDECL Print(int nVb, const char *pszFmt, ...) {
     if (nVb < g_nVerbosity) {
         va_list pVa;
-        va_start(pVa, fmt);
-        vprintf(fmt, pVa);
+        va_start(pVa, pszFmt);
+        vprintf(pszFmt, pVa);
         fflush(stdout);
         va_end(pVa);
     }
     if (LogFile) {
         va_list pVa;
-        va_start(pVa, fmt);
-        vfprintf(LogFile, fmt, pVa);
+        va_start(pVa, pszFmt);
+        vfprintf(LogFile, pszFmt, pVa);
         fflush(LogFile);
         va_end(pVa);
     }
@@ -106,19 +106,19 @@ void CDECL Print(int nVb, const char *fmt, ...) {
  * file when g_nDebugMode is set, unconditionally of the verbosity level. The stdout
  * copy remains gated by g_nVerbosity for the console front-ends.
  */
-void CDECL PrintDebug(int nVb, const char *fmt, ...) {
+void CDECL PrintDebug(int nVb, const char *pszFmt, ...) {
     if (nVb < g_nVerbosity) {
         va_list pVa;
-        va_start(pVa, fmt);
-        vprintf(fmt, pVa);
+        va_start(pVa, pszFmt);
+        vprintf(pszFmt, pVa);
         fflush(stdout);
         va_end(pVa);
     }
 
     if (g_nDebugMode && LogFile) {
         va_list pVa;
-        va_start(pVa, fmt);
-        vfprintf(LogFile, fmt, pVa);
+        va_start(pVa, pszFmt);
+        vfprintf(LogFile, pszFmt, pVa);
         fflush(LogFile);
         va_end(pVa);
     }
@@ -127,14 +127,14 @@ void CDECL PrintDebug(int nVb, const char *fmt, ...) {
 /**
  * Read a line from stdin.
  */
-int ReadLine(char *buffer, int cnt) {
-    return fgets(buffer, cnt, stdin) != NULL;
+int ReadLine(char *pszBuffer, int nCnt) {
+    return fgets(pszBuffer, nCnt, stdin) != NULL;
 }
 
 /**
  * Convert an int representing a time in seconds to a string.
  */
-char *FormatTime(unsigned long dwSecs, char *buffer, size_t qwLen) {
+char *FormatTime(unsigned long dwSecs, char *pszBuffer, size_t qwLen) {
     if (dwSecs >= 60 * ONE_SECOND) {
         long nMins;
         dwSecs = dwSecs / ONE_SECOND;
@@ -142,38 +142,38 @@ char *FormatTime(unsigned long dwSecs, char *buffer, size_t qwLen) {
         dwSecs -= nMins * 60;
 
         if (nMins >= 100)
-            snprintf(buffer, qwLen, "%ld:%02ld", nMins, dwSecs);
+            snprintf(pszBuffer, qwLen, "%ld:%02ld", nMins, dwSecs);
         else if (nMins >= 10)
-            snprintf(buffer, qwLen, " %ld:%02ld", nMins, dwSecs);
+            snprintf(pszBuffer, qwLen, " %ld:%02ld", nMins, dwSecs);
         else
-            snprintf(buffer, qwLen, "  %ld:%02ld", nMins, dwSecs);
+            snprintf(pszBuffer, qwLen, "  %ld:%02ld", nMins, dwSecs);
     } else {
         int nTsecs = (dwSecs % ONE_SECOND) / 10;
         dwSecs = dwSecs / ONE_SECOND;
 
-        snprintf(buffer, qwLen, "  %2ld.%d", dwSecs, nTsecs);
+        snprintf(pszBuffer, qwLen, "  %2ld.%d", dwSecs, nTsecs);
     }
-    return buffer;
+    return pszBuffer;
 }
 
 /**
  * Convert a score to a string.
  */
-char *FormatScore(int nScore, char *buffer, size_t qwLen) {
+char *FormatScore(int nScore, char *pszBuffer, size_t qwLen) {
     if (nScore > CMLIMIT) {
-        snprintf(buffer, qwLen, "+M%d", (INF - nScore) / 2 + 1);
+        snprintf(pszBuffer, qwLen, "+M%d", (INF - nScore) / 2 + 1);
     } else if (nScore < -CMLIMIT) {
-        snprintf(buffer, qwLen, "-M%d", (nScore + INF) / 2);
+        snprintf(pszBuffer, qwLen, "-M%d", (nScore + INF) / 2);
     } else if (nScore == CMLIMIT) {
-        snprintf(buffer, qwLen, "+Mate");
+        snprintf(pszBuffer, qwLen, "+Mate");
     } else if (nScore == -CMLIMIT) {
-        snprintf(buffer, qwLen, "-Mate");
+        snprintf(pszBuffer, qwLen, "-Mate");
     } else if (nScore >= 0) {
-        snprintf(buffer, qwLen, "+%d.%03d", nScore / 1000, nScore % 1000);
+        snprintf(pszBuffer, qwLen, "+%d.%03d", nScore / 1000, nScore % 1000);
     } else {
-        snprintf(buffer, qwLen, "-%d.%03d", (-nScore) / 1000, (-nScore) % 1000);
+        snprintf(pszBuffer, qwLen, "-%d.%03d", (-nScore) / 1000, (-nScore) % 1000);
     }
-    return buffer;
+    return pszBuffer;
 }
 
 /**
@@ -187,32 +187,32 @@ char *FormatScore(int nScore, char *buffer, size_t qwLen) {
  * Returns:
  *     the pointer to the buffer
  */
-char *FormatCount(unsigned long count, char *buffer, size_t qwLen) {
-    if (count < 1000) {
-        snprintf(buffer, qwLen, "%lu", count);
-    } else if (count < 10000ull) {
-        double dScaled = count * 1e-3;
-        snprintf(buffer, qwLen, "%.2fk", dScaled);
-    } else if (count < 100000ull) {
-        double dScaled = count * 1e-3;
-        snprintf(buffer, qwLen, "%.1fk", dScaled);
-    } else if (count < 1000000ull) {
-        int nScaled = (int)(count * 1e-3);
-        snprintf(buffer, qwLen, "%dk", nScaled);
-    } else if (count < 10000000ull) {
-        double dScaled = count * 1e-6;
-        snprintf(buffer, qwLen, "%.2fM", dScaled);
-    } else if (count < 100000000ull) {
-        double dScaled = count * 1e-6;
-        snprintf(buffer, qwLen, "%.1fM", dScaled);
-    } else if (count < 1000000000ull) {
-        int nScaled = (int)(count * 1e-6);
-        snprintf(buffer, qwLen, "%dM", nScaled);
+char *FormatCount(unsigned long dwCount, char *pszBuffer, size_t qwLen) {
+    if (dwCount < 1000) {
+        snprintf(pszBuffer, qwLen, "%lu", dwCount);
+    } else if (dwCount < 10000ull) {
+        double dScaled = dwCount * 1e-3;
+        snprintf(pszBuffer, qwLen, "%.2fk", dScaled);
+    } else if (dwCount < 100000ull) {
+        double dScaled = dwCount * 1e-3;
+        snprintf(pszBuffer, qwLen, "%.1fk", dScaled);
+    } else if (dwCount < 1000000ull) {
+        int nScaled = (int)(dwCount * 1e-3);
+        snprintf(pszBuffer, qwLen, "%dk", nScaled);
+    } else if (dwCount < 10000000ull) {
+        double dScaled = dwCount * 1e-6;
+        snprintf(pszBuffer, qwLen, "%.2fM", dScaled);
+    } else if (dwCount < 100000000ull) {
+        double dScaled = dwCount * 1e-6;
+        snprintf(pszBuffer, qwLen, "%.1fM", dScaled);
+    } else if (dwCount < 1000000000ull) {
+        int nScaled = (int)(dwCount * 1e-6);
+        snprintf(pszBuffer, qwLen, "%dM", nScaled);
     } else {
-        double dScaled = count * 1e-9;
-        snprintf(buffer, qwLen, "%.2fG", dScaled);
+        double dScaled = dwCount * 1e-9;
+        snprintf(pszBuffer, qwLen, "%.2fG", dScaled);
     }
-    return buffer;
+    return pszBuffer;
 }
 
 /**
@@ -220,10 +220,10 @@ char *FormatCount(unsigned long count, char *buffer, size_t qwLen) {
  */
 unsigned long GetTime(void) {
 #if HAVE_GETTIMEOFDAY
-    static struct timeval timeval;
+    static struct timeval Timeval;
 
-    gettimeofday(&timeval, NULL);
-    return timeval.tv_sec * 100 + (timeval.tv_usec / 10000L);
+    gettimeofday(&Timeval, NULL);
+    return Timeval.tv_sec * 100 + (Timeval.tv_usec / 10000L);
 #else
 #ifdef _WIN32
     return ((unsigned long)GetTickCount() / 10);
@@ -236,13 +236,13 @@ unsigned long GetTime(void) {
 /**
  * Create a filename for a temporary file
  */
-void GetTmpFileName(char *file_name, size_t qwLen) {
-    for (int cnt = 0;; cnt++) {
+void GetTmpFileName(char *pszFileName, size_t qwLen) {
+    for (int nCnt = 0;; nCnt++) {
         int nResult;
-        struct stat dummy;
+        struct stat Dummy;
 
-        snprintf(file_name, qwLen, "save_%03d.pgn", cnt);
-        nResult = stat(file_name, &dummy);
+        snprintf(pszFileName, qwLen, "save_%03d.pgn", nCnt);
+        nResult = stat(pszFileName, &Dummy);
 
         if (nResult < 0)
             return;
@@ -253,13 +253,13 @@ void GetTmpFileName(char *file_name, size_t qwLen) {
  */
 int InputReady(void) {
 #if HAVE_SELECT
-    fd_set rfd;
-    struct timeval timeout;
-    timeout.tv_sec = timeout.tv_usec = 0;
-    FD_ZERO(&rfd);
-    FD_SET(0, &rfd);
+    fd_set Rfd;
+    struct timeval Timeout;
+    Timeout.tv_sec = Timeout.tv_usec = 0;
+    FD_ZERO(&Rfd);
+    FD_SET(0, &Rfd);
 
-    return select(1, &rfd, NULL, NULL, &timeout) > 0;
+    return select(1, &Rfd, NULL, NULL, &Timeout) > 0;
 #else
 #ifdef _WIN32
     int nI;
@@ -306,22 +306,22 @@ int InputReady(void) {
 /**
  * Tokenize a string.
  */
-char *nextToken(char **pString, const char *delim) {
+char *nextToken(char **pString, const char *pszDelim) {
     char *pszStart = *pString;
     char *pszEnd;
     const char *pszT;
-    bool flag = true;
+    bool fFlag = true;
 
     if (pszStart == NULL)
         return NULL;
 
-    while (flag) {
-        flag = false;
+    while (fFlag) {
+        fFlag = false;
         if (*pszStart == '\0')
             return NULL;
-        for (pszT = delim; *pszT; pszT++) {
+        for (pszT = pszDelim; *pszT; pszT++) {
             if (*pszT == *pszStart) {
-                flag = true;
+                fFlag = true;
                 pszStart++;
                 break;
             }
@@ -335,7 +335,7 @@ char *nextToken(char **pString, const char *delim) {
             *pString = pszEnd;
             return pszStart;
         }
-        for (pszT = delim; *pszT; pszT++) {
+        for (pszT = pszDelim; *pszT; pszT++) {
             if (*pszT == *pszEnd) {
                 *pszEnd = 0;
                 *pString = pszEnd + 1;
@@ -353,21 +353,21 @@ char *nextToken(char **pString, const char *delim) {
  * Returns the ratio of dividend / divisor as percentage.
  * Handles some edge cases for convenience.
  */
-int Percentage(unsigned long dividend, unsigned long divisor) {
-    if (dividend == 0) {
+int Percentage(unsigned long dwDividend, unsigned long dwDivisor) {
+    if (dwDividend == 0) {
         return 0;
     }
 
-    if (divisor == 0) {
+    if (dwDivisor == 0) {
         return INT_MAX;
     }
 
-    double dRatio = (double)dividend / (double)divisor;
+    double dRatio = (double)dwDividend / (double)dwDivisor;
     return (int)(dRatio * 100.0 + 0.5);
 }
 
-char *strip(char *buffer) {
-    char *pszStart = buffer;
+char *strip(char *pszBuffer) {
+    char *pszStart = pszBuffer;
     while (*pszStart == ' ') {
         pszStart++;
     }

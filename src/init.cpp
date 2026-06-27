@@ -65,8 +65,8 @@ CBitBoard KingSideMask, QueenSideMask;
 CBitBoard ConnectedMask[CBitBoard::SIZE];
 
 void InitMasks(void) {
-    const CBitBoard allOnes = ~CBitBoard();
-    ShiftUpMask = ShiftDownMask = ShiftLeftMask = ShiftRightMask = allOnes;
+    const CBitBoard AllOnes = ~CBitBoard();
+    ShiftUpMask = ShiftDownMask = ShiftLeftMask = ShiftRightMask = AllOnes;
     for (unsigned int dwI = 0; dwI < CBitBoard::MAX_LEVEL_WIDTH; dwI++) {
         ShiftUpMask &= CBitBoard::ClrMask(static_cast<uint16_t>(dwI));
         ShiftDownMask &= CBitBoard::ClrMask(
@@ -78,14 +78,14 @@ void InitMasks(void) {
     }
 }
 
-void PrintBitBoard(CBitBoard x) {
+void PrintBitBoard(CBitBoard X) {
     for (unsigned int dwLevel = 0; dwLevel < CBitBoard::NUM_LEVELS; dwLevel++) {
-        const unsigned int width = CBitBoard::LEVEL_WIDTH[dwLevel];
-        for (int nRank = static_cast<int>(width) - 1; nRank >= 0; nRank--) {
-            for (unsigned int file = 0; file < width; file++) {
+        const unsigned int dwWidth = CBitBoard::LEVEL_WIDTH[dwLevel];
+        for (int nRank = static_cast<int>(dwWidth) - 1; nRank >= 0; nRank--) {
+            for (unsigned int dwFile = 0; dwFile < dwWidth; dwFile++) {
                 int nK =
-                    static_cast<int>(CSCoord(static_cast<int>(dwLevel), static_cast<int>(file), nRank));
-                if (x.TstBit(nK))
+                    static_cast<int>(CSCoord(static_cast<int>(dwLevel), static_cast<int>(dwFile), nRank));
+                if (X.TstBit(nK))
                     Print(0, "*");
                 else
                     Print(0, ".");
@@ -106,45 +106,45 @@ void InitPawnMasks(void) {
     }
 
     for (unsigned int dwLevel = 0; dwLevel < CBitBoard::NUM_LEVELS; dwLevel++) {
-        const unsigned int width = CBitBoard::LEVEL_WIDTH[dwLevel];
-        for (unsigned int file = 0; file < width; file++) {
-            for (unsigned int dwRank = 0; dwRank < width; dwRank++) {
+        const unsigned int dwWidth = CBitBoard::LEVEL_WIDTH[dwLevel];
+        for (unsigned int dwFile = 0; dwFile < dwWidth; dwFile++) {
+            for (unsigned int dwRank = 0; dwRank < dwWidth; dwRank++) {
                 const uint16_t wSquare =
-                    CSCoord(static_cast<uint16_t>(dwLevel), static_cast<uint16_t>(file),
+                    CSCoord(static_cast<uint16_t>(dwLevel), static_cast<uint16_t>(dwFile),
                             static_cast<uint16_t>(dwRank))
                         .BitOffset();
-                FileMask[file] |= CBitBoard::SetMask(wSquare);
-                if (file > 0) {
-                    IsoMask[file] |= CBitBoard::SetMask(
+                FileMask[dwFile] |= CBitBoard::SetMask(wSquare);
+                if (dwFile > 0) {
+                    IsoMask[dwFile] |= CBitBoard::SetMask(
                         CSCoord(static_cast<uint16_t>(dwLevel),
-                                static_cast<uint16_t>(file - 1),
+                                static_cast<uint16_t>(dwFile - 1),
                                 static_cast<uint16_t>(dwRank))
                             .BitOffset());
                 }
-                if ((file + 1) < width) {
-                    IsoMask[file] |= CBitBoard::SetMask(
+                if ((dwFile + 1) < dwWidth) {
+                    IsoMask[dwFile] |= CBitBoard::SetMask(
                         CSCoord(static_cast<uint16_t>(dwLevel),
-                                static_cast<uint16_t>(file + 1),
+                                static_cast<uint16_t>(dwFile + 1),
                                 static_cast<uint16_t>(dwRank))
                             .BitOffset());
                 }
             }
 #ifdef DEBUG
-            PrintBitBoard(IsoMask[file]);
+            PrintBitBoard(IsoMask[dwFile]);
 #endif
         }
     }
     for (nI = 0; nI < nSize; nI++) {
         ForwardRayW[nI] = ForwardRayB[nI] = {};
-        const CSCoord coord(static_cast<uint16_t>(nI));
-        const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[coord.m_nLevel]);
-        for (uint16_t wR = coord.m_nRank + 1; wR < width; wR++) {
+        const CSCoord Coord(static_cast<uint16_t>(nI));
+        const uint16_t wWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[Coord.m_nLevel]);
+        for (uint16_t wR = Coord.m_nRank + 1; wR < wWidth; wR++) {
             ForwardRayW[nI].SetBit(
-                CSCoord(coord.m_nLevel, coord.m_nFile, wR).BitOffset());
+                CSCoord(Coord.m_nLevel, Coord.m_nFile, wR).BitOffset());
         }
-        for (int nR = static_cast<int>(coord.m_nRank) - 1; nR >= 0; nR--) {
+        for (int nR = static_cast<int>(Coord.m_nRank) - 1; nR >= 0; nR--) {
             ForwardRayB[nI].SetBit(
-                CSCoord(coord.m_nLevel, coord.m_nFile, static_cast<uint16_t>(nR))
+                CSCoord(Coord.m_nLevel, Coord.m_nFile, static_cast<uint16_t>(nR))
                     .BitOffset());
         }
 #ifdef DEBUG
@@ -153,26 +153,26 @@ void InitPawnMasks(void) {
 #endif
     }
     for (nI = 0; nI < nSize; nI++) {
-        const CSCoord coord(nI);
-        const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[coord.m_nLevel]);
+        const CSCoord Coord(nI);
+        const uint16_t wWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[Coord.m_nLevel]);
         PassedMaskW[nI] = ForwardRayW[nI];
-        if (coord.m_nFile > 0)
+        if (Coord.m_nFile > 0)
             PassedMaskW[nI] |= ForwardRayW[nI - 1];
-        if (coord.m_nFile < (width - 1))
+        if (Coord.m_nFile < (wWidth - 1))
             PassedMaskW[nI] |= ForwardRayW[nI + 1];
         PassedMaskB[nI] = ForwardRayB[nI];
-        if (coord.m_nFile > 0)
+        if (Coord.m_nFile > 0)
             PassedMaskB[nI] |= ForwardRayB[nI - 1];
-        if (coord.m_nFile < (width - 1))
+        if (Coord.m_nFile < (wWidth - 1))
             PassedMaskB[nI] |= ForwardRayB[nI + 1];
         /* PrintBitBoard(PassedMaskW[i]); */
         /* PrintBitBoard(PassedMaskB[i]); */
         OutpostMaskW[nI] = OutpostMaskB[nI] = {};
-        if (coord.m_nFile > 0) {
+        if (Coord.m_nFile > 0) {
             OutpostMaskW[nI] |= ForwardRayW[nI - 1];
             OutpostMaskB[nI] |= ForwardRayB[nI - 1];
         }
-        if (coord.m_nFile < (width - 1)) {
+        if (Coord.m_nFile < (wWidth - 1)) {
             OutpostMaskW[nI] |= ForwardRayW[nI + 1];
             OutpostMaskB[nI] |= ForwardRayB[nI + 1];
         }
@@ -184,53 +184,53 @@ void InitPawnMasks(void) {
 
     for (nI = 0; nI < nSize; nI++) {
         WPawnBackwardMask[nI] = BPawnBackwardMask[nI] = {};
-        const CSCoord coord(static_cast<uint16_t>(nI));
-        const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[coord.m_nLevel]);
-        for (int nR = static_cast<int>(coord.m_nRank) - 1; nR >= 0; nR--) {
-            if (coord.m_nFile > 0) {
+        const CSCoord Coord(static_cast<uint16_t>(nI));
+        const uint16_t wWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[Coord.m_nLevel]);
+        for (int nR = static_cast<int>(Coord.m_nRank) - 1; nR >= 0; nR--) {
+            if (Coord.m_nFile > 0) {
                 WPawnBackwardMask[nI].SetBit(
-                    CSCoord(coord.m_nLevel, coord.m_nFile - 1, static_cast<uint16_t>(nR))
+                    CSCoord(Coord.m_nLevel, Coord.m_nFile - 1, static_cast<uint16_t>(nR))
                         .BitOffset());
             }
-            if (coord.m_nFile < (width - 1)) {
+            if (Coord.m_nFile < (wWidth - 1)) {
                 WPawnBackwardMask[nI].SetBit(
-                    CSCoord(coord.m_nLevel, coord.m_nFile + 1, static_cast<uint16_t>(nR))
+                    CSCoord(Coord.m_nLevel, Coord.m_nFile + 1, static_cast<uint16_t>(nR))
                         .BitOffset());
             }
         }
-        for (uint16_t wR = coord.m_nRank + 1; wR < width; wR++) {
-            if (coord.m_nFile > 0) {
+        for (uint16_t wR = Coord.m_nRank + 1; wR < wWidth; wR++) {
+            if (Coord.m_nFile > 0) {
                 BPawnBackwardMask[nI].SetBit(
-                    CSCoord(coord.m_nLevel, coord.m_nFile - 1, wR).BitOffset());
+                    CSCoord(Coord.m_nLevel, Coord.m_nFile - 1, wR).BitOffset());
             }
-            if (coord.m_nFile < (width - 1)) {
+            if (Coord.m_nFile < (wWidth - 1)) {
                 BPawnBackwardMask[nI].SetBit(
-                    CSCoord(coord.m_nLevel, coord.m_nFile + 1, wR).BitOffset());
+                    CSCoord(Coord.m_nLevel, Coord.m_nFile + 1, wR).BitOffset());
             }
         }
     }
 
     for (nI = 0; nI < nSize; nI++) {
-        const CSCoord iCoord(static_cast<uint16_t>(nI));
-        const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[iCoord.m_nLevel]);
+        const CSCoord ICoord(static_cast<uint16_t>(nI));
+        const uint16_t wWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[ICoord.m_nLevel]);
         ConnectedMask[nI] = {};
 
-        if (iCoord.m_nFile < (width - 1)) {
+        if (ICoord.m_nFile < (wWidth - 1)) {
             ConnectedMask[nI].SetBit(nI + 1);
-            if (iCoord.m_nRank > 1) {
-                ConnectedMask[nI].SetBit(nI - (width - 1));
+            if (ICoord.m_nRank > 1) {
+                ConnectedMask[nI].SetBit(nI - (wWidth - 1));
             }
-            if (iCoord.m_nRank < (width - 2)) {
-                ConnectedMask[nI].SetBit(nI + (width + 1));
+            if (ICoord.m_nRank < (wWidth - 2)) {
+                ConnectedMask[nI].SetBit(nI + (wWidth + 1));
             }
         }
-        if (iCoord.m_nFile > 0) {
+        if (ICoord.m_nFile > 0) {
             ConnectedMask[nI].SetBit(nI - 1);
-            if (iCoord.m_nRank > 1) {
-                ConnectedMask[nI].SetBit(nI - (width + 1));
+            if (ICoord.m_nRank > 1) {
+                ConnectedMask[nI].SetBit(nI - (wWidth + 1));
             }
-            if (iCoord.m_nRank < (width - 2)) {
-                ConnectedMask[nI].SetBit(nI + (width - 1));
+            if (ICoord.m_nRank < (wWidth - 2)) {
+                ConnectedMask[nI].SetBit(nI + (wWidth - 1));
             }
         }
     }
@@ -323,11 +323,11 @@ void InitMiscMasks(void) {
     }
 
     for (unsigned int dwLevel = 0; dwLevel < CBitBoard::NUM_LEVELS; dwLevel++) {
-        const unsigned int width = CBitBoard::LEVEL_WIDTH[dwLevel];
-        for (unsigned int dwRank = 0; dwRank < width; dwRank++) {
-            for (unsigned int file = 0; file < width; file++) {
+        const unsigned int dwWidth = CBitBoard::LEVEL_WIDTH[dwLevel];
+        for (unsigned int dwRank = 0; dwRank < dwWidth; dwRank++) {
+            for (unsigned int dwFile = 0; dwFile < dwWidth; dwFile++) {
                 const int nSquare = static_cast<int>(
-                    CSCoord(static_cast<int>(dwLevel), static_cast<int>(file), static_cast<int>(dwRank)));
+                    CSCoord(static_cast<int>(dwLevel), static_cast<int>(dwFile), static_cast<int>(dwRank)));
                 RankMask[dwRank] |= CBitBoard::SetMask(nSquare);
 
                 if (dwRank == 6) {
@@ -350,7 +350,7 @@ void InitMiscMasks(void) {
                 }
                 // PrePromoRank: one step from promotion, only on promotion levels f–j (5–9)
                 if (dwLevel >= 5 && dwLevel <= 9) {
-                    if (dwRank == width - 2) {
+                    if (dwRank == dwWidth - 2) {
                         PrePromoRank[White] |= CBitBoard::SetMask(nSquare);
                     }
                     if (dwRank == 1) {
@@ -384,12 +384,12 @@ void InitMiscMasks(void) {
 
     WhiteSquaresMask = BlackSquaresMask = {};
     for (unsigned int dwLevel = 0; dwLevel < CBitBoard::NUM_LEVELS; dwLevel++) {
-        const unsigned int width = CBitBoard::LEVEL_WIDTH[dwLevel];
-        for (unsigned int dwRank = 0; dwRank < width; dwRank++) {
-            for (unsigned int file = 0; file < width; file++) {
+        const unsigned int dwWidth = CBitBoard::LEVEL_WIDTH[dwLevel];
+        for (unsigned int dwRank = 0; dwRank < dwWidth; dwRank++) {
+            for (unsigned int dwFile = 0; dwFile < dwWidth; dwFile++) {
                 const int nSquare = static_cast<int>(
-                    CSCoord(static_cast<int>(dwLevel), static_cast<int>(file), static_cast<int>(dwRank)));
-                if (((dwRank + file) & 1) == 0) {
+                    CSCoord(static_cast<int>(dwLevel), static_cast<int>(dwFile), static_cast<int>(dwRank)));
+                if (((dwRank + dwFile) & 1) == 0) {
                     BlackSquaresMask.SetBit(nSquare);
                 } else {
                     WhiteSquaresMask.SetBit(nSquare);
@@ -399,20 +399,20 @@ void InitMiscMasks(void) {
     }
 
     for (nI = 0; nI < nSize; nI++) {
-        const CSCoord coord(nI);
-        const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[coord.m_nLevel]);
-        int bdist = coord.m_nRank;
-        int wdist = (width - 1) - bdist;
-        CSCoord wtargetCoord(coord.m_nLevel, coord.m_nFile, width - 1);
-        CSCoord btargetCoord(coord.m_nLevel, coord.m_nFile, 0);
+        const CSCoord Coord(nI);
+        const uint16_t wWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[Coord.m_nLevel]);
+        int nBdist = Coord.m_nRank;
+        int nWdist = (wWidth - 1) - nBdist;
+        CSCoord wtargetCoord(Coord.m_nLevel, Coord.m_nFile, wWidth - 1);
+        CSCoord btargetCoord(Coord.m_nLevel, Coord.m_nFile, 0);
 
         KingSquareW[nI] = KingSquareB[nI] = {};
         for (nJ = 0; nJ < nSize; nJ++) {
-            CSCoord coord(nJ);
-            if (KingDist(wtargetCoord, coord) <= wdist) {
+            CSCoord Coord(nJ);
+            if (KingDist(wtargetCoord, Coord) <= nWdist) {
                 KingSquareW[nI].SetBit(nJ);
             }
-            if (KingDist(btargetCoord, coord) <= bdist) {
+            if (KingDist(btargetCoord, Coord) <= nBdist) {
                 KingSquareB[nI].SetBit(nJ);
             }
         }

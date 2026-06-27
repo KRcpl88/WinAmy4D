@@ -42,17 +42,17 @@ static void test_parse_san_promotions(void) {
         "|4K1k1/P7/8/8/8/8/8/8"
         "|7/7/7/7/7/7/7|6/6/6/6/6/6|5/5/5/5/5|4/4/4/4|3/3/3|2/2|1 w - -");
 
-    CMove move = p->ParseSAN("ha8=Q");
-    assert(move == make_promotion(ha7, ha8, Queen, 0));
+    CMove Move = p->ParseSAN("ha8=Q");
+    assert(Move == make_promotion(ha7, ha8, Queen, 0));
 
-    move = p->ParseSAN("ha8=R");
-    assert(move == make_promotion(ha7, ha8, Rook, 0));
+    Move = p->ParseSAN("ha8=R");
+    assert(Move == make_promotion(ha7, ha8, Rook, 0));
 
-    move = p->ParseSAN("ha8=B");
-    assert(move == make_promotion(ha7, ha8, Bishop, 0));
+    Move = p->ParseSAN("ha8=B");
+    assert(Move == make_promotion(ha7, ha8, Bishop, 0));
 
-    move = p->ParseSAN("ha8=N");
-    assert(move == make_promotion(ha7, ha8, Knight, 0));
+    Move = p->ParseSAN("ha8=N");
+    assert(Move == make_promotion(ha7, ha8, Knight, 0));
 
     CPosition::Free(p);
 }

@@ -183,7 +183,7 @@ static void BookupInternal(char *pszFileName, int nVerbosity) {
     tree_node_t *pDatabase = NULL;
     int nLines = 0;
 
-    struct PGNHeader header;
+    struct PGNHeader Header;
     char szMove[12];
 
     pFin = fopen(pszFileName, "rb");
@@ -196,14 +196,14 @@ static void BookupInternal(char *pszFileName, int nVerbosity) {
 
     CloseBook();
 
-    while (!scanHeader(pFin, &header)) {
+    while (!scanHeader(pFin, &Header)) {
         int nResult;
 
-        if (!strcmp(header.result, "1-0"))
+        if (!strcmp(Header.result, "1-0"))
             nResult = 1;
-        else if (!strcmp(header.result, "0-1"))
+        else if (!strcmp(Header.result, "0-1"))
             nResult = -1;
-        else if (!strcmp(header.result, "1/2-1/2"))
+        else if (!strcmp(Header.result, "1/2-1/2"))
             nResult = 0;
         else
             continue;
@@ -216,9 +216,9 @@ static void BookupInternal(char *pszFileName, int nVerbosity) {
                 exit(1);
             }
 
-            CMove themove = p->ParseSAN(szMove);
-            if (themove != M_NONE) {
-                p->DoMove(themove);
+            CMove TheMove = p->ParseSAN(szMove);
+            if (TheMove != M_NONE) {
+                p->DoMove(TheMove);
                 char *pszEcoCode = GetEcoCode(p->GetHashKey());
                 if (pszEcoCode) {
                     nAfterEco = 0;
@@ -230,11 +230,11 @@ static void BookupInternal(char *pszFileName, int nVerbosity) {
                     if (p->GetTurn() == Black) {
                         /* white played the move */
                         pDatabase = PutBookEntry(pDatabase, p->GetHashKey(), nResult,
-                                                 header.white_elo);
+                                                 Header.white_elo);
                     } else {
                         /* black played the move */
                         pDatabase = PutBookEntry(pDatabase, p->GetHashKey(), -nResult,
-                                                 header.black_elo);
+                                                 Header.black_elo);
                     }
                 }
             }
@@ -280,21 +280,21 @@ static void GetAllBookMoves(CPosition *p, int *cnt, CMove *book_moves,
 
     for (dwI = heap->current_section->start; dwI < heap->current_section->end;
          dwI++) {
-        CMove move = heap->data[dwI];
+        CMove Move = heap->data[dwI];
         struct BookEntry *be = NULL;
         struct LearnEntry *pLe = NULL;
 
-        p->DoMove(move);
+        p->DoMove(Move);
         /* If the move leads to a repetition, do not accept it. */
         if (!p->Repeated(false)) {
             be = GetBookEntry(p->GetHashKey());
             pLe = GetLearnEntry(p->GetHashKey());
         }
-        p->UndoMove(move);
+        p->UndoMove(Move);
 
         if (be) {
             memset(pEntries + *cnt, 0, sizeof(struct BookQuery));
-            book_moves[*cnt] = move;
+            book_moves[*cnt] = Move;
             pEntries[*cnt].be = *be;
             if (pLe) {
                 pEntries[*cnt].le = *pLe;
@@ -309,35 +309,35 @@ static void GetAllBookMoves(CPosition *p, int *cnt, CMove *book_moves,
 }
 
 static void SortBook(int cnt, CMove *pMvs, struct BookQuery *pEntries) {
-    bool done = false;
+    bool fDone = false;
 
-    while (!done) {
+    while (!fDone) {
         int nI;
 
-        done = true;
+        fDone = true;
 
         for (nI = 1; nI < cnt; nI++) {
-            int f1 = pEntries[nI - 1].be.win + pEntries[nI - 1].be.loss +
+            int nF1 = pEntries[nI - 1].be.win + pEntries[nI - 1].be.loss +
                      pEntries[nI - 1].be.draw;
-            int f2 =
+            int nF2 =
                 pEntries[nI].be.win + pEntries[nI].be.loss + pEntries[nI].be.draw;
-            if (f1 < f2) {
+            if (nF1 < nF2) {
                 struct BookQuery betmp = pEntries[nI];
-                CMove move;
+                CMove Move;
                 pEntries[nI] = pEntries[nI - 1];
                 pEntries[nI - 1] = betmp;
-                move = pMvs[nI];
+                Move = pMvs[nI];
                 pMvs[nI] = pMvs[nI - 1];
-                pMvs[nI - 1] = move;
+                pMvs[nI - 1] = Move;
 
-                done = false;
+                fDone = false;
             }
         }
     }
 }
 
 static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
-                                   double *props) {
+                                   double *rgdProps) {
     int nTotal = 0;
     double dTotalprops;
     int nLimit;
@@ -352,10 +352,10 @@ static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
 
     for (nI = 0; nI < cnt; nI++) {
         struct BookQuery *pEntry = pEntries + nI;
-        int freq = pEntry->be.win + pEntry->be.loss + pEntry->be.draw;
+        int nFreq = pEntry->be.win + pEntry->be.loss + pEntry->be.draw;
 
-        props[nI] = 0.0;
-        if (freq > nLimit) {
+        rgdProps[nI] = 0.0;
+        if (nFreq > nLimit) {
             int nAvelo = 2000;
 
 #if WITH_ELO
@@ -364,16 +364,16 @@ static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
             }
 #endif
 
-            props[nI] = nAvelo * freq *
+            rgdProps[nI] = nAvelo * nFreq *
                        (double)(2 * pEntry->be.win + pEntry->be.draw) /
-                       (double)(freq);
+                       (double)(nFreq);
 
             if (pEntry->le.flags & GoodMove) {
-                props[nI] *= 2;
+                rgdProps[nI] *= 2;
             }
 
             if (pEntry->le.flags & BadMove) {
-                props[nI] = 0.0;
+                rgdProps[nI] = 0.0;
             }
 
             /*
@@ -381,10 +381,10 @@ static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
              */
 
             if (pEntry->be.win == 0) {
-                props[nI] = 0.0;
+                rgdProps[nI] = 0.0;
             }
 
-            dTotalprops += props[nI];
+            dTotalprops += rgdProps[nI];
         }
     }
 
@@ -395,7 +395,7 @@ static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
     }
 
     for (nI = 0; nI < cnt; nI++) {
-        props[nI] *= dTotalprops;
+        rgdProps[nI] *= dTotalprops;
     }
 }
 
@@ -403,18 +403,18 @@ CMove SelectBook(CPosition *p) {
     int nI, cnt = 0;
     struct BookQuery be[32];
     CMove rgMoves[32];
-    double props[32];
+    double rgdProps[32];
     double dRandomValue = Random();
 
     GetAllBookMoves(p, &cnt, rgMoves, be);
 
     if (cnt != 0) {
         SortBook(cnt, rgMoves, be);
-        CalculatePropabilities(cnt, be, props);
+        CalculatePropabilities(cnt, be, rgdProps);
 
         for (nI = 0; nI < cnt; nI++) {
-            if (props[nI] > 0.0) {
-                dRandomValue -= props[nI];
+            if (rgdProps[nI] > 0.0) {
+                dRandomValue -= rgdProps[nI];
                 if (dRandomValue <= 0.0) {
                     return rgMoves[nI];
                 }
@@ -429,16 +429,16 @@ void QueryBook(CPosition *p) {
     int nI, cnt = 0;
     struct BookQuery be[32];
     CMove rgMoves[32];
-    double props[32];
+    double rgdProps[32];
 
     GetAllBookMoves(p, &cnt, rgMoves, be);
     SortBook(cnt, rgMoves, be);
-    CalculatePropabilities(cnt, be, props);
+    CalculatePropabilities(cnt, be, rgdProps);
 
     Print(0, "\tmove    count  win loss draw av. elo prop\n");
     for (nI = 0; nI < cnt; nI++) {
         struct BookQuery *pEntry = be + nI;
-        int freq = pEntry->be.win + pEntry->be.loss + pEntry->be.draw;
+        int nFreq = pEntry->be.win + pEntry->be.loss + pEntry->be.draw;
         char cModifier = ' ';
 
         if (pEntry->le.flags & GoodMove) {
@@ -450,21 +450,21 @@ void QueryBook(CPosition *p) {
 
         char szSanBuffer[16];
         Print(0, "\t%5s%c %6d %3d%% %3d%% %3d%% %5d %3.f\n",
-              p->SAN(rgMoves[nI], szSanBuffer), cModifier, freq,
-              (100 * pEntry->be.win) / freq, (100 * pEntry->be.loss) / freq,
-              (100 * pEntry->be.draw) / freq,
+              p->SAN(rgMoves[nI], szSanBuffer), cModifier, nFreq,
+              (100 * pEntry->be.win) / nFreq, (100 * pEntry->be.loss) / nFreq,
+              (100 * pEntry->be.draw) / nFreq,
 #if WITH_ELO
               pEntry->be.nElo ? pEntry->be.sumElo / pEntry->be.nElo : 0,
 #else
               0,
 #endif
-              props[nI] * 100.0);
+              rgdProps[nI] * 100.0);
     }
 
     Print(0, "\n");
 }
 
-static void PutLearnEntry(hash_t hk, int nLearnValue, int flags) {
+static void PutLearnEntry(hash_t hk, int nLearnValue, int nFlags) {
     if (LearnDB == NULL) {
         FILE *pFin = fopen(LEARN_NAME, "rb");
         if (pFin != NULL) {
@@ -473,18 +473,18 @@ static void PutLearnEntry(hash_t hk, int nLearnValue, int flags) {
         }
     }
 
-    struct LearnEntry entry;
+    struct LearnEntry Entry;
 
-    entry.learn_value = nLearnValue;
-    entry.flags = flags;
+    Entry.learn_value = nLearnValue;
+    Entry.flags = nFlags;
 
-    LearnDB = add_node(LearnDB, (char *)&hk, sizeof(hk), (char *)&entry,
-                       sizeof(entry));
+    LearnDB = add_node(LearnDB, (char *)&hk, sizeof(hk), (char *)&Entry,
+                       sizeof(Entry));
 }
 
 void CreateLearnDB(char *pszFileName) {
     FILE *pFin = fopen(pszFileName, "rb");
-    char buffer[1024];
+    char szBuffer[1024];
     CPosition *p;
 
     if (pFin == NULL) {
@@ -492,37 +492,37 @@ void CreateLearnDB(char *pszFileName) {
         return;
     }
 
-    while (fgets(buffer, 1023, pFin)) {
-        char *pszX = buffer;
+    while (fgets(szBuffer, 1023, pFin)) {
+        char *pszX = szBuffer;
         char *pszMove;
 
-        if (buffer[0] == '#')
+        if (szBuffer[0] == '#')
             continue;
 
         p = CPosition::Initial();
 
         while ((pszMove = nextToken(&pszX, " \n\r\t")) != NULL) {
-            int flags = 0;
+            int nFlags = 0;
             char *pszModifier = pszMove + strlen(pszMove) - 1;
-            CMove themove;
+            CMove TheMove;
 
             if (*pszModifier == '!') {
-                flags = GoodMove;
+                nFlags = GoodMove;
                 *pszModifier = '\0';
             } else if (*pszModifier == '?') {
-                flags = BadMove;
+                nFlags = BadMove;
                 *pszModifier = '\0';
             }
 
-            themove = p->ParseSAN(pszMove);
-            if (themove != M_NONE) {
+            TheMove = p->ParseSAN(pszMove);
+            if (TheMove != M_NONE) {
                 char szSanBuffer[16];
-                Print(0, "%s ", p->SAN(themove, szSanBuffer));
+                Print(0, "%s ", p->SAN(TheMove, szSanBuffer));
 
-                p->DoMove(themove);
+                p->DoMove(TheMove);
 
-                if (flags != 0) {
-                    PutLearnEntry(p->GetHashKey(), 0, flags);
+                if (nFlags != 0) {
+                    PutLearnEntry(p->GetHashKey(), 0, nFlags);
                 }
             } else {
                 Print(0, "can't parse >%s<\n", pszMove);

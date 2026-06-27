@@ -82,10 +82,10 @@ void StateMachine(void) {
             if (!ReadLine(InputBuffer, 1023)) {
                 State = STATE_END;
             } else {
-                struct SCommand *command = ParseInput(InputBuffer);
-                if (command) {
-                    ExecuteCommand(command);
-                    if (command->move != M_NONE) {
+                struct SCommand *pCommand = ParseInput(InputBuffer);
+                if (pCommand) {
+                    ExecuteCommand(pCommand);
+                    if (pCommand->move != M_NONE) {
                         if (!ForceMode)
                             State = STATE_CALCULATING;
                     }

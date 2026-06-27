@@ -57,15 +57,15 @@ void free_tree_node(tree_node_t *tree);
 static bool is_word_char(char c) { return isalnum(c) || c == '_' || c == '-'; }
 
 static struct YamlToken token_from_type(YamlTokenType nType) {
-    struct YamlToken result = {.type = nType, .text = NULL};
-    return result;
+    struct YamlToken Result = {.type = nType, .text = NULL};
+    return Result;
 }
 
 struct YamlToken parse_word(struct TokenizerState *pState) {
     unsigned int dwLength = 0;
     unsigned int dwTrailingBlanks = 0;
 
-    const char *begin = pState->ptr;
+    const char *pszBegin = pState->ptr;
     while (is_word_char(*pState->ptr) || *pState->ptr == ' ') {
         if (*pState->ptr == ' ') {
             dwTrailingBlanks++;
@@ -79,13 +79,13 @@ struct YamlToken parse_word(struct TokenizerState *pState) {
 
     dwLength -= dwTrailingBlanks;
 
-    char *buffer = (char *)safe_malloc(dwLength + 1);
+    char *pszBuffer = (char *)safe_malloc(dwLength + 1);
 
-    memcpy(buffer, begin, dwLength);
-    buffer[dwLength] = '\0';
+    memcpy(pszBuffer, pszBegin, dwLength);
+    pszBuffer[dwLength] = '\0';
 
-    struct YamlToken result = {.type = TT_WORD, .text = buffer};
-    return result;
+    struct YamlToken Result = {.type = TT_WORD, .text = pszBuffer};
+    return Result;
 }
 
 static bool is_sequence_header(struct TokenizerState *pState) {
@@ -160,10 +160,10 @@ static struct YamlToken next_token(struct TokenizerState *pState) {
         }
 
         if (pState->check_indent) {
-            struct YamlToken result = handle_indent(pState, dwIndent);
-            // printf("handle_indent() returned %d\n", result.type);
-            if (result.type != CONTINUE) {
-                return result;
+            struct YamlToken Result = handle_indent(pState, dwIndent);
+            // printf("handle_indent() returned %d\n", Result.type);
+            if (Result.type != CONTINUE) {
+                return Result;
             }
         }
 
@@ -209,16 +209,16 @@ struct YamlListNode *parse_list(struct TokenizerState *pState) {
     struct YamlListNode *pResult = NULL;
     struct YamlListNode *pLastNode = NULL;
 
-    struct YamlToken token = next_token(pState);
+    struct YamlToken Token = next_token(pState);
 
     for (;;) {
-        if (token.type == TT_WORD) {
+        if (Token.type == TT_WORD) {
             struct YamlNode *pValue =
                 (struct YamlNode *)safe_malloc(sizeof(struct YamlNode));
 
             pValue->type = SCALAR;
-            pValue->payload = token.text;
-            // printf("Parsed list element: %s\n", token.text);
+            pValue->payload = Token.text;
+            // printf("Parsed list element: %s\n", Token.text);
 
             struct YamlListNode *pNextNode =
                 (struct YamlListNode *)safe_malloc(sizeof(struct YamlListNode));
@@ -234,19 +234,19 @@ struct YamlListNode *parse_list(struct TokenizerState *pState) {
                 pLastNode = pNextNode;
             }
 
-            token = next_token(pState);
-            if (token.type == CLOSING_BRACKET) {
+            Token = next_token(pState);
+            if (Token.type == CLOSING_BRACKET) {
                 // printf("List done.\n");
                 return pResult;
-            } else if (token.type == COMMA) {
-                token = next_token(pState);
+            } else if (Token.type == COMMA) {
+                Token = next_token(pState);
                 continue;
             }
-        } else if (token.type == CLOSING_BRACKET) {
+        } else if (Token.type == CLOSING_BRACKET) {
             // printf("List done.\n");
             return pResult;
         }
-        // printf("parse_list: Unexpected token %d!\n", token.type);
+        // printf("parse_list: Unexpected token %d!\n", Token.type);
         free_list_node(pResult);
         return NULL;
     }
@@ -256,53 +256,53 @@ struct YamlNode *parse_dict(struct TokenizerState *pState) {
     tree_node_t *pResultDict = NULL;
 
     for (;;) {
-        struct YamlToken token = next_token(pState);
-        if (token.type == TT_WORD) {
-            struct YamlToken expected_colon = next_token(pState);
-            if (expected_colon.type != COLON) {
-                free(token.text);
-                printf("Expected ':', got token %d!\n", expected_colon.type);
+        struct YamlToken Token = next_token(pState);
+        if (Token.type == TT_WORD) {
+            struct YamlToken ExpectedColon = next_token(pState);
+            if (ExpectedColon.type != COLON) {
+                free(Token.text);
+                printf("Expected ':', got token %d!\n", ExpectedColon.type);
                 return NULL;
             }
-            struct YamlToken expected_value = next_token(pState);
-            if (expected_value.type == TT_WORD) {
-                struct YamlNode node = {.type = SCALAR,
-                                    .payload = expected_value.text};
+            struct YamlToken ExpectedValue = next_token(pState);
+            if (ExpectedValue.type == TT_WORD) {
+                struct YamlNode Node = {.type = SCALAR,
+                                    .payload = ExpectedValue.text};
                 pResultDict =
-                    add_node(pResultDict, token.text, strlen(token.text) + 1,
-                             &node, sizeof(struct YamlNode));
-            } else if (expected_value.type == OPENING_BRACKET) {
+                    add_node(pResultDict, Token.text, strlen(Token.text) + 1,
+                             &Node, sizeof(struct YamlNode));
+            } else if (ExpectedValue.type == OPENING_BRACKET) {
                 struct YamlListNode *pListNode = parse_list(pState);
                 if (pListNode == NULL) {
-                    free(token.text);
+                    free(Token.text);
                     free_tree_node(pResultDict);
                     // printf("Failed to parse list!\n");
                     return NULL;
                 }
-                struct YamlNode node = {.type = LIST, .payload = pListNode};
+                struct YamlNode Node = {.type = LIST, .payload = pListNode};
                 pResultDict =
-                    add_node(pResultDict, token.text, strlen(token.text) + 1,
-                             &node, sizeof(struct YamlNode));
-            } else if (expected_value.type == OPENING_BRACE) {
+                    add_node(pResultDict, Token.text, strlen(Token.text) + 1,
+                             &Node, sizeof(struct YamlNode));
+            } else if (ExpectedValue.type == OPENING_BRACE) {
                 struct YamlNode *pDictNode = parse_dict(pState);
                 if (pDictNode == NULL) {
-                    free(token.text);
+                    free(Token.text);
                     free_tree_node(pResultDict);
                     // printf("Failed to parse dict!\n");
                     return NULL;
                 }
                 pResultDict =
-                    add_node(pResultDict, token.text, strlen(token.text) + 1,
+                    add_node(pResultDict, Token.text, strlen(Token.text) + 1,
                              pDictNode, sizeof(struct YamlNode));
                 free(pDictNode);
             } else {
-                // printf("Unexpected token %d!\n", expected_value.type);
-                free(token.text);
+                // printf("Unexpected token %d!\n", ExpectedValue.type);
+                free(Token.text);
                 free_tree_node(pResultDict);
                 return NULL;
             }
 
-            free(token.text);
+            free(Token.text);
         } else {
             break;
         }
@@ -320,52 +320,52 @@ struct YamlNode *parse_dict(struct TokenizerState *pState) {
 }
 
 struct YamlNode *parse_yaml(const char *pszText) {
-    struct TokenizerState state = {.ptr = pszText,
+    struct TokenizerState State = {.ptr = pszText,
                                    .indent_level = 0,
                                    .check_indent = true,
                                    .flow_style = false,
                                    .in_sequence = false};
-    return parse_dict(&state);
+    return parse_dict(&State);
 }
 
-struct YamlNode *get_node(struct YamlNode *node, const char *path) {
+struct YamlNode *get_node(struct YamlNode *pNode, const char *pszPath) {
     // Make a copy of path because strtok will clobber it
-    char *path_buffer = (char *)safe_malloc(strlen(path) + 1);
-    memcpy(path_buffer, path, strlen(path) + 1);
+    char *pszPathBuffer = (char *)safe_malloc(strlen(pszPath) + 1);
+    memcpy(pszPathBuffer, pszPath, strlen(pszPath) + 1);
 
-    char *pX = path_buffer;
-    struct YamlNode current_node = *node;
+    char *pX = pszPathBuffer;
+    struct YamlNode CurrentNode = *pNode;
 
     for (;;) {
-        char *path_element = strtok(pX, ".");
+        char *pszPathElement = strtok(pX, ".");
         pX = NULL;
 
-        if (path_element == NULL)
+        if (pszPathElement == NULL)
             break;
 
-        if (current_node.type != DICT) {
-            free(path_buffer);
+        if (CurrentNode.type != DICT) {
+            free(pszPathBuffer);
             return NULL;
         }
 
-        tree_node_t *pTree = (tree_node_t *)current_node.payload;
+        tree_node_t *pTree = (tree_node_t *)CurrentNode.payload;
         size_t qwValueLen;
         struct YamlNode *pValue = (struct YamlNode *)lookup_value(
-            pTree, path_element, strlen(path_element) + 1, &qwValueLen);
+            pTree, pszPathElement, strlen(pszPathElement) + 1, &qwValueLen);
 
         if (pValue == NULL) {
-            free(path_buffer);
+            free(pszPathBuffer);
             return NULL;
         }
 
-        current_node = *pValue;
+        CurrentNode = *pValue;
         free(pValue);
     }
-    free(path_buffer);
+    free(pszPathBuffer);
 
     struct YamlNode *pResult =
         (struct YamlNode *)safe_malloc(sizeof(struct YamlNode));
-    memcpy(pResult, &current_node, sizeof(struct YamlNode));
+    memcpy(pResult, &CurrentNode, sizeof(struct YamlNode));
 
     return pResult;
 }
@@ -382,13 +382,13 @@ struct YamlNode *get_node(struct YamlNode *node, const char *path) {
  * Returns .result_code = TYPE_ERROR if the node identified by path is
  * not a scalar.
  */
-struct StringLookupResult get_as_string(struct YamlNode *node, const char *path) {
-    struct YamlNode *pTarget = get_node(node, path);
+struct StringLookupResult get_as_string(struct YamlNode *pNode, const char *pszPath) {
+    struct YamlNode *pTarget = get_node(pNode, pszPath);
 
     if (pTarget == NULL) {
-        struct StringLookupResult lookup_result = {.result_code = NOT_FOUND,
+        struct StringLookupResult LookupResult = {.result_code = NOT_FOUND,
                                                    .result = NULL};
-        return lookup_result;
+        return LookupResult;
     }
 
     char *pszResult = _strdup((const char *)pTarget->payload);
@@ -396,23 +396,23 @@ struct StringLookupResult get_as_string(struct YamlNode *node, const char *path)
     free(pTarget);
 
     if (nType != SCALAR) {
-        struct StringLookupResult lookup_result = {.result_code = TYPE_ERROR,
+        struct StringLookupResult LookupResult = {.result_code = TYPE_ERROR,
                                                    .result = NULL};
-        return lookup_result;
+        return LookupResult;
     }
 
-    struct StringLookupResult lookup_result = {.result_code = OK,
+    struct StringLookupResult LookupResult = {.result_code = OK,
                                               .result = pszResult};
-    return lookup_result;
+    return LookupResult;
 }
 
-struct IntLookupResult get_as_int(struct YamlNode *node, const char *path) {
-    struct YamlNode *pTarget = get_node(node, path);
+struct IntLookupResult get_as_int(struct YamlNode *pNode, const char *pszPath) {
+    struct YamlNode *pTarget = get_node(pNode, pszPath);
 
     if (pTarget == NULL) {
-        struct IntLookupResult lookup_result = {.result_code = NOT_FOUND,
+        struct IntLookupResult LookupResult = {.result_code = NOT_FOUND,
                                                 .result = 0};
-        return lookup_result;
+        return LookupResult;
     }
 
     char *pszResult = (char *)pTarget->payload;
@@ -420,36 +420,36 @@ struct IntLookupResult get_as_int(struct YamlNode *node, const char *path) {
     free(pTarget);
 
     if (nType != SCALAR) {
-        struct IntLookupResult lookup_result = {.result_code = TYPE_ERROR,
+        struct IntLookupResult LookupResult = {.result_code = TYPE_ERROR,
                                                 .result = 0};
-        return lookup_result;
+        return LookupResult;
     }
 
     char *pszEnd;
     long nValue = strtol(pszResult, &pszEnd, 10);
     if (*pszEnd != '\0') { // Illegal character in the string
-        struct IntLookupResult lookup_result = {.result_code = FORMAT_ERROR,
+        struct IntLookupResult LookupResult = {.result_code = FORMAT_ERROR,
                                                 .result = 0};
-        return lookup_result;
+        return LookupResult;
     }
     if (nValue > INT_MAX || nValue < INT_MIN) { // overflow
-        struct IntLookupResult lookup_result = {.result_code = FORMAT_ERROR,
+        struct IntLookupResult LookupResult = {.result_code = FORMAT_ERROR,
                                                 .result = 0};
-        return lookup_result;
+        return LookupResult;
     }
 
-    struct IntLookupResult lookup_result = {.result_code = OK,
+    struct IntLookupResult LookupResult = {.result_code = OK,
                                             .result = (int)nValue};
-    return lookup_result;
+    return LookupResult;
 }
 
-struct ListLookupResult get_as_list(struct YamlNode *node, const char *path) {
-    struct YamlNode *pTarget = get_node(node, path);
+struct ListLookupResult get_as_list(struct YamlNode *pNode, const char *pszPath) {
+    struct YamlNode *pTarget = get_node(pNode, pszPath);
 
     if (pTarget == NULL) {
-        struct ListLookupResult lookup_result = {.result_code = NOT_FOUND,
+        struct ListLookupResult LookupResult = {.result_code = NOT_FOUND,
                                                  .result = NULL};
-        return lookup_result;
+        return LookupResult;
     }
 
     struct YamlListNode *pResult = (struct YamlListNode *)pTarget->payload;
@@ -457,24 +457,24 @@ struct ListLookupResult get_as_list(struct YamlNode *node, const char *path) {
     free(pTarget);
 
     if (nType != LIST) {
-        struct ListLookupResult lookup_result = {.result_code = TYPE_ERROR,
+        struct ListLookupResult LookupResult = {.result_code = TYPE_ERROR,
                                                  .result = NULL};
-        return lookup_result;
+        return LookupResult;
     }
 
-    struct ListLookupResult lookup_result = {.result_code = OK,
+    struct ListLookupResult LookupResult = {.result_code = OK,
                                              .result = pResult};
-    return lookup_result;
+    return LookupResult;
 }
 
-struct IntArrayLookupResult get_as_int_array(struct YamlNode *node, const char *path,
-                                             int *buffer, int count) {
-    struct YamlNode *pTarget = get_node(node, path);
+struct IntArrayLookupResult get_as_int_array(struct YamlNode *pNode, const char *pszPath,
+                                             int *rgnBuffer, int nCount) {
+    struct YamlNode *pTarget = get_node(pNode, pszPath);
 
     if (pTarget == NULL) {
-        struct IntArrayLookupResult lookup_result = {.result_code = NOT_FOUND,
+        struct IntArrayLookupResult LookupResult = {.result_code = NOT_FOUND,
                                                      .elements_read = 0};
-        return lookup_result;
+        return LookupResult;
     }
 
     struct YamlListNode *pListNode = (struct YamlListNode *)pTarget->payload;
@@ -482,40 +482,40 @@ struct IntArrayLookupResult get_as_int_array(struct YamlNode *node, const char *
     free(pTarget);
 
     if (nType != LIST) {
-        struct IntArrayLookupResult lookup_result = {.result_code = TYPE_ERROR,
+        struct IntArrayLookupResult LookupResult = {.result_code = TYPE_ERROR,
                                                      .elements_read = 0};
-        return lookup_result;
+        return LookupResult;
     }
 
     int nIndex = 0;
-    for (; nIndex < count; nIndex++) {
+    for (; nIndex < nCount; nIndex++) {
         if (pListNode == NULL)
             break;
         struct YamlNode *pElem = pListNode->value;
         if (pElem->type != SCALAR) {
-            struct IntArrayLookupResult lookup_result = {
+            struct IntArrayLookupResult LookupResult = {
                 .result_code = TYPE_ERROR, .elements_read = 0};
-            return lookup_result;
+            return LookupResult;
         }
         char *pszEnd;
         long nValue = strtol((const char *)pElem->payload, &pszEnd, 10);
         if (*pszEnd != '\0') { // Illegal character in the string
-            struct IntArrayLookupResult lookup_result = {
+            struct IntArrayLookupResult LookupResult = {
                 .result_code = FORMAT_ERROR, .elements_read = 0};
-            return lookup_result;
+            return LookupResult;
         }
         if (nValue > INT_MAX || nValue < INT_MIN) { // overflow
-            struct IntArrayLookupResult lookup_result = {
+            struct IntArrayLookupResult LookupResult = {
                 .result_code = FORMAT_ERROR, .elements_read = 0};
-            return lookup_result;
+            return LookupResult;
         }
-        buffer[nIndex] = (int)nValue;
+        rgnBuffer[nIndex] = (int)nValue;
         pListNode = pListNode->next;
     }
 
-    struct IntArrayLookupResult lookup_result = {
+    struct IntArrayLookupResult LookupResult = {
         .result_code = OK, .elements_read = (unsigned int)nIndex};
-    return lookup_result;
+    return LookupResult;
 }
 
 void free_yaml_node(struct YamlNode *);
@@ -524,9 +524,9 @@ void free_list_node(struct YamlListNode *pListNode) {
     if (pListNode == NULL)
         return;
     free_yaml_node(pListNode->value);
-    struct YamlListNode *next = pListNode->next;
+    struct YamlListNode *pNextNode = pListNode->next;
     free(pListNode);
-    free_list_node(next);
+    free_list_node(pNextNode);
 }
 
 void free_tree_node(tree_node_t *pTree) {
@@ -542,17 +542,17 @@ void free_tree_node(tree_node_t *pTree) {
     free(pTree);
 }
 
-void free_yaml_node(struct YamlNode *node) {
-    if (node->type == DICT) {
-        tree_node_t *pTree = (tree_node_t *)node->payload;
+void free_yaml_node(struct YamlNode *pNode) {
+    if (pNode->type == DICT) {
+        tree_node_t *pTree = (tree_node_t *)pNode->payload;
         free_tree_node(pTree);
-    } else if (node->type == SCALAR) {
-        free((char *)node->payload);
-    } else if (node->type == LIST) {
-        struct YamlListNode *pList = (struct YamlListNode *)node->payload;
+    } else if (pNode->type == SCALAR) {
+        free((char *)pNode->payload);
+    } else if (pNode->type == LIST) {
+        struct YamlListNode *pList = (struct YamlListNode *)pNode->payload;
         free_list_node(pList);
     } else {
-        printf("Unknown node type: %d\n", node->type);
+        printf("Unknown node type: %d\n", pNode->type);
     }
-    free(node);
+    free(pNode);
 }

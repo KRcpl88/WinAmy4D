@@ -42,14 +42,14 @@
 
 #define PV_BUFFER_SIZE 512
 
-static void PrintPV(char *pv) {
-    char PVBuffer[512];
+static void PrintPV(char *pszPv) {
+    char szPVBuffer[512];
     char *pszX;
     size_t qwLen = 21;
 
-    strncpy(PVBuffer, pv, sizeof(PVBuffer) - 1);
+    strncpy(szPVBuffer, pszPv, sizeof(szPVBuffer) - 1);
 
-    for (pszX = PVBuffer; *pszX;) {
+    for (pszX = szPVBuffer; *pszX;) {
         char *pszY = pszX;
 
         while (*pszY != ' ' && *pszY != '\0')

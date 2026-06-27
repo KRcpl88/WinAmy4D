@@ -48,17 +48,17 @@ static int SwapValue[] = {
     10000      /* King, whose value is basically infinity */
 };
 
-static void SwapReRay(CPosition *p, int nSide, CBitBoard rgAtks[2], int from,
+static void SwapReRay(CPosition *p, int nSide, CBitBoard rgAtks[2], int nFrom,
                       int nTo, CBitBoard *pExclude) {
     CBitBoard tmp;
     int nI;
-    int pc = TYPE(p->GetPiece(from));
+    int nPc = TYPE(p->GetPiece(nFrom));
 
-    rgAtks[nSide].ClrBit(from);
-    pExclude->ClrBit(from);
+    rgAtks[nSide].ClrBit(nFrom);
+    pExclude->ClrBit(nFrom);
 
-    if (pc == Pawn || pc == Bishop || pc == Queen) {
-        tmp = p->GetAtkFr(from) & *pExclude & Ray[nTo][from];
+    if (nPc == Pawn || nPc == Bishop || nPc == Queen) {
+        tmp = p->GetAtkFr(nFrom) & *pExclude & Ray[nTo][nFrom];
         if (tmp) {
             nI = (tmp).FindSetBit();
             if (TYPE(p->GetPiece(nI)) == Bishop || TYPE(p->GetPiece(nI)) == Queen) {
@@ -71,8 +71,8 @@ static void SwapReRay(CPosition *p, int nSide, CBitBoard rgAtks[2], int from,
         }
     }
 
-    if (pc == Rook || pc == Queen) {
-        tmp = p->GetAtkFr(from) & *pExclude & Ray[nTo][from];
+    if (nPc == Rook || nPc == Queen) {
+        tmp = p->GetAtkFr(nFrom) & *pExclude & Ray[nTo][nFrom];
         if (tmp) {
             nI = (tmp).FindSetBit();
             if (TYPE(p->GetPiece(nI)) == Rook || TYPE(p->GetPiece(nI)) == Queen) {
@@ -88,8 +88,8 @@ static void SwapReRay(CPosition *p, int nSide, CBitBoard rgAtks[2], int from,
 
 int SwapOff(CPosition *p, CMove move) {
     int nTo = move.GetToCoord().BitOffset();
-    int fr = move.GetFromCoord().BitOffset();
-    int nSide = COLOR(p->GetPiece(fr));
+    int nFr = move.GetFromCoord().BitOffset();
+    int nSide = COLOR(p->GetPiece(nFr));
     int nOside = !nSide;
     int rgSwapList[32];
     int nSwapCnt = 0;
@@ -103,7 +103,7 @@ int SwapOff(CPosition *p, CMove move) {
         nSwapVal = SwapValue[PromoType(move)];
         rgSwapList[0] = SwapValue[TYPE(p->GetPiece(nTo))] - SwapValue[Pawn] + nSwapVal;
     } else {
-        nSwapVal = SwapValue[TYPE(p->GetPiece(fr))];
+        nSwapVal = SwapValue[TYPE(p->GetPiece(nFr))];
         rgSwapList[0] = SwapValue[TYPE(p->GetPiece(nTo))];
     }
 
@@ -114,7 +114,7 @@ int SwapOff(CPosition *p, CMove move) {
 
     exclude = p->GetMask(White, 0) | p->GetMask(Black, 0);
 
-    SwapReRay(p, nSide, rgAtks, fr, nTo, &exclude);
+    SwapReRay(p, nSide, rgAtks, nFr, nTo, &exclude);
 
     while (rgAtks[nSwapSide]) {
         int nAt;

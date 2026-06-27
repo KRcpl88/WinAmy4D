@@ -212,10 +212,10 @@ tree_node_t *add_node(tree_node_t *node, void *pKeyData, size_t qwKeyLen,
         return allocate_node(pKeyData, qwKeyLen, pValueData, qwValueLen);
     }
 
-    int comparison =
+    int nComparison =
         cmp_keys((const char *)pKeyData, qwKeyLen, node->key_data, node->key_len);
 
-    if (comparison == 0) {
+    if (nComparison == 0) {
         node->value_data = safe_realloc(node->value_data, qwValueLen);
         if (node->value_data == NULL) {
             perror("Failed to allocate value_data");
@@ -223,7 +223,7 @@ tree_node_t *add_node(tree_node_t *node, void *pKeyData, size_t qwKeyLen,
         }
         memcpy(node->value_data, pValueData, qwValueLen);
         return node;
-    } else if (comparison < 0) {
+    } else if (nComparison < 0) {
         node->left_child = add_node(node->left_child, pKeyData, qwKeyLen,
                                     pValueData, qwValueLen);
     } else {
@@ -240,26 +240,26 @@ tree_node_t *add_node(tree_node_t *node, void *pKeyData, size_t qwKeyLen,
  */
 static void *lookup_value_internal(tree_node_t *node, const char *pKeyData,
                                    size_t qwKeyLen, size_t *pValueLen,
-                                   int depth) {
+                                   int nDepth) {
     if (node == NULL) {
         return NULL;
     }
 
-    int comparison = cmp_keys(pKeyData, qwKeyLen, node->key_data, node->key_len);
+    int nComparison = cmp_keys(pKeyData, qwKeyLen, node->key_data, node->key_len);
 
-    if (comparison == 0) {
+    if (nComparison == 0) {
         if (pValueLen != NULL) {
             *pValueLen = node->value_len;
         }
-        char *buffer = (char *)safe_malloc(node->value_len);
-        memcpy(buffer, node->value_data, node->value_len);
-        return buffer;
-    } else if (comparison < 0) {
+        char *pBuffer = (char *)safe_malloc(node->value_len);
+        memcpy(pBuffer, node->value_data, node->value_len);
+        return pBuffer;
+    } else if (nComparison < 0) {
         return lookup_value_internal(node->left_child, pKeyData, qwKeyLen,
-                                     pValueLen, depth + 1);
+                                     pValueLen, nDepth + 1);
     } else {
         return lookup_value_internal(node->right_child, pKeyData, qwKeyLen,
-                                     pValueLen, depth + 1);
+                                     pValueLen, nDepth + 1);
     }
 }
 
@@ -380,12 +380,12 @@ static tree_node_t *load_tree_internal(FILE *fin) {
  * Load the tree from a file.
  */
 tree_node_t *load_tree(FILE *fin) {
-    char buffer[4];
-    size_t qwRecordsRead = fread(buffer, 4, 1, fin);
+    char szBuffer[4];
+    size_t qwRecordsRead = fread(szBuffer, 4, 1, fin);
     if (qwRecordsRead != 1)
         return NULL;
 
-    if (memcmp(buffer, MAGIC, 4) != 0)
+    if (memcmp(szBuffer, MAGIC, 4) != 0)
         return NULL;
 
     return load_tree_internal(fin);

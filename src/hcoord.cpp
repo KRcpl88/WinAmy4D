@@ -7,8 +7,8 @@
 const int CHCoord::Relu16[15]{0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7};
 const int CHCoord::NegRelu16[15]{7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0};
 
-CHCoord::CHCoord(int nLevel, int file, int nRank)
-    : m_nLevel(nLevel), m_nRank(nRank), m_nFile(file) {
+CHCoord::CHCoord(int nLevel, int nFile, int nRank)
+    : m_nLevel(nLevel), m_nRank(nRank), m_nFile(nFile) {
 }
 
 CHCoord::CHCoord(const CSCoord& scoord) {
@@ -29,7 +29,7 @@ bool CHCoord::IsValid() const {
     return IsValid(m_nLevel, m_nFile, m_nRank);
 }
 
-bool CHCoord::IsValid(int nLevel, int file, int nRank) {
+bool CHCoord::IsValid(int nLevel, int nFile, int nRank) {
     const int nMaxLevelWidth = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH);
     if ((nLevel < 0) || (nLevel >= nMaxLevelWidth)) {
         return false;
@@ -40,11 +40,11 @@ bool CHCoord::IsValid(int nLevel, int file, int nRank) {
     }
 
     if (nRank < nLevel) {
-        if ((file < (nMaxLevelWidth - RankWidth(nLevel, nRank))) || (file >= nMaxLevelWidth)) {
+        if ((nFile < (nMaxLevelWidth - RankWidth(nLevel, nRank))) || (nFile >= nMaxLevelWidth)) {
             return false;
         }
     } else {
-        if ((file < 0) || (file >= (nMaxLevelWidth - RankWidth(nLevel, nRank)))) {
+        if ((nFile < 0) || (nFile >= (nMaxLevelWidth - RankWidth(nLevel, nRank)))) {
             return false;
         }
     }
