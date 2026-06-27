@@ -715,12 +715,11 @@ static void UndoCastle(CPosition *p, CMove move) {
  */
 
 void CPosition::DoMove(CMove move) {
-    CPosition *p = this;
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
     const uint16_t wFromOffset = fromCoord.BitOffset();
     const uint16_t wToOffset = toCoord.BitOffset();
-    int8_t nTp = TYPE(p->m_rgPiece[wFromOffset]);
+    int8_t nTp = TYPE(m_rgPiece[wFromOffset]);
 
     /*
      * The moving piece must exist on the from-square and belong to the side to
@@ -729,62 +728,62 @@ void CPosition::DoMove(CMove move) {
      * checking; trap it here before it corrupts the board and the attack maps
      * (an empty from-square yields nTp == Neutral, which later panics in AtkSet).
      */
-    AMY_ASSERT(nTp != Neutral && SAME_COLOR(p->m_rgPiece[wFromOffset], p->m_nTurn),
+    AMY_ASSERT(nTp != Neutral && SAME_COLOR(m_rgPiece[wFromOffset], m_nTurn),
                "DoMove moving a non-friendly piece (%d) from L%d/F%d/R%d\n",
-               (int)p->m_rgPiece[wFromOffset], fromCoord.m_nLevel,
+               (int)m_rgPiece[wFromOffset], fromCoord.m_nLevel,
                fromCoord.m_nFile, fromCoord.m_nRank);
-    AMY_ASSERT(p->m_pActLog >= p->m_pGameLog &&
-                   p->m_pActLog < p->m_pGameLog + p->m_cGameLog,
+    AMY_ASSERT(m_pActLog >= m_pGameLog &&
+                   m_pActLog < m_pGameLog + m_cGameLog,
                "DoMove: m_pActLog out of range (ply=%u size=%u act=%p base=%p)\n",
-               (unsigned)p->m_wPly, p->m_cGameLog, (void *)p->m_pActLog,
-               (void *)p->m_pGameLog);
-    AMY_ASSERT(p->m_pActLog == p->m_pGameLog + p->m_wPly,
+               (unsigned)m_wPly, m_cGameLog, (void *)m_pActLog,
+               (void *)m_pGameLog);
+    AMY_ASSERT(m_pActLog == m_pGameLog + m_wPly,
                "DoMove: m_pActLog/ply mismatch (ply=%u index=%u)\n",
-               (unsigned)p->m_wPly,
-               (unsigned)(p->m_pActLog - p->m_pGameLog));
+               (unsigned)m_wPly,
+               (unsigned)(m_pActLog - m_pGameLog));
 
     /* save EnPassant and Castling */
-    p->m_pActLog->gl_EnPassant = p->m_EnPassant;
-    p->m_pActLog->gl_Castle = p->m_bCastle;
-    p->m_pActLog->gl_HashKey = p->m_ullHKey;
-    p->m_pActLog->gl_PawnKey = p->m_ullPKey;
+    m_pActLog->gl_EnPassant = m_EnPassant;
+    m_pActLog->gl_Castle = m_bCastle;
+    m_pActLog->gl_HashKey = m_ullHKey;
+    m_pActLog->gl_PawnKey = m_ullPKey;
 
     if (move.IsCastle()) {
-        DoCastle(p, move);
-        p->m_bCastle &= ~(CastleMask[p->m_nTurn][0] | CastleMask[p->m_nTurn][1]);
+        DoCastle(this, move);
+        m_bCastle &= ~(CastleMask[m_nTurn][0] | CastleMask[m_nTurn][1]);
     } else {
         /* piece looses its attacks */
-        p->AtkClr(fromCoord);
+        AtkClr(fromCoord);
 
         if (nTp == King) {
-            p->m_rgKingSq[p->m_nTurn] = toCoord;
+            m_rgKingSq[m_nTurn] = toCoord;
         }
 
         /* remove it from the board */
-        p->m_rgPiece[wFromOffset] = Neutral;
-        p->m_rgMask[p->m_nTurn][0].ClrBit(wFromOffset);
-        p->m_rgMask[p->m_nTurn][nTp].ClrBit(wFromOffset);
+        m_rgPiece[wFromOffset] = Neutral;
+        m_rgMask[m_nTurn][0].ClrBit(wFromOffset);
+        m_rgMask[m_nTurn][nTp].ClrBit(wFromOffset);
         if (is_sliding(nTp))
-            p->m_SlidingPieces.ClrBit(wFromOffset);
+            m_SlidingPieces.ClrBit(wFromOffset);
         /* re-calculate attacks through from-square */
-        p->GainAttacks(fromCoord);
+        GainAttacks(fromCoord);
 
         /* update hashkey */
-        p->m_ullHKey ^= HashKeys[p->m_nTurn][nTp][wFromOffset];
+        m_ullHKey ^= HashKeys[m_nTurn][nTp][wFromOffset];
         if (nTp == Pawn)
-            p->m_ullPKey ^= HashKeys[p->m_nTurn][Pawn][wFromOffset];
+            m_ullPKey ^= HashKeys[m_nTurn][Pawn][wFromOffset];
 
         if (nTp == King) {
             /* No more castling rights */
-            p->m_bCastle &= ~(CastleMask[p->m_nTurn][0] | CastleMask[p->m_nTurn][1]);
+            m_bCastle &= ~(CastleMask[m_nTurn][0] | CastleMask[m_nTurn][1]);
         } else if (nTp == Rook) {
-            if (wFromOffset == (p->m_nTurn == White ? hh1 : hh8))
-                p->m_bCastle &= ~(CastleMask[p->m_nTurn][0]);
-            if (wFromOffset == (p->m_nTurn == White ? ha1 : ha8))
-                p->m_bCastle &= ~(CastleMask[p->m_nTurn][1]);
+            if (wFromOffset == (m_nTurn == White ? hh1 : hh8))
+                m_bCastle &= ~(CastleMask[m_nTurn][0]);
+            if (wFromOffset == (m_nTurn == White ? ha1 : ha8))
+                m_bCastle &= ~(CastleMask[m_nTurn][1]);
         }
         if (move.IsCapture()) {
-            const int8_t nCapturedPiece = p->m_rgPiece[wToOffset];
+            const int8_t nCapturedPiece = m_rgPiece[wToOffset];
             int nSp = TYPE(nCapturedPiece);
 
             /*
@@ -793,14 +792,14 @@ void CPosition::DoMove(CMove move) {
              * generator must never let the opponent's king be taken), and an
              * M_CAPTURE flag on an empty or own-coloured square indicates a
              * malformed/mis-encoded move. Either way the resulting state is
-             * corrupt: the matching UndoMove restores p->m_pActLog->gl_Piece via
+             * corrupt: the matching UndoMove restores m_pActLog->gl_Piece via
              * AtkSet(TYPE(gl_Piece), ...), so a Neutral/invalid captured piece
              * later panics in AtkSet's default case. Trap it here so the corrupt
              * state is both logged and trapped in the debugger (no-op in release
              * builds).
              */
             AMY_ASSERT(nSp != Neutral && nSp != King &&
-                           SAME_COLOR(nCapturedPiece, OPP(p->m_nTurn)),
+                           SAME_COLOR(nCapturedPiece, OPP(m_nTurn)),
                        "DoMove capturing an invalid piece (%d) at L%d/F%d/R%d "
                        "(from L%d/F%d/R%d) - illegal move reached DoMove\n",
                        (int)nCapturedPiece, toCoord.m_nLevel, toCoord.m_nFile,
@@ -808,74 +807,74 @@ void CPosition::DoMove(CMove move) {
                        fromCoord.m_nRank);
 
             /* piece looses its attacks */
-            p->AtkClr(toCoord);
+            AtkClr(toCoord);
 
             /* remember type of captured piece */
-            p->m_pActLog->gl_Piece = p->m_rgPiece[wToOffset];
+            m_pActLog->gl_Piece = m_rgPiece[wToOffset];
 
-            p->m_rgMask[OPP(p->m_nTurn)][0].ClrBit(wToOffset);
-            p->m_rgMask[OPP(p->m_nTurn)][nSp].ClrBit(wToOffset);
+            m_rgMask[OPP(m_nTurn)][0].ClrBit(wToOffset);
+            m_rgMask[OPP(m_nTurn)][nSp].ClrBit(wToOffset);
             if (is_sliding(nSp))
-                p->m_SlidingPieces.ClrBit(wToOffset);
+                m_SlidingPieces.ClrBit(wToOffset);
 
             /* Update oppponents material and PawnCount */
-            p->m_rgnMaterial[OPP(p->m_nTurn)] -= Value[nSp];
+            m_rgnMaterial[OPP(m_nTurn)] -= Value[nSp];
             if (nSp != Pawn)
-                p->m_rgnNonPawn[OPP(p->m_nTurn)] -= Value[nSp];
+                m_rgnNonPawn[OPP(m_nTurn)] -= Value[nSp];
 
             /* update material signature */
-            if (!(p->m_rgMask[OPP(p->m_nTurn)][nSp])) {
-                p->m_rgbMaterialSignature[OPP(p->m_nTurn)] &= ~SIGNATURE_BIT(nSp);
+            if (!(m_rgMask[OPP(m_nTurn)][nSp])) {
+                m_rgbMaterialSignature[OPP(m_nTurn)] &= ~SIGNATURE_BIT(nSp);
             }
 
             /* update hashkey */
-            p->m_ullHKey ^= HashKeys[OPP(p->m_nTurn)][nSp][wToOffset];
+            m_ullHKey ^= HashKeys[OPP(m_nTurn)][nSp][wToOffset];
             if (nSp == Pawn)
-                p->m_ullPKey ^= HashKeys[OPP(p->m_nTurn)][Pawn][wToOffset];
-            if (wToOffset == (OPP(p->m_nTurn) == White ? hh1 : hh8)) {
-                p->m_bCastle &= ~(CastleMask[OPP(p->m_nTurn)][0]);
+                m_ullPKey ^= HashKeys[OPP(m_nTurn)][Pawn][wToOffset];
+            if (wToOffset == (OPP(m_nTurn) == White ? hh1 : hh8)) {
+                m_bCastle &= ~(CastleMask[OPP(m_nTurn)][0]);
             }
-            if (wToOffset == (OPP(p->m_nTurn) == White ? ha1 : ha8)) {
-                p->m_bCastle &= ~(CastleMask[OPP(p->m_nTurn)][1]);
+            if (wToOffset == (OPP(m_nTurn) == White ? ha1 : ha8)) {
+                m_bCastle &= ~(CastleMask[OPP(m_nTurn)][1]);
             }
         } else if (move.IsEnPassant()) {
             const CSCoord capturedPawnCoord(
                 toCoord.m_nLevel, toCoord.m_nFile,
-                p->m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
+                m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
             const uint16_t wCapturedPawnOffset = capturedPawnCoord.BitOffset();
 
             /* piece looses its attacks */
-            p->AtkClr(capturedPawnCoord);
+            AtkClr(capturedPawnCoord);
 
             /* captured piece must be a pawn */
-            p->m_pActLog->gl_Piece = ((OPP(p->m_nTurn) == White) ? Pawn : -Pawn);
+            m_pActLog->gl_Piece = ((OPP(m_nTurn) == White) ? Pawn : -Pawn);
 
-            p->m_rgMask[OPP(p->m_nTurn)][0].ClrBit(wCapturedPawnOffset);
-            p->m_rgMask[OPP(p->m_nTurn)][Pawn].ClrBit(wCapturedPawnOffset);
+            m_rgMask[OPP(m_nTurn)][0].ClrBit(wCapturedPawnOffset);
+            m_rgMask[OPP(m_nTurn)][Pawn].ClrBit(wCapturedPawnOffset);
 
             /* re-calculate attacks through to-square */
-            p->GainAttacks(capturedPawnCoord);
+            GainAttacks(capturedPawnCoord);
 
             /* remove captured pawn from the board */
-            p->m_rgPiece[wCapturedPawnOffset] = Neutral;
+            m_rgPiece[wCapturedPawnOffset] = Neutral;
 
             /* Update oppponents material and PawnCount */
-            p->m_rgnMaterial[OPP(p->m_nTurn)] -= Value[Pawn];
+            m_rgnMaterial[OPP(m_nTurn)] -= Value[Pawn];
 
             /* update material signature */
-            if (!(p->m_rgMask[OPP(p->m_nTurn)][Pawn])) {
-                p->m_rgbMaterialSignature[OPP(p->m_nTurn)] &= ~SIGNATURE_BIT(Pawn);
+            if (!(m_rgMask[OPP(m_nTurn)][Pawn])) {
+                m_rgbMaterialSignature[OPP(m_nTurn)] &= ~SIGNATURE_BIT(Pawn);
             }
 
             /* update hashkey */
-            p->m_ullHKey ^= HashKeys[OPP(p->m_nTurn)][Pawn][wCapturedPawnOffset];
-            p->m_ullPKey ^= HashKeys[OPP(p->m_nTurn)][Pawn][wCapturedPawnOffset];
+            m_ullHKey ^= HashKeys[OPP(m_nTurn)][Pawn][wCapturedPawnOffset];
+            m_ullPKey ^= HashKeys[OPP(m_nTurn)][Pawn][wCapturedPawnOffset];
 
             /* re-calculate attacks through to-square */
-            p->LooseAttacks(toCoord);
+            LooseAttacks(toCoord);
         } else {
             /* re-calculate attacks through to-square */
-            p->LooseAttacks(toCoord);
+            LooseAttacks(toCoord);
         }
 
         if (move.HasPromotion()) {
@@ -883,35 +882,35 @@ void CPosition::DoMove(CMove move) {
             nTp = PromoType(move);
 
             /* Update own material */
-            p->m_rgnMaterial[p->m_nTurn] += Value[nTp] - Value[Pawn];
-            p->m_rgnNonPawn[p->m_nTurn] += Value[nTp];
+            m_rgnMaterial[m_nTurn] += Value[nTp] - Value[Pawn];
+            m_rgnNonPawn[m_nTurn] += Value[nTp];
 
-            if (!(p->m_rgMask[p->m_nTurn][Pawn])) {
-                p->m_rgbMaterialSignature[p->m_nTurn] &= ~SIGNATURE_BIT(Pawn);
+            if (!(m_rgMask[m_nTurn][Pawn])) {
+                m_rgbMaterialSignature[m_nTurn] &= ~SIGNATURE_BIT(Pawn);
             }
-            p->m_rgbMaterialSignature[p->m_nTurn] |= SIGNATURE_BIT(nTp);
+            m_rgbMaterialSignature[m_nTurn] |= SIGNATURE_BIT(nTp);
         }
 
         /* put it on the board again */
-        p->m_rgPiece[wToOffset] = (p->m_nTurn == White) ? nTp : -nTp;
-        p->m_rgMask[p->m_nTurn][0].SetBit(wToOffset);
-        p->m_rgMask[p->m_nTurn][nTp].SetBit(wToOffset);
+        m_rgPiece[wToOffset] = (m_nTurn == White) ? nTp : -nTp;
+        m_rgMask[m_nTurn][0].SetBit(wToOffset);
+        m_rgMask[m_nTurn][nTp].SetBit(wToOffset);
         if (is_sliding(nTp))
-            p->m_SlidingPieces.SetBit(wToOffset);
+            m_SlidingPieces.SetBit(wToOffset);
 
         /* piece gains its attacks */
-        p->AtkSet(nTp, p->m_nTurn, toCoord);
+        AtkSet(nTp, m_nTurn, toCoord);
 
         /* update hashkey */
-        p->m_ullHKey ^= HashKeys[p->m_nTurn][nTp][wToOffset];
+        m_ullHKey ^= HashKeys[m_nTurn][nTp][wToOffset];
         if (nTp == Pawn)
-            p->m_ullPKey ^= HashKeys[p->m_nTurn][Pawn][wToOffset];
+            m_ullPKey ^= HashKeys[m_nTurn][Pawn][wToOffset];
     }
 
     /* Check if loss of castling rights */
-    if (p->m_bCastle != p->m_pActLog->gl_Castle) {
-        p->m_ullHKey ^= HashKeysCastle[p->m_pActLog->gl_Castle];
-        p->m_ullHKey ^= HashKeysCastle[p->m_bCastle];
+    if (m_bCastle != m_pActLog->gl_Castle) {
+        m_ullHKey ^= HashKeysCastle[m_pActLog->gl_Castle];
+        m_ullHKey ^= HashKeysCastle[m_bCastle];
     }
 
     /*
@@ -921,84 +920,83 @@ void CPosition::DoMove(CMove move) {
      * the transposition table.
      */
 
-    p->m_EnPassant = InvalidSquareCoord();
+    m_EnPassant = InvalidSquareCoord();
     if (move.IsPawnDoublePush()) {
         const CSCoord passantCoord(toCoord.m_nLevel, toCoord.m_nFile,
-                                   p->m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
+                                   m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
         const uint16_t wPassantOffset = passantCoord.BitOffset();
-        if (p->m_rgAtkFr[wPassantOffset] & p->m_rgMask[OPP(p->m_nTurn)][Pawn]) {
-            p->m_EnPassant = passantCoord;
+        if (m_rgAtkFr[wPassantOffset] & m_rgMask[OPP(m_nTurn)][Pawn]) {
+            m_EnPassant = passantCoord;
         }
     }
 
-    if ((p->m_EnPassant.IsValid() != p->m_pActLog->gl_EnPassant.IsValid()) ||
-        (p->m_EnPassant.IsValid() &&
-         p->m_EnPassant.BitOffset() != p->m_pActLog->gl_EnPassant.BitOffset())) {
-        if (p->m_pActLog->gl_EnPassant.IsValid()) {
-            p->m_ullHKey ^= HashKeysEP[p->m_pActLog->gl_EnPassant.BitOffset()];
+    if ((m_EnPassant.IsValid() != m_pActLog->gl_EnPassant.IsValid()) ||
+        (m_EnPassant.IsValid() &&
+         m_EnPassant.BitOffset() != m_pActLog->gl_EnPassant.BitOffset())) {
+        if (m_pActLog->gl_EnPassant.IsValid()) {
+            m_ullHKey ^= HashKeysEP[m_pActLog->gl_EnPassant.BitOffset()];
         }
-        if (p->m_EnPassant.IsValid()) {
-            p->m_ullHKey ^= HashKeysEP[p->m_EnPassant.BitOffset()];
+        if (m_EnPassant.IsValid()) {
+            m_ullHKey ^= HashKeysEP[m_EnPassant.BitOffset()];
         }
     }
 
     /* Update SGameLog */
-    p->m_pActLog->gl_Move = move;
-    p->m_wPly++;
+    m_pActLog->gl_Move = move;
+    m_wPly++;
 
     /* Grow gameLog if needed. */
-    if (p->m_wPly >= p->m_cGameLog) {
-        const unsigned int nOldSize = p->m_cGameLog;
-        const unsigned int nNewSize = p->m_cGameLog * 2;
+    if (m_wPly >= m_cGameLog) {
+        const unsigned int nOldSize = m_cGameLog;
+        const unsigned int nNewSize = m_cGameLog * 2;
         SGameLog *pNewGameLog = (SGameLog *)safe_realloc(
-            p->m_pGameLog, sizeof(SGameLog) * nNewSize);
+            m_pGameLog, sizeof(SGameLog) * nNewSize);
         PrintDebug(9,
                    "DoMove: game log growth %u -> %u at ply %u (old=%p new=%p)\n",
-                   nOldSize, nNewSize, (unsigned)p->m_wPly,
-                   (void *)p->m_pGameLog, (void *)pNewGameLog);
-        p->m_cGameLog = nNewSize;
-        p->m_pGameLog = pNewGameLog;
+                   nOldSize, nNewSize, (unsigned)m_wPly,
+                   (void *)m_pGameLog, (void *)pNewGameLog);
+        m_cGameLog = nNewSize;
+        m_pGameLog = pNewGameLog;
         /* Zero the newly allocated portion (realloc does not initialize) */
-        memset(p->m_pGameLog + nOldSize, 0,
+        memset(m_pGameLog + nOldSize, 0,
                sizeof(SGameLog) * (nNewSize - nOldSize));
-        p->m_pActLog = p->m_pGameLog + p->m_wPly;
+        m_pActLog = m_pGameLog + m_wPly;
     } else {
-        p->m_pActLog++;
+        m_pActLog++;
     }
-    AMY_ASSERT(p->m_pActLog == p->m_pGameLog + p->m_wPly,
+    AMY_ASSERT(m_pActLog == m_pGameLog + m_wPly,
                "DoMove: post-update m_pActLog/ply mismatch (ply=%u index=%u)\n",
-               (unsigned)p->m_wPly,
-               (unsigned)(p->m_pActLog - p->m_pGameLog));
+               (unsigned)m_wPly,
+               (unsigned)(m_pActLog - m_pGameLog));
 
     /* Check if reversible move */
     if (move.IsCapture() || move.HasPromotion() || move.IsCastle() || nTp == Pawn) {
-        p->m_pActLog->gl_IrrevCount = 0;
+        m_pActLog->gl_IrrevCount = 0;
     } else {
-        p->m_pActLog->gl_IrrevCount = (p->m_pActLog - 1)->gl_IrrevCount + 1;
+        m_pActLog->gl_IrrevCount = (m_pActLog - 1)->gl_IrrevCount + 1;
     }
 
-    /* Swap p->turns */
-    p->m_nTurn = OPP(p->m_nTurn);
-    p->m_ullHKey ^= STMKey;
+    /* Swap turns */
+    m_nTurn = OPP(m_nTurn);
+    m_ullHKey ^= STMKey;
 }
 
 void CPosition::UndoMove(CMove move) {
-    CPosition *p = this;
     const CSCoord& fromCoord = move.GetFromCoord();
     const CSCoord& toCoord = move.GetToCoord();
     const uint16_t wFromOffset = fromCoord.BitOffset();
     const uint16_t wToOffset = toCoord.BitOffset();
-    int8_t nTp = TYPE(p->m_rgPiece[wToOffset]);
+    int8_t nTp = TYPE(m_rgPiece[wToOffset]);
 
-    /* Swap p->turns */
-    p->m_nTurn = OPP(p->m_nTurn);
+    /* Swap turns */
+    m_nTurn = OPP(m_nTurn);
 
     /* Decrement ActLog */
-    p->m_pActLog--;
-    p->m_wPly--;
+    m_pActLog--;
+    m_wPly--;
 
     /*
-     * After the turn swap p->m_nTurn is the colour that played the move being
+     * After the turn swap m_nTurn is the colour that played the move being
      * undone, so the to-square must currently hold one of that side's pieces
      * (the piece that moved there, possibly a promoted piece). If it does not,
      * the board/attack maps are already corrupt before we start undoing - trap
@@ -1007,46 +1005,46 @@ void CPosition::UndoMove(CMove move) {
      */
     AMY_ASSERT(move.IsCastle() ||
                    (nTp != Neutral &&
-                    SAME_COLOR(p->m_rgPiece[wToOffset], p->m_nTurn)),
+                    SAME_COLOR(m_rgPiece[wToOffset], m_nTurn)),
                "UndoMove: no friendly piece (%d) on the to-square L%d/F%d/R%d\n",
-               (int)p->m_rgPiece[wToOffset], toCoord.m_nLevel, toCoord.m_nFile,
+               (int)m_rgPiece[wToOffset], toCoord.m_nLevel, toCoord.m_nFile,
                toCoord.m_nRank);
 
     if (move.IsCastle()) {
-        UndoCastle(p, move);
+        UndoCastle(this, move);
     } else {
         /* piece looses its attacks */
-        p->AtkClr(toCoord);
+        AtkClr(toCoord);
 
         if (nTp == King) {
-            p->m_rgKingSq[p->m_nTurn] = fromCoord;
+            m_rgKingSq[m_nTurn] = fromCoord;
         }
 
         /* update masks */
-        p->m_rgMask[p->m_nTurn][0].ClrBit(wToOffset);
-        p->m_rgMask[p->m_nTurn][nTp].ClrBit(wToOffset);
+        m_rgMask[m_nTurn][0].ClrBit(wToOffset);
+        m_rgMask[m_nTurn][nTp].ClrBit(wToOffset);
         if (is_sliding(nTp))
-            p->m_SlidingPieces.ClrBit(wToOffset);
+            m_SlidingPieces.ClrBit(wToOffset);
 
         if (move.HasPromotion()) {
             /* Update own material */
-            p->m_rgnMaterial[p->m_nTurn] -= Value[nTp] - Value[Pawn];
-            p->m_rgnNonPawn[p->m_nTurn] -= Value[nTp];
+            m_rgnMaterial[m_nTurn] -= Value[nTp] - Value[Pawn];
+            m_rgnNonPawn[m_nTurn] -= Value[nTp];
 
             /* update material signature */
-            if (!(p->m_rgMask[p->m_nTurn][nTp])) {
-                p->m_rgbMaterialSignature[p->m_nTurn] &= ~SIGNATURE_BIT(nTp);
+            if (!(m_rgMask[m_nTurn][nTp])) {
+                m_rgbMaterialSignature[m_nTurn] &= ~SIGNATURE_BIT(nTp);
             }
 
             /* Unpromote piece */
             nTp = Pawn;
 
             /* update material signature */
-            p->m_rgbMaterialSignature[p->m_nTurn] |= SIGNATURE_BIT(Pawn);
+            m_rgbMaterialSignature[m_nTurn] |= SIGNATURE_BIT(Pawn);
         }
 
         if (move.IsCapture()) {
-            int8_t nSp = p->m_pActLog->gl_Piece;
+            int8_t nSp = m_pActLog->gl_Piece;
 
             /*
              * gl_Piece is the piece that DoMove removed from the to-square; on
@@ -1059,18 +1057,18 @@ void CPosition::UndoMove(CMove move) {
              * caught in the debugger (no-op in release builds).
              */
             AMY_ASSERT(TYPE(nSp) >= Pawn && TYPE(nSp) <= Queen &&
-                           SAME_COLOR(nSp, OPP(p->m_nTurn)),
+                           SAME_COLOR(nSp, OPP(m_nTurn)),
                        "UndoMove restoring an invalid captured piece (%d) at "
                        "L%d/F%d/R%d - would panic in AtkSet\n",
                        (int)nSp, toCoord.m_nLevel, toCoord.m_nFile,
                        toCoord.m_nRank);
 
-            p->m_rgPiece[wToOffset] = nSp;
+            m_rgPiece[wToOffset] = nSp;
             nSp = TYPE(nSp);
-            p->m_rgMask[OPP(p->m_nTurn)][0].SetBit(wToOffset);
-            p->m_rgMask[OPP(p->m_nTurn)][nSp].SetBit(wToOffset);
+            m_rgMask[OPP(m_nTurn)][0].SetBit(wToOffset);
+            m_rgMask[OPP(m_nTurn)][nSp].SetBit(wToOffset);
             if (is_sliding(nSp)) {
-                p->m_SlidingPieces.SetBit(wToOffset);
+                m_SlidingPieces.SetBit(wToOffset);
             }
 
             /*
@@ -1078,73 +1076,73 @@ void CPosition::UndoMove(CMove move) {
              * placed back on the board (m_rgPiece[wToOffset] = nSp above), since
              * AtkSet reads m_rgPiece[square] to validate/seed the attack maps.
              */
-            p->AtkSet(nSp, OPP(p->m_nTurn), toCoord);
+            AtkSet(nSp, OPP(m_nTurn), toCoord);
 
             /* Update oppponents material and PawnCount */
-            p->m_rgnMaterial[OPP(p->m_nTurn)] += Value[nSp];
+            m_rgnMaterial[OPP(m_nTurn)] += Value[nSp];
             if (nSp != Pawn)
-                p->m_rgnNonPawn[OPP(p->m_nTurn)] += Value[nSp];
+                m_rgnNonPawn[OPP(m_nTurn)] += Value[nSp];
 
             /* update material signature */
-            p->m_rgbMaterialSignature[OPP(p->m_nTurn)] |= SIGNATURE_BIT(nSp);
+            m_rgbMaterialSignature[OPP(m_nTurn)] |= SIGNATURE_BIT(nSp);
         } else if (move.IsEnPassant()) {
             const CSCoord capturedPawnCoord(
                 toCoord.m_nLevel, toCoord.m_nFile,
-                p->m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
+                m_nTurn == White ? toCoord.m_nRank - 1 : toCoord.m_nRank + 1);
             const uint16_t wCapturedPawnOffset = capturedPawnCoord.BitOffset();
 
-            p->m_rgMask[OPP(p->m_nTurn)][0].SetBit(wCapturedPawnOffset);
-            p->m_rgMask[OPP(p->m_nTurn)][Pawn].SetBit(wCapturedPawnOffset);
+            m_rgMask[OPP(m_nTurn)][0].SetBit(wCapturedPawnOffset);
+            m_rgMask[OPP(m_nTurn)][Pawn].SetBit(wCapturedPawnOffset);
 
             /* re-calculate attacks through to-square */
-            p->LooseAttacks(capturedPawnCoord);
+            LooseAttacks(capturedPawnCoord);
 
             /* restore captured pawn to the board */
-            p->m_rgPiece[wCapturedPawnOffset] = (OPP(p->m_nTurn) == White) ? Pawn : -Pawn;
-            p->m_rgPiece[wToOffset] = Neutral;
+            m_rgPiece[wCapturedPawnOffset] = (OPP(m_nTurn) == White) ? Pawn : -Pawn;
+            m_rgPiece[wToOffset] = Neutral;
 
             /*
              * piece gains its attacks - must run AFTER the captured pawn is
              * placed back on the board (m_rgPiece[wCapturedPawnOffset] above),
              * since AtkSet reads m_rgPiece[square] to validate the attack maps.
              */
-            p->AtkSet(Pawn, OPP(p->m_nTurn), capturedPawnCoord);
+            AtkSet(Pawn, OPP(m_nTurn), capturedPawnCoord);
 
             /* re-calculate attacks through to-square */
-            p->GainAttacks(toCoord);
+            GainAttacks(toCoord);
 
             /* Update oppponents material */
-            p->m_rgnMaterial[OPP(p->m_nTurn)] += Value[Pawn];
+            m_rgnMaterial[OPP(m_nTurn)] += Value[Pawn];
 
             /* update material signature */
-            p->m_rgbMaterialSignature[OPP(p->m_nTurn)] |= SIGNATURE_BIT(Pawn);
+            m_rgbMaterialSignature[OPP(m_nTurn)] |= SIGNATURE_BIT(Pawn);
         } else {
-            p->m_rgPiece[wToOffset] = Neutral;
+            m_rgPiece[wToOffset] = Neutral;
 
             /* re-calculate attacks through to-square */
-            p->GainAttacks(toCoord);
+            GainAttacks(toCoord);
         }
 
         /* re-calculate attacks through from-square */
-        p->LooseAttacks(fromCoord);
+        LooseAttacks(fromCoord);
 
         /* put it on the board again */
-        p->m_rgPiece[wFromOffset] = (p->m_nTurn == White) ? nTp : -nTp;
-        p->m_rgMask[p->m_nTurn][0].SetBit(wFromOffset);
-        p->m_rgMask[p->m_nTurn][nTp].SetBit(wFromOffset);
+        m_rgPiece[wFromOffset] = (m_nTurn == White) ? nTp : -nTp;
+        m_rgMask[m_nTurn][0].SetBit(wFromOffset);
+        m_rgMask[m_nTurn][nTp].SetBit(wFromOffset);
         if (is_sliding(nTp))
-            p->m_SlidingPieces.SetBit(wFromOffset);
+            m_SlidingPieces.SetBit(wFromOffset);
 
         /* piece gains its attacks */
-        p->AtkSet(nTp, p->m_nTurn, fromCoord);
+        AtkSet(nTp, m_nTurn, fromCoord);
     }
 
     /* restore EnPassant and Castling */
-    p->m_EnPassant = p->m_pActLog->gl_EnPassant;
-    p->m_bCastle = p->m_pActLog->gl_Castle;
+    m_EnPassant = m_pActLog->gl_EnPassant;
+    m_bCastle = m_pActLog->gl_Castle;
 
-    p->m_ullHKey = p->m_pActLog->gl_HashKey;
-    p->m_ullPKey = p->m_pActLog->gl_PawnKey;
+    m_ullHKey = m_pActLog->gl_HashKey;
+    m_ullPKey = m_pActLog->gl_PawnKey;
 
     /*
     DebugEngine(move);
@@ -1161,10 +1159,9 @@ void CPosition::UndoMove(CMove move) {
  */
 
 bool CPosition::Undo() {
-    CPosition *p = this;
-    if (p->m_wPly == 0)
+    if (m_wPly == 0)
         return false;
-    p->UndoMove((p->m_pActLog - 1)->gl_Move);
+    UndoMove((m_pActLog - 1)->gl_Move);
     return true;
 }
 
@@ -1173,7 +1170,6 @@ bool CPosition::Undo() {
  */
 
 void CPosition::DoNull() {
-    CPosition *p = this;
 
     /*
      * A null move hands the move to the opponent without changing the board, so
@@ -1182,68 +1178,68 @@ void CPosition::DoNull() {
      * null-move branch when !incheck; assert the same invariant here so a stray
      * caller is logged and trapped (no-op in release builds).
      */
-    AMY_ASSERT(!p->InCheck(p->m_nTurn),
-               "DoNull called while side %d is in check\n", p->m_nTurn);
-    AMY_ASSERT(p->m_pActLog >= p->m_pGameLog &&
-                   p->m_pActLog < p->m_pGameLog + p->m_cGameLog,
+    AMY_ASSERT(!InCheck(m_nTurn),
+               "DoNull called while side %d is in check\n", m_nTurn);
+    AMY_ASSERT(m_pActLog >= m_pGameLog &&
+                   m_pActLog < m_pGameLog + m_cGameLog,
                "DoNull: m_pActLog out of range (ply=%u size=%u act=%p base=%p)\n",
-               (unsigned)p->m_wPly, p->m_cGameLog, (void *)p->m_pActLog,
-               (void *)p->m_pGameLog);
-    AMY_ASSERT(p->m_pActLog == p->m_pGameLog + p->m_wPly,
+               (unsigned)m_wPly, m_cGameLog, (void *)m_pActLog,
+               (void *)m_pGameLog);
+    AMY_ASSERT(m_pActLog == m_pGameLog + m_wPly,
                "DoNull: m_pActLog/ply mismatch (ply=%u index=%u)\n",
-               (unsigned)p->m_wPly,
-               (unsigned)(p->m_pActLog - p->m_pGameLog));
+               (unsigned)m_wPly,
+               (unsigned)(m_pActLog - m_pGameLog));
 
     /* Update SGameLog */
-    p->m_pActLog->gl_Move = M_NULL;
-    p->m_pActLog->gl_EnPassant = p->m_EnPassant;
-    p->m_pActLog->gl_Castle = p->m_bCastle;
-    p->m_pActLog->gl_HashKey = p->m_ullHKey;
-    p->m_EnPassant = InvalidSquareCoord();
+    m_pActLog->gl_Move = M_NULL;
+    m_pActLog->gl_EnPassant = m_EnPassant;
+    m_pActLog->gl_Castle = m_bCastle;
+    m_pActLog->gl_HashKey = m_ullHKey;
+    m_EnPassant = InvalidSquareCoord();
 
-    if ((p->m_EnPassant.IsValid() != p->m_pActLog->gl_EnPassant.IsValid()) ||
-        (p->m_EnPassant.IsValid() &&
-         p->m_EnPassant.BitOffset() != p->m_pActLog->gl_EnPassant.BitOffset())) {
-        if (p->m_pActLog->gl_EnPassant.IsValid()) {
-            p->m_ullHKey ^= HashKeysEP[p->m_pActLog->gl_EnPassant.BitOffset()];
+    if ((m_EnPassant.IsValid() != m_pActLog->gl_EnPassant.IsValid()) ||
+        (m_EnPassant.IsValid() &&
+         m_EnPassant.BitOffset() != m_pActLog->gl_EnPassant.BitOffset())) {
+        if (m_pActLog->gl_EnPassant.IsValid()) {
+            m_ullHKey ^= HashKeysEP[m_pActLog->gl_EnPassant.BitOffset()];
         }
-        if (p->m_EnPassant.IsValid()) {
-            p->m_ullHKey ^= HashKeysEP[p->m_EnPassant.BitOffset()];
+        if (m_EnPassant.IsValid()) {
+            m_ullHKey ^= HashKeysEP[m_EnPassant.BitOffset()];
         }
     }
 
-    p->m_wPly++;
+    m_wPly++;
 
     /* Grow gameLog if needed. */
-    if (p->m_wPly >= p->m_cGameLog) {
-        const unsigned int nOldSize = p->m_cGameLog;
-        const unsigned int nNewSize = p->m_cGameLog * 2;
+    if (m_wPly >= m_cGameLog) {
+        const unsigned int nOldSize = m_cGameLog;
+        const unsigned int nNewSize = m_cGameLog * 2;
         SGameLog *pNewGameLog = (SGameLog *)safe_realloc(
-            p->m_pGameLog, sizeof(SGameLog) * nNewSize);
+            m_pGameLog, sizeof(SGameLog) * nNewSize);
         PrintDebug(9,
                    "DoNull: game log growth %u -> %u at ply %u (old=%p new=%p)\n",
-                   nOldSize, nNewSize, (unsigned)p->m_wPly,
-                   (void *)p->m_pGameLog, (void *)pNewGameLog);
-        p->m_cGameLog = nNewSize;
-        p->m_pGameLog = pNewGameLog;
+                   nOldSize, nNewSize, (unsigned)m_wPly,
+                   (void *)m_pGameLog, (void *)pNewGameLog);
+        m_cGameLog = nNewSize;
+        m_pGameLog = pNewGameLog;
         /* Zero the newly allocated portion (realloc does not initialize) */
-        memset(p->m_pGameLog + nOldSize, 0,
+        memset(m_pGameLog + nOldSize, 0,
                sizeof(SGameLog) * (nNewSize - nOldSize));
-        p->m_pActLog = p->m_pGameLog + p->m_wPly;
+        m_pActLog = m_pGameLog + m_wPly;
     } else {
-        p->m_pActLog++;
+        m_pActLog++;
     }
-    AMY_ASSERT(p->m_pActLog == p->m_pGameLog + p->m_wPly,
+    AMY_ASSERT(m_pActLog == m_pGameLog + m_wPly,
                "DoNull: post-update m_pActLog/ply mismatch (ply=%u index=%u)\n",
-               (unsigned)p->m_wPly,
-               (unsigned)(p->m_pActLog - p->m_pGameLog));
+               (unsigned)m_wPly,
+               (unsigned)(m_pActLog - m_pGameLog));
 
     /* treat null move as irreversible */
-    p->m_pActLog->gl_IrrevCount = 0;
+    m_pActLog->gl_IrrevCount = 0;
 
-    /* swap p->turns */
-    p->m_nTurn = OPP(p->m_nTurn);
-    p->m_ullHKey ^= STMKey;
+    /* swap turns */
+    m_nTurn = OPP(m_nTurn);
+    m_ullHKey ^= STMKey;
 }
 
 /*
@@ -1251,7 +1247,6 @@ void CPosition::DoNull() {
  */
 
 void CPosition::UndoNull() {
-    CPosition *p = this;
 
     /*
      * UndoNull must balance a prior DoNull: there has to be at least one ply on
@@ -1260,19 +1255,19 @@ void CPosition::UndoNull() {
      * would silently corrupt the game log / hash key - trap it here (no-op in
      * release builds).
      */
-    AMY_ASSERT(p->m_wPly > 0, "UndoNull called at ply 0 (nothing to undo)\n");
+    AMY_ASSERT(m_wPly > 0, "UndoNull called at ply 0 (nothing to undo)\n");
 
-    p->m_nTurn = OPP(p->m_nTurn);
+    m_nTurn = OPP(m_nTurn);
 
     /* Decrement ActLog */
-    p->m_pActLog--;
-    p->m_wPly--;
+    m_pActLog--;
+    m_wPly--;
 
-    AMY_ASSERT(p->m_pActLog->gl_Move == M_NULL,
+    AMY_ASSERT(m_pActLog->gl_Move == M_NULL,
                "UndoNull: log entry being undone is not a null move\n");
 
-    p->m_EnPassant = p->m_pActLog->gl_EnPassant;
-    p->m_ullHKey = p->m_pActLog->gl_HashKey;
+    m_EnPassant = m_pActLog->gl_EnPassant;
+    m_ullHKey = m_pActLog->gl_HashKey;
 }
 
 /*
@@ -1280,31 +1275,30 @@ void CPosition::UndoNull() {
  */
 
 void CPosition::RecalcAttacks() {
-    CPosition *p = this;
     int i;
     CBitBoard tmp;
 
     PrintDebug(9, "RecalcAttacks: performing full attack recalculation\n");
 
     for (unsigned int dwSquare = 0; dwSquare < CBitBoard::SIZE; dwSquare++) {
-        p->m_rgAtkTo[dwSquare] = p->m_rgAtkFr[dwSquare] = {};
+        m_rgAtkTo[dwSquare] = m_rgAtkFr[dwSquare] = {};
     }
 
     for (i = Pawn; i <= King; i++) {
-        p->m_rgMask[White][i] = p->m_rgMask[Black][i] = {};
+        m_rgMask[White][i] = m_rgMask[Black][i] = {};
     }
 
-    p->m_SlidingPieces = {};
+    m_SlidingPieces = {};
 
-    p->m_rgnMaterial[White] = p->m_rgnMaterial[Black] = 0;
-    p->m_rgnNonPawn[White] = p->m_rgnNonPawn[Black] = 0;
-    p->m_rgbMaterialSignature[White] = p->m_rgbMaterialSignature[Black] = 0;
-    p->m_ullHKey = p->m_ullPKey = 0;
+    m_rgnMaterial[White] = m_rgnMaterial[Black] = 0;
+    m_rgnNonPawn[White] = m_rgnNonPawn[Black] = 0;
+    m_rgbMaterialSignature[White] = m_rgbMaterialSignature[Black] = 0;
+    m_ullHKey = m_ullPKey = 0;
 
-    tmp = p->m_rgMask[White][0];
+    tmp = m_rgMask[White][0];
     while (tmp) {
         int i = (tmp).FindSetBit();
-        int nPc = p->m_rgPiece[i];
+        int nPc = m_rgPiece[i];
         /*
          * m_rgMask[White][0] must only have bits set for squares that actually
          * hold a white piece.  A stale bit (nPc <= 0) means the occupancy mask
@@ -1316,68 +1310,68 @@ void CPosition::RecalcAttacks() {
                    "m_rgPiece[%u]=%d (not a white piece)\n",
                    (unsigned)i, (unsigned)i, nPc);
         tmp.ClearLowestBit();
-        p->m_rgMask[White][nPc].SetBit(i);
+        m_rgMask[White][nPc].SetBit(i);
         if (is_sliding(nPc))
-            p->m_SlidingPieces.SetBit(i);
-        p->m_rgnMaterial[White] += Value[nPc];
-        p->m_ullHKey ^= HashKeys[White][nPc][i];
+            m_SlidingPieces.SetBit(i);
+        m_rgnMaterial[White] += Value[nPc];
+        m_ullHKey ^= HashKeys[White][nPc][i];
         if (nPc != Pawn)
-            p->m_rgnNonPawn[White] += Value[nPc];
+            m_rgnNonPawn[White] += Value[nPc];
         else {
-            p->m_ullPKey ^= HashKeys[White][Pawn][i];
+            m_ullPKey ^= HashKeys[White][Pawn][i];
         }
 
         if (nPc != King) {
-            p->m_rgbMaterialSignature[White] |= SIGNATURE_BIT(nPc);
+            m_rgbMaterialSignature[White] |= SIGNATURE_BIT(nPc);
         }
     }
 
-    tmp = p->m_rgMask[Black][0];
+    tmp = m_rgMask[Black][0];
     while (tmp) {
         int i = (tmp).FindSetBit();
-        int nPc = -p->m_rgPiece[i];
+        int nPc = -m_rgPiece[i];
         /*
          * m_rgMask[Black][0] must only have bits set for squares that actually
          * hold a black piece (stored as negative values).  A stale bit means
          * the occupancy mask and the piece array have diverged.
          */
-        AMY_ASSERT(p->m_rgPiece[i] < 0,
+        AMY_ASSERT(m_rgPiece[i] < 0,
                    "RecalcAttacks: m_rgMask[Black][0] bit %u set but "
                    "m_rgPiece[%u]=%d (not a black piece)\n",
-                   (unsigned)i, (unsigned)i, (int)p->m_rgPiece[i]);
+                   (unsigned)i, (unsigned)i, (int)m_rgPiece[i]);
         tmp.ClearLowestBit();
-        p->m_rgMask[Black][nPc].SetBit(i);
+        m_rgMask[Black][nPc].SetBit(i);
         if (is_sliding(nPc))
-            p->m_SlidingPieces.SetBit(i);
-        p->m_rgnMaterial[Black] += Value[nPc];
-        p->m_ullHKey ^= HashKeys[Black][nPc][i];
+            m_SlidingPieces.SetBit(i);
+        m_rgnMaterial[Black] += Value[nPc];
+        m_ullHKey ^= HashKeys[Black][nPc][i];
         if (nPc != Pawn)
-            p->m_rgnNonPawn[Black] += Value[nPc];
+            m_rgnNonPawn[Black] += Value[nPc];
         else {
-            p->m_ullPKey ^= HashKeys[Black][Pawn][i];
+            m_ullPKey ^= HashKeys[Black][Pawn][i];
         }
 
         if (nPc != King) {
-            p->m_rgbMaterialSignature[Black] |= SIGNATURE_BIT(nPc);
+            m_rgbMaterialSignature[Black] |= SIGNATURE_BIT(nPc);
         }
     }
 
-    tmp = p->m_rgMask[White][0];
+    tmp = m_rgMask[White][0];
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        p->AtkSet(p->m_rgPiece[coord.BitOffset()], White, coord);
+        AtkSet(m_rgPiece[coord.BitOffset()], White, coord);
     }
 
-    tmp = p->m_rgMask[Black][0];
+    tmp = m_rgMask[Black][0];
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        p->AtkSet(-p->m_rgPiece[coord.BitOffset()], Black, coord);
+        AtkSet(-m_rgPiece[coord.BitOffset()], Black, coord);
     }
 
-    p->m_rgKingSq[White] = (p->m_rgMask[White][King]).FindSetBitCoord();
-    p->m_rgKingSq[Black] = (p->m_rgMask[Black][King]).FindSetBitCoord();
+    m_rgKingSq[White] = (m_rgMask[White][King]).FindSetBitCoord();
+    m_rgKingSq[Black] = (m_rgMask[Black][King]).FindSetBitCoord();
 
     /*
      * Post-build invariant: every bit recorded in m_rgAtkFr must correspond to
@@ -1387,11 +1381,11 @@ void CPosition::RecalcAttacks() {
      * such a bit it will emit a move from an empty dwSquare and DoMove will assert.
      */
     for (unsigned int nSq = 0; nSq < CBitBoard::SIZE; nSq++) {
-        CBitBoard frBits = p->m_rgAtkFr[nSq];
+        CBitBoard frBits = m_rgAtkFr[nSq];
         while (frBits) {
             const uint16_t nFrom = frBits.FindSetBit();
             frBits.ClearLowestBit();
-            AMY_ASSERT(p->m_rgPiece[nFrom] != Neutral,
+            AMY_ASSERT(m_rgPiece[nFrom] != Neutral,
                        "RecalcAttacks: m_rgAtkFr[%u] bit %u set from empty "
                        "square (from L%d/F%d/R%d attacking L%d/F%d/R%d)\n",
                        (unsigned)nSq, (unsigned)nFrom,
@@ -1411,8 +1405,8 @@ void CPosition::RecalcAttacks() {
      * stale attack row is logged and trapped (no-op in release builds).
      */
     for (unsigned int nFrom = 0; nFrom < CBitBoard::SIZE; nFrom++) {
-        if (p->m_rgAtkTo[nFrom].IsNotEmpty()) {
-            AMY_ASSERT(p->m_rgPiece[nFrom] != Neutral,
+        if (m_rgAtkTo[nFrom].IsNotEmpty()) {
+            AMY_ASSERT(m_rgPiece[nFrom] != Neutral,
                        "RecalcAttacks: m_rgAtkTo[%u] is non-empty but square "
                        "L%d/F%d/R%d is empty\n",
                        (unsigned)nFrom, (int)CSCoord(nFrom).m_nLevel,
@@ -1420,12 +1414,12 @@ void CPosition::RecalcAttacks() {
         }
     }
 
-    p->m_ullHKey ^= HashKeysCastle[p->m_bCastle];
-    if (p->m_nTurn == Black)
-        p->m_ullHKey ^= STMKey;
+    m_ullHKey ^= HashKeysCastle[m_bCastle];
+    if (m_nTurn == Black)
+        m_ullHKey ^= STMKey;
 
-    if (p->m_EnPassant.IsValid()) {
-        p->m_ullHKey ^= HashKeysEP[p->m_EnPassant.BitOffset()];
+    if (m_EnPassant.IsValid()) {
+        m_ullHKey ^= HashKeysEP[m_EnPassant.BitOffset()];
     }
 }
 
@@ -1433,19 +1427,18 @@ void CPosition::RecalcAttacks() {
  * Generate all capturing moves to a square "square"
  */
 void CPosition::GenTo(const CSCoord& squareCoord, heap_t heap) {
-    CPosition *p = this;
     const unsigned int dwSquare = squareCoord.BitOffset();
 
     /*
      * GenTo generates capture moves TO squareCoord.  The target dwSquare must
      * hold a real (non-empty) piece for the capture to be valid.
      */
-    AMY_ASSERT(p->m_rgPiece[dwSquare] != Neutral,
+    AMY_ASSERT(m_rgPiece[dwSquare] != Neutral,
                "GenTo: target square L%d/F%d/R%d (offset %u) is empty\n",
                (int)squareCoord.m_nLevel, (int)squareCoord.m_nFile,
                (int)squareCoord.m_nRank, (unsigned)dwSquare);
 
-    CBitBoard tmp = p->m_rgAtkFr[dwSquare] & p->m_rgMask[p->m_nTurn][0];
+    CBitBoard tmp = m_rgAtkFr[dwSquare] & m_rgMask[m_nTurn][0];
 
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
@@ -1456,16 +1449,16 @@ void CPosition::GenTo(const CSCoord& squareCoord, heap_t heap) {
          * friendly piece.  A stale bit in either table (occupancy mask or attack
          * map) would produce a move out of an empty dwSquare, which DoMove traps.
          */
-        AMY_ASSERT(p->m_rgPiece[coord.BitOffset()] != Neutral &&
-                       SAME_COLOR(p->m_rgPiece[coord.BitOffset()], p->m_nTurn),
+        AMY_ASSERT(m_rgPiece[coord.BitOffset()] != Neutral &&
+                       SAME_COLOR(m_rgPiece[coord.BitOffset()], m_nTurn),
                    "GenTo: m_rgAtkFr/m_rgMask indicate an attack from empty or "
                    "wrong-color square (from L%d/F%d/R%d to L%d/F%d/R%d), "
                    "piece=%d\n",
                    (int)coord.m_nLevel, (int)coord.m_nFile, (int)coord.m_nRank,
                    (int)squareCoord.m_nLevel, (int)squareCoord.m_nFile,
                    (int)squareCoord.m_nRank,
-                   (int)p->m_rgPiece[coord.BitOffset()]);
-        if (TYPE(p->m_rgPiece[coord.BitOffset()]) == Pawn) {
+                   (int)m_rgPiece[coord.BitOffset()]);
+        if (TYPE(m_rgPiece[coord.BitOffset()]) == Pawn) {
             if (is_promo_square(squareCoord)) {
                 append_to_heap(heap, make_promotion(coord, squareCoord, Queen, M_CAPTURE));
                 append_to_heap(heap, make_promotion(coord, squareCoord, Knight, M_CAPTURE));
@@ -1482,17 +1475,16 @@ void CPosition::GenTo(const CSCoord& squareCoord, heap_t heap) {
 }
 
 void CPosition::GenEnpas(heap_t heap) {
-    CPosition *p = this;
     CBitBoard tmp;
 
-    if (!p->m_EnPassant.IsValid())
+    if (!m_EnPassant.IsValid())
         return;
 
-    tmp = p->m_rgAtkFr[p->m_EnPassant.BitOffset()] & p->m_rgMask[p->m_nTurn][Pawn];
+    tmp = m_rgAtkFr[m_EnPassant.BitOffset()] & m_rgMask[m_nTurn][Pawn];
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
-        append_to_heap(heap, make_move(coord, p->m_EnPassant, M_ENPASSANT));
+        append_to_heap(heap, make_move(coord, m_EnPassant, M_ENPASSANT));
     }
 }
 
@@ -1501,7 +1493,6 @@ void CPosition::GenEnpas(heap_t heap) {
  */
 
 void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
-    CPosition *p = this;
     const unsigned int dwSquare = squareCoord.BitOffset();
 
     /*
@@ -1512,18 +1503,18 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
      * which DoMove traps.  Catch the corrupt attack table here, at its point of
      * use, before the bad move is ever generated (no-op in release builds).
      */
-    AMY_ASSERT(p->m_rgPiece[dwSquare] != Neutral &&
-                   SAME_COLOR(p->m_rgPiece[dwSquare], p->m_nTurn),
+    AMY_ASSERT(m_rgPiece[dwSquare] != Neutral &&
+                   SAME_COLOR(m_rgPiece[dwSquare], m_nTurn),
                "GenFrom: source square L%d/F%d/R%d (offset %u) holds no friendly "
                "piece (piece=%d)\n",
                (int)squareCoord.m_nLevel, (int)squareCoord.m_nFile,
                (int)squareCoord.m_nRank, (unsigned)dwSquare,
-               (int)p->m_rgPiece[dwSquare]);
+               (int)m_rgPiece[dwSquare]);
 
-    if (TYPE(p->m_rgPiece[dwSquare]) != Pawn) {
+    if (TYPE(m_rgPiece[dwSquare]) != Pawn) {
         CBitBoard tmp;
 
-        tmp = p->m_rgAtkTo[dwSquare] & ~(p->m_rgMask[White][0] | p->m_rgMask[Black][0]);
+        tmp = m_rgAtkTo[dwSquare] & ~(m_rgMask[White][0] | m_rgMask[Black][0]);
 
         while (tmp) {
             CSCoord coord = (tmp).FindSetBitCoord();
@@ -1536,22 +1527,22 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
          * Castling is only valid on the main board (level 7).
          */
 
-        if (TYPE(p->m_rgPiece[dwSquare]) == King && squareCoord.m_nLevel == MAIN_LEVEL) {
-            if (p->m_bCastle & CastleMask[p->m_nTurn][0]) {
-                /* OK, we might castle king p->m_nTurn */
-                append_to_heap(heap, make_move(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
-                                               p->m_nTurn == White ? CASTLE_G1 : CASTLE_G8,
+        if (TYPE(m_rgPiece[dwSquare]) == King && squareCoord.m_nLevel == MAIN_LEVEL) {
+            if (m_bCastle & CastleMask[m_nTurn][0]) {
+                /* OK, we might castle king m_nTurn */
+                append_to_heap(heap, make_move(m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
+                                               m_nTurn == White ? CASTLE_G1 : CASTLE_G8,
                                                M_SCASTLE));
             }
-            if (p->m_bCastle & CastleMask[p->m_nTurn][1]) {
-                append_to_heap(heap, make_move(p->m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
-                                               p->m_nTurn == White ? CASTLE_C1 : CASTLE_C8,
+            if (m_bCastle & CastleMask[m_nTurn][1]) {
+                append_to_heap(heap, make_move(m_nTurn == White ? CASTLE_E1 : CASTLE_E8,
+                                               m_nTurn == White ? CASTLE_C1 : CASTLE_C8,
                                                M_LCASTLE));
             }
         }
     } else {
         const uint16_t wWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[squareCoord.m_nLevel]);
-        const int nDirection = (p->m_nTurn == White) ? 1 : -1;
+        const int nDirection = (m_nTurn == White) ? 1 : -1;
         const uint16_t nNewRank =
             static_cast<uint16_t>(static_cast<int>(squareCoord.m_nRank) + nDirection);
         if (nNewRank >= wWidth)
@@ -1559,7 +1550,7 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
         CSCoord sqCoord(squareCoord.m_nLevel, squareCoord.m_nFile, nNewRank);
         uint16_t wSq = sqCoord.BitOffset();
 
-        if (p->m_rgPiece[wSq] == Neutral) {
+        if (m_rgPiece[wSq] == Neutral) {
             if (is_promo_square(sqCoord)) {
                 append_to_heap(heap, make_promotion(squareCoord, sqCoord, Queen, 0));
                 append_to_heap(heap, make_promotion(squareCoord, sqCoord, Knight, 0));
@@ -1572,14 +1563,14 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
                  * only allowed on the main board (level h). On every other
                  * level pawns advance a single square at a time. */
                 const uint16_t nHomeRank =
-                    static_cast<uint16_t>((p->m_nTurn == White) ? 1 : (wWidth - 2));
+                    static_cast<uint16_t>((m_nTurn == White) ? 1 : (wWidth - 2));
                 if (squareCoord.m_nLevel == MAIN_LEVEL && squareCoord.m_nRank == nHomeRank) {
                     const uint16_t nDblRank =
                         static_cast<uint16_t>(static_cast<int>(squareCoord.m_nRank) + 2 * nDirection);
                     if (nDblRank < wWidth) {
                         CSCoord dblCoord(squareCoord.m_nLevel, squareCoord.m_nFile, nDblRank);
                         wSq = dblCoord.BitOffset();
-                        if (p->m_rgPiece[wSq] == Neutral) {
+                        if (m_rgPiece[wSq] == Neutral) {
                             append_to_heap(heap, make_move(squareCoord, dblCoord, M_PAWND));
                         }
                     }
@@ -1594,11 +1585,10 @@ void CPosition::GenFrom(const CSCoord& squareCoord, heap_t heap) {
  */
 
 bool CPosition::MayCastle(CMove move) {
-    CPosition *p = this;
     const CSCoord& fromCoord = move.GetFromCoord();
-    const CSCoord kingHome(static_cast<uint16_t>((p->m_nTurn == White) ? CASTLE_E1 : CASTLE_E8));
+    const CSCoord kingHome(static_cast<uint16_t>((m_nTurn == White) ? CASTLE_E1 : CASTLE_E8));
     /* Sometimes there might be a legal castling move, but for the
-       wrong p->m_nTurn, probably from the Countermove table */
+       wrong m_nTurn, probably from the Countermove table */
     if (fromCoord.m_nLevel != kingHome.m_nLevel || fromCoord.m_nFile != kingHome.m_nFile ||
         fromCoord.m_nRank != kingHome.m_nRank)
         return false;
@@ -1610,51 +1600,51 @@ bool CPosition::MayCastle(CMove move) {
      * rights are set, so verify the pieces are really there before allowing a
      * castle.  Without this, DoCastle would shuffle non-existent pieces and
      * corrupt the board (mask bits set on empty squares). */
-    if (TYPE(p->m_rgPiece[kingHome.BitOffset()]) != King ||
-        !SAME_COLOR(p->m_rgPiece[kingHome.BitOffset()], p->m_nTurn))
+    if (TYPE(m_rgPiece[kingHome.BitOffset()]) != King ||
+        !SAME_COLOR(m_rgPiece[kingHome.BitOffset()], m_nTurn))
         return false;
 
-    if (p->InCheck(p->m_nTurn))
+    if (InCheck(m_nTurn))
         return false;
 
-    /* king p->m_nTurn castling */
-    if (move.IsShortCastle() && (p->m_bCastle & CastleMask[p->m_nTurn][0])) {
-        int nFs = (p->m_nTurn == White ? CASTLE_F1 : CASTLE_F8);
-        int nGs = (p->m_nTurn == White ? CASTLE_G1 : CASTLE_G8);
-        int nHs = (p->m_nTurn == White ? CASTLE_H1 : CASTLE_H8);
+    /* king m_nTurn castling */
+    if (move.IsShortCastle() && (m_bCastle & CastleMask[m_nTurn][0])) {
+        int nFs = (m_nTurn == White ? CASTLE_F1 : CASTLE_F8);
+        int nGs = (m_nTurn == White ? CASTLE_G1 : CASTLE_G8);
+        int nHs = (m_nTurn == White ? CASTLE_H1 : CASTLE_H8);
 
         /* The king-side rook must actually be on its home square */
-        if (TYPE(p->m_rgPiece[nHs]) != Rook ||
-            !SAME_COLOR(p->m_rgPiece[nHs], p->m_nTurn))
+        if (TYPE(m_rgPiece[nHs]) != Rook ||
+            !SAME_COLOR(m_rgPiece[nHs], m_nTurn))
             return false;
 
         /* Check if f and g square are empty */
-        if (p->m_rgPiece[nFs] == Neutral && p->m_rgPiece[nGs] == Neutral) {
+        if (m_rgPiece[nFs] == Neutral && m_rgPiece[nGs] == Neutral) {
             /* Check if f and g square are not attacked by opponent */
-            if ((p->m_rgAtkFr[nFs] | p->m_rgAtkFr[nGs]) & p->m_rgMask[OPP(p->m_nTurn)][0])
+            if ((m_rgAtkFr[nFs] | m_rgAtkFr[nGs]) & m_rgMask[OPP(m_nTurn)][0])
                 return false;
             else
                 return true;
         }
     }
 
-    /* queen p->m_nTurn castling */
-    if (move.IsLongCastle() && (p->m_bCastle & CastleMask[p->m_nTurn][1])) {
-        int nAs = (p->m_nTurn == White ? CASTLE_A1 : CASTLE_A8);
-        int nBs = (p->m_nTurn == White ? CASTLE_B1 : CASTLE_B8);
-        int nCs = (p->m_nTurn == White ? CASTLE_C1 : CASTLE_C8);
-        int nDs = (p->m_nTurn == White ? CASTLE_D1 : CASTLE_D8);
+    /* queen m_nTurn castling */
+    if (move.IsLongCastle() && (m_bCastle & CastleMask[m_nTurn][1])) {
+        int nAs = (m_nTurn == White ? CASTLE_A1 : CASTLE_A8);
+        int nBs = (m_nTurn == White ? CASTLE_B1 : CASTLE_B8);
+        int nCs = (m_nTurn == White ? CASTLE_C1 : CASTLE_C8);
+        int nDs = (m_nTurn == White ? CASTLE_D1 : CASTLE_D8);
 
         /* The queen-side rook must actually be on its home square */
-        if (TYPE(p->m_rgPiece[nAs]) != Rook ||
-            !SAME_COLOR(p->m_rgPiece[nAs], p->m_nTurn))
+        if (TYPE(m_rgPiece[nAs]) != Rook ||
+            !SAME_COLOR(m_rgPiece[nAs], m_nTurn))
             return false;
 
         /* Check if b, c and d square are empty */
-        if (p->m_rgPiece[nBs] == Neutral && p->m_rgPiece[nCs] == Neutral &&
-            p->m_rgPiece[nDs] == Neutral) {
+        if (m_rgPiece[nBs] == Neutral && m_rgPiece[nCs] == Neutral &&
+            m_rgPiece[nDs] == Neutral) {
             /* Check if c and d square are not attacked by opponent */
-            if ((p->m_rgAtkFr[nCs] | p->m_rgAtkFr[nDs]) & p->m_rgMask[OPP(p->m_nTurn)][0])
+            if ((m_rgAtkFr[nCs] | m_rgAtkFr[nDs]) & m_rgMask[OPP(m_nTurn)][0])
                 return false;
             else
                 return true;
@@ -1669,7 +1659,6 @@ bool CPosition::MayCastle(CMove move) {
  */
 
 bool CPosition::LegalMove(CMove move) {
-    CPosition *p = this;
     const CSCoord& frCoord = move.GetFromCoord();
     if (!frCoord.IsValid())
         return false;
@@ -1685,11 +1674,11 @@ bool CPosition::LegalMove(CMove move) {
         return false;
 
     /* There must be a piece on the square */
-    if (!SAME_COLOR(p->m_rgPiece[wFr], p->m_nTurn))
+    if (!SAME_COLOR(m_rgPiece[wFr], m_nTurn))
         return false;
 
     /* if a promotion, moving piece must be a pawn */
-    if (move.HasPromotion() && TYPE(p->m_rgPiece[wFr]) != Pawn)
+    if (move.HasPromotion() && TYPE(m_rgPiece[wFr]) != Pawn)
         return false;
 
     /* A promotion is only legal when the destination is an actual promotion
@@ -1708,7 +1697,7 @@ bool CPosition::LegalMove(CMove move) {
     /* if the move is a pawn move to the 1st/8th rank, it must be
      * be a promotion.
      */
-    if (TYPE(p->m_rgPiece[wFr]) == Pawn && !move.HasPromotion()) {
+    if (TYPE(m_rgPiece[wFr]) == Pawn && !move.HasPromotion()) {
         const uint16_t wLevelWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[toCoord.m_nLevel]);
         if (toCoord.m_nRank == 0 || toCoord.m_nRank == (wLevelWidth - 1))
             return false;
@@ -1719,8 +1708,8 @@ bool CPosition::LegalMove(CMove move) {
          * must attack that square
          */
 
-        if (!SAME_COLOR(p->m_rgPiece[wTo], OPP(p->m_nTurn)) ||
-            !p->m_rgAtkTo[wFr].TstBit(wTo)) {
+        if (!SAME_COLOR(m_rgPiece[wTo], OPP(m_nTurn)) ||
+            !m_rgAtkTo[wFr].TstBit(wTo)) {
             return false;
         }
         return true;
@@ -1729,25 +1718,25 @@ bool CPosition::LegalMove(CMove move) {
          * the enpassant square
          */
 
-        if (!p->m_EnPassant.IsValid())
+        if (!m_EnPassant.IsValid())
             return false;
-        if (TYPE(p->m_rgPiece[wFr]) != Pawn || wTo != p->m_EnPassant.BitOffset())
+        if (TYPE(m_rgPiece[wFr]) != Pawn || wTo != m_EnPassant.BitOffset())
             return false;
-        if (!p->m_rgAtkTo[wFr].TstBit(wTo))
+        if (!m_rgAtkTo[wFr].TstBit(wTo))
             return false;
 
         return true;
     } else if (move.IsCastle()) {
         /* Call the castling test routine */
-        return p->MayCastle(move);
+        return MayCastle(move);
     } else {
         /* target sqaure must be empty */
-        if (p->m_rgPiece[wTo] != Neutral)
+        if (m_rgPiece[wTo] != Neutral)
             return false;
 
-        if (TYPE(p->m_rgPiece[wFr]) != Pawn) {
+        if (TYPE(m_rgPiece[wFr]) != Pawn) {
             /* if no pawn, we must attack to square */
-            if (!p->m_rgAtkTo[wFr].TstBit(wTo))
+            if (!m_rgAtkTo[wFr].TstBit(wTo))
                 return false;
             if (move.IsPawnDoublePush())
                 return false;
@@ -1756,7 +1745,7 @@ bool CPosition::LegalMove(CMove move) {
             /* use NextPos array to check if legal move */
             const uint16_t wLevelWidth =
                 static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[frCoord.m_nLevel]);
-            const int nRankStep = (p->m_nTurn == White ? 1 : -1);
+            const int nRankStep = (m_nTurn == White ? 1 : -1);
             int nTtRank = frCoord.m_nRank + nRankStep;
             if (nTtRank < 0 || nTtRank >= wLevelWidth)
                 return false;
@@ -1770,12 +1759,12 @@ bool CPosition::LegalMove(CMove move) {
                  * referring to a pawn on another level - so legality stays
                  * level-aware. */
                 const uint16_t nHomeRank = static_cast<uint16_t>(
-                    (p->m_nTurn == White) ? 1 : (wLevelWidth - 2));
+                    (m_nTurn == White) ? 1 : (wLevelWidth - 2));
                 if (frCoord.m_nLevel != MAIN_LEVEL ||
                     frCoord.m_nRank != nHomeRank) {
                     return false;
                 }
-                if (p->m_rgPiece[wTt] != Neutral)
+                if (m_rgPiece[wTt] != Neutral)
                     return false;
                 nTtRank += nRankStep;
                 if (nTtRank < 0 || nTtRank >= wLevelWidth)
@@ -1787,10 +1776,10 @@ bool CPosition::LegalMove(CMove move) {
             if (wTt != wTo)
                 return false;
 
-            if (p->m_nTurn == White && toCoord.m_nRank == (wLevelWidth - 1) &&
+            if (m_nTurn == White && toCoord.m_nRank == (wLevelWidth - 1) &&
                 !move.HasPromotion())
                 return false;
-            if (p->m_nTurn == Black && toCoord.m_nRank == 0 && !move.HasPromotion())
+            if (m_nTurn == Black && toCoord.m_nRank == 0 && !move.HasPromotion())
                 return false;
 
             return true;
@@ -1813,7 +1802,6 @@ bool CPosition::LegalMove(CMove move) {
  */
 
 bool CPosition::IsCheckingMove(CMove move) {
-    CPosition *p = this;
     /*
      * A move that captures the opponent's king is illegal and must never be
      * passed to DoMove (which asserts on king captures). Abstractly it is not
@@ -1822,7 +1810,7 @@ bool CPosition::IsCheckingMove(CMove move) {
      * left in check. Report it as a non-checking move so callers that use this
      * predicate (e.g. futility pruning) never make the move.
      */
-    if (p->IsKingCapture(move)) {
+    if (IsKingCapture(move)) {
         const CSCoord &frCoord = move.GetFromCoord();
         const CSCoord &toCoord = move.GetToCoord();
         PrintDebug(9,
@@ -1832,9 +1820,9 @@ bool CPosition::IsCheckingMove(CMove move) {
                    toCoord.m_nLevel, toCoord.m_nFile, toCoord.m_nRank);
         return false;
     }
-    p->DoMove(move);
-    const bool fGivesCheck = p->InCheck(p->m_nTurn);
-    p->UndoMove(move);
+    DoMove(move);
+    const bool fGivesCheck = InCheck(m_nTurn);
+    UndoMove(move);
     return fGivesCheck;
 }
 
@@ -1857,50 +1845,49 @@ bool CPosition::IsKingCapture(CMove move) const {
  */
 
 void CPosition::GenChecks(heap_t heap) {
-    CPosition *p = this;
     CBitBoard tmp;
     CBitBoard fr;
-    int nKp = p->m_rgKingSq[OPP(p->m_nTurn)].BitOffset();
+    int nKp = m_rgKingSq[OPP(m_nTurn)].BitOffset();
     CBitBoard *pIp = InterPath[nKp];
-    CBitBoard fsq = p->m_rgMask[p->m_nTurn][0];
-    CBitBoard all = (p->m_rgMask[White][0] | p->m_rgMask[Black][0]);
+    CBitBoard fsq = m_rgMask[m_nTurn][0];
+    CBitBoard all = (m_rgMask[White][0] | m_rgMask[Black][0]);
 
     /* First find all blockers, i.e. pieces that give check when they move
      * from their current square
      */
 
-    tmp = (p->m_rgMask[p->m_nTurn][Bishop] | p->m_rgMask[p->m_nTurn][Queen]) & BishopEPM[nKp];
+    tmp = (m_rgMask[m_nTurn][Bishop] | m_rgMask[m_nTurn][Queen]) & BishopEPM[nKp];
 
     while (tmp) {
         int i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        if (pIp[i] && !(pIp[i] & p->m_rgMask[OPP(p->m_nTurn)][0])) {
-            CBitBoard tmp2 = p->m_rgMask[p->m_nTurn][0] & pIp[i];
+        if (pIp[i] && !(pIp[i] & m_rgMask[OPP(m_nTurn)][0])) {
+            CBitBoard tmp2 = m_rgMask[m_nTurn][0] & pIp[i];
 
             if ((tmp2).CountBits() == 1) {
                 CSCoord coord = (tmp2).FindSetBitCoord();
 
                 if (fsq.TstBit(coord.BitOffset())) {
-                    p->GenFrom(coord, heap);
+                    GenFrom(coord, heap);
                     fsq.ClrBit(coord.BitOffset());
                 }
             }
         }
     }
 
-    tmp = (p->m_rgMask[p->m_nTurn][Rook] | p->m_rgMask[p->m_nTurn][Queen]) & RookEPM[nKp];
+    tmp = (m_rgMask[m_nTurn][Rook] | m_rgMask[m_nTurn][Queen]) & RookEPM[nKp];
 
     while (tmp) {
         int i = (tmp).FindSetBit();
         tmp.ClearLowestBit();
-        if (pIp[i] && !(pIp[i] & p->m_rgMask[OPP(p->m_nTurn)][0])) {
-            CBitBoard tmp2 = p->m_rgMask[p->m_nTurn][0] & pIp[i];
+        if (pIp[i] && !(pIp[i] & m_rgMask[OPP(m_nTurn)][0])) {
+            CBitBoard tmp2 = m_rgMask[m_nTurn][0] & pIp[i];
 
             if ((tmp2).CountBits() == 1) {
                 CSCoord coord = (tmp2).FindSetBitCoord();
 
                 if (fsq.TstBit(coord.BitOffset())) {
-                    p->GenFrom(coord, heap);
+                    GenFrom(coord, heap);
                     fsq.ClrBit(coord.BitOffset());
                 }
             }
@@ -1911,12 +1898,12 @@ void CPosition::GenChecks(heap_t heap) {
     tmp = BishopEPM[nKp];
     tmp &= ~all;
 
-    fr = p->m_rgMask[p->m_nTurn][Bishop] | p->m_rgMask[p->m_nTurn][Queen];
+    fr = m_rgMask[m_nTurn][Bishop] | m_rgMask[m_nTurn][Queen];
     fr &= fsq;
 
     while (fr) {
         int nSq = (fr).FindSetBit();
-        CBitBoard tmp2 = p->m_rgAtkTo[nSq] & tmp;
+        CBitBoard tmp2 = m_rgAtkTo[nSq] & tmp;
         fr.ClearLowestBit();
 
         while (tmp2) {
@@ -1932,12 +1919,12 @@ void CPosition::GenChecks(heap_t heap) {
     tmp = RookEPM[nKp];
     tmp &= ~all;
 
-    fr = p->m_rgMask[p->m_nTurn][Rook] | p->m_rgMask[p->m_nTurn][Queen];
+    fr = m_rgMask[m_nTurn][Rook] | m_rgMask[m_nTurn][Queen];
     fr &= fsq;
 
     while (fr) {
         int nSq = (fr).FindSetBit();
-        CBitBoard tmp2 = p->m_rgAtkTo[nSq] & tmp;
+        CBitBoard tmp2 = m_rgAtkTo[nSq] & tmp;
         fr.ClearLowestBit();
 
         while (tmp2) {
@@ -1953,7 +1940,7 @@ void CPosition::GenChecks(heap_t heap) {
     tmp = KnightEPM[nKp];
     tmp &= ~all;
 
-    fr = p->m_rgMask[p->m_nTurn][Knight];
+    fr = m_rgMask[m_nTurn][Knight];
     fr &= fsq;
 
     while (fr) {
@@ -1961,7 +1948,7 @@ void CPosition::GenChecks(heap_t heap) {
         CBitBoard tmp2;
 
         fr.ClearLowestBit();
-        tmp2 = p->m_rgAtkTo[nSq] & tmp;
+        tmp2 = m_rgAtkTo[nSq] & tmp;
 
         while (tmp2) {
             int nSq2 = (tmp2).FindSetBit();
@@ -1974,23 +1961,23 @@ void CPosition::GenChecks(heap_t heap) {
      * last find pawn checks
      */
 
-    tmp = (p->m_nTurn == White) ? BPawnEPM[nKp] : WPawnEPM[nKp];
-    tmp &= ~(p->m_rgMask[White][0] | p->m_rgMask[Black][0]);
+    tmp = (m_nTurn == White) ? BPawnEPM[nKp] : WPawnEPM[nKp];
+    tmp &= ~(m_rgMask[White][0] | m_rgMask[Black][0]);
 
     while (tmp) {
         int nSq = (tmp).FindSetBit();
         tmp.ClearLowestBit();
 
-        if (p->m_nTurn == White) {
+        if (m_nTurn == White) {
             const CSCoord sqCoord(static_cast<uint16_t>(nSq));
             const int nPawnOff = nSq - static_cast<int>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
-            if (nPawnOff >= 0 && p->m_rgPiece[nPawnOff] == Pawn) {
+            if (nPawnOff >= 0 && m_rgPiece[nPawnOff] == Pawn) {
                 append_to_heap(heap, make_move(nPawnOff, nSq, 0));
             }
         } else {
             const CSCoord sqCoord(static_cast<uint16_t>(nSq));
             const int nPawnOff = nSq + static_cast<int>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
-            if (nPawnOff < static_cast<int>(CBitBoard::SIZE) && p->m_rgPiece[nPawnOff] == -Pawn) {
+            if (nPawnOff < static_cast<int>(CBitBoard::SIZE) && m_rgPiece[nPawnOff] == -Pawn) {
                 append_to_heap(heap, make_move(nPawnOff, nSq, 0));
             }
         }
@@ -2004,19 +1991,18 @@ void CPosition::GenChecks(heap_t heap) {
  */
 
 int CPosition::Repeated(int nMode) {
-    CPosition *p = this;
     int i, nCnt = 0;
     struct SGameLog *pGl;
 
-    if (p->m_wPly == 0)
+    if (m_wPly == 0)
         return 0;
 
-    if (p->m_pActLog->gl_IrrevCount >= 100)
+    if (m_pActLog->gl_IrrevCount >= 100)
         return 3;
 
-    pGl = p->m_pActLog - 1;
-    for (i = p->m_pActLog->gl_IrrevCount; i > 0; i--, pGl--) {
-        if (pGl->gl_HashKey == p->m_ullHKey) {
+    pGl = m_pActLog - 1;
+    for (i = m_pActLog->gl_IrrevCount; i > 0; i--, pGl--) {
+        if (pGl->gl_HashKey == m_ullHKey) {
             if (nMode)
                 nCnt++;
             else
@@ -2041,13 +2027,12 @@ int CPosition::Repeated(int nMode) {
  *   the pointer to the generated string (buffer)
  */
 char *CPosition::SAN(CMove move, char *pszBuffer) {
-    CPosition *p = this;
     char *pszX = pszBuffer;
 
     const CSCoord& toCoord = move.GetToCoord();
     const CSCoord& frCoord = move.GetFromCoord();
     const uint16_t wFr = frCoord.BitOffset();
-    int8_t nTp = TYPE(p->m_rgPiece[wFr]);
+    int8_t nTp = TYPE(m_rgPiece[wFr]);
 
     if (move.IsCastle()) {
         *(pszX++) = 'O';
@@ -2082,14 +2067,14 @@ char *CPosition::SAN(CMove move, char *pszBuffer) {
         }
     }
 
-    p->DoMove(move);
-    if (p->InCheck(p->m_nTurn)) {
-        if (!p->LegalMoves(NULL))
+    DoMove(move);
+    if (InCheck(m_nTurn)) {
+        if (!LegalMoves(NULL))
             *(pszX++) = '#';
         else
             *(pszX++) = '+';
     }
-    p->UndoMove(move);
+    UndoMove(move);
 
     *pszX = '\0';
     return pszBuffer;
@@ -2193,9 +2178,8 @@ CMove parse_gsan_internal(CPosition *p, char *pszSan, heap_t heap) {
 }
 
 CMove CPosition::ParseGSAN(char *pszSan) {
-    CPosition *p = this;
     heap_t heap = allocate_heap();
-    CMove move = parse_gsan_internal(p, pszSan, heap);
+    CMove move = parse_gsan_internal(this, pszSan, heap);
     free_heap(heap);
 
     return move;
@@ -2463,9 +2447,8 @@ static CMove parse_san_with_heap(CPosition *p, const char *pszSan, heap_t heap) 
 }
 
 CMove CPosition::ParseSAN(const char *pszSan) {
-    CPosition *p = this;
     heap_t heap = allocate_heap();
-    CMove move = parse_san_with_heap(p, pszSan, heap);
+    CMove move = parse_san_with_heap(this, pszSan, heap);
     free_heap(heap);
     return move;
 }
@@ -2647,26 +2630,25 @@ CMove ParseSANList(char *pszSan, Color nSide, CMove *pMvs, int nCnt, int *pmap) 
  */
 
 void CPosition::PLegalMoves(heap_t heap) {
-    CPosition *p = this;
     CBitBoard tmp;
 
-    tmp = p->m_rgMask[OPP(p->m_nTurn)][0];
+    tmp = m_rgMask[OPP(m_nTurn)][0];
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
 
-        p->GenTo(coord, heap);
+        GenTo(coord, heap);
     }
 
-    tmp = p->m_rgMask[p->m_nTurn][0];
+    tmp = m_rgMask[m_nTurn][0];
     while (tmp) {
         CSCoord coord = (tmp).FindSetBitCoord();
         tmp.ClearLowestBit();
 
-        p->GenFrom(coord, heap);
+        GenFrom(coord, heap);
     }
 
-    p->GenEnpas(heap);
+    GenEnpas(heap);
 }
 
 /**
@@ -2759,7 +2741,6 @@ void legal_moves_internal(CPosition *p, heap_t heap, heap_t pTmpHeap) {
 }
 
 int CPosition::LegalMoves(heap_t heap) {
-    CPosition *p = this;
     heap_t pTmpHeap = allocate_heap();
     heap_t hDestination = heap;
 
@@ -2767,7 +2748,7 @@ int CPosition::LegalMoves(heap_t heap) {
         hDestination = allocate_heap();
     }
 
-    legal_moves_internal(p, hDestination, pTmpHeap);
+    legal_moves_internal(this, hDestination, pTmpHeap);
 
     int nCnt =
         hDestination->current_section->end - hDestination->current_section->start;
@@ -2786,7 +2767,6 @@ int CPosition::LegalMoves(heap_t heap) {
  */
 
 void CPosition::ShowPosition() {
-    CPosition *p = this;
     const int nNumLevels = static_cast<int>(CBitBoard::NUM_LEVELS);
     for (int nLevel = nNumLevels - 1; nLevel >= 0; nLevel--) {
         const int nWidth = CBitBoard::LEVEL_WIDTH[nLevel];
@@ -2806,21 +2786,21 @@ void CPosition::ShowPosition() {
 
         for (int nRk = nWidth - 1; nRk >= 0; nRk--) {
             char cIndicator =
-                ((nRk == nWidth - 1) && (p->m_nTurn)) || ((nRk == 0) && (!p->m_nTurn)) ? '>' : ' ';
+                ((nRk == nWidth - 1) && (m_nTurn)) || ((nRk == 0) && (!m_nTurn)) ? '>' : ' ';
             Print(0, "    %c %c ", cIndicator, '1' + nRk);
             for (int nFl = 0; nFl < nWidth; nFl++) {
                 const int nSquare = static_cast<int>(CSCoord(nLevel, nFl, nRk));
 
                 Print(0, "|");
-                if (p->m_EnPassant.IsValid() && nSquare == p->m_EnPassant.BitOffset())
+                if (m_EnPassant.IsValid() && nSquare == m_EnPassant.BitOffset())
                     Print(0, "<E>");
                 else {
-                    if (p->m_rgPiece[nSquare] < 0)
+                    if (m_rgPiece[nSquare] < 0)
                         Print(0, "*");
                     else
                         Print(0, " ");
-                    Print(0, "%c", PieceName[TYPE(p->m_rgPiece[nSquare])]);
-                    if (p->m_rgPiece[nSquare] < 0)
+                    Print(0, "%c", PieceName[TYPE(m_rgPiece[nSquare])]);
+                    if (m_rgPiece[nSquare] < 0)
                         Print(0, "*");
                     else
                         Print(0, " ");
@@ -2828,33 +2808,33 @@ void CPosition::ShowPosition() {
             }
             if (nRk == 4) {
                 int nBit;
-                Print(0, "|   Black (%5d, %5d)  ", p->m_rgnMaterial[Black],
-                      p->m_rgnNonPawn[Black]);
+                Print(0, "|   Black (%5d, %5d)  ", m_rgnMaterial[Black],
+                      m_rgnNonPawn[Black]);
                 for (nBit = 0; nBit < 5; nBit++) {
                     Print(0, "%c",
-                          (p->m_rgbMaterialSignature[Black] & (1 << nBit))
+                          (m_rgbMaterialSignature[Black] & (1 << nBit))
                               ? PieceName[nBit + 1]
                               : '.');
                 }
                 Print(0, "\n");
             } else if (nRk == 3) {
                 int nBit;
-                Print(0, "|   White (%5d, %5d)  ", p->m_rgnMaterial[White],
-                      p->m_rgnNonPawn[White]);
+                Print(0, "|   White (%5d, %5d)  ", m_rgnMaterial[White],
+                      m_rgnNonPawn[White]);
                 for (nBit = 0; nBit < 5; nBit++) {
                     Print(0, "%c",
-                          (p->m_rgbMaterialSignature[White] & (1 << nBit))
+                          (m_rgbMaterialSignature[White] & (1 << nBit))
                               ? PieceName[nBit + 1]
                               : '.');
                 }
                 Print(0, "\n");
             } else if (nRk == 6) {
-                Print(0, "|   Hashkey: %llx\n", p->m_ullHKey);
+                Print(0, "|   Hashkey: %llx\n", m_ullHKey);
             } else if (nRk == 1) {
-                Print(0, "|   Index: %d\n", RECOGNIZER_INDEX(p));
+                Print(0, "|   Index: %d\n", RECOGNIZER_INDEX(this));
             } else if (nRk == 0) {
-                Print(0, "|   MateThreat: %d %d\n", MateThreat(p, White),
-                      MateThreat(p, Black));
+                Print(0, "|   MateThreat: %d %d\n", MateThreat(this, White),
+                      MateThreat(this, Black));
             } else {
                 Print(0, "|\n");
             }
@@ -2879,26 +2859,25 @@ void CPosition::ShowPosition() {
  */
 
 void CPosition::ShowMoves() {
-    CPosition *p = this;
     unsigned int i;
     char szSanBuffer[16];
 
     heap_t heap = allocate_heap();
 
     push_section(heap);
-    p->LegalMoves(heap);
+    LegalMoves(heap);
 
     for (i = heap->current_section->start; i < heap->current_section->end;
          i++) {
         CMove move = heap->data[i];
-        Print(0, "%s ", p->SAN(move, szSanBuffer));
-        if (p->IsCheckingMove(move))
+        Print(0, "%s ", SAN(move, szSanBuffer));
+        if (IsCheckingMove(move))
             Print(0, "(check) ");
-        if (!p->LegalMove(move)) {
+        if (!LegalMove(move)) {
             Print(0, "(rejected?!) ");
         }
         if (move.IsCapture() || move.IsEnPassant()) {
-            Print(0, "(%d) ", SwapOff(p, move));
+            Print(0, "(%d) ", SwapOff(this, move));
         }
     }
     Print(0, "\n");
@@ -2906,14 +2885,14 @@ void CPosition::ShowMoves() {
     pop_section(heap);
 
     push_section(heap);
-    p->GenChecks(heap);
+    GenChecks(heap);
 
     if (heap->current_section->end > heap->current_section->start) {
         Print(0, "Checks: ");
         for (i = heap->current_section->start; i < heap->current_section->end;
              i++) {
             CMove move = heap->data[i];
-            Print(0, "%s ", p->SAN(move, szSanBuffer));
+            Print(0, "%s ", SAN(move, szSanBuffer));
         }
         Print(0, "\n");
     }
@@ -3252,7 +3231,6 @@ static void ReadEPD(CPosition *p, const char *pszEpdInput) {
  */
 
 char *CPosition::MakeEPD() {
-    CPosition *p = this;
     static char szEpdbuffer[2048];
     char szWName[] = " PNBRQK";
     char szBName[] = " pnbrqk";
@@ -3267,7 +3245,7 @@ char *CPosition::MakeEPD() {
             for (unsigned int j = 0; j < dwWidth; j++) {
                 const int nSquare =
                     static_cast<int>(CSCoord(static_cast<int>(dwLevel), static_cast<int>(j), i));
-                if (p->m_rgPiece[nSquare] == Neutral) {
+                if (m_rgPiece[nSquare] == Neutral) {
                     bCnt++;
                     if (j == (dwWidth - 1))
                         *(pszX++) = '0' + bCnt;
@@ -3275,10 +3253,10 @@ char *CPosition::MakeEPD() {
                     if (bCnt)
                         *(pszX++) = '0' + bCnt;
                     bCnt = 0;
-                    if (p->m_rgPiece[nSquare] > 0)
-                        *(pszX++) = szWName[TYPE(p->m_rgPiece[nSquare])];
+                    if (m_rgPiece[nSquare] > 0)
+                        *(pszX++) = szWName[TYPE(m_rgPiece[nSquare])];
                     else
-                        *(pszX++) = szBName[TYPE(p->m_rgPiece[nSquare])];
+                        *(pszX++) = szBName[TYPE(m_rgPiece[nSquare])];
                 }
             }
             if ((dwLevel == (CBitBoard::NUM_LEVELS - 1)) && (i == 0))
@@ -3289,27 +3267,27 @@ char *CPosition::MakeEPD() {
                 *(pszX++) = '/';
         }
     }
-    if (p->m_nTurn == White)
+    if (m_nTurn == White)
         *(pszX++) = 'w';
     else
         *(pszX++) = 'b';
     *(pszX++) = ' ';
 
-    if (p->m_bCastle & CastleMask[White][0])
+    if (m_bCastle & CastleMask[White][0])
         *(pszX++) = 'K';
-    if (p->m_bCastle & CastleMask[White][1])
+    if (m_bCastle & CastleMask[White][1])
         *(pszX++) = 'Q';
-    if (p->m_bCastle & CastleMask[Black][0])
+    if (m_bCastle & CastleMask[Black][0])
         *(pszX++) = 'k';
-    if (p->m_bCastle & CastleMask[Black][1])
+    if (m_bCastle & CastleMask[Black][1])
         *(pszX++) = 'q';
-    if (!p->m_bCastle)
+    if (!m_bCastle)
         *(pszX++) = '-';
     *(pszX++) = ' ';
 
-    if (p->m_EnPassant.IsValid()) {
-        *(pszX++) = 'a' + p->m_EnPassant.m_nFile;
-        *(pszX++) = '1' + p->m_EnPassant.m_nRank;
+    if (m_EnPassant.IsValid()) {
+        *(pszX++) = 'a' + m_EnPassant.m_nFile;
+        *(pszX++) = '1' + m_EnPassant.m_nRank;
     } else
         *(pszX++) = '-';
     *(pszX++) = '\0';
@@ -3319,7 +3297,7 @@ char *CPosition::MakeEPD() {
         strcat(szEpdbuffer, " bm");
         for (i = 0; goodmove[i] != M_NONE; i++) {
             strcat(szEpdbuffer, " ");
-            strcat(szEpdbuffer, p->SAN(goodmove[i], szSanBuffer));
+            strcat(szEpdbuffer, SAN(goodmove[i], szSanBuffer));
         }
         strcat(szEpdbuffer, ";");
     }
@@ -3329,7 +3307,7 @@ char *CPosition::MakeEPD() {
         strcat(szEpdbuffer, " am");
         for (i = 0; badmove[i] != M_NONE; i++) {
             strcat(szEpdbuffer, " ");
-            strcat(szEpdbuffer, p->SAN(badmove[i], szSanBuffer));
+            strcat(szEpdbuffer, SAN(badmove[i], szSanBuffer));
         }
         strcat(szEpdbuffer, ";");
     }
@@ -3344,22 +3322,21 @@ char *CPosition::MakeEPD() {
  */
 
 const char *CPosition::GameEnd() {
-    CPosition *p = this;
-    if (p->m_pActLog->gl_IrrevCount >= 100) {
+    if (m_pActLog->gl_IrrevCount >= 100) {
         return "1/2-1/2 {50 move rule}";
     }
 
-    if (p->Repeated(true) >= 2) {
+    if (Repeated(true) >= 2) {
         return "1/2-1/2 {Draw by repetition}";
     }
 
-    if (p->m_rgnMaterial[White] == 0 && p->m_rgnMaterial[Black] == 0) {
+    if (m_rgnMaterial[White] == 0 && m_rgnMaterial[Black] == 0) {
         return "1/2-1/2 {Insufficient material}";
     }
 
-    if (!p->LegalMoves(NULL)) {
-        if (p->InCheck(p->m_nTurn)) {
-            if (p->m_nTurn == Black) {
+    if (!LegalMoves(NULL)) {
+        if (InCheck(m_nTurn)) {
+            if (m_nTurn == Black) {
                 return "1-0 {White mates}";
             } else {
                 return "0-1 {Black mates}";
@@ -3385,49 +3362,48 @@ static bool has_only_bishops(const CPosition *p, Color nSide) {
  * Check if this is a theoretical draw
  */
 bool CPosition::CheckDraw() const {
-    const CPosition *p = this;
-    if (p->m_rgnMaterial[Black] == 0) {
-        if (p->m_rgnNonPawn[White] == 0) {
-            if (!(p->m_rgMask[White][Pawn] & NotAFileMask)) {
-                if (p->m_rgMask[Black][King] & CornerMaskA8)
+    if (m_rgnMaterial[Black] == 0) {
+        if (m_rgnNonPawn[White] == 0) {
+            if (!(m_rgMask[White][Pawn] & NotAFileMask)) {
+                if (m_rgMask[Black][King] & CornerMaskA8)
                     return true;
             }
-            if (!(p->m_rgMask[White][Pawn] & NotHFileMask)) {
-                if (p->m_rgMask[Black][King] & CornerMaskH8)
+            if (!(m_rgMask[White][Pawn] & NotHFileMask)) {
+                if (m_rgMask[Black][King] & CornerMaskH8)
                     return true;
             }
-        } else if (has_only_bishops(p, White)) {
-            if (!(p->m_rgMask[White][Pawn] & NotAFileMask) &&
-                (p->m_rgMask[Black][King] & CornerMaskA8)) {
-                if (p->m_rgMask[White][Bishop] & BlackSquaresMask)
+        } else if (has_only_bishops(this, White)) {
+            if (!(m_rgMask[White][Pawn] & NotAFileMask) &&
+                (m_rgMask[Black][King] & CornerMaskA8)) {
+                if (m_rgMask[White][Bishop] & BlackSquaresMask)
                     return true;
             }
-            if (!(p->m_rgMask[White][Pawn] & NotHFileMask) &&
-                (p->m_rgMask[Black][King] & CornerMaskH8)) {
-                if (p->m_rgMask[White][Bishop] & WhiteSquaresMask)
+            if (!(m_rgMask[White][Pawn] & NotHFileMask) &&
+                (m_rgMask[Black][King] & CornerMaskH8)) {
+                if (m_rgMask[White][Bishop] & WhiteSquaresMask)
                     return true;
             }
         }
     }
-    if (p->m_rgnMaterial[White] == 0) {
-        if (p->m_rgnNonPawn[Black] == 0) {
-            if (!(p->m_rgMask[Black][Pawn] & NotAFileMask)) {
-                if (p->m_rgMask[White][King] & CornerMaskA1)
+    if (m_rgnMaterial[White] == 0) {
+        if (m_rgnNonPawn[Black] == 0) {
+            if (!(m_rgMask[Black][Pawn] & NotAFileMask)) {
+                if (m_rgMask[White][King] & CornerMaskA1)
                     return true;
             }
-            if (!(p->m_rgMask[Black][Pawn] & NotHFileMask)) {
-                if (p->m_rgMask[White][King] & CornerMaskH1)
+            if (!(m_rgMask[Black][Pawn] & NotHFileMask)) {
+                if (m_rgMask[White][King] & CornerMaskH1)
                     return true;
             }
-        } else if (has_only_bishops(p, Black)) {
-            if (!(p->m_rgMask[Black][Pawn] & NotAFileMask) &&
-                (p->m_rgMask[White][King] & CornerMaskA1)) {
-                if (p->m_rgMask[Black][Bishop] & WhiteSquaresMask)
+        } else if (has_only_bishops(this, Black)) {
+            if (!(m_rgMask[Black][Pawn] & NotAFileMask) &&
+                (m_rgMask[White][King] & CornerMaskA1)) {
+                if (m_rgMask[Black][Bishop] & WhiteSquaresMask)
                     return true;
             }
-            if (!(p->m_rgMask[Black][Pawn] & NotHFileMask) &&
-                (p->m_rgMask[White][King] & CornerMaskH1)) {
-                if (p->m_rgMask[Black][Bishop] & BlackSquaresMask)
+            if (!(m_rgMask[Black][Pawn] & NotHFileMask) &&
+                (m_rgMask[White][King] & CornerMaskH1)) {
+                if (m_rgMask[Black][Bishop] & BlackSquaresMask)
                     return true;
             }
         }
