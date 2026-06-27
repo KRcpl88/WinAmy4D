@@ -59,7 +59,7 @@ int ComputerSide;
  * Implements the state machine.
  */
 void StateMachine(void) {
-    const char *gameend;
+    const char *pszGameend;
 
     NewGame(NULL);
 
@@ -82,10 +82,10 @@ void StateMachine(void) {
             if (!ReadLine(InputBuffer, 1023)) {
                 State = STATE_END;
             } else {
-                struct SCommand *command = ParseInput(InputBuffer);
-                if (command) {
-                    ExecuteCommand(command);
-                    if (command->move != M_NONE) {
+                struct SCommand *pCommand = ParseInput(InputBuffer);
+                if (pCommand) {
+                    ExecuteCommand(pCommand);
+                    if (pCommand->move != M_NONE) {
                         if (!ForceMode)
                             State = STATE_CALCULATING;
                     }
@@ -129,9 +129,9 @@ void StateMachine(void) {
          * Check for game termination
          */
 
-        gameend = CurrentPosition->GameEnd();
-        if (gameend != NULL) {
-            Print(0, "%s\n", gameend);
+        pszGameend = CurrentPosition->GameEnd();
+        if (pszGameend != NULL) {
+            Print(0, "%s\n", pszGameend);
             if (State == STATE_ANALYZING) {
                 State = STATE_WAITING;
             }

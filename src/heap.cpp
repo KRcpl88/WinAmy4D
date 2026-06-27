@@ -45,12 +45,12 @@ heap_t allocate_heap(void) {
     heap->data = data;
     heap->capacity = DATA_SIZE;
 
-    heap_section_t sections =
+    heap_section_t pSections =
         (heap_section_t)safe_malloc(SECTION_SIZE * sizeof(struct heap_section));
 
-    heap->sections_start = sections;
-    heap->sections_end = sections + SECTION_SIZE;
-    heap->current_section = sections;
+    heap->sections_start = pSections;
+    heap->sections_end = pSections + SECTION_SIZE;
+    heap->current_section = pSections;
 
     heap->current_section->start = 0;
     heap->current_section->end = 0;

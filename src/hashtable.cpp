@@ -89,12 +89,12 @@ static std::atomic<int> ScoreMutex[MUTEX_COUNT];
  * Acquire a read lock for the given pointer. There can be many read locks,
  * but only a single write lock.
  */
-static void acquire_read_lock(std::atomic<int> *data) {
+static void acquire_read_lock(std::atomic<int> *pData) {
     for (;;) {
-        int val = data->load();
-        if (val >= 0) {
-            bool result = data->compare_exchange_strong(val, val + 1);
-            if (result)
+        int nVal = pData->load();
+        if (nVal >= 0) {
+            bool fResult = pData->compare_exchange_strong(nVal, nVal + 1);
+            if (fResult)
                 return;
         }
     }
@@ -103,12 +103,12 @@ static void acquire_read_lock(std::atomic<int> *data) {
 /**
  * Release the read lock.
  */
-static void release_read_lock(std::atomic<int> *data) {
+static void release_read_lock(std::atomic<int> *pData) {
     for (;;) {
-        int val = data->load();
-        if (val > 0) {
-            bool result = data->compare_exchange_strong(val, val - 1);
-            if (result)
+        int nVal = pData->load();
+        if (nVal > 0) {
+            bool fResult = pData->compare_exchange_strong(nVal, nVal - 1);
+            if (fResult)
                 return;
         }
     }
@@ -118,12 +118,12 @@ static void release_read_lock(std::atomic<int> *data) {
  * Acquire a write lock for the given pointer. There can be many read locks,
  * but only a single write lock.
  */
-static void acquire_write_lock(std::atomic<int> *data) {
+static void acquire_write_lock(std::atomic<int> *pData) {
     for (;;) {
-        int val = data->load();
-        if (val == 0) {
-            bool result = data->compare_exchange_strong(val, -1);
-            if (result)
+        int nVal = pData->load();
+        if (nVal == 0) {
+            bool fResult = pData->compare_exchange_strong(nVal, -1);
+            if (fResult)
                 return;
         }
     }
@@ -132,12 +132,12 @@ static void acquire_write_lock(std::atomic<int> *data) {
 /**
  * Release the write lock.
  */
-static void release_write_lock(std::atomic<int> *data) {
+static void release_write_lock(std::atomic<int> *pData) {
     for (;;) {
-        int val = data->load();
-        if (val == -1) {
-            bool result = data->compare_exchange_strong(val, 0);
-            if (result)
+        int nVal = pData->load();
+        if (nVal == -1) {
+            bool fResult = pData->compare_exchange_strong(nVal, 0);
+            if (fResult)
                 return;
         }
     }
@@ -148,16 +148,16 @@ static void release_write_lock(std::atomic<int> *data) {
 /**
  * Gets an entry from the global transposition table.
  */
-static inline struct HTEntry GetHTEntry(hash_t key) {
+static inline struct HTEntry GetHTEntry(hash_t qwKey) {
 #if MP
-    std::atomic<int> *mutex = TranspositionMutex + ((key >> 32) & MUTEX_MASK);
-    acquire_read_lock(mutex);
+    std::atomic<int> *pMutex = TranspositionMutex + ((qwKey >> 32) & MUTEX_MASK);
+    acquire_read_lock(pMutex);
 #endif /* MP */
 
-    struct HTEntry entry = TranspositionTable[(key >> 32) & HT_Mask];
+    struct HTEntry entry = TranspositionTable[(qwKey >> 32) & HT_Mask];
 
 #if MP
-    release_read_lock(mutex);
+    release_read_lock(pMutex);
 #endif /* MP */
 
     return entry;
@@ -166,68 +166,68 @@ static inline struct HTEntry GetHTEntry(hash_t key) {
 /**
  * Puts an entry to the global transposition table.
  */
-static inline void PutHTEntry(hash_t key, struct HTEntry entry) {
+static inline void PutHTEntry(hash_t qwKey, struct HTEntry entry) {
 #if MP
-    std::atomic<int> *mutex = TranspositionMutex + ((key >> 32) & MUTEX_MASK);
-    acquire_write_lock(mutex);
+    std::atomic<int> *pMutex = TranspositionMutex + ((qwKey >> 32) & MUTEX_MASK);
+    acquire_write_lock(pMutex);
 #endif /* MP */
 
-    TranspositionTable[(key >> 32) & HT_Mask] = entry;
+    TranspositionTable[(qwKey >> 32) & HT_Mask] = entry;
 
 #if MP
-    release_write_lock(mutex);
+    release_write_lock(pMutex);
 #endif /* MP */
 }
 
 /**
  *
  */
-static inline bool PutHTEntryBestEffort(hash_t key, struct HTEntry entry,
-                                        int depth) {
-    const hash_t key1 = key;
-    const hash_t key2 = key + 1;
+static inline bool PutHTEntryBestEffort(hash_t qwKey, struct HTEntry entry,
+                                        int nDepth) {
+    const hash_t qwKey1 = qwKey;
+    const hash_t qwKey2 = qwKey + 1;
 
-    struct HTEntry entry1 = GetHTEntry(key1);
-    struct HTEntry entry2 = GetHTEntry(key2);
+    struct HTEntry entry1 = GetHTEntry(qwKey1);
+    struct HTEntry entry2 = GetHTEntry(qwKey2);
 
     /* Overwrite any matching entry. */
-    if (entry1.ht_Signature == (unsigned int)key) {
-        PutHTEntry(key1, entry);
+    if (entry1.ht_Signature == (unsigned int)qwKey) {
+        PutHTEntry(qwKey1, entry);
         return true;
     }
-    if (entry2.ht_Signature == (unsigned int)key) {
-        PutHTEntry(key2, entry);
+    if (entry2.ht_Signature == (unsigned int)qwKey) {
+        PutHTEntry(qwKey2, entry);
         return true;
     }
 
     /* Overwrite entries with lower depth. */
     if (entry1.ht_Depth <= entry2.ht_Depth) {
-        if (entry1.ht_Depth <= depth) {
-            PutHTEntry(key1, entry);
+        if (entry1.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey1, entry);
             return true;
         }
-        if (entry2.ht_Depth <= depth) {
-            PutHTEntry(key2, entry);
+        if (entry2.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey2, entry);
             return true;
         }
     } else {
-        if (entry2.ht_Depth <= depth) {
-            PutHTEntry(key2, entry);
+        if (entry2.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey2, entry);
             return true;
         }
-        if (entry1.ht_Depth <= depth) {
-            PutHTEntry(key1, entry);
+        if (entry1.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey1, entry);
             return true;
         }
     }
 
     /* Overwrite entries from older generation. */
     if ((entry1.ht_Flags & HT_AGE) != HTGeneration) {
-        PutHTEntry(key1, entry);
+        PutHTEntry(qwKey1, entry);
         return true;
     }
     if ((entry2.ht_Flags & HT_AGE) != HTGeneration) {
-        PutHTEntry(key2, entry);
+        PutHTEntry(qwKey2, entry);
         return true;
     }
 
@@ -235,108 +235,108 @@ static inline bool PutHTEntryBestEffort(hash_t key, struct HTEntry entry,
 }
 
 #if MP
-LookupResult ProbeHT(hash_t key, int *score, int depth, CMove *bestm,
-                     bool *threat, int ply, int exclusiveP,
-                     struct HTEntry *localHT)
+LookupResult ProbeHT(hash_t qwKey, int *pScore, int nDepth, CMove *pBestm,
+                     bool *pThreat, int nPly, int nExclusiveP,
+                     struct HTEntry *pLocalHT)
 #else
-LookupResult ProbeHT(hash_t key, int *score, int depth, CMove *bestm,
-                     bool *threat, int ply)
+LookupResult ProbeHT(hash_t qwKey, int *pScore, int nDepth, CMove *pBestm,
+                     bool *pThreat, int nPly)
 #endif
 {
-    hash_t effective_key = key;
-    struct HTEntry h = GetHTEntry(effective_key);
-    bool found = h.ht_Signature == (unsigned int)key;
+    hash_t qwEffectiveKey = qwKey;
+    struct HTEntry h = GetHTEntry(qwEffectiveKey);
+    bool fFound = h.ht_Signature == (unsigned int)qwKey;
 
-    if (!found) {
-        effective_key++;
-        h = GetHTEntry(effective_key);
-        found = h.ht_Signature == (unsigned int)key;
+    if (!fFound) {
+        qwEffectiveKey++;
+        h = GetHTEntry(qwEffectiveKey);
+        fFound = h.ht_Signature == (unsigned int)qwKey;
     }
 
-    int result = Useless;
+    int nResult = Useless;
 
 #if MP
-    if (localHT != NULL && !found) {
-        h = localHT[(key >> 32) & L_HT_Mask];
-        found = h.ht_Signature == (unsigned int)key;
+    if (pLocalHT != NULL && !fFound) {
+        h = pLocalHT[(qwKey >> 32) & L_HT_Mask];
+        fFound = h.ht_Signature == (unsigned int)qwKey;
     }
 #endif
 
-    if (found) {
-        *bestm = h.ht_Move;
-        *threat = (h.ht_Flags & HT_THREAT);
+    if (fFound) {
+        *pBestm = h.ht_Move;
+        *pThreat = (h.ht_Flags & HT_THREAT);
 
 #if MP
-        if ((int)h.ht_Depth == depth && exclusiveP &&
+        if ((int)h.ht_Depth == nDepth && nExclusiveP &&
             (h.ht_Flags & HT_NCPU) > 0) {
 
-            result = OnEvaluation;
+            nResult = OnEvaluation;
 
         } else
 #endif
 
-            if ((int)h.ht_Depth >= depth) {
-            *score = h.ht_Score;
+            if ((int)h.ht_Depth >= nDepth) {
+            *pScore = h.ht_Score;
 
             /*
              * Correct a mate score. See comment in 'StoreHT'.
              */
 
-            if (*score > CMLIMIT) {
-                *score -= ply;
-            } else if (*score < -CMLIMIT) {
-                *score += ply;
+            if (*pScore > CMLIMIT) {
+                *pScore -= nPly;
+            } else if (*pScore < -CMLIMIT) {
+                *pScore += nPly;
             }
 
             if (h.ht_Flags & HT_EXACT) {
-                result = ExactScore;
+                nResult = ExactScore;
             } else if (h.ht_Flags & HT_LBOUND) {
-                result = LowerBound;
+                nResult = LowerBound;
             } else if (h.ht_Flags & HT_UBOUND) {
-                result = UpperBound;
+                nResult = UpperBound;
             }
 
 #if MP
-            if ((int)h.ht_Depth == depth) {
+            if ((int)h.ht_Depth == nDepth) {
 
                 /*
                  * increment processor count
                  */
 
                 h.ht_Flags += HT_NCPU_INCREMENT;
-                PutHTEntry(effective_key, h);
+                PutHTEntry(qwEffectiveKey, h);
             }
 #endif /* MP */
 
         } else {
-            result = Useful;
+            nResult = Useful;
         }
     }
 #if MP
     else {
-        h.ht_Depth = (short)depth;
+        h.ht_Depth = (short)nDepth;
         h.ht_Flags = HT_NCPU_INCREMENT;
-        h.ht_Signature = (int)key;
-        PutHTEntryBestEffort(key, h, depth);
+        h.ht_Signature = (int)qwKey;
+        PutHTEntryBestEffort(qwKey, h, nDepth);
     }
 #endif /* MP */
 
-    return static_cast<LookupResult>(result);
+    return static_cast<LookupResult>(nResult);
 }
 
-LookupResult ProbePT(hash_t key, int *score, struct PawnFacts *pf) {
+LookupResult ProbePT(hash_t qwKey, int *pScore, struct PawnFacts *pf) {
 #if MP
-    acquire_read_lock(PawnMutex + ((key >> 32) & MUTEX_MASK));
+    acquire_read_lock(PawnMutex + ((qwKey >> 32) & MUTEX_MASK));
 #endif /* MP */
 
-    struct PTEntry h = PawnTable[(key >> 32) & PT_Mask];
+    struct PTEntry h = PawnTable[(qwKey >> 32) & PT_Mask];
 
 #if MP
-    release_read_lock(PawnMutex + ((key >> 32) & MUTEX_MASK));
+    release_read_lock(PawnMutex + ((qwKey >> 32) & MUTEX_MASK));
 #endif /* MP */
 
-    if (h.pt_Signature == (unsigned int)key && h.pt_Score != PT_INVALID) {
-        *score = h.pt_Score;
+    if (h.pt_Signature == (unsigned int)qwKey && h.pt_Score != PT_INVALID) {
+        *pScore = h.pt_Score;
         *pf = h.pt_PawnFacts;
         return Useful;
     }
@@ -344,51 +344,51 @@ LookupResult ProbePT(hash_t key, int *score, struct PawnFacts *pf) {
     return Useless;
 }
 
-LookupResult ProbeST(hash_t key, int *score) {
+LookupResult ProbeST(hash_t qwKey, int *pScore) {
 #if MP
-    acquire_read_lock(ScoreMutex + ((key >> 32) & MUTEX_MASK));
+    acquire_read_lock(ScoreMutex + ((qwKey >> 32) & MUTEX_MASK));
 #endif /* MP */
 
-    struct STEntry h = ScoreTable[(key >> 32) & ST_Mask];
+    struct STEntry h = ScoreTable[(qwKey >> 32) & ST_Mask];
 
 #if MP
-    release_read_lock(ScoreMutex + ((key >> 32) & MUTEX_MASK));
+    release_read_lock(ScoreMutex + ((qwKey >> 32) & MUTEX_MASK));
 #endif /* MP */
 
-    if (h.st_Signature == (unsigned int)key && h.st_Score != PT_INVALID) {
-        *score = h.st_Score;
+    if (h.st_Signature == (unsigned int)qwKey && h.st_Score != PT_INVALID) {
+        *pScore = h.st_Score;
         return Useful;
     }
 
     return Useless;
 }
 
-void StoreHT(hash_t key, int best, int alpha, int beta, CMove bestm, int depth,
-             int threat, int ply
+void StoreHT(hash_t qwKey, int best, int nAlpha, int beta, CMove bestm, int nDepth,
+             int nThreat, int nPly
 #if MP
              ,
-             struct HTEntry *localHT
+             struct HTEntry *pLocalHT
 #endif
 ) {
-    hash_t effective_key = key;
-    struct HTEntry entry = GetHTEntry(effective_key);
-    bool found = entry.ht_Signature == (unsigned int)key;
+    hash_t qwEffectiveKey = qwKey;
+    struct HTEntry entry = GetHTEntry(qwEffectiveKey);
+    bool fFound = entry.ht_Signature == (unsigned int)qwKey;
 
-    if (!found) {
-        effective_key++;
-        entry = GetHTEntry(effective_key);
-        found = entry.ht_Signature == (unsigned int)key;
+    if (!fFound) {
+        qwEffectiveKey++;
+        entry = GetHTEntry(qwEffectiveKey);
+        fFound = entry.ht_Signature == (unsigned int)qwKey;
     }
 
     HTStoreTried++;
 
 #if MP
-    if (!found) {
-        entry = localHT[(key >> 32) & L_HT_Mask];
+    if (!fFound) {
+        entry = pLocalHT[(qwKey >> 32) & L_HT_Mask];
     }
 #endif
 
-    int reduced = best;
+    int nReduced = best;
 
     /*
      * Handling of mate scores is a bit tricky.
@@ -398,76 +398,76 @@ void StoreHT(hash_t key, int best, int alpha, int beta, CMove bestm, int depth,
      */
 
     if (best > CMLIMIT) {
-        reduced += ply;
+        nReduced += nPly;
     } else if (best < -CMLIMIT) {
-        reduced -= ply;
+        nReduced -= nPly;
     }
 
 #if MP
-    if (entry.ht_Signature == (unsigned int)key && depth == entry.ht_Depth) {
+    if (entry.ht_Signature == (unsigned int)qwKey && nDepth == entry.ht_Depth) {
         if ((entry.ht_Flags & HT_NCPU) > 0) {
             entry.ht_Flags = (entry.ht_Flags & HT_NCPU) - HT_NCPU_INCREMENT;
         }
     } else {
-        entry.ht_Signature = (unsigned int)key;
+        entry.ht_Signature = (unsigned int)qwKey;
         entry.ht_Flags = 0;
     }
 #else
-    entry.ht_Signature = (unsigned int)key;
+    entry.ht_Signature = (unsigned int)qwKey;
 #endif /* MP */
 
     entry.ht_Move = bestm;
-    entry.ht_Depth = (short)depth;
-    entry.ht_Score = reduced;
+    entry.ht_Depth = (short)nDepth;
+    entry.ht_Score = nReduced;
 #if MP
     entry.ht_Flags |= (short)HTGeneration;
 #else
     entry.ht_Flags = (short)HTGeneration;
 #endif /* MP */
-    if (best <= alpha)
+    if (best <= nAlpha)
         entry.ht_Flags |= HT_UBOUND;
     else if (best >= beta)
         entry.ht_Flags |= HT_LBOUND;
     else
         entry.ht_Flags |= HT_EXACT;
 
-    if (threat)
+    if (nThreat)
         entry.ht_Flags |= HT_THREAT;
 
-    bool success = PutHTEntryBestEffort(key, entry, depth);
-    if (!success) {
+    bool fSuccess = PutHTEntryBestEffort(qwKey, entry, nDepth);
+    if (!fSuccess) {
         HTStoreFailed++;
 #if MP
-        localHT[(key >> 32) & L_HT_Mask] = entry;
+        pLocalHT[(qwKey >> 32) & L_HT_Mask] = entry;
 #endif
     }
 }
 
-void StorePT(hash_t key, int score, struct PawnFacts *pf) {
-    struct PTEntry h = {(unsigned int)key, score, *pf};
+void StorePT(hash_t qwKey, int nScore, struct PawnFacts *pf) {
+    struct PTEntry h = {(unsigned int)qwKey, nScore, *pf};
 
 #if MP
-    acquire_write_lock(PawnMutex + ((key >> 32) & MUTEX_MASK));
+    acquire_write_lock(PawnMutex + ((qwKey >> 32) & MUTEX_MASK));
 #endif /* MP */
 
-    PawnTable[(key >> 32) & PT_Mask] = h;
+    PawnTable[(qwKey >> 32) & PT_Mask] = h;
 
 #if MP
-    release_write_lock(PawnMutex + ((key >> 32) & MUTEX_MASK));
+    release_write_lock(PawnMutex + ((qwKey >> 32) & MUTEX_MASK));
 #endif /* MP */
 }
 
-void StoreST(hash_t key, int score) {
-    struct STEntry h = {(unsigned int)key, score};
+void StoreST(hash_t qwKey, int nScore) {
+    struct STEntry h = {(unsigned int)qwKey, nScore};
 
 #if MP
-    acquire_write_lock(ScoreMutex + ((key >> 32) & MUTEX_MASK));
+    acquire_write_lock(ScoreMutex + ((qwKey >> 32) & MUTEX_MASK));
 #endif /* MP */
 
-    ScoreTable[(key >> 32) & ST_Mask] = h;
+    ScoreTable[(qwKey >> 32) & ST_Mask] = h;
 
 #if MP
-    release_write_lock(ScoreMutex + ((key >> 32) & MUTEX_MASK));
+    release_write_lock(ScoreMutex + ((qwKey >> 32) & MUTEX_MASK));
 #endif /* MP */
 }
 
@@ -496,16 +496,16 @@ void AgeHashTable(void) {
 void ClearPawnHashTable(void) {
     unsigned int i;
     struct PTEntry *ph;
-    struct STEntry *sh;
+    struct STEntry *pSh;
 
     ph = PawnTable;
     for (i = 0; i < PT_Size; i++, ph++) {
         ph->pt_Score = PT_INVALID;
     }
 
-    sh = ScoreTable;
-    for (i = 0; i < ST_Size; i++, sh++) {
-        sh->st_Score = PT_INVALID;
+    pSh = ScoreTable;
+    for (i = 0; i < ST_Size; i++, pSh++) {
+        pSh->st_Score = PT_INVALID;
     }
 }
 
@@ -527,14 +527,14 @@ static void FreeHT(void) {
 }
 
 void AllocateHT(void) {
-    static bool registered_free_ht = false;
+    static bool s_fRegisteredFreeHt = false;
 
     /*
      * Register atexit() handler to free hashtable memory automatically
      */
 
-    if (!registered_free_ht) {
-        registered_free_ht = true;
+    if (!s_fRegisteredFreeHt) {
+        s_fRegisteredFreeHt = true;
         atexit(FreeHT);
     }
 
@@ -577,68 +577,68 @@ void AllocateHT(void) {
 
 void ShowHashStatistics(void) {
     unsigned int i;
-    unsigned int cnt = 0;
+    unsigned int dwCnt = 0;
     struct HTEntry *h = TranspositionTable;
 
     for (i = 0; i < HT_Size; i++, h++) {
         if ((h->ht_Flags & HT_AGE) == HTGeneration)
-            cnt++;
+            dwCnt++;
     }
 
-    char buf1[16], buf2[16];
+    char szBuf1[16], szBuf2[16];
 
     Print(1, "Hashtable 1:  entries = %s, use = %s (%d %%)\n",
-          FormatCount(i, buf1, sizeof(buf1)),
-          FormatCount(cnt, buf2, sizeof(buf2)), Percentage(cnt, i));
+          FormatCount(i, szBuf1, sizeof(szBuf1)),
+          FormatCount(dwCnt, szBuf2, sizeof(szBuf2)), Percentage(dwCnt, i));
     Print(1, "              store failed = %s (%d %%)\n",
-          FormatCount(HTStoreFailed, buf1, sizeof(buf1)),
+          FormatCount(HTStoreFailed, szBuf1, sizeof(szBuf1)),
           Percentage(HTStoreFailed, HTStoreTried));
 }
 
-void GuessHTSizes(char *size) {
-    size_t last = strlen(size) - 1;
-    int64_t total_size;
-    int64_t tmp;
+void GuessHTSizes(char *pszSize) {
+    size_t qwLast = strlen(pszSize) - 1;
+    int64_t nTotalSize;
+    int64_t nTmp;
 
-    if (size[last] == 'k') {
-        total_size = atoi(size) * 1024L;
-    } else if (size[last] == 'm') {
-        total_size = atoi(size) * 1024L * 1024L;
+    if (pszSize[qwLast] == 'k') {
+        nTotalSize = atoi(pszSize) * 1024L;
+    } else if (pszSize[qwLast] == 'm') {
+        nTotalSize = atoi(pszSize) * 1024L * 1024L;
     } else {
-        total_size = atoi(size) * 1024;
+        nTotalSize = atoi(pszSize) * 1024;
     }
 
-    if (total_size < 64 * 1024) {
+    if (nTotalSize < 64 * 1024) {
         Print(0, "I need at least 64k of hashtables.\n");
-        total_size = 64 * 1024;
+        nTotalSize = 64 * 1024;
     }
 
-    tmp = total_size * 4 / 5;
+    nTmp = nTotalSize * 4 / 5;
 
     for (HT_Bits = 1; HT_Bits < 32; HT_Bits++) {
-        int64_t tmp2 =
+        int64_t nTmp2 =
             ((int64_t)1 << (HT_Bits + 1)) * (int64_t)sizeof(struct HTEntry);
-        if (tmp2 > tmp)
+        if (nTmp2 > nTmp)
             break;
     }
 
-    total_size -= ((int64_t)1 << HT_Bits) * (int64_t)sizeof(struct HTEntry);
+    nTotalSize -= ((int64_t)1 << HT_Bits) * (int64_t)sizeof(struct HTEntry);
 
-    tmp = 3 * total_size / 4;
+    nTmp = 3 * nTotalSize / 4;
 
     for (ST_Bits = 1; ST_Bits < 32; ST_Bits++) {
-        int64_t tmp2 =
+        int64_t nTmp2 =
             ((int64_t)1 << (ST_Bits + 1)) * (int64_t)sizeof(struct STEntry);
-        if (tmp2 > tmp)
+        if (nTmp2 > nTmp)
             break;
     }
 
-    total_size -= ((int64_t)1 << ST_Bits) * (int64_t)sizeof(struct STEntry);
+    nTotalSize -= ((int64_t)1 << ST_Bits) * (int64_t)sizeof(struct STEntry);
 
     for (PT_Bits = 1; PT_Bits < 32; PT_Bits++) {
-        int64_t tmp2 =
+        int64_t nTmp2 =
             ((int64_t)1 << (PT_Bits + 1)) * (int64_t)sizeof(struct PTEntry);
-        if (tmp2 > total_size)
+        if (nTmp2 > nTotalSize)
             break;
     }
 }
@@ -666,4 +666,3 @@ void HashInit(void) {
 
     STMKey = Random64();
 }
-

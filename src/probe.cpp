@@ -21,11 +21,11 @@
 
 int EGTBProbe, EGTBProbeSucc;
 
-void InitEGTB(char *tbpath) { (void)tbpath; }
+void InitEGTB(char *pszTbpath) { (void)pszTbpath; }
 
-int ProbeEGTB(const CPosition *p, int *score, int ply) {
+int ProbeEGTB(const CPosition *p, int *pScore, int ply) {
     (void)p;
-    (void)score;
+    (void)pScore;
     (void)ply;
     return 0;
 }

@@ -1,9 +1,9 @@
 #include "move.h"
 
-CMove::CMove(const CSCoord& from, const CSCoord& to, std::uint32_t flags)
+CMove::CMove(const CSCoord& from, const CSCoord& to, std::uint32_t dwFlags)
     : m_From(from), m_To(to),
       m_dwBits(static_cast<std::uint32_t>(from.GetBitField()) |
-              (static_cast<std::uint32_t>(to.GetBitField()) << 16) | flags) {
+              (static_cast<std::uint32_t>(to.GetBitField()) << 16) | dwFlags) {
 }
 
 const CSCoord& CMove::GetFromCoord() const {
@@ -57,29 +57,29 @@ bool CMove::IsTactical() const {
     return HasFlag(FLAG_TACTICAL);
 }
 
-void CMove::SetCapture(bool value) {
-    SetFlag(FLAG_CAPTURE, value);
+void CMove::SetCapture(bool fValue) {
+    SetFlag(FLAG_CAPTURE, fValue);
 }
 
-void CMove::SetShortCastle(bool value) {
-    SetFlag(FLAG_SCASTLE, value);
+void CMove::SetShortCastle(bool fValue) {
+    SetFlag(FLAG_SCASTLE, fValue);
 }
 
-void CMove::SetLongCastle(bool value) {
-    SetFlag(FLAG_LCASTLE, value);
+void CMove::SetLongCastle(bool fValue) {
+    SetFlag(FLAG_LCASTLE, fValue);
 }
 
-void CMove::SetPawnDoublePush(bool value) {
-    SetFlag(FLAG_PAWND, value);
+void CMove::SetPawnDoublePush(bool fValue) {
+    SetFlag(FLAG_PAWND, fValue);
 }
 
-void CMove::SetEnPassant(bool value) {
-    SetFlag(FLAG_ENPASSANT, value);
+void CMove::SetEnPassant(bool fValue) {
+    SetFlag(FLAG_ENPASSANT, fValue);
 }
 
-void CMove::SetPromotionType(int promotionType) {
+void CMove::SetPromotionType(int nPromotionType) {
     m_dwBits &= ~PROMOTION_MASK;
-    m_dwBits |= (static_cast<std::uint32_t>(promotionType) << PROMOTION_OFFSET) &
+    m_dwBits |= (static_cast<std::uint32_t>(nPromotionType) << PROMOTION_OFFSET) &
               PROMOTION_MASK;
 }
 
@@ -95,14 +95,14 @@ bool CMove::operator!=(const CMove& other) const {
     return !(*this == other);
 }
 
-bool CMove::HasFlag(std::uint32_t mask) const {
-    return (m_dwBits & mask) != 0;
+bool CMove::HasFlag(std::uint32_t dwMask) const {
+    return (m_dwBits & dwMask) != 0;
 }
 
-void CMove::SetFlag(std::uint32_t mask, bool value) {
-    if (value) {
-        m_dwBits |= mask;
+void CMove::SetFlag(std::uint32_t dwMask, bool fValue) {
+    if (fValue) {
+        m_dwBits |= dwMask;
     } else {
-        m_dwBits &= ~mask;
+        m_dwBits &= ~dwMask;
     }
 }

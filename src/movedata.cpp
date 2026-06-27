@@ -310,10 +310,9 @@ void InitMoves(void) {
     // Initialize entire NextSQ table to -1 (no next square).
     // The 3D entries are populated later by InitNextSQ() (called from InitAll),
     // once the ATTACK_DELTA tables are available.
-    for (unsigned int sqIndex = 0; sqIndex < CBitBoard::SIZE; sqIndex++) {
-        for (unsigned int sq2Index = 0; sq2Index < CBitBoard::SIZE; sq2Index++) {
-            NextSQ[sqIndex][sq2Index] = 0xffff;
+    for (unsigned int dwSqIndex = 0; dwSqIndex < CBitBoard::SIZE; dwSqIndex++) {
+        for (unsigned int dwSq2Index = 0; dwSq2Index < CBitBoard::SIZE; dwSq2Index++) {
+            NextSQ[dwSqIndex][dwSq2Index] = 0xffff;
         }
     }
 }
-

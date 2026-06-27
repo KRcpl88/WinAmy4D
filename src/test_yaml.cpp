@@ -39,365 +39,365 @@
 #include "yaml.h"
 
 static void test_simple_dict(void) {
-    const char *payload = "key: value\n";
+    const char *pszPayload = "key: value\n";
 
-    struct YamlNode *result = parse_yaml(payload);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
 
-    assert(result != NULL);
+    assert(pResult != NULL);
 
-    assert(result->type == DICT);
+    assert(pResult->type == DICT);
 
-    tree_node_t *tree = (tree_node_t *)result->payload;
+    tree_node_t *pTree = (tree_node_t *)pResult->payload;
 
-    size_t value_len;
-    struct YamlNode *value = (YamlNode *)lookup_value(tree, "key", 4, &value_len);
+    size_t qwValueLen;
+    struct YamlNode *pValue = (YamlNode *)lookup_value(pTree, "key", 4, &qwValueLen);
 
-    assert(value != NULL);
-    assert(value_len == sizeof(struct YamlNode));
+    assert(pValue != NULL);
+    assert(qwValueLen == sizeof(struct YamlNode));
 
-    assert(value->type == SCALAR);
+    assert(pValue->type == SCALAR);
 
-    assert(!strcmp("value", (const char *)value->payload));
+    assert(!strcmp("value", (const char *)pValue->payload));
 
-    free(value);
+    free(pValue);
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 static void test_nested_dict(void) {
-    const char *payload = "level1:\n"
+    const char *pszPayload = "level1:\n"
                     "  level2: value";
 
-    struct YamlNode *result = parse_yaml(payload);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
 
-    assert(result != NULL);
-    assert(result->type == DICT);
+    assert(pResult != NULL);
+    assert(pResult->type == DICT);
 
-    tree_node_t *tree = (tree_node_t *)result->payload;
+    tree_node_t *pTree = (tree_node_t *)pResult->payload;
 
-    size_t value_len;
-    struct YamlNode *value = (YamlNode *)lookup_value(tree, "level1", 7, &value_len);
+    size_t qwValueLen;
+    struct YamlNode *pValue = (YamlNode *)lookup_value(pTree, "level1", 7, &qwValueLen);
 
-    assert(value != NULL);
-    assert(value_len == sizeof(struct YamlNode));
+    assert(pValue != NULL);
+    assert(qwValueLen == sizeof(struct YamlNode));
 
-    assert(value->type == DICT);
+    assert(pValue->type == DICT);
 
-    tree_node_t *tree2 = (tree_node_t *)value->payload;
+    tree_node_t *pTree2 = (tree_node_t *)pValue->payload;
 
-    size_t value2_len;
-    struct YamlNode *value2 = (YamlNode *)lookup_value(tree2, "level2", 7, &value2_len);
+    size_t qwValue2Len;
+    struct YamlNode *pValue2 = (YamlNode *)lookup_value(pTree2, "level2", 7, &qwValue2Len);
 
-    assert(value2 != NULL);
+    assert(pValue2 != NULL);
 
-    assert(value2->type == SCALAR);
-    assert(!strcmp("value", (const char *)value2->payload));
+    assert(pValue2->type == SCALAR);
+    assert(!strcmp("value", (const char *)pValue2->payload));
 
-    free(value);
-    free(value2);
-    free_yaml_node(result);
+    free(pValue);
+    free(pValue2);
+    free_yaml_node(pResult);
 }
 
 static void test_multi_line_array(void) {
-    const char *payload = "array:\n"
+    const char *pszPayload = "array:\n"
                     "- a\n"
                     "- b\n";
 
-    struct YamlNode *result = parse_yaml(payload);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
 
-    assert(result != NULL);
-    assert(result->type == DICT);
+    assert(pResult != NULL);
+    assert(pResult->type == DICT);
 
-    tree_node_t *tree = (tree_node_t *)result->payload;
+    tree_node_t *pTree = (tree_node_t *)pResult->payload;
 
-    size_t value_len;
-    struct YamlNode *value = (YamlNode *)lookup_value(tree, "array", 6, &value_len);
+    size_t qwValueLen;
+    struct YamlNode *pValue = (YamlNode *)lookup_value(pTree, "array", 6, &qwValueLen);
 
-    assert(value != NULL);
-    assert(value_len == sizeof(struct YamlNode));
+    assert(pValue != NULL);
+    assert(qwValueLen == sizeof(struct YamlNode));
 
-    assert(value->type == LIST);
+    assert(pValue->type == LIST);
 }
 
 static void test_nested_multi_line_array(void) {
-    const char *payload = "level1:\n"
+    const char *pszPayload = "level1:\n"
                     "  array:\n"
                     "  - a\n"
                     "  - b\n"
                     "  scalar: x\n";
 
-    struct YamlNode *result = parse_yaml(payload);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
 
-    assert(result != NULL);
-    assert(result->type == DICT);
+    assert(pResult != NULL);
+    assert(pResult->type == DICT);
 
-    tree_node_t *tree = (tree_node_t *)result->payload;
+    tree_node_t *pTree = (tree_node_t *)pResult->payload;
 
-    size_t value_len;
-    struct YamlNode *value = (YamlNode *)lookup_value(tree, "level1", 7, &value_len);
+    size_t qwValueLen;
+    struct YamlNode *pValue = (YamlNode *)lookup_value(pTree, "level1", 7, &qwValueLen);
 
-    assert(value != NULL);
-    assert(value_len == sizeof(struct YamlNode));
+    assert(pValue != NULL);
+    assert(qwValueLen == sizeof(struct YamlNode));
 
-    assert(value->type == DICT);
+    assert(pValue->type == DICT);
 
-    tree_node_t *nested = (tree_node_t *)value->payload;
+    tree_node_t *pNested = (tree_node_t *)pValue->payload;
 
-    value = (YamlNode *)lookup_value(nested, "array", 6, &value_len);
+    pValue = (YamlNode *)lookup_value(pNested, "array", 6, &qwValueLen);
 
-    assert(value != NULL);
-    assert(value_len == sizeof(struct YamlNode));
+    assert(pValue != NULL);
+    assert(qwValueLen == sizeof(struct YamlNode));
 
-    assert(value->type == LIST);
+    assert(pValue->type == LIST);
 
-    value = (YamlNode *)lookup_value(nested, "scalar", 7, &value_len);
+    pValue = (YamlNode *)lookup_value(pNested, "scalar", 7, &qwValueLen);
 
-    assert(value != NULL);
-    assert(value_len == sizeof(struct YamlNode));
+    assert(pValue != NULL);
+    assert(qwValueLen == sizeof(struct YamlNode));
 
-    assert(value->type == SCALAR);
+    assert(pValue->type == SCALAR);
 }
 
 static void test_nested_multi_line_array_2(void) {
-    const char *payload = "level1:\n"
+    const char *pszPayload = "level1:\n"
                     "  array:\n"
                     "  - a\n"
                     "  - b\n"
                     "scalar: x\n";
 
-    struct YamlNode *result = parse_yaml(payload);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
 
-    assert(result != NULL);
-    assert(result->type == DICT);
+    assert(pResult != NULL);
+    assert(pResult->type == DICT);
 
-    tree_node_t *tree = (tree_node_t *)result->payload;
+    tree_node_t *pTree = (tree_node_t *)pResult->payload;
 
-    size_t value_len;
-    struct YamlNode *value = (YamlNode *)lookup_value(tree, "level1", 7, &value_len);
+    size_t qwValueLen;
+    struct YamlNode *pValue = (YamlNode *)lookup_value(pTree, "level1", 7, &qwValueLen);
 
-    assert(value != NULL);
-    assert(value_len == sizeof(struct YamlNode));
+    assert(pValue != NULL);
+    assert(qwValueLen == sizeof(struct YamlNode));
 
-    assert(value->type == DICT);
+    assert(pValue->type == DICT);
 
-    tree_node_t *nested = (tree_node_t *)value->payload;
+    tree_node_t *pNested = (tree_node_t *)pValue->payload;
 
-    value = (YamlNode *)lookup_value(nested, "array", 6, &value_len);
+    pValue = (YamlNode *)lookup_value(pNested, "array", 6, &qwValueLen);
 
-    assert(value != NULL);
-    assert(value_len == sizeof(struct YamlNode));
+    assert(pValue != NULL);
+    assert(qwValueLen == sizeof(struct YamlNode));
 
-    assert(value->type == LIST);
+    assert(pValue->type == LIST);
 
-    value = (YamlNode *)lookup_value(nested, "scalar", 7, &value_len);
+    pValue = (YamlNode *)lookup_value(pNested, "scalar", 7, &qwValueLen);
 
-    assert(value == NULL);
+    assert(pValue == NULL);
 }
 
 static void test_get_as_string(void) {
-    const char *payload = "key: value\n";
+    const char *pszPayload = "key: value\n";
 
-    struct YamlNode *result = parse_yaml(payload);
-    assert(result != NULL);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
+    assert(pResult != NULL);
 
-    struct StringLookupResult lookup_result = get_as_string(result, "key");
-    assert(lookup_result.result_code == OK);
-    assert(lookup_result.result != NULL);
-    assert(!strcmp(lookup_result.result, "value"));
+    struct StringLookupResult LookupResult = get_as_string(pResult, "key");
+    assert(LookupResult.result_code == OK);
+    assert(LookupResult.result != NULL);
+    assert(!strcmp(LookupResult.result, "value"));
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 static void test_get_as_string_not_found(void) {
-    const char *payload = "key: value\n";
+    const char *pszPayload = "key: value\n";
 
-    struct YamlNode *result = parse_yaml(payload);
-    assert(result != NULL);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
+    assert(pResult != NULL);
 
-    struct StringLookupResult lookupResult = get_as_string(result, "other_key");
+    struct StringLookupResult lookupResult = get_as_string(pResult, "other_key");
     assert(lookupResult.result_code == NOT_FOUND);
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 static void test_get_as_string_nested(void) {
-    const char *payload = "level1:\n"
+    const char *pszPayload = "level1:\n"
                     "  level2: value";
 
-    struct YamlNode *result = parse_yaml(payload);
-    assert(result != NULL);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
+    assert(pResult != NULL);
 
-    struct StringLookupResult lookup_result =
-        get_as_string(result, "level1.level2");
-    assert(lookup_result.result_code == OK);
-    assert(lookup_result.result != NULL);
-    assert(!strcmp(lookup_result.result, "value"));
+    struct StringLookupResult LookupResult =
+        get_as_string(pResult, "level1.level2");
+    assert(LookupResult.result_code == OK);
+    assert(LookupResult.result != NULL);
+    assert(!strcmp(LookupResult.result, "value"));
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 static void test_get_as_int(void) {
-    const char *payload = "key: 500\n";
+    const char *pszPayload = "key: 500\n";
 
-    struct YamlNode *result = parse_yaml(payload);
-    assert(result != NULL);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
+    assert(pResult != NULL);
 
-    struct IntLookupResult lookup_result = get_as_int(result, "key");
-    assert(lookup_result.result_code == OK);
-    assert(lookup_result.result == 500);
+    struct IntLookupResult LookupResult = get_as_int(pResult, "key");
+    assert(LookupResult.result_code == OK);
+    assert(LookupResult.result == 500);
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 static void test_get_as_int_format_error(void) {
-    const char *payload = "key: x\n";
+    const char *pszPayload = "key: x\n";
 
-    struct YamlNode *result = parse_yaml(payload);
-    assert(result != NULL);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
+    assert(pResult != NULL);
 
-    struct IntLookupResult lookup_result = get_as_int(result, "key");
-    assert(lookup_result.result_code == FORMAT_ERROR);
+    struct IntLookupResult LookupResult = get_as_int(pResult, "key");
+    assert(LookupResult.result_code == FORMAT_ERROR);
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 static void test_get_as_list(void) {
-    const char *payload = "key: [1, 0, 2]\n";
+    const char *pszPayload = "key: [1, 0, 2]\n";
 
-    struct YamlNode *result = parse_yaml(payload);
-    assert(result != NULL);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
+    assert(pResult != NULL);
 
-    struct ListLookupResult lookup_result = get_as_list(result, "key");
-    assert(lookup_result.result_code == OK);
+    struct ListLookupResult LookupResult = get_as_list(pResult, "key");
+    assert(LookupResult.result_code == OK);
 
-    struct YamlListNode *list = lookup_result.result;
-    assert(list != NULL);
+    struct YamlListNode *pList = LookupResult.result;
+    assert(pList != NULL);
 
-    struct YamlListNode *next = list->next;
-    assert(next != NULL);
+    struct YamlListNode *pNextNode = pList->next;
+    assert(pNextNode != NULL);
 
-    next = next->next;
-    assert(next != NULL);
+    pNextNode = pNextNode->next;
+    assert(pNextNode != NULL);
 
-    next = next->next;
-    assert(next == NULL);
+    pNextNode = pNextNode->next;
+    assert(pNextNode == NULL);
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 static void test_get_as_int_array(void) {
-    const char *payload = "key: [1, 0, 2]\n";
+    const char *pszPayload = "key: [1, 0, 2]\n";
 
-    struct YamlNode *node = parse_yaml(payload);
-    assert(node != NULL);
+    struct YamlNode *pNode = parse_yaml(pszPayload);
+    assert(pNode != NULL);
 
-    int buf[3];
+    int rgnBuf[3];
 
-    struct IntArrayLookupResult lookup_result =
-        get_as_int_array(node, "key", buf, 3);
+    struct IntArrayLookupResult LookupResult =
+        get_as_int_array(pNode, "key", rgnBuf, 3);
 
-    assert(lookup_result.result_code == OK);
-    assert(lookup_result.elements_read == 3);
-    assert(buf[0] == 1);
-    assert(buf[1] == 0);
-    assert(buf[2] == 2);
+    assert(LookupResult.result_code == OK);
+    assert(LookupResult.elements_read == 3);
+    assert(rgnBuf[0] == 1);
+    assert(rgnBuf[1] == 0);
+    assert(rgnBuf[2] == 2);
 
-    free_yaml_node(node);
+    free_yaml_node(pNode);
 }
 
 static void test_get_as_int_array_short(void) {
-    const char *payload = "key: [1, -1, 2]\n";
+    const char *pszPayload = "key: [1, -1, 2]\n";
 
-    struct YamlNode *node = parse_yaml(payload);
-    assert(node != NULL);
+    struct YamlNode *pNode = parse_yaml(pszPayload);
+    assert(pNode != NULL);
 
-    int buf[2];
+    int rgnBuf[2];
 
-    struct IntArrayLookupResult lookup_result =
-        get_as_int_array(node, "key", buf, 2);
+    struct IntArrayLookupResult LookupResult =
+        get_as_int_array(pNode, "key", rgnBuf, 2);
 
-    assert(lookup_result.result_code == OK);
-    assert(lookup_result.elements_read == 2);
-    assert(buf[0] == 1);
-    assert(buf[1] == -1);
+    assert(LookupResult.result_code == OK);
+    assert(LookupResult.elements_read == 2);
+    assert(rgnBuf[0] == 1);
+    assert(rgnBuf[1] == -1);
 
-    free_yaml_node(node);
+    free_yaml_node(pNode);
 }
 
 static void test_get_as_list_flow_style(void) {
-    const char *payload = "key: [1,\n"
+    const char *pszPayload = "key: [1,\n"
                     "  0, 2,\n"
                     "  3]\n";
 
-    struct YamlNode *result = parse_yaml(payload);
-    assert(result != NULL);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
+    assert(pResult != NULL);
 
-    struct ListLookupResult lookupResult = get_as_list(result, "key");
+    struct ListLookupResult lookupResult = get_as_list(pResult, "key");
     assert(lookupResult.result_code == OK);
 
-    struct YamlListNode *list = lookupResult.result;
-    assert(list != NULL);
+    struct YamlListNode *pList = lookupResult.result;
+    assert(pList != NULL);
 
-    struct YamlListNode *next = list->next;
-    assert(next != NULL);
+    struct YamlListNode *pNextNode = pList->next;
+    assert(pNextNode != NULL);
 
-    next = next->next;
-    assert(next != NULL);
+    pNextNode = pNextNode->next;
+    assert(pNextNode != NULL);
 
-    next = next->next;
-    assert(next != NULL);
+    pNextNode = pNextNode->next;
+    assert(pNextNode != NULL);
 
-    next = next->next;
-    assert(next == NULL);
+    pNextNode = pNextNode->next;
+    assert(pNextNode == NULL);
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 static void test_get_as_int_array_illegal_input(void) {
-    const char *payload = "key: [1, a, 2]\n";
+    const char *pszPayload = "key: [1, a, 2]\n";
 
-    struct YamlNode *node = parse_yaml(payload);
-    assert(node != NULL);
+    struct YamlNode *pNode = parse_yaml(pszPayload);
+    assert(pNode != NULL);
 
-    int buf[3];
+    int rgnBuf[3];
 
-    struct IntArrayLookupResult lookup_result =
-        get_as_int_array(node, "key", buf, 3);
+    struct IntArrayLookupResult LookupResult =
+        get_as_int_array(pNode, "key", rgnBuf, 3);
 
-    assert(lookup_result.result_code == FORMAT_ERROR);
+    assert(LookupResult.result_code == FORMAT_ERROR);
 
-    free_yaml_node(node);
+    free_yaml_node(pNode);
 }
 
 static void test_malformed_input(void) {
-    const char *payload = "item1:\n  key: [1, a, 2\nitem2: scalar\n";
-    struct YamlNode *node = parse_yaml(payload);
-    assert(node == NULL);
+    const char *pszPayload = "item1:\n  key: [1, a, 2\nitem2: scalar\n";
+    struct YamlNode *pNode = parse_yaml(pszPayload);
+    assert(pNode == NULL);
 }
 
 static void test_list_trailing_comma(void) {
-    const char *payload = "key: [1, 0,]\n";
+    const char *pszPayload = "key: [1, 0,]\n";
 
-    struct YamlNode *result = parse_yaml(payload);
-    assert(result != NULL);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
+    assert(pResult != NULL);
 
-    struct ListLookupResult lookup_result = get_as_list(result, "key");
-    assert(lookup_result.result_code == OK);
+    struct ListLookupResult LookupResult = get_as_list(pResult, "key");
+    assert(LookupResult.result_code == OK);
 
-    struct YamlListNode *list = lookup_result.result;
-    assert(list != NULL);
+    struct YamlListNode *pList = LookupResult.result;
+    assert(pList != NULL);
 
-    struct YamlListNode *next = list->next;
-    assert(next != NULL);
+    struct YamlListNode *pNextNode = pList->next;
+    assert(pNextNode != NULL);
 
-    next = next->next;
-    assert(next == NULL);
+    pNextNode = pNextNode->next;
+    assert(pNextNode == NULL);
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 static void test_comments_and_empty_lines(void) {
-    const char *payload = "key1: value1 # comment\n"
+    const char *pszPayload = "key1: value1 # comment\n"
                     "\n\n"
                     "# top level comment\n"
                     "key2: value2\n"
@@ -406,31 +406,31 @@ static void test_comments_and_empty_lines(void) {
                     "\n\n"
                     "  key4: value4\n";
 
-    struct YamlNode *result = parse_yaml(payload);
-    assert(result != NULL);
-    assert(result->type == DICT);
+    struct YamlNode *pResult = parse_yaml(pszPayload);
+    assert(pResult != NULL);
+    assert(pResult->type == DICT);
 
-    struct StringLookupResult lookup_result = get_as_string(result, "key1");
-    assert(lookup_result.result_code == OK);
-    assert(lookup_result.result != NULL);
-    assert(!strcmp(lookup_result.result, "value1"));
+    struct StringLookupResult LookupResult = get_as_string(pResult, "key1");
+    assert(LookupResult.result_code == OK);
+    assert(LookupResult.result != NULL);
+    assert(!strcmp(LookupResult.result, "value1"));
 
-    lookup_result = get_as_string(result, "key2");
-    assert(lookup_result.result_code == OK);
-    assert(lookup_result.result != NULL);
-    assert(!strcmp(lookup_result.result, "value2"));
+    LookupResult = get_as_string(pResult, "key2");
+    assert(LookupResult.result_code == OK);
+    assert(LookupResult.result != NULL);
+    assert(!strcmp(LookupResult.result, "value2"));
 
-    lookup_result = get_as_string(result, "nested.key3");
-    assert(lookup_result.result_code == OK);
-    assert(lookup_result.result != NULL);
-    assert(!strcmp(lookup_result.result, "value3"));
+    LookupResult = get_as_string(pResult, "nested.key3");
+    assert(LookupResult.result_code == OK);
+    assert(LookupResult.result != NULL);
+    assert(!strcmp(LookupResult.result, "value3"));
 
-    lookup_result = get_as_string(result, "nested.key4");
-    assert(lookup_result.result_code == OK);
-    assert(lookup_result.result != NULL);
-    assert(!strcmp(lookup_result.result, "value4"));
+    LookupResult = get_as_string(pResult, "nested.key4");
+    assert(LookupResult.result_code == OK);
+    assert(LookupResult.result != NULL);
+    assert(!strcmp(LookupResult.result, "value4"));
 
-    free_yaml_node(result);
+    free_yaml_node(pResult);
 }
 
 void test_all_yaml(void) {

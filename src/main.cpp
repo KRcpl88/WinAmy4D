@@ -69,46 +69,46 @@ static void RunAllTests(void) {
     test_all_dbase();
 }
 
-static void ProcessOptions(int argc, char *argv[]) {
+static void ProcessOptions(int nArgc, char *pArgv[]) {
     int i;
 
-    for (i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "-ht")) {
+    for (i = 1; i < nArgc; i++) {
+        if (!strcmp(pArgv[i], "-ht")) {
             i++;
-            if (i < argc) {
-                GuessHTSizes(argv[i]);
+            if (i < nArgc) {
+                GuessHTSizes(pArgv[i]);
             }
         }
 
-        if (!strcmp(argv[i], "-conf")) {
+        if (!strcmp(pArgv[i], "-conf")) {
             i++;
-            if (i < argc) {
-                ConfigFileName = argv[i];
+            if (i < nArgc) {
+                ConfigFileName = pArgv[i];
             }
         }
 
-        if (!strcmp(argv[i], "--test")) {
+        if (!strcmp(pArgv[i], "--test")) {
             RunAllTests();
             exit(0);
         }
 
-        if (!strcmp(argv[i], "-debug")) {
+        if (!strcmp(pArgv[i], "-debug")) {
             g_nDebugMode = 1;
             /*
              * An optional verbosity level may follow -debug. When the next
              * token is a number it is consumed and used to set g_nVerbosity;
              * otherwise the verbosity is left unchanged.
              */
-            if (i + 1 < argc && isdigit((unsigned char)argv[i + 1][0])) {
+            if (i + 1 < nArgc && isdigit((unsigned char)pArgv[i + 1][0])) {
                 i++;
-                g_nVerbosity = (uint16_t)atoi(argv[i]);
+                g_nVerbosity = (uint16_t)atoi(pArgv[i]);
             }
         }
 #if MP
-        if (!strcmp(argv[i], "-cpu")) {
+        if (!strcmp(pArgv[i], "-cpu")) {
             i++;
-            if (i < argc) {
-                NumberOfCores = atoi(argv[i]);
+            if (i < nArgc) {
+                NumberOfCores = atoi(pArgv[i]);
             }
         }
 #endif
@@ -116,51 +116,51 @@ static void ProcessOptions(int argc, char *argv[]) {
 }
 
 static void ProcessRCFile(void) {
-    FILE *rcFile = fopen(".amyrc", "r");
-    char buf[1024];
+    FILE *pRcFile = fopen(".amyrc", "r");
+    char szBuf[1024];
 
-    if (!rcFile) {
+    if (!pRcFile) {
 
         /*
          * Windows people have problems naming files .amyrc
          * So lets look for 'Amy.ini' too.
          */
 
-        rcFile = fopen("Amy.ini", "r");
+        pRcFile = fopen("Amy.ini", "r");
     }
 
-    if (!rcFile)
+    if (!pRcFile)
         return;
 
-    while (fgets(buf, 1023, rcFile)) {
-        char *x = buf;
-        char *key, *value;
+    while (fgets(szBuf, 1023, pRcFile)) {
+        char *pX = szBuf;
+        char *pszKey, *pszValue;
 
-        if (buf[0] == '#')
+        if (szBuf[0] == '#')
             continue;
 
-        key = nextToken(&x, "=\t\n\r");
-        if (key == NULL)
+        pszKey = nextToken(&pX, "=\t\n\r");
+        if (pszKey == NULL)
             continue;
 
-        value = nextToken(&x, "\n\n\r");
-        if (value == NULL)
+        pszValue = nextToken(&pX, "\n\n\r");
+        if (pszValue == NULL)
             continue;
 
-        if (!strcmp(key, "ht")) {
-            GuessHTSizes(value);
-        } else if (!strcmp(key, "tbpath")) {
-            strncpy(EGTBPath, value, sizeof(EGTBPath) - 1);
-        } else if (!strcmp(key, "cpu")) {
+        if (!strcmp(pszKey, "ht")) {
+            GuessHTSizes(pszValue);
+        } else if (!strcmp(pszKey, "tbpath")) {
+            strncpy(EGTBPath, pszValue, sizeof(EGTBPath) - 1);
+        } else if (!strcmp(pszKey, "cpu")) {
 #if MP
-            NumberOfCores = atoi(value);
+            NumberOfCores = atoi(pszValue);
 #endif /* MP */
-        } else if (!strcmp(key, "autosave")) {
-            AutoSave = !strcmp(value, "true");
+        } else if (!strcmp(pszKey, "autosave")) {
+            AutoSave = !strcmp(pszValue, "true");
         }
     }
 
-    fclose(rcFile);
+    fclose(pRcFile);
 }
 
 /**
@@ -172,7 +172,7 @@ static void ShowVersion(void) {
     Print(0, "\n\n");
 }
 
-int main(int argc, char *argv[]) {
+int main(int nArgc, char *pArgv[]) {
 #if HAVE_SETBUF
     setbuf(stdin, NULL);
 #endif
@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
      */
 
     ProcessRCFile();
-    ProcessOptions(argc, argv);
+    ProcessOptions(nArgc, pArgv);
 
     ShowVersion();
 

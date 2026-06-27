@@ -48,38 +48,38 @@ static int SwapValue[] = {
     10000      /* King, whose value is basically infinity */
 };
 
-static void SwapReRay(CPosition *p, int side, CBitBoard atks[2], int from,
-                      int to, CBitBoard *exclude) {
+static void SwapReRay(CPosition *p, int nSide, CBitBoard rgAtks[2], int nFrom,
+                      int nTo, CBitBoard *pExclude) {
     CBitBoard tmp;
     int i;
-    int pc = TYPE(p->GetPiece(from));
+    int nPc = TYPE(p->GetPiece(nFrom));
 
-    atks[side].ClrBit(from);
-    exclude->ClrBit(from);
+    rgAtks[nSide].ClrBit(nFrom);
+    pExclude->ClrBit(nFrom);
 
-    if (pc == Pawn || pc == Bishop || pc == Queen) {
-        tmp = p->GetAtkFr(from) & *exclude & Ray[to][from];
+    if (nPc == Pawn || nPc == Bishop || nPc == Queen) {
+        tmp = p->GetAtkFr(nFrom) & *pExclude & Ray[nTo][nFrom];
         if (tmp) {
             i = (tmp).FindSetBit();
             if (TYPE(p->GetPiece(i)) == Bishop || TYPE(p->GetPiece(i)) == Queen) {
                 if (p->GetPiece(i) > 0) {
-                    atks[White].SetBit(i);
+                    rgAtks[White].SetBit(i);
                 } else {
-                    atks[Black].SetBit(i);
+                    rgAtks[Black].SetBit(i);
                 }
             }
         }
     }
 
-    if (pc == Rook || pc == Queen) {
-        tmp = p->GetAtkFr(from) & *exclude & Ray[to][from];
+    if (nPc == Rook || nPc == Queen) {
+        tmp = p->GetAtkFr(nFrom) & *pExclude & Ray[nTo][nFrom];
         if (tmp) {
             i = (tmp).FindSetBit();
             if (TYPE(p->GetPiece(i)) == Rook || TYPE(p->GetPiece(i)) == Queen) {
                 if (p->GetPiece(i) > 0) {
-                    atks[White].SetBit(i);
+                    rgAtks[White].SetBit(i);
                 } else {
-                    atks[Black].SetBit(i);
+                    rgAtks[Black].SetBit(i);
                 }
             }
         }
@@ -87,87 +87,87 @@ static void SwapReRay(CPosition *p, int side, CBitBoard atks[2], int from,
 }
 
 int SwapOff(CPosition *p, CMove move) {
-    int to = move.GetToCoord().BitOffset();
-    int fr = move.GetFromCoord().BitOffset();
-    int side = COLOR(p->GetPiece(fr));
-    int oside = !side;
-    int swaplist[32];
-    int swapcnt = 0;
-    int swapval, swapside;
-    int swapsign = -1;
+    int nTo = move.GetToCoord().BitOffset();
+    int nFr = move.GetFromCoord().BitOffset();
+    int nSide = COLOR(p->GetPiece(nFr));
+    int nOside = !nSide;
+    int rgSwapList[32];
+    int nSwapCnt = 0;
+    int nSwapVal, nSwapSide;
+    int nSwapSign = -1;
 
-    CBitBoard atks[2];
+    CBitBoard rgAtks[2];
     CBitBoard exclude;
 
     if (move.HasPromotion()) {
-        swapval = SwapValue[PromoType(move)];
-        swaplist[0] = SwapValue[TYPE(p->GetPiece(to))] - SwapValue[Pawn] + swapval;
+        nSwapVal = SwapValue[PromoType(move)];
+        rgSwapList[0] = SwapValue[TYPE(p->GetPiece(nTo))] - SwapValue[Pawn] + nSwapVal;
     } else {
-        swapval = SwapValue[TYPE(p->GetPiece(fr))];
-        swaplist[0] = SwapValue[TYPE(p->GetPiece(to))];
+        nSwapVal = SwapValue[TYPE(p->GetPiece(nFr))];
+        rgSwapList[0] = SwapValue[TYPE(p->GetPiece(nTo))];
     }
 
-    swapside = oside;
+    nSwapSide = nOside;
 
-    atks[White] = p->GetMask(White, 0) & p->GetAtkFr(to);
-    atks[Black] = p->GetMask(Black, 0) & p->GetAtkFr(to);
+    rgAtks[White] = p->GetMask(White, 0) & p->GetAtkFr(nTo);
+    rgAtks[Black] = p->GetMask(Black, 0) & p->GetAtkFr(nTo);
 
     exclude = p->GetMask(White, 0) | p->GetMask(Black, 0);
 
-    SwapReRay(p, side, atks, fr, to, &exclude);
+    SwapReRay(p, nSide, rgAtks, nFr, nTo, &exclude);
 
-    while (atks[swapside]) {
-        int at;
+    while (rgAtks[nSwapSide]) {
+        int nAt;
         CBitBoard tmp;
 
         /* find last valuable attacker */
-        tmp = p->GetMask(swapside, Pawn) & atks[swapside];
+        tmp = p->GetMask(nSwapSide, Pawn) & rgAtks[nSwapSide];
         if (tmp)
-            at = (tmp).FindSetBit();
+            nAt = (tmp).FindSetBit();
         else {
-            tmp = (p->GetMask(swapside, Knight) | p->GetMask(swapside, Bishop)) &
-                  atks[swapside];
+            tmp = (p->GetMask(nSwapSide, Knight) | p->GetMask(nSwapSide, Bishop)) &
+                  rgAtks[nSwapSide];
             if (tmp)
-                at = (tmp).FindSetBit();
+                nAt = (tmp).FindSetBit();
             else {
-                tmp = p->GetMask(swapside, Rook) & atks[swapside];
+                tmp = p->GetMask(nSwapSide, Rook) & rgAtks[nSwapSide];
                 if (tmp)
-                    at = (tmp).FindSetBit();
+                    nAt = (tmp).FindSetBit();
                 else {
-                    tmp = p->GetMask(swapside, Queen) & atks[swapside];
+                    tmp = p->GetMask(nSwapSide, Queen) & rgAtks[nSwapSide];
                     if (tmp)
-                        at = (tmp).FindSetBit();
+                        nAt = (tmp).FindSetBit();
                     else
-                        at = (p->GetMask(swapside, King)).FindSetBit();
+                        nAt = (p->GetMask(nSwapSide, King)).FindSetBit();
                 }
             }
         }
 
-        swapcnt++;
-        swaplist[swapcnt] = swaplist[swapcnt - 1] + swapsign * swapval;
-        swapval = SwapValue[TYPE(p->GetPiece(at))];
-        swapsign = -swapsign;
+        nSwapCnt++;
+        rgSwapList[nSwapCnt] = rgSwapList[nSwapCnt - 1] + nSwapSign * nSwapVal;
+        nSwapVal = SwapValue[TYPE(p->GetPiece(nAt))];
+        nSwapSign = -nSwapSign;
 
-        SwapReRay(p, swapside, atks, at, to, &exclude);
+        SwapReRay(p, nSwapSide, rgAtks, nAt, nTo, &exclude);
 
-        swapside = !swapside;
+        nSwapSide = !nSwapSide;
     }
 
-    if (swapcnt & 1)
-        swapsign = -1;
+    if (nSwapCnt & 1)
+        nSwapSign = -1;
     else
-        swapsign = 1;
-    while (swapcnt) {
-        if (swapsign < 0) {
-            if (swaplist[swapcnt] <= swaplist[swapcnt - 1])
-                swaplist[swapcnt - 1] = swaplist[swapcnt];
+        nSwapSign = 1;
+    while (nSwapCnt) {
+        if (nSwapSign < 0) {
+            if (rgSwapList[nSwapCnt] <= rgSwapList[nSwapCnt - 1])
+                rgSwapList[nSwapCnt - 1] = rgSwapList[nSwapCnt];
         } else {
-            if (swaplist[swapcnt] >= swaplist[swapcnt - 1])
-                swaplist[swapcnt - 1] = swaplist[swapcnt];
+            if (rgSwapList[nSwapCnt] >= rgSwapList[nSwapCnt - 1])
+                rgSwapList[nSwapCnt - 1] = rgSwapList[nSwapCnt];
         }
-        swapcnt--;
-        swapsign = -swapsign;
+        nSwapCnt--;
+        nSwapSign = -nSwapSign;
     }
 
-    return (swaplist[0]);
+    return (rgSwapList[0]);
 }

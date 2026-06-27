@@ -154,23 +154,23 @@ static struct SCommandEntry Commands[] = {
 
 char AutoSaveFileName[64];
 
-struct SCommand *ParseInput(char *line) {
+struct SCommand *ParseInput(char *pszLine) {
     static struct SCommand theCommand;
-    char *token;
+    char *pszToken;
     CMove move;
-    struct SCommandEntry *entry;
+    struct SCommandEntry *pEntry;
 
-    token = nextToken(&line, " \t\n\r");
-    if (token == NULL)
+    pszToken = nextToken(&pszLine, " \t\n\r");
+    if (pszToken == NULL)
         return NULL;
 
     /*
      * Try to interpret as move.
      */
 
-    move = CurrentPosition->ParseSAN(token);
+    move = CurrentPosition->ParseSAN(pszToken);
     if (move == M_NONE) {
-        move = CurrentPosition->ParseGSAN(token);
+        move = CurrentPosition->ParseGSAN(pszToken);
     }
 
     if (move != M_NONE) {
@@ -180,74 +180,74 @@ struct SCommand *ParseInput(char *line) {
         return &theCommand;
     }
 
-    entry = Commands;
-    while (entry->name) {
-        if (!strcmp(entry->name, token)) {
+    pEntry = Commands;
+    while (pEntry->name) {
+        if (!strcmp(pEntry->name, pszToken)) {
             theCommand.move = M_NONE;
-            theCommand.command_func = entry->command_func;
-            theCommand.allowed_during_search = entry->allowed_during_search;
-            theCommand.interrupts_search = entry->interrupts_search;
-            theCommand.args = nextToken(&line, "\n\r");
+            theCommand.command_func = pEntry->command_func;
+            theCommand.allowed_during_search = pEntry->allowed_during_search;
+            theCommand.interrupts_search = pEntry->interrupts_search;
+            theCommand.args = nextToken(&pszLine, "\n\r");
             return &theCommand;
         }
-        entry++;
+        pEntry++;
     }
 
     return NULL;
 }
 
-void ExecuteCommand(struct SCommand *theCommand) {
-    if (theCommand->move != M_NONE) {
-        CurrentPosition->DoMove(theCommand->move);
+void ExecuteCommand(struct SCommand *pTheCommand) {
+    if (pTheCommand->move != M_NONE) {
+        CurrentPosition->DoMove(pTheCommand->move);
     } else {
-        COMMAND cfunc = theCommand->command_func;
-        cfunc(theCommand->args);
+        COMMAND cfunc = pTheCommand->command_func;
+        cfunc(pTheCommand->args);
     }
 }
 
-static void Quit(char *args) {
-    (void)args;
+static void Quit(char *pszArgs) {
+    (void)pszArgs;
 #if MP
     StopHelpers();
 #endif
     CPosition::Free(CurrentPosition);
-    Print(0, "\n\nI'll be back.\n");
+    Print(0, "\n\i'll be back.\n");
     exit(0);
 }
 
-static void Show(char *args) {
-    (void)args;
+static void Show(char *pszArgs) {
+    (void)pszArgs;
     CurrentPosition->ShowPosition();
 }
 
-static void ShowEco(char *args) {
-    (void)args;
-    char eco[128] = "";
+static void ShowEco(char *pszArgs) {
+    (void)pszArgs;
+    char szEco[128] = "";
 
-    FindEcoCode(CurrentPosition, eco);
+    FindEcoCode(CurrentPosition, szEco);
 
-    Print(0, "Eco code is %s\n", eco);
+    Print(0, "Eco code is %s\n", szEco);
 }
 
-static void Test(char *fname) {
+static void Test(char *pszFname) {
     CPosition *p;
-    int solved = 0, total = 0;
+    int nSolved = 0, nTotal = 0;
     FILE *fin, *fout;
     int i;
-    int btav = 0;
-    int btval;
-    int bsval;
-    int lctval = 1900;
-    char line[256];
+    int nBtav = 0;
+    int nBtval;
+    int nBsval;
+    int nLctval = 1900;
+    char szLine[256];
 
-    if (!fname) {
+    if (!pszFname) {
         Print(0, "Usage: test <filename>\n");
         return;
     }
 
-    fin = fopen(fname, "r");
+    fin = fopen(pszFname, "r");
     if (!fin) {
-        Print(0, "Couldn't open %s for input.\n", fname);
+        Print(0, "Couldn't open %s for input.\n", pszFname);
         return;
     }
 
@@ -256,12 +256,12 @@ static void Test(char *fname) {
     for (i = 1;; i++) {
         CMove move;
         int j;
-        bool correct = false;
+        bool fCorrect = false;
 
-        if (fgets(line, 256, fin) == NULL)
+        if (fgets(szLine, 256, fin) == NULL)
             break;
         Print(0, "Problem %d:\n", i);
-        p = CPosition::CreateFromEPD(line);
+        p = CPosition::CreateFromEPD(szLine);
         if (p == NULL) {
             Print(0, "Skipping invalid EPD.\n");
             continue;
@@ -273,48 +273,48 @@ static void Test(char *fname) {
         move = p->Iterate(NULL, M_NONE, NULL);
         for (j = 0; goodmove[j] != M_NONE; j++)
             if (move == goodmove[j])
-                correct = true;
+                fCorrect = true;
 
-        if (!correct && badmove[0] != M_NONE) {
-            correct = true;
+        if (!fCorrect && badmove[0] != M_NONE) {
+            fCorrect = true;
 
             for (j = 0; badmove[j] != M_NONE; j++)
                 if (move == badmove[j])
-                    correct = false;
+                    fCorrect = false;
         }
 
-        total++;
-        if (correct) {
+        nTotal++;
+        if (fCorrect) {
             Print(0, "solved!\n");
-            solved++;
+            nSolved++;
 
-            btav += (FHTime < 900) ? FHTime : 900;
+            nBtav += (FHTime < 900) ? FHTime : 900;
 
             if (FHTime < 10)
-                lctval += 30;
+                nLctval += 30;
             else if (FHTime < 30)
-                lctval += 25;
+                nLctval += 25;
             else if (FHTime < 90)
-                lctval += 20;
+                nLctval += 20;
             else if (FHTime < 180)
-                lctval += 15;
+                nLctval += 15;
             else if (FHTime < 390)
-                lctval += 10;
+                nLctval += 10;
             else if (FHTime <= 600)
-                lctval += 5;
+                nLctval += 5;
         } else {
             Print(0, "not solved!\n");
-            btav += 900;
+            nBtav += 900;
             if (fout)
-                fprintf(fout, "%s", line);
+                fprintf(fout, "%s", szLine);
         }
 
-        btval = 2630 - (btav / total);
-        bsval = (btav / (17 * 60));
-        bsval = 2830 - bsval * bsval;
+        nBtval = 2630 - (nBtav / nTotal);
+        nBsval = (nBtav / (17 * 60));
+        nBsval = 2830 - nBsval * nBsval;
 
         Print(0, "solved %d out of %d  (BT2630 = %d, LCT2 = %d, BS2830 = %d)\n",
-              solved, total, btval, lctval, bsval);
+              nSolved, nTotal, nBtval, nLctval, nBsval);
         Print(0, "-----------------------------------------------\n\n");
 
         CPosition::Free(p);
@@ -326,19 +326,19 @@ static void Test(char *fname) {
         fclose(fout);
 }
 
-static void TestScore(char *fname) {
+static void TestScore(char *pszFname) {
     CPosition *p;
     FILE *fin, *fout;
-    char line[256];
+    char szLine[256];
 
-    if (!fname) {
+    if (!pszFname) {
         Print(0, "Usage: test-score <filename>\n");
         return;
     }
 
-    fin = fopen(fname, "r");
+    fin = fopen(pszFname, "r");
     if (!fin) {
-        Print(0, "Couldn't open %s for input.\n", fname);
+        Print(0, "Couldn't open %s for input.\n", pszFname);
         return;
     }
 
@@ -346,26 +346,26 @@ static void TestScore(char *fname) {
 
     for (;;) {
 
-        if (fgets(line, 256, fin) == NULL)
+        if (fgets(szLine, 256, fin) == NULL)
             break;
-        p = CPosition::CreateFromEPD(line);
+        p = CPosition::CreateFromEPD(szLine);
         if (p == NULL) {
             Print(0, "Skipping invalid EPD.\n");
             continue;
         }
         InitEvaluation(p);
-        int score = EvaluatePosition(p);
+        int nScore = EvaluatePosition(p);
 
         if (fout) {
-            size_t l = strlen(line);
+            size_t l = strlen(szLine);
             l--;
-            line[l] = '\0';
+            szLine[l] = '\0';
             l--;
-            if (line[l] == ';') {
-                line[l] = '\0';
+            if (szLine[l] == ';') {
+                szLine[l] = '\0';
             }
 
-            fprintf(fout, "%s; score %d;\n", line, score);
+            fprintf(fout, "%s; score %d;\n", szLine, nScore);
         }
 
         CPosition::Free(p);
@@ -377,18 +377,18 @@ static void TestScore(char *fname) {
         fclose(fout);
 }
 
-static void SetTime(char *arg) {
-    char *args[3];
+static void SetTime(char *pszArg) {
+    char *rgArgs[3];
 
-    args[0] = strtok(arg, " \t");
-    args[1] = strtok(NULL, " \t");
-    args[2] = strtok(NULL, " \t");
+    rgArgs[0] = strtok(pszArg, " \t");
+    rgArgs[1] = strtok(NULL, " \t");
+    rgArgs[2] = strtok(NULL, " \t");
 
-    SetTimeControl(args, XBoardMode);
+    SetTimeControl(rgArgs, XBoardMode);
 }
 
-static void SetXBoard(char *args) {
-    (void)args;
+static void SetXBoard(char *pszArgs) {
+    (void)pszArgs;
     XBoardMode = true;
     g_nVerbosity = 1;
 
@@ -402,20 +402,20 @@ static void SetXBoard(char *args) {
     signal(SIGINT, SIG_IGN);
 }
 
-static void Go(char *args) {
-    (void)args;
+static void Go(char *pszArgs) {
+    (void)pszArgs;
     ForceMode = false;
     State = STATE_CALCULATING;
 }
 
-static void Force(char *args) {
-    (void)args;
+static void Force(char *pszArgs) {
+    (void)pszArgs;
     ForceMode = true;
     AbortSearch = true;
 }
 
-void NewGame(char *args) {
-    (void)args;
+void NewGame(char *pszArgs) {
+    (void)pszArgs;
     /*
      * Create a new save file.
      */
@@ -430,61 +430,61 @@ void NewGame(char *args) {
     ResetTimeControl(!XBoardMode);
 }
 
-static void MoveNow(char *args) {
-    (void)args;
+static void MoveNow(char *pszArgs) {
+    (void)pszArgs;
     AbortSearch = true;
 }
 
-void Edit(char *args) {
-    (void)args;
-    bool editing = true;
+void Edit(char *pszArgs) {
+    (void)pszArgs;
+    bool fEditing = true;
     unsigned int i;
-    int side = White;
-    char buffer[16];
+    int nSide = White;
+    char szBuffer[16];
     CPosition *p = CurrentPosition;
 
     for (i = 0; i < CBitBoard::SIZE; i++)
         p->SetPiece(i, Neutral);
     p->GetMask(White, 0) = p->GetMask(Black, 0) = {};
 
-    while (editing) {
-        int sq;
+    while (fEditing) {
+        int nSq;
 
-        if (!ReadLine(buffer, 256))
+        if (!ReadLine(szBuffer, 256))
             break;
 
-        sq = (buffer[1] - 'a') + 8 * (buffer[2] - '1');
+        nSq = (szBuffer[1] - 'a') + 8 * (szBuffer[2] - '1');
 
-        switch (buffer[0]) {
+        switch (szBuffer[0]) {
         case '.':
-            editing = false;
+            fEditing = false;
             break;
         case 'c':
-            side = OPP(side);
+            nSide = OPP(nSide);
             break;
         case 'P':
-            p->SetPiece(sq, PIECEID(Pawn, side));
-            p->GetMask(side, 0).SetBit(sq);
+            p->SetPiece(nSq, PIECEID(Pawn, nSide));
+            p->GetMask(nSide, 0).SetBit(nSq);
             break;
         case 'N':
-            p->SetPiece(sq, PIECEID(Knight, side));
-            p->GetMask(side, 0).SetBit(sq);
+            p->SetPiece(nSq, PIECEID(Knight, nSide));
+            p->GetMask(nSide, 0).SetBit(nSq);
             break;
         case 'B':
-            p->SetPiece(sq, PIECEID(Bishop, side));
-            p->GetMask(side, 0).SetBit(sq);
+            p->SetPiece(nSq, PIECEID(Bishop, nSide));
+            p->GetMask(nSide, 0).SetBit(nSq);
             break;
         case 'R':
-            p->SetPiece(sq, PIECEID(Rook, side));
-            p->GetMask(side, 0).SetBit(sq);
+            p->SetPiece(nSq, PIECEID(Rook, nSide));
+            p->GetMask(nSide, 0).SetBit(nSq);
             break;
         case 'Q':
-            p->SetPiece(sq, PIECEID(Queen, side));
-            p->GetMask(side, 0).SetBit(sq);
+            p->SetPiece(nSq, PIECEID(Queen, nSide));
+            p->GetMask(nSide, 0).SetBit(nSq);
             break;
         case 'K':
-            p->SetPiece(sq, PIECEID(King, side));
-            p->GetMask(side, 0).SetBit(sq);
+            p->SetPiece(nSq, PIECEID(King, nSide));
+            p->GetMask(nSide, 0).SetBit(nSq);
             break;
         }
     }
@@ -509,47 +509,47 @@ void Edit(char *args) {
     p->ShowPosition();
 }
 
-static void Undo(char *args) {
-    (void)args;
+static void Undo(char *pszArgs) {
+    (void)pszArgs;
     CurrentPosition->Undo();
 }
 
-static void Book(char *args) {
-    (void)args;
+static void Book(char *pszArgs) {
+    (void)pszArgs;
     QueryBook(CurrentPosition);
 }
 
-static void Post(char *args) {
-    (void)args;
+static void Post(char *pszArgs) {
+    (void)pszArgs;
     PostMode = true;
 }
 
-static void NoPost(char *args) {
-    (void)args;
+static void NoPost(char *pszArgs) {
+    (void)pszArgs;
     PostMode = false;
 }
 
-static void Easy(char *args) {
-    (void)args;
+static void Easy(char *pszArgs) {
+    (void)pszArgs;
     EasyMode = true;
 }
 
-static void Hard(char *args) {
-    (void)args;
+static void Hard(char *pszArgs) {
+    (void)pszArgs;
     EasyMode = false;
 }
 
-static void MovesCmd(char *args) {
-    (void)args;
+static void MovesCmd(char *pszArgs) {
+    (void)pszArgs;
     CurrentPosition->ShowMoves();
 }
 
-static void SetEPD(char *args) {
-    if (!args) {
+static void SetEPD(char *pszArgs) {
+    if (!pszArgs) {
         Print(0, "Usage: epd <EPD>\n");
         return;
     }
-    CPosition *pNewPosition = CPosition::CreateFromEPD(args);
+    CPosition *pNewPosition = CPosition::CreateFromEPD(pszArgs);
     if (pNewPosition == NULL) {
         Print(0, "Invalid EPD.\n");
         return;
@@ -558,25 +558,25 @@ static void SetEPD(char *args) {
     CurrentPosition = pNewPosition;
 }
 
-static void RunAnnotate(char *fname, int side) {
-    FILE *fin = fopen(fname, "r");
+static void RunAnnotate(char *pszFname, int nSide) {
+    FILE *fin = fopen(pszFname, "r");
     CPosition *p;
 
     if (fin) {
         struct PGNHeader header;
-        char move[16];
+        char szMove[16];
 
         while (!scanHeader(fin, &header)) {
             p = CPosition::Initial();
-            while (!scanMove(fin, move)) {
-                CMove themove = p->ParseSAN(move);
+            while (!scanMove(fin, szMove)) {
+                CMove themove = p->ParseSAN(szMove);
                 if (themove != M_NONE) {
-                    char san_buffer[16];
+                    char szSanBuffer[16];
                     p->ShowPosition();
                     Print(0, "%s(%d): ", p->GetTurn() == White ? "White" : "Black",
                           (p->GetPly() / 2) + 1);
-                    Print(0, "%s\n", p->SAN(themove, san_buffer));
-                    if (side == -1 || (side == p->GetTurn())) {
+                    Print(0, "%s\n", p->SAN(themove, szSanBuffer));
+                    if (nSide == -1 || (nSide == p->GetTurn())) {
                         p->Iterate(NULL, M_NONE, NULL);
                     }
                     p->DoMove(themove);
@@ -586,28 +586,28 @@ static void RunAnnotate(char *fname, int side) {
         }
         fclose(fin);
     } else
-        Print(0, "Couldn't open %s\n", fname);
+        Print(0, "Couldn't open %s\n", pszFname);
 }
 
-static void Anno(char *args) {
-    int side = -1;
-    char *arg1 = strtok(args, " \n\r");
-    char *arg2 = strtok(NULL, " \n\r");
+static void Anno(char *pszArgs) {
+    int nSide = -1;
+    char *pszArg1 = strtok(pszArgs, " \n\r");
+    char *pszArg2 = strtok(NULL, " \n\r");
 
-    if (!arg1) {
+    if (!pszArg1) {
         Print(0, "Usage: anno <file> [w|b|wb]\n");
         return;
     }
 
-    if (arg2) {
-        if (!strcmp(arg2, "w")) {
-            side = White;
-        } else if (!strcmp(arg2, "b")) {
-            side = Black;
+    if (pszArg2) {
+        if (!strcmp(pszArg2, "w")) {
+            nSide = White;
+        } else if (!strcmp(pszArg2, "b")) {
+            nSide = Black;
         }
     }
 
-    RunAnnotate(arg1, side);
+    RunAnnotate(pszArg1, nSide);
 }
 
 static const char *distribution =
@@ -651,71 +651,71 @@ static const char *warranty =
     " OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
     "\n";
 
-static void ShowWarranty(char *args) {
-    (void)args;
+static void ShowWarranty(char *pszArgs) {
+    (void)pszArgs;
     Print(0, warranty);
 }
 
-static void ShowDistribution(char *args) {
-    (void)args;
+static void ShowDistribution(char *pszArgs) {
+    (void)pszArgs;
     Print(0, distribution);
     Print(0, warranty);
 }
 
-static void Help(char *args) {
-    struct SCommandEntry *entry = Commands;
+static void Help(char *pszArgs) {
+    struct SCommandEntry *pEntry = Commands;
 
-    (void)args;
+    (void)pszArgs;
     Print(2, "\nEnter a legal move (like e4, Nxd5, O-O, d1=Q+) or one of the\n"
              "following commands:\n\n");
-    while (entry->name) {
-        char tmpl[] = ". . . . . . . . ";
-        memcpy(tmpl, entry->name, strlen(entry->name));
-        Print(2, tmpl);
-        if (entry->short_help) {
-            Print(2, "%s", entry->short_help);
+    while (pEntry->name) {
+        char szTmpl[] = ". . . . . . . . ";
+        memcpy(szTmpl, pEntry->name, strlen(pEntry->name));
+        Print(2, szTmpl);
+        if (pEntry->short_help) {
+            Print(2, "%s", pEntry->short_help);
         }
         Print(2, "\n");
 
-        entry++;
+        pEntry++;
     }
 
     Print(2, "\n");
 }
 
-static void Benchmark(char *args) {
-    (void)args;
+static void Benchmark(char *pszArgs) {
+    (void)pszArgs;
     CMove move = make_move(hg1, hf3, 0);
     int i;
-    const int cycles = 10000000;
-    unsigned long start, end;
-    double elapsed;
+    const int nCycles = 10000000;
+    unsigned long dwStart, dwEnd;
+    double dElapsed;
     CPosition *p;
 
     p = CPosition::Initial();
 
-    start = GetTime();
+    dwStart = GetTime();
 
-    for (i = cycles; i > 0; i--) {
+    for (i = nCycles; i > 0; i--) {
         p->DoMove(move);
         p->UndoMove(move);
     }
 
-    end = GetTime();
+    dwEnd = GetTime();
 
-    elapsed = (end - start) / 100.0;
+    dElapsed = (dwEnd - dwStart) / 100.0;
 
-    Print(0, "Nf3: %.2g secs, %g moves/sec\n", elapsed, cycles / elapsed);
+    Print(0, "Nf3: %.2g secs, %g moves/sec\n", dElapsed, nCycles / dElapsed);
 
     CPosition::Free(p);
 }
 
-static BitBoardBits SearchFully(CPosition *p, BitBoardBits cnt, int depth,
+static BitBoardBits SearchFully(CPosition *p, BitBoardBits qwCnt, int nDepth,
                                 heap_t heap) {
     unsigned int i;
 
-    if (depth <= 0) {
-        return cnt + 1;
+    if (nDepth <= 0) {
+        return qwCnt + 1;
     }
 
     push_section(heap);
@@ -729,146 +729,145 @@ static BitBoardBits SearchFully(CPosition *p, BitBoardBits cnt, int depth,
 
         p->DoMove(move);
         if (!p->InCheck(OPP(p->GetTurn()))) {
-            cnt = SearchFully(p, cnt, depth - 1, heap);
+            qwCnt = SearchFully(p, qwCnt, nDepth - 1, heap);
         }
         p->UndoMove(move);
     }
     pop_section(heap);
 
-    return cnt;
+    return qwCnt;
 }
 
-static void Perft(char *args) {
-    if (args == NULL) {
+static void Perft(char *pszArgs) {
+    if (pszArgs == NULL) {
         Print(0, "Usage: perft <depth>\n");
         return;
     }
 
-    int depth;
-    sscanf(args, "%d", &depth);
+    int nDepth;
+    sscanf(pszArgs, "%d", &nDepth);
 
-    BitBoardBits cnt = 0;
+    BitBoardBits qwCnt = 0;
     heap_t heap = allocate_heap();
 
-    unsigned long start = GetTime();
-    cnt = SearchFully(CurrentPosition, cnt, depth, heap);
-    unsigned long end = GetTime();
+    unsigned long dwStart = GetTime();
+    qwCnt = SearchFully(CurrentPosition, qwCnt, nDepth, heap);
+    unsigned long dwEnd = GetTime();
 
     free_heap(heap);
 
-    double elapsed = (end - start) / 100.0;
-    double nps = cnt / elapsed;
+    double dElapsed = (dwEnd - dwStart) / 100.0;
+    double dNps = qwCnt / dElapsed;
 
-    Print(0, "Perft(%d): %lld terminal positions in %g secs (%g nps)\n", depth,
-          cnt, elapsed, nps);
+    Print(0, "Perft(%d): %lld terminal positions in %g secs (%g nps)\n", nDepth,
+          qwCnt, dElapsed, dNps);
 }
 
-static void Load(char *args) {
-    if (args == NULL) {
+static void Load(char *pszArgs) {
+    if (pszArgs == NULL) {
         Print(0, "Usage: load <filename>\n");
         return;
     }
     CurrentPosition = CPosition::Initial();
-    LoadGame(CurrentPosition, args);
+    LoadGame(CurrentPosition, pszArgs);
 }
 
-static void Save(char *args) {
-    if (args == NULL) {
+static void Save(char *pszArgs) {
+    if (pszArgs == NULL) {
         Print(0, "Usage: save <filename>\n");
         return;
     }
-    SaveGame(CurrentPosition, args);
+    SaveGame(CurrentPosition, pszArgs);
 }
 
-static void Prefs(char *args) { CreateLearnDB(args); }
+static void Prefs(char *pszArgs) { CreateLearnDB(pszArgs); }
 
-static void Flatten(char *args) {
-    int threshold;
-    if (args == NULL) {
+static void Flatten(char *pszArgs) {
+    int nThreshold;
+    if (pszArgs == NULL) {
         Print(0, "Usage: flatten <count>\n");
         return;
     }
 
-    threshold = atoi(args);
-    if (threshold < 1) {
-        threshold = 1;
+    nThreshold = atoi(pszArgs);
+    if (nThreshold < 1) {
+        nThreshold = 1;
     }
 
-    FlattenBook(threshold);
+    FlattenBook(nThreshold);
 }
 
-static void XboardTime(char *args) {
-    if (args != NULL) {
-        int seconds = atoi(args) / 100;
+static void XboardTime(char *pszArgs) {
+    if (pszArgs != NULL) {
+        int nSeconds = atoi(pszArgs) / 100;
 
         /*
          * xboard sends time for the side not to move.
          */
 
-        Time[ComputerSide] = seconds;
+        Time[ComputerSide] = nSeconds;
     }
 }
 
-static void Analyze(char *args) {
-    (void)args;
+static void Analyze(char *pszArgs) {
+    (void)pszArgs;
     State = STATE_ANALYZING;
 }
 
-static void StopAnalyze(char *args) {
-    (void)args;
+static void StopAnalyze(char *pszArgs) {
+    (void)pszArgs;
     State = STATE_WAITING;
 }
 
-static void Name(char *args) {
-    if (args) {
-        strncpy(OpponentName, args, OPP_NAME_LENGTH - 1);
+static void Name(char *pszArgs) {
+    if (pszArgs) {
+        strncpy(OpponentName, pszArgs, OPP_NAME_LENGTH - 1);
         Print(2, "Your name is %s\n", OpponentName);
     }
 }
 
-static void SelfPlay(char *args) {
-    (void)args;
+static void SelfPlay(char *pszArgs) {
+    (void)pszArgs;
     SelfPlayMode = true;
     State = STATE_CALCULATING;
 }
 
-static void TestNext(char *args) {
-    (void)args;
+static void TestNext(char *pszArgs) {
+    (void)pszArgs;
     CurrentPosition->TestNextGenerators();
 }
 
-static void Conf(char *args) {
-    if (args == NULL) {
+static void Conf(char *pszArgs) {
+    if (pszArgs == NULL) {
         Print(0, "Usage: conf <filename>\n");
         return;
     }
 
-    LoadEvaluationConfig(args);
+    LoadEvaluationConfig(pszArgs);
     CurrentPosition->RecalcAttacks();
 }
 
-static void SaveConf(char *args) {
-    if (args == NULL) {
+static void SaveConf(char *pszArgs) {
+    if (pszArgs == NULL) {
         Print(0, "Usage: save-conf <filename>\n");
         return;
     }
 
-    SaveEvaluationConfig(args);
+    SaveEvaluationConfig(pszArgs);
 }
 
-static void ShowScore(char *args) {
-    (void)args;
+static void ShowScore(char *pszArgs) {
+    (void)pszArgs;
     InitEvaluation(CurrentPosition);
-    int score = EvaluatePosition(CurrentPosition);
-    Print(0, "Static evaluation: %d\n", score);
+    int nScore = EvaluatePosition(CurrentPosition);
+    Print(0, "Static evaluation: %d\n", nScore);
 }
 
-static void SetSearchDepth(char *args) {
-    if (args == NULL) {
+static void SetSearchDepth(char *pszArgs) {
+    if (pszArgs == NULL) {
         Print(0, "Usage: depth <depth>");
         return;
     }
 
-    SetMaxSearchDepth(atoi(args));
+    SetMaxSearchDepth(atoi(pszArgs));
 }
-

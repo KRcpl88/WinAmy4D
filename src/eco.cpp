@@ -50,30 +50,30 @@
 #define DEFAULT_ECO_NAME "ECODIR\\ECO"
 #endif
 
-void ParseEcoPgn(char *fname) {
-    FILE *fin = fopen(fname, "rb");
-    char buffer[1024];
-    char name[128];
+void ParseEcoPgn(char *pszFname) {
+    FILE *pFin = fopen(pszFname, "rb");
+    char szBuffer[1024];
+    char szName[128];
 
-    if (!fin) {
-        Print(0, "Cannot open file %s\n", fname);
+    if (!pFin) {
+        Print(0, "Cannot open file %s\n", pszFname);
         return;
     }
 
-    tree_node_t *node = NULL;
+    tree_node_t *pNode = NULL;
 
-    while (fgets(buffer, sizeof(buffer) - 1, fin) != NULL) {
+    while (fgets(szBuffer, sizeof(szBuffer) - 1, pFin) != NULL) {
         char *x;
-        strtok(buffer, " \t");
+        strtok(szBuffer, " \t");
         x = strtok(NULL, "]\n\r");
-        strncpy(name, x, sizeof(name) - 1);
+        strncpy(szName, x, sizeof(szName) - 1);
 
         Print(0, ".");
 
         CPosition *p = CPosition::Initial();
 
-        if (fgets(buffer, 1024, fin) != NULL) {
-            for (x = strtok(buffer, " \n\r\t"); x;
+        if (fgets(szBuffer, 1024, pFin) != NULL) {
+            for (x = strtok(szBuffer, " \n\r\t"); x;
                  x = strtok(NULL, " \n\r\t")) {
                 CMove move = p->ParseSAN(x);
                 if (move != M_NONE) {
@@ -81,78 +81,78 @@ void ParseEcoPgn(char *fname) {
                 }
             }
 
-            hash_t hashKey = p->GetHashKey();
-            node = add_node(node, (char *)&hashKey, sizeof(hashKey), name,
-                            strlen(name) + 1);
+            hash_t qwHashKey = p->GetHashKey();
+            pNode = add_node(pNode, (char *)&qwHashKey, sizeof(qwHashKey), szName,
+                            strlen(szName) + 1);
         }
 
         CPosition::Free(p);
     }
 
-    fclose(fin);
+    fclose(pFin);
 
-    FILE *fout = fopen(ECO_NAME, "wb");
-    if (fout == NULL) {
+    FILE *pFout = fopen(ECO_NAME, "wb");
+    if (pFout == NULL) {
         Print(0, "\nCannot save ECO database to %s: %s\n", ECO_NAME,
               strerror(errno));
         return;
     }
 
-    save_tree(node, fout);
-    fclose(fout);
+    save_tree(pNode, pFout);
+    fclose(pFout);
 
-    free_node(node);
+    free_node(pNode);
 
     Print(0, "\nECO database created.\n");
 }
 
 static tree_node_t *EcoDB = NULL;
 
-char *GetEcoCode(hash_t hkey) {
-    char *retval = NULL;
+char *GetEcoCode(hash_t qwHkey) {
+    char *pszRetval = NULL;
 
     if (EcoDB == NULL) {
-        FILE *fin = fopen(ECO_NAME, "rb");
+        FILE *pFin = fopen(ECO_NAME, "rb");
 
 #ifdef DEFAULT_ECO_NAME
-        if (fin == NULL) {
-            fin = fopen(DEFAULT_ECO_NAME, "rb");
+        if (pFin == NULL) {
+            pFin = fopen(DEFAULT_ECO_NAME, "rb");
         }
 #endif
 
-        if (fin == NULL) {
+        if (pFin == NULL) {
             Print(0, "Can't open database: %s\n", strerror(errno));
             return NULL;
         }
-        EcoDB = load_tree(fin);
-        fclose(fin);
+        EcoDB = load_tree(pFin);
+        fclose(pFin);
     }
 
     if (EcoDB != NULL) {
-        retval = (char *)lookup_value(EcoDB, (char *)&hkey, sizeof(hkey), NULL);
+        pszRetval = (char *)lookup_value(EcoDB, (char *)&qwHkey, sizeof(qwHkey), NULL);
     }
 
-    return retval;
+    return pszRetval;
 }
 
-bool FindEcoCode(const CPosition *p, char *result) {
-    int ply = 0;
-    char *res;
-    bool found = false;
+bool FindEcoCode(const CPosition *p, char *pszResult) {
+    int nPly = 0;
+    char *pszRes;
+    bool fFound = false;
 
-    while (ply <= p->GetPly()) {
-        hash_t key = p->GetGameLog()[ply].gl_HashKey;
-        if (ply == p->GetPly()) {
-            key = p->GetHashKey();
+    while (nPly <= p->GetPly()) {
+        hash_t qwKey = p->GetGameLog()[nPly].gl_HashKey;
+        if (nPly == p->GetPly()) {
+            qwKey = p->GetHashKey();
         }
-        res = GetEcoCode(key);
-        if (res != NULL) {
-            strcpy(result, res);
-            found = true;
-            free(res);
+        pszRes = GetEcoCode(qwKey);
+        if (pszRes != NULL) {
+            strcpy(pszResult, pszRes);
+            fFound = true;
+            free(pszRes);
         }
-        ply++;
+        nPly++;
     }
 
-    return found;
+    return fFound;
 }
