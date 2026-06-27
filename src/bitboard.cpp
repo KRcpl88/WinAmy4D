@@ -115,63 +115,63 @@ bool operator!=(const CBitBoard &Left, const CBitBoard &Right) {
 }
 
 CBitBoard operator&(const CBitBoard &Left, const CBitBoard &Right) {
-    CBitBoard Result;
+    CBitBoard result;
     for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w)
-        Result.m_rgBits[w] = Left.m_rgBits[w] & Right.m_rgBits[w];
-    return Result;
+        result.m_rgBits[w] = Left.m_rgBits[w] & Right.m_rgBits[w];
+    return result;
 }
 
 CBitBoard operator|(const CBitBoard &Left, const CBitBoard &Right) {
-    CBitBoard Result;
+    CBitBoard result;
     for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w)
-        Result.m_rgBits[w] = Left.m_rgBits[w] | Right.m_rgBits[w];
-    return Result;
+        result.m_rgBits[w] = Left.m_rgBits[w] | Right.m_rgBits[w];
+    return result;
 }
 
 CBitBoard operator^(const CBitBoard &Left, const CBitBoard &Right) {
-    CBitBoard Result;
+    CBitBoard result;
     for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w)
-        Result.m_rgBits[w] = Left.m_rgBits[w] ^ Right.m_rgBits[w];
-    return Result;
+        result.m_rgBits[w] = Left.m_rgBits[w] ^ Right.m_rgBits[w];
+    return result;
 }
 
 CBitBoard operator~(const CBitBoard &BitBoard) {
-    CBitBoard Result;
+    CBitBoard result;
     for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w)
-        Result.m_rgBits[w] = ~BitBoard.m_rgBits[w];
-    return Result;
+        result.m_rgBits[w] = ~BitBoard.m_rgBits[w];
+    return result;
 }
 
 CBitBoard operator<<(const CBitBoard &BitBoard, int nShift) {
-    CBitBoard Result;
+    CBitBoard result;
     const int nWordShift = nShift / CBitBoard::ULONGLONG_SIZE_BITS;
     const int nBitShift = nShift % CBitBoard::ULONGLONG_SIZE_BITS;
     for (int i = CBitBoard::SIZE_ULONGLONG - 1; i >= 0; --i) {
         const int nSrc = i - nWordShift;
         if (nSrc >= 0) {
-            Result.m_rgBits[i] = BitBoard.m_rgBits[nSrc] << nBitShift;
+            result.m_rgBits[i] = BitBoard.m_rgBits[nSrc] << nBitShift;
             if (nBitShift > 0 && nSrc - 1 >= 0) {
-                Result.m_rgBits[i] |= BitBoard.m_rgBits[nSrc - 1] >> (CBitBoard::ULONGLONG_SIZE_BITS - nBitShift);
+                result.m_rgBits[i] |= BitBoard.m_rgBits[nSrc - 1] >> (CBitBoard::ULONGLONG_SIZE_BITS - nBitShift);
             }
         }
     }
-    return Result;
+    return result;
 }
 
 CBitBoard operator>>(const CBitBoard &BitBoard, int nShift) {
-    CBitBoard Result;
+    CBitBoard result;
     const int nWordShift = nShift / CBitBoard::ULONGLONG_SIZE_BITS;
     const int nBitShift = nShift % CBitBoard::ULONGLONG_SIZE_BITS;
     for (int i = 0; i < CBitBoard::SIZE_ULONGLONG; ++i) {
         const int nSrc = i + nWordShift;
         if (nSrc < CBitBoard::SIZE_ULONGLONG) {
-            Result.m_rgBits[i] = BitBoard.m_rgBits[nSrc] >> nBitShift;
+            result.m_rgBits[i] = BitBoard.m_rgBits[nSrc] >> nBitShift;
             if (nBitShift > 0 && nSrc + 1 < CBitBoard::SIZE_ULONGLONG) {
-                Result.m_rgBits[i] |= BitBoard.m_rgBits[nSrc + 1] << (CBitBoard::ULONGLONG_SIZE_BITS - nBitShift);
+                result.m_rgBits[i] |= BitBoard.m_rgBits[nSrc + 1] << (CBitBoard::ULONGLONG_SIZE_BITS - nBitShift);
             }
         }
     }
-    return Result;
+    return result;
 }
 
 CBitBoard &CBitBoard::operator|=(const CBitBoard &Right) {
@@ -203,9 +203,9 @@ CBitBoard &CBitBoard::operator>>=(int nShift) {
 }
 
 CBitBoard operator*(const CBitBoard &Left, const CBitBoard &Right) {
-    CBitBoard Result;
-    Result.m_rgBits[0] = Left.m_rgBits[0] * Right.m_rgBits[0];
-    return Result;
+    CBitBoard result;
+    result.m_rgBits[0] = Left.m_rgBits[0] * Right.m_rgBits[0];
+    return result;
 }
 
 bool operator!(const CBitBoard &BitBoard) {
