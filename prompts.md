@@ -615,6 +615,18 @@ A new repro has been found, please see most recent comments and impossiblebug.lo
 - global fix hungarian
 
 
+# Look feature
+
+Please add a new button labeled "look" for a new feature for both 2D and 3D mode to allow the player to look at attacks for any piece from any location.  
+
+1. Add a button labeled "Look" with a checkbox that operates as a pushbutton, press once to activate the fature and press again to turn it off.  When activated, the checkbox on the button will be checked.  The button will appear to the right of the board perspective rotation dropdown.
+2. When active, add a dropdown selection to the right of the button which allows the use to selecte a piece type.
+3. When lookmode is active, the user may select any location, either with or without a piece on it, and the view will highlight all squares the selected piece type can attack from that position, including capturing any white or black pieces.  The look mode does not specify which side the piece is from, it may be either white or black, so any pieces whihc could be captured from that location will be highlighted, regardless of which side they belong to.
+4. If the user switched form 2D to 3D while a look mode is enabled, the same piece type and location selection will be highlighted from both views.
+5. If the user turns off look mode and then turns it on again, the previous selection for the piece type and location will be remebered.
+
+
+
 
 
 Please create a plan to make these improvements to the program:
