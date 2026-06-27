@@ -81,6 +81,10 @@
 #define IDC_BTN_ENTER_MOVE  2014
 #define IDC_CB_SWAP_AXES    2017
 #define IDC_BTN_ROTATE_GRID 2018
+// "Look" feature: a toggle (push-like checkbox) that, while active, highlights
+// every square the chosen piece type would attack from a selected location.
+#define IDC_BTN_LOOK        2019
+#define IDC_CB_LOOK_PIECE   2020
 
 // Custom window messages
 #define WM_APP_ENGINE_MOVE  (WM_APP + 1)

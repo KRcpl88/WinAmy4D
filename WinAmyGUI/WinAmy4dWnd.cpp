@@ -446,6 +446,12 @@ POINT CWinAmy4dWnd::Get2DBoardOffset(HWND hWnd) const {
 // Handles a click on a CSCoord that came from the 3D pick. Mirrors the
 // selection/move logic in OnSquareClick but skips the 2D hit-test.
 void CWinAmy4dWnd::OnSquareClick3D(const CSCoord& sq) {
+    // Look-mode locations may only be picked from the 2D view: an empty square
+    // cannot be clicked accurately in 3D. Ignore 3D board clicks while look
+    // mode is active so a stray pick never changes the previewed location.
+    if (m_fLookMode) {
+        return;
+    }
     // Input is intentionally NOT blocked while the engine is searching; see the
     // note in OnSquareClick. TryMakeSelectedMove() aborts the in-flight search
     // when the user actually commits a move.
@@ -499,7 +505,7 @@ LRESULT CWinAmy4dWnd::Render3DProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
         PAINTSTRUCT ps;
         BeginPaint(hWnd, &ps);
         if (m_D3DRenderer.IsInitialized()) {
-            const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
+            const CSCoord* sel = SelectionForRender();
             std::vector<CSCoord> HintSquares = GetHintSquaresForRender();
             m_D3DRenderer.Render(m_Game.GetPosition(), sel, m_rgLegalDests,
                                  HintSquares);
@@ -700,6 +706,50 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
         }
         SendMessageW(m_hCbSwapAxes, CB_SETCURSEL, 0, 0);
     }
+
+    // "Look" feature controls. The Look button is a checkbox that behaves as a
+    // toggle: each click flips look mode on/off and the checkbox reflects the
+    // active state. Both controls remain available in 2D and 3D, so they are
+    // never hidden by SetViewMode; the piece-type dropdown is shown only while
+    // look mode is on. Their x-origin depends on the view mode: in 3D they sit
+    // to the far right (here, after the 3D-only controls) so those controls
+    // have room; in 2D they move left next to the plane selector. SetViewMode
+    // calls PositionLookControls to switch between the two slots.
+    {
+        m_nLookX3D = x; // far-right slot, used in 3D view.
+        m_nLookX2D = m_nDropdownX + DROPDOWN_W + BTN_GAP; // next to plane selector.
+        m_hBtnLook = CreateWindowExW(0, L"BUTTON", L"Look",
+            WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, BTN_Y, 70, BTN_H, hWnd,
+            (HMENU)(INT_PTR)IDC_BTN_LOOK, hInst, nullptr);
+        x += 70 + BTN_GAP;
+        SendMessageW(m_hBtnLook, BM_SETCHECK, BST_UNCHECKED, 0);
+
+        int nCbH = 200; // includes dropdown extent (5 items + decorations).
+        m_hCbLookPiece = CreateWindowExW(0, L"COMBOBOX", L"",
+            WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
+            x, BTN_Y, 110, nCbH, hWnd,
+            (HMENU)(INT_PTR)IDC_CB_LOOK_PIECE, hInst, nullptr);
+        x += 110 + BTN_GAP;
+        // Index order maps onto the Piece enum: combobox index N == (Knight + N).
+        // Pawn is intentionally omitted because a pawn's attack direction
+        // depends on its colour, which the side-agnostic Look mode cannot show.
+        static const wchar_t* kLookPieceLabels[] = {
+            L"Knight",
+            L"Bishop",
+            L"Rook",
+            L"Queen",
+            L"King",
+        };
+        for (auto* psz : kLookPieceLabels) {
+            SendMessageW(m_hCbLookPiece, CB_ADDSTRING, 0, (LPARAM)psz);
+        }
+        SendMessageW(m_hCbLookPiece, CB_SETCURSEL,
+                     (WPARAM)(m_nLookPiece - Knight), 0);
+    }
+
+    // Initial view is 2D, so dock the Look controls in their 2D slot.
+    PositionLookControls(m_nLookX2D);
 
     // Initial visibility for the current (2D) view mode: the 3D-only view
     // controls are hidden, while the 2D-only plane selector stays visible.
@@ -1041,25 +1091,109 @@ void CWinAmy4dWnd::UpdateSuggestMoveButton() {
 
 std::vector<CSCoord> CWinAmy4dWnd::GetHintSquaresForRender() const {
     std::vector<CSCoord> Squares = m_LegalMoveHintSquares;
-    for (const CSCoord& sqHint : m_HintSquares) {
-        bool fFound = false;
-        for (const CSCoord& sqExisting : Squares) {
-            if (sqHint.IsValid() && sqExisting.IsValid()
-                    && sqHint.BitOffset() == sqExisting.BitOffset()) {
-                fFound = true;
-                break;
+    auto AppendUnique = [&Squares](const std::vector<CSCoord>& Extra) {
+        for (const CSCoord& sqExtra : Extra) {
+            bool fFound = false;
+            for (const CSCoord& sqExisting : Squares) {
+                if (sqExtra.IsValid() && sqExisting.IsValid()
+                        && sqExtra.BitOffset() == sqExisting.BitOffset()) {
+                    fFound = true;
+                    break;
+                }
+            }
+            if (!fFound) {
+                Squares.push_back(sqExtra);
             }
         }
-        if (!fFound) {
-            Squares.push_back(sqHint);
-        }
-    }
+    };
+    AppendUnique(m_HintSquares);
+    // Look-mode attack preview squares are highlighted alongside hints.
+    AppendUnique(ComputeLookAttackSquares());
     return Squares;
 }
 
 // ---------------------------------------------------------------------------
-// OnSuggestMove — ask the engine to recommend a move for the human player
+// Look feature helpers
 // ---------------------------------------------------------------------------
+
+std::vector<CSCoord> CWinAmy4dWnd::ComputeLookAttackSquares() const {
+    std::vector<CSCoord> Squares;
+    if (!m_fLookMode || !m_fLookHaveSquare || !m_LookSquare.IsValid()) {
+        return Squares;
+    }
+    const CPosition* pPos = m_Game.GetPosition();
+    if (!pPos) {
+        return Squares;
+    }
+
+    // Occupancy of both colours, used as blockers for sliding pieces (matches
+    // the board the engine uses in CPosition::AtkSet).
+    const CBitBoard Occupied = pPos->GetMask(0, 0) | pPos->GetMask(1, 0);
+
+    CBitBoard Attacks;
+    switch (m_nLookPiece) {
+    case Knight:
+        Attacks = ComputeLeapAttacks(m_LookSquare, Knight);
+        break;
+    case King:
+        Attacks = ComputeLeapAttacks(m_LookSquare, King);
+        break;
+    case Bishop:
+        Attacks = ComputeSlidingAttacks(m_LookSquare, Bishop, Occupied);
+        break;
+    case Rook:
+        Attacks = ComputeSlidingAttacks(m_LookSquare, Rook, Occupied);
+        break;
+    case Queen:
+        Attacks = ComputeSlidingAttacks(m_LookSquare, Queen, Occupied);
+        break;
+    default:
+        break;
+    }
+
+    while (Attacks) {
+        const uint16_t nOffset = Attacks.FindSetBit();
+        Attacks.ClearLowestBit();
+        Squares.push_back(CSCoord(nOffset));
+    }
+    return Squares;
+}
+
+const CSCoord* CWinAmy4dWnd::SelectionForRender() const {
+    if (m_fLookMode && m_fLookHaveSquare && m_LookSquare.IsValid()) {
+        return &m_LookSquare;
+    }
+    return m_fHaveSelection ? &m_SelectedSquare : nullptr;
+}
+
+void CWinAmy4dWnd::OnToggleLookMode() {
+    m_fLookMode = (SendMessageW(m_hBtnLook, BM_GETCHECK, 0, 0) == BST_CHECKED);
+    // The piece-type dropdown is only relevant while look mode is active.
+    ShowWindow(m_hCbLookPiece, m_fLookMode ? SW_SHOW : SW_HIDE);
+    if (m_fLookMode) {
+        // Repurpose board clicks for picking a look location, so drop any
+        // pending click-to-move selection.
+        m_fHaveSelection = false;
+        m_rgLegalDests.clear();
+    }
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    if (m_hRender3D) {
+        InvalidateRect(m_hRender3D, nullptr, FALSE);
+    }
+}
+
+void CWinAmy4dWnd::PositionLookControls(int nBaseX) {
+    // Button width matches the value used when creating m_hBtnLook.
+    constexpr int nLookBtnW = 70;
+    if (m_hBtnLook) {
+        SetWindowPos(m_hBtnLook, nullptr, nBaseX, BTN_Y, 0, 0,
+                     SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    if (m_hCbLookPiece) {
+        SetWindowPos(m_hCbLookPiece, nullptr, nBaseX + nLookBtnW + BTN_GAP,
+                     BTN_Y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+}
 
 void CWinAmy4dWnd::OnSuggestMove() {
     if (m_Game.IsEngineRunning()) {
@@ -1205,6 +1339,19 @@ void CWinAmy4dWnd::OnEngineStrategy(LPARAM /*lParam*/) {
 // ---------------------------------------------------------------------------
 
 void CWinAmy4dWnd::OnSquareClick(POINT pt) {
+    // In look mode a board click picks the location to preview attacks from —
+    // any square, occupied or empty. This works regardless of game state since
+    // it only inspects the board, so it is handled before the play guards.
+    if (m_fLookMode) {
+        CSCoord sq = m_Renderer.HitTest(pt);
+        if (sq.IsValid()) {
+            m_LookSquare = sq;
+            m_fLookHaveSquare = true;
+            InvalidateRect(m_hWnd, nullptr, TRUE);
+        }
+        return;
+    }
+
     // Note: input is intentionally NOT blocked while the engine is searching.
     // The user may select any piece to inspect its legal moves, and may commit
     // a move of their own; TryMakeSelectedMove() aborts the in-flight search
@@ -1794,6 +1941,9 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         ShowWindow(m_hBtnZoomOut,  SW_SHOW);
         ShowWindow(m_hBtnRotateGrid, SW_SHOW);
         ShowWindow(m_hCbSwapAxes,  SW_HIDE);
+        // Move the Look controls to their far-right slot so the 3D-only
+        // controls (grid type, rotate grid, zoom) have room on the left.
+        PositionLookControls(m_nLookX3D);
         // Enable the 3D-only View menu items.
         EnableMenuItem(hMenu, IDM_VIEW_SHOW_GRIDLINES, MF_BYCOMMAND | MF_ENABLED);
         EnableMenuItem(hMenu, IDM_VIEW_RESET_VIEW,     MF_BYCOMMAND | MF_ENABLED);
@@ -1822,6 +1972,9 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         ShowWindow(m_hBtnZoomOut,  SW_HIDE);
         ShowWindow(m_hBtnRotateGrid, SW_HIDE);
         ShowWindow(m_hCbSwapAxes,  SW_SHOW);
+        // Dock the Look controls next to the 2D plane selector now that the
+        // 3D-only controls are hidden.
+        PositionLookControls(m_nLookX2D);
         // Disable the 3D-only View menu items.
         EnableMenuItem(hMenu, IDM_VIEW_SHOW_GRIDLINES,
             MF_BYCOMMAND | MF_GRAYED | MF_DISABLED);
@@ -2054,7 +2207,7 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             // Offset by toolbar height and current scroll position.
             SetViewportOrgEx(hdc, ptOffset.x - m_nScrollX, TOOLBAR_H + ptOffset.y - m_nScrollY, nullptr);
 
-            const CSCoord* sel = m_fHaveSelection ? &m_SelectedSquare : nullptr;
+            const CSCoord* sel = SelectionForRender();
             std::vector<CSCoord> HintSquares = GetHintSquaresForRender();
             m_Renderer.DrawBoard(hdc, m_Game.GetPosition(), sel, m_rgLegalDests,
                                  HintSquares);
@@ -2245,6 +2398,24 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                 if (nSel != CB_ERR) {
                     SetGridType(static_cast<CUCoord::EOutlineType>(
                         static_cast<int>(CUCoord::OT_full) + nSel));
+                }
+            }
+            break;
+
+        case IDC_BTN_LOOK:
+            OnToggleLookMode();
+            break;
+
+        case IDC_CB_LOOK_PIECE:
+            // Look-mode piece selector: combobox index N maps to (Knight + N).
+            if (code == CBN_SELCHANGE) {
+                int nSel = (int)SendMessageW(m_hCbLookPiece, CB_GETCURSEL, 0, 0);
+                if (nSel != CB_ERR) {
+                    m_nLookPiece = Knight + nSel;
+                    InvalidateRect(m_hWnd, nullptr, TRUE);
+                    if (m_hRender3D) {
+                        InvalidateRect(m_hRender3D, nullptr, FALSE);
+                    }
                 }
             }
             break;
