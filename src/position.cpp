@@ -73,15 +73,6 @@ extern char BestLine[2048];
 extern char ShortBestLine[2048];
 extern char AnalysisLine[4096];
 extern OPTIONAL_ATOMIC unsigned long TotalNodes;
-extern void *IterateInt(void *x);
-
-enum {
-    Searching = 1,
-    Pondering = 2,
-    Puzzling = 3,
-    Analyzing = 4,
-    Interrupted = 5
-};
 
 #define REVERSE "\x1B[7m"
 #define NORMAL "\x1B[0m"
@@ -505,7 +496,7 @@ CMove CPosition::Iterate(int *pScorePtr, CMove AlternateMove,
      */
     p->m_pSearchData = pSd;
 
-    IterateInt(pSd);
+    pSd->IterateInt();
 
     CMove BestMove = pSd->m_BestMove;
     if (pScorePtr != NULL) {
@@ -769,7 +760,7 @@ void CPosition::StartHelpers() {
                    (void *)pSd->m_pPosition, nthread);
         HelperThreads.emplace_back([pSd]() {
             SetSearchThreadBackgroundPriority();
-            IterateInt(pSd);
+            pSd->IterateInt();
         });
     }
 }

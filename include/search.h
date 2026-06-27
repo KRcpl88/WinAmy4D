@@ -97,4 +97,59 @@ void StopHelpers(void);
 void SetSearchThreadBackgroundPriority(void);
 #endif
 
+/*
+ * Search mode constants.
+ */
+enum {
+    Searching = 1,
+    Pondering = 2,
+    Puzzling = 3,
+    Analyzing = 4,
+    Interrupted = 5
+};
+
+/*
+ * Node type constants used by NegaScout and IterateInt.
+ */
+enum { PVNode = 0, AllNode = 1, CutNode = 2, CutNodeNoNull = 3 };
+
+/*
+ * Fractional-ply value: one logical ply equals OnePly internal depth units.
+ * See D. Levy et al., "The SEX Algorithm in Computer Chess."
+ */
+static const int OnePly = 16;
+
+/* Aspiration window and re-search widths. */
+static const int PVWindow = 250;
+static const int ResearchWindow = 1500;
+
+/* Minimum depth before an early mate-score exit is allowed. */
+static const int MateDepth = 3;
+
+/*
+ * Search-state globals defined in search.cpp.
+ */
+extern int MaxDepth;
+extern int MaxSearchDepth;
+extern int SearchMode;
+extern int DoneAtRoot;
+extern bool NeedTime;
+extern int PrintOK;
+extern int NodesPerCheck;
+extern unsigned long SoftLimit, SoftLimit2, HardLimit;
+extern unsigned long StartTime, CurTime;
+extern uint16_t cExcludedRootMoves;
+extern CMove rgExcludedRootMoves[];
+extern char BestLine[2048];
+extern char AnalysisLine[4096];
+extern CMove PBMove;
+extern unsigned long RCExt, ChkExt, DiscExt, DblExt, SingExt, PPExt, ZZExt;
+
+/*
+ * Sort root moves by the node counts gathered in the previous iteration.
+ * Moves with higher node counts (i.e., moves the engine spent more time on)
+ * are moved towards the front so they are searched first in the next depth.
+ */
+void ResortMovesList(int nCnt, CMove *pMvs, unsigned long *pNodes);
+
 #endif
