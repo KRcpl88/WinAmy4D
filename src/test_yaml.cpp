@@ -214,8 +214,8 @@ static void test_get_as_string_not_found(void) {
     struct YamlNode *pResult = parse_yaml(pszPayload);
     assert(pResult != NULL);
 
-    struct StringLookupResult LookupResult = get_as_string(pResult, "other_key");
-    assert(LookupResult.result_code == NOT_FOUND);
+    struct StringLookupResult lookupResult = get_as_string(pResult, "other_key");
+    assert(lookupResult.result_code == NOT_FOUND);
 
     free_yaml_node(pResult);
 }
@@ -332,10 +332,10 @@ static void test_get_as_list_flow_style(void) {
     struct YamlNode *pResult = parse_yaml(pszPayload);
     assert(pResult != NULL);
 
-    struct ListLookupResult LookupResult = get_as_list(pResult, "key");
-    assert(LookupResult.result_code == OK);
+    struct ListLookupResult lookupResult = get_as_list(pResult, "key");
+    assert(lookupResult.result_code == OK);
 
-    struct YamlListNode *pList = LookupResult.result;
+    struct YamlListNode *pList = lookupResult.result;
     assert(pList != NULL);
 
     struct YamlListNode *pNextNode = pList->next;

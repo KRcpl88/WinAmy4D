@@ -220,10 +220,10 @@ char *FormatCount(unsigned long dwCount, char *pszBuffer, size_t qwLen) {
  */
 unsigned long GetTime(void) {
 #if HAVE_GETTIMEOFDAY
-    static struct timeval Timeval;
+    static struct timeval timeval;
 
-    gettimeofday(&Timeval, NULL);
-    return Timeval.tv_sec * 100 + (Timeval.tv_usec / 10000L);
+    gettimeofday(&timeval, NULL);
+    return timeval.tv_sec * 100 + (timeval.tv_usec / 10000L);
 #else
 #ifdef _WIN32
     return ((unsigned long)GetTickCount() / 10);
@@ -239,10 +239,10 @@ unsigned long GetTime(void) {
 void GetTmpFileName(char *pszFileName, size_t qwLen) {
     for (int nCnt = 0;; nCnt++) {
         int nResult;
-        struct stat Dummy;
+        struct stat dummy;
 
         snprintf(pszFileName, qwLen, "save_%03d.pgn", nCnt);
-        nResult = stat(pszFileName, &Dummy);
+        nResult = stat(pszFileName, &dummy);
 
         if (nResult < 0)
             return;
@@ -253,13 +253,13 @@ void GetTmpFileName(char *pszFileName, size_t qwLen) {
  */
 int InputReady(void) {
 #if HAVE_SELECT
-    fd_set Rfd;
-    struct timeval Timeout;
-    Timeout.tv_sec = Timeout.tv_usec = 0;
-    FD_ZERO(&Rfd);
-    FD_SET(0, &Rfd);
+    fd_set rfd;
+    struct timeval timeout;
+    timeout.tv_sec = timeout.tv_usec = 0;
+    FD_ZERO(&rfd);
+    FD_SET(0, &rfd);
 
-    return select(1, &Rfd, NULL, NULL, &Timeout) > 0;
+    return select(1, &rfd, NULL, NULL, &timeout) > 0;
 #else
 #ifdef _WIN32
     int nI;

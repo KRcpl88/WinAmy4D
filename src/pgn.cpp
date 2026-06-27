@@ -127,13 +127,13 @@ void SaveGame(CPosition *p, char *pszFileName) {
             fprintf(pFout, "[Result \"%s\"]\n\n", szShortgameend);
 
             for (i = nPly; i > 0; i--) {
-                CMove Move = (p->GetActLog() - 1)->gl_Move;
-                PGNMoveHistory[i - 1] = Move;
-                p->UndoMove(Move);
+                CMove move = (p->GetActLog() - 1)->gl_Move;
+                PGNMoveHistory[i - 1] = move;
+                p->UndoMove(move);
             }
 
             for (i = 0; i < nPly; i++) {
-                CMove Move = PGNMoveHistory[i];
+                CMove move = PGNMoveHistory[i];
                 if ((i & 1) == 0) {
                     fprintf(pFout, "%d. ", (i / 2) + 1);
                     nWidth += 3;
@@ -144,14 +144,14 @@ void SaveGame(CPosition *p, char *pszFileName) {
                 }
 
                 char szSanBuffer[16];
-                char *pszSan = p->SAN(Move, szSanBuffer);
+                char *pszSan = p->SAN(move, szSanBuffer);
                 fprintf(pFout, "%s ", pszSan);
                 nWidth += (int)strlen(pszSan) + 1;
                 if (nWidth > 67) {
                     nWidth = 0;
                     fprintf(pFout, "\n");
                 }
-                p->DoMove(Move);
+                p->DoMove(move);
             }
             fprintf(pFout, "\n%s\n\n", pszGameend);
             fclose(pFout);
@@ -163,13 +163,13 @@ void LoadGame(CPosition *p, char *pszFileName) {
     FILE *pFin = fopen(pszFileName, "r");
 
     if (pFin) {
-        struct PGNHeader Header;
+        struct PGNHeader header;
         char szMove[16];
-        if (!scanHeader(pFin, &Header)) {
+        if (!scanHeader(pFin, &header)) {
             while (!scanMove(pFin, szMove)) {
-                CMove TheMove = p->ParseSAN(szMove);
-                if (TheMove != M_NONE) {
-                    p->DoMove(TheMove);
+                CMove themove = p->ParseSAN(szMove);
+                if (themove != M_NONE) {
+                    p->DoMove(themove);
                 }
             }
         }

@@ -183,7 +183,7 @@ static void BookupInternal(char *pszFileName, int nVerbosity) {
     tree_node_t *pDatabase = NULL;
     int nLines = 0;
 
-    struct PGNHeader Header;
+    struct PGNHeader header;
     char szMove[12];
 
     pFin = fopen(pszFileName, "rb");
@@ -196,14 +196,14 @@ static void BookupInternal(char *pszFileName, int nVerbosity) {
 
     CloseBook();
 
-    while (!scanHeader(pFin, &Header)) {
+    while (!scanHeader(pFin, &header)) {
         int nResult;
 
-        if (!strcmp(Header.result, "1-0"))
+        if (!strcmp(header.result, "1-0"))
             nResult = 1;
-        else if (!strcmp(Header.result, "0-1"))
+        else if (!strcmp(header.result, "0-1"))
             nResult = -1;
-        else if (!strcmp(Header.result, "1/2-1/2"))
+        else if (!strcmp(header.result, "1/2-1/2"))
             nResult = 0;
         else
             continue;
@@ -216,9 +216,9 @@ static void BookupInternal(char *pszFileName, int nVerbosity) {
                 exit(1);
             }
 
-            CMove TheMove = p->ParseSAN(szMove);
-            if (TheMove != M_NONE) {
-                p->DoMove(TheMove);
+            CMove themove = p->ParseSAN(szMove);
+            if (themove != M_NONE) {
+                p->DoMove(themove);
                 char *pszEcoCode = GetEcoCode(p->GetHashKey());
                 if (pszEcoCode) {
                     nAfterEco = 0;
@@ -230,11 +230,11 @@ static void BookupInternal(char *pszFileName, int nVerbosity) {
                     if (p->GetTurn() == Black) {
                         /* white played the move */
                         pDatabase = PutBookEntry(pDatabase, p->GetHashKey(), nResult,
-                                                 Header.white_elo);
+                                                 header.white_elo);
                     } else {
                         /* black played the move */
                         pDatabase = PutBookEntry(pDatabase, p->GetHashKey(), -nResult,
-                                                 Header.black_elo);
+                                                 header.black_elo);
                     }
                 }
             }
@@ -280,21 +280,21 @@ static void GetAllBookMoves(CPosition *p, int *cnt, CMove *book_moves,
 
     for (i = heap->current_section->start; i < heap->current_section->end;
          i++) {
-        CMove Move = heap->data[i];
+        CMove move = heap->data[i];
         struct BookEntry *be = NULL;
         struct LearnEntry *pLe = NULL;
 
-        p->DoMove(Move);
+        p->DoMove(move);
         /* If the move leads to a repetition, do not accept it. */
         if (!p->Repeated(false)) {
             be = GetBookEntry(p->GetHashKey());
             pLe = GetLearnEntry(p->GetHashKey());
         }
-        p->UndoMove(Move);
+        p->UndoMove(move);
 
         if (be) {
             memset(pEntries + *cnt, 0, sizeof(struct BookQuery));
-            book_moves[*cnt] = Move;
+            book_moves[*cnt] = move;
             pEntries[*cnt].be = *be;
             if (pLe) {
                 pEntries[*cnt].le = *pLe;
@@ -323,12 +323,12 @@ static void SortBook(int cnt, CMove *pMvs, struct BookQuery *pEntries) {
                 pEntries[i].be.win + pEntries[i].be.loss + pEntries[i].be.draw;
             if (nF1 < nF2) {
                 struct BookQuery betmp = pEntries[i];
-                CMove Move;
+                CMove move;
                 pEntries[i] = pEntries[i - 1];
                 pEntries[i - 1] = betmp;
-                Move = pMvs[i];
+                move = pMvs[i];
                 pMvs[i] = pMvs[i - 1];
-                pMvs[i - 1] = Move;
+                pMvs[i - 1] = move;
 
                 fDone = false;
             }
@@ -473,13 +473,13 @@ static void PutLearnEntry(hash_t hk, int nLearnValue, int nFlags) {
         }
     }
 
-    struct LearnEntry Entry;
+    struct LearnEntry entry;
 
-    Entry.learn_value = nLearnValue;
-    Entry.flags = nFlags;
+    entry.learn_value = nLearnValue;
+    entry.flags = nFlags;
 
-    LearnDB = add_node(LearnDB, (char *)&hk, sizeof(hk), (char *)&Entry,
-                       sizeof(Entry));
+    LearnDB = add_node(LearnDB, (char *)&hk, sizeof(hk), (char *)&entry,
+                       sizeof(entry));
 }
 
 void CreateLearnDB(char *pszFileName) {
@@ -504,7 +504,7 @@ void CreateLearnDB(char *pszFileName) {
         while ((pszMove = nextToken(&pszX, " \n\r\t")) != NULL) {
             int nFlags = 0;
             char *pszModifier = pszMove + strlen(pszMove) - 1;
-            CMove TheMove;
+            CMove themove;
 
             if (*pszModifier == '!') {
                 nFlags = GoodMove;
@@ -514,12 +514,12 @@ void CreateLearnDB(char *pszFileName) {
                 *pszModifier = '\0';
             }
 
-            TheMove = p->ParseSAN(pszMove);
-            if (TheMove != M_NONE) {
+            themove = p->ParseSAN(pszMove);
+            if (themove != M_NONE) {
                 char szSanBuffer[16];
-                Print(0, "%s ", p->SAN(TheMove, szSanBuffer));
+                Print(0, "%s ", p->SAN(themove, szSanBuffer));
 
-                p->DoMove(TheMove);
+                p->DoMove(themove);
 
                 if (nFlags != 0) {
                     PutLearnEntry(p->GetHashKey(), 0, nFlags);

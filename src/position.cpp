@@ -105,11 +105,11 @@ extern std::vector<std::thread> HelperThreads;
 int CPosition::CheckExtend() {
     CPosition *p = this;
     int nKp = p->m_rgKingSq[p->m_nTurn].BitOffset();
-    CBitBoard Att;
+    CBitBoard att;
 
-    Att = p->m_rgAtkFr[nKp] & p->m_rgMask[OPP(p->m_nTurn)][0];
+    att = p->m_rgAtkFr[nKp] & p->m_rgMask[OPP(p->m_nTurn)][0];
 
-    if ((Att).CountBits() > 1) {
+    if ((att).CountBits() > 1) {
 
         /*
          * double check, the king has to move
@@ -125,11 +125,11 @@ int CPosition::CheckExtend() {
         DblExt++;
 
         ff = KingEPM[nKp] & ~p->m_rgMask[p->m_nTurn][0];
-        Att &= p->m_SlidingPieces;
+        att &= p->m_SlidingPieces;
 
-        while (Att) {
-            i = (Att).FindSetBit();
-            Att.ClearLowestBit();
+        while (att) {
+            i = (att).FindSetBit();
+            att.ClearLowestBit();
             ff &= ~Ray[i][nKp];
         }
 
@@ -144,9 +144,9 @@ int CPosition::CheckExtend() {
     } else {
         CBitBoard ff;
         CBitBoard def;
-        CBitBoard Tmp;
+        CBitBoard tmp;
 
-        int nAtp = (Att).FindSetBit();
+        int nAtp = (att).FindSetBit();
         int nCnt = 0;
         int i;
         int nNd = 0;
@@ -159,7 +159,7 @@ int CPosition::CheckExtend() {
 
         ff = KingEPM[nKp] & ~p->m_rgMask[p->m_nTurn][0];
 
-        i = (Att).FindSetBit();
+        i = (att).FindSetBit();
         if (p->m_SlidingPieces.TstBit(i))
             ff &= ~Ray[i][nKp];
 
@@ -176,52 +176,52 @@ int CPosition::CheckExtend() {
         /* Find all non-pinned defenders */
         def = p->m_rgMask[p->m_nTurn][0] & ~p->m_rgMask[p->m_nTurn][King];
 
-        Tmp = (p->m_rgMask[OPP(p->m_nTurn)][Bishop] | p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
+        tmp = (p->m_rgMask[OPP(p->m_nTurn)][Bishop] | p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
               BishopEPM[nKp];
-        while (Tmp) {
-            CBitBoard Tmp2;
-            i = (Tmp).FindSetBit();
-            Tmp.ClearLowestBit();
-            Tmp2 = InterPath[i][nKp];
-            if (Tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & Tmp2)) {
-                Tmp2 &= p->m_rgMask[p->m_nTurn][0];
-                if ((Tmp2).CountBits() == 1) {
-                    def.ClrBit((Tmp2).FindSetBit());
+        while (tmp) {
+            CBitBoard tmp2;
+            i = (tmp).FindSetBit();
+            tmp.ClearLowestBit();
+            tmp2 = InterPath[i][nKp];
+            if (tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & tmp2)) {
+                tmp2 &= p->m_rgMask[p->m_nTurn][0];
+                if ((tmp2).CountBits() == 1) {
+                    def.ClrBit((tmp2).FindSetBit());
                 }
             }
         }
 
-        Tmp = (p->m_rgMask[OPP(p->m_nTurn)][Rook] | p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
+        tmp = (p->m_rgMask[OPP(p->m_nTurn)][Rook] | p->m_rgMask[OPP(p->m_nTurn)][Queen]) &
               RookEPM[nKp];
-        while (Tmp) {
-            CBitBoard Tmp2;
-            i = (Tmp).FindSetBit();
-            Tmp.ClearLowestBit();
-            Tmp2 = InterPath[i][nKp];
-            if (Tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & Tmp2)) {
-                Tmp2 &= p->m_rgMask[p->m_nTurn][0];
-                if ((Tmp2).CountBits() == 1) {
-                    def.ClrBit((Tmp2).FindSetBit());
+        while (tmp) {
+            CBitBoard tmp2;
+            i = (tmp).FindSetBit();
+            tmp.ClearLowestBit();
+            tmp2 = InterPath[i][nKp];
+            if (tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & tmp2)) {
+                tmp2 &= p->m_rgMask[p->m_nTurn][0];
+                if ((tmp2).CountBits() == 1) {
+                    def.ClrBit((tmp2).FindSetBit());
                 }
             }
         }
 
         /* All non-pinned defenders are in 'def' */
-        Tmp = p->m_rgAtkFr[nAtp] & def;
+        tmp = p->m_rgAtkFr[nAtp] & def;
 
-        nCnt += (Tmp).CountBits();
+        nCnt += (tmp).CountBits();
         if (nCnt > 1)
             return nNd;
 
         /* if possible, try an interposition */
         if (p->m_SlidingPieces.TstBit(nAtp)) {
-            Tmp = InterPath[nAtp][nKp];
-            while (Tmp) {
-                CBitBoard Tmp2;
-                i = (Tmp).FindSetBit();
-                Tmp.ClearLowestBit();
-                if ((Tmp2 = p->m_rgAtkFr[i] & def)) {
-                    nCnt += (Tmp2).CountBits();
+            tmp = InterPath[nAtp][nKp];
+            while (tmp) {
+                CBitBoard tmp2;
+                i = (tmp).FindSetBit();
+                tmp.ClearLowestBit();
+                if ((tmp2 = p->m_rgAtkFr[i] & def)) {
+                    nCnt += (tmp2).CountBits();
                 }
                 if (p->m_nTurn == White) {
                     const int nLw = static_cast<int>(
@@ -253,24 +253,24 @@ int CPosition::CheckExtend() {
  * Compute an optimistic score for a move.
  */
 
-int CPosition::ScoreMove(CMove Move) {
+int CPosition::ScoreMove(CMove move) {
     CPosition *p = this;
     int nScore = 0;
 
-    if (Move.IsCapture())
-        nScore += Value[TYPE(p->m_rgPiece[Move.GetToCoord().BitOffset()])];
-    if (Move.HasPromotion())
-        nScore += Value[PromoType(Move)] - Value[Pawn];
-    else if (TYPE(p->m_rgPiece[Move.GetFromCoord().BitOffset()]) == Pawn) {
-        if (p->m_nTurn == White && Move.GetToCoord().BitOffset() >= ha7) {
+    if (move.IsCapture())
+        nScore += Value[TYPE(p->m_rgPiece[move.GetToCoord().BitOffset()])];
+    if (move.HasPromotion())
+        nScore += Value[PromoType(move)] - Value[Pawn];
+    else if (TYPE(p->m_rgPiece[move.GetFromCoord().BitOffset()]) == Pawn) {
+        if (p->m_nTurn == White && move.GetToCoord().BitOffset() >= ha7) {
             nScore += Value[Bishop];
         }
-        if (p->m_nTurn == Black && Move.GetToCoord().BitOffset() <= hh2) {
+        if (p->m_nTurn == Black && move.GetToCoord().BitOffset() <= hh2) {
             nScore += Value[Bishop];
         }
     }
 
-    if (Move.IsEnPassant())
+    if (move.IsEnPassant())
         nScore += Value[Pawn];
 
     return nScore;
@@ -279,15 +279,15 @@ int CPosition::ScoreMove(CMove Move) {
 /**
  * Print the SAN of a move prefixed by the move number.
  */
-char *CPosition::NumberedSAN(CMove Move, char *pszBuffer, size_t qwLen) {
+char *CPosition::NumberedSAN(CMove move, char *pszBuffer, size_t qwLen) {
     CPosition *p = this;
     char szSanBuffer[16];
     if (p->m_nTurn == White)
         snprintf(pszBuffer, qwLen, "%d. %s", 1 + (p->m_wPly + 1) / 2,
-                 p->SAN(Move, szSanBuffer));
+                 p->SAN(move, szSanBuffer));
     else
         snprintf(pszBuffer, qwLen, "%d. .. %s", 1 + p->m_wPly / 2,
-                 p->SAN(Move, szSanBuffer));
+                 p->SAN(move, szSanBuffer));
 
     return pszBuffer;
 }
@@ -298,28 +298,28 @@ char *CPosition::NumberedSAN(CMove Move, char *pszBuffer, size_t qwLen) {
 
 void CPosition::AnaLoop(int nDepth) {
     CPosition *p = this;
-    CMove Move;
+    CMove move;
     bool fDummy = false;
     int nScore;
 
 #if MP
-    if (ProbeHT(p->m_ullHKey, &nScore, 0, &Move, &fDummy, 0, 0, NULL) == Useless)
+    if (ProbeHT(p->m_ullHKey, &nScore, 0, &move, &fDummy, 0, 0, NULL) == Useless)
         return;
 #else
-    if (ProbeHT(p->m_ullHKey, &nScore, 0, &Move, &fDummy, 0) == Useless)
+    if (ProbeHT(p->m_ullHKey, &nScore, 0, &move, &fDummy, 0) == Useless)
         return;
 #endif
 
     if (p->Repeated(true) >= 2)
         return;
 
-    if (p->LegalMove(Move)) {
+    if (p->LegalMove(move)) {
         int nIncheck;
         char szBuffer[16];
 
-        p->DoMove(Move);
+        p->DoMove(move);
         nIncheck = p->InCheck(OPP(p->m_nTurn));
-        p->UndoMove(Move);
+        p->UndoMove(move);
 
         if (p->m_nTurn == White) {
             snprintf(szBuffer, sizeof(szBuffer), "%d. ", 1 + (p->m_wPly + 1) / 2);
@@ -332,7 +332,7 @@ void CPosition::AnaLoop(int nDepth) {
             return;
         }
 
-        char *pszSan = p->SAN(Move, szBuffer);
+        char *pszSan = p->SAN(move, szBuffer);
         strcat(BestLine, pszSan);
         strcat(BestLine, " ");
         strcat(ShortBestLine, pszSan);
@@ -340,30 +340,30 @@ void CPosition::AnaLoop(int nDepth) {
 
         /* save move to ponder on ... */
         if (nDepth == 1)
-            PBMove = Move;
+            PBMove = move;
 
-        p->DoMove(Move);
+        p->DoMove(move);
         p->AnaLoop(nDepth + 1);
-        p->UndoMove(Move);
-    } else if (Move == M_HASHED) {
+        p->UndoMove(move);
+    } else if (move == M_HASHED) {
         strcat(BestLine, "..");
         strcat(ShortBestLine, "..");
-    } else if (Move == M_NULL) {
+    } else if (move == M_NULL) {
         strcat(BestLine, "<null>");
         strcat(ShortBestLine, "<null>");
     }
 }
 
-void CPosition::AnalyzeHT(CMove Move) {
+void CPosition::AnalyzeHT(CMove move) {
     CPosition *p = this;
-    p->NumberedSAN(Move, BestLine, sizeof(BestLine));
+    p->NumberedSAN(move, BestLine, sizeof(BestLine));
     strcat(BestLine, " ");
     char szSanBuffer[16];
-    strcpy(ShortBestLine, p->SAN(Move, szSanBuffer));
+    strcpy(ShortBestLine, p->SAN(move, szSanBuffer));
     strcat(ShortBestLine, " ");
-    p->DoMove(Move);
+    p->DoMove(move);
     p->AnaLoop(1);
-    p->UndoMove(Move);
+    p->UndoMove(move);
 }
 
 /**
@@ -376,24 +376,24 @@ void CPosition::AnalyzeHT(CMove Move) {
  */
 CMove CPosition::ProbeBestMove() {
     CPosition *p = this;
-    CMove Move = M_NONE;
+    CMove move = M_NONE;
     int nScore;
     bool fDummy = false;
 
 #if MP
-    if (ProbeHT(p->m_ullHKey, &nScore, 0, &Move, &fDummy, 0, 0, NULL) == Useless)
+    if (ProbeHT(p->m_ullHKey, &nScore, 0, &move, &fDummy, 0, 0, NULL) == Useless)
         return M_NONE;
 #else
-    if (ProbeHT(p->m_ullHKey, &nScore, 0, &Move, &fDummy, 0) == Useless)
+    if (ProbeHT(p->m_ullHKey, &nScore, 0, &move, &fDummy, 0) == Useless)
         return M_NONE;
 #endif
 
-    if (Move == M_HASHED || Move == M_NULL || Move == M_NONE)
+    if (move == M_HASHED || move == M_NULL || move == M_NONE)
         return M_NONE;
-    if (!p->LegalMove(Move))
+    if (!p->LegalMove(move))
         return M_NONE;
 
-    return Move;
+    return move;
 }
 
 /**
@@ -531,44 +531,44 @@ CMove CPosition::Iterate(int *pScorePtr, CMove AlternateMove,
  */
 void CPosition::SearchRoot() {
     CPosition *p = this;
-    CMove Move = M_NONE;
+    CMove move = M_NONE;
     CPosition *pQ;
 
     SearchMode = Searching;
 
     /* Test book first */
     if (p->m_rgwOutOfBookCnt[p->m_nTurn] < 3) {
-        Move = SelectBook(p);
+        move = SelectBook(p);
 
-        if (Move != M_NONE) {
+        if (move != M_NONE) {
             char szSanBuffer[32];
             Print(1, "Book move found: %s\n",
-                  p->NumberedSAN(Move, szSanBuffer, sizeof(szSanBuffer)));
+                  p->NumberedSAN(move, szSanBuffer, sizeof(szSanBuffer)));
             p->m_rgwOutOfBookCnt[p->m_nTurn] = 0;
         } else {
             p->m_rgwOutOfBookCnt[p->m_nTurn] += 1;
         }
     }
 
-    if (Move == M_NONE) {
+    if (move == M_NONE) {
         pQ = CPosition::Clone(p);
-        Move = pQ->Iterate(NULL, M_NONE, NULL);
+        move = pQ->Iterate(NULL, M_NONE, NULL);
         CPosition::Free(pQ);
     }
 
-    if (Move != M_NONE) {
+    if (move != M_NONE) {
         double dElapsed = (double)(CurTime - StartTime) / (double)ONE_SECOND;
         DoTC(p, (int)(dElapsed + 0.5));
 
         char szSanBuffer[16];
         Print(0, REVERSE "%s(%d): %s" NORMAL "\n",
               p->m_nTurn == White ? "White" : "Black", (p->m_wPly / 2) + 1,
-              p->SAN(Move, szSanBuffer));
+              p->SAN(move, szSanBuffer));
 
         if (XBoardMode)
-            PrintDebug(0, "move %s\n", ICS_SAN(Move));
+            PrintDebug(0, "move %s\n", ICS_SAN(move));
 
-        p->DoMove(Move);
+        p->DoMove(move);
     }
 }
 
@@ -624,7 +624,7 @@ int CPosition::PermanentBrain() {
     }
 
     if (p->LegalMove(PBMove)) {
-        CMove Move = M_NONE;
+        CMove move = M_NONE;
         CPosition *pQ;
         bool fInbook = false;
         char szSanBuffer[16];
@@ -642,8 +642,8 @@ int CPosition::PermanentBrain() {
         pQ->DoMove(PBActMove);
 
         if (pQ->m_rgwOutOfBookCnt[pQ->m_nTurn] < 3) {
-            Move = SelectBook(pQ);
-            if (Move != M_NONE) {
+            move = SelectBook(pQ);
+            if (move != M_NONE) {
                 PBHit = false;
                 PBAltMove = M_NONE;
                fInbook = true;
@@ -653,7 +653,7 @@ int CPosition::PermanentBrain() {
         SearchMode = Pondering;
 
         if (!fInbook) {
-            Move = pQ->Iterate(NULL, M_NONE, NULL);
+            move = pQ->Iterate(NULL, M_NONE, NULL);
         }
 
         CPosition::Free(pQ);
@@ -675,13 +675,13 @@ int CPosition::PermanentBrain() {
 
             Print(0, REVERSE "%s(%d): %s" NORMAL "\n",
                   p->m_nTurn == White ? "White" : "Black", (p->m_wPly / 2) + 1,
-                  p->SAN(Move, szSanBuffer));
+                  p->SAN(move, szSanBuffer));
 
             if (XBoardMode) {
-                PrintDebug(0, "move %s\n", ICS_SAN(Move));
+                PrintDebug(0, "move %s\n", ICS_SAN(move));
             }
 
-            p->DoMove(Move);
+            p->DoMove(move);
 
             return PB_HIT;
         } else if (!PBHit && PBAltMove != M_NONE) {
@@ -719,7 +719,7 @@ void CPosition::AnalysisMode() {
 void CPosition::StartHelpers() {
     CPosition *p = this;
     int nHelperThreads;
-    int nThread;
+    int nthread;
 
     if (!HelperThreads.empty()) {
         StopHelpers();
@@ -762,11 +762,11 @@ void CPosition::StartHelpers() {
      */
 
     HelperThreads.reserve(NumberOfCores - 1);
-    for (nThread = 0; nThread < (NumberOfCores - 1); nThread++) {
+    for (nthread = 0; nthread < (NumberOfCores - 1); nthread++) {
         CSearchData *pSd = new CSearchData(CPosition::Clone(p));
         pSd->m_fMaster = false;
         PrintDebug(2, "StartHelpers: created helper clone %p for thread %d.\n",
-                   (void *)pSd->m_pPosition, nThread);
+                   (void *)pSd->m_pPosition, nthread);
         HelperThreads.emplace_back([pSd]() {
             SetSearchThreadBackgroundPriority();
             IterateInt(pSd);

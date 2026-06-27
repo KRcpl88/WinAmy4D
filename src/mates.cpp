@@ -42,10 +42,10 @@ bool MateThreat(CPosition *p, int nSide) {
     int nOside = !nSide;
     int nEkp = p->GetKingSq(nOside).BitOffset();
     CBitBoard pcs;
-    CBitBoard KSafe;
+    CBitBoard ksafe;
     int nFr;
 
-    KSafe = p->GetAtkTo(nEkp) & ~p->GetMask(nOside, 0);
+    ksafe = p->GetAtkTo(nEkp) & ~p->GetMask(nOside, 0);
 
     /*
      * Queen checks
@@ -59,73 +59,73 @@ bool MateThreat(CPosition *p, int nSide) {
         pcs.ClearLowestBit();
         Moves = (p->GetAtkTo(nFr) & QueenEPM[nEkp]) & ~p->GetMask(nSide, 0);
         while (Moves) {
-            CBitBoard Tmp;
+            CBitBoard tmp;
             nTo = (Moves).FindSetBit();
             Moves.ClearLowestBit();
             /* check whether path is obstructed */
-            Tmp = InterPath[nEkp][nTo];
-            if ((p->GetMask(White, 0) & Tmp) || (p->GetMask(Black, 0) & Tmp))
+            tmp = InterPath[nEkp][nTo];
+            if ((p->GetMask(White, 0) & tmp) || (p->GetMask(Black, 0) & tmp))
                 continue;
             /* check wether all flight squares are covered */
-            Tmp = KSafe & ~QueenEPM[nTo];
-            if (Tmp) {
+            tmp = ksafe & ~QueenEPM[nTo];
+            if (tmp) {
                 int nFlight;
                 int nFree = 0;
                 do {
-                    CBitBoard Att;
-                    nFlight = (Tmp).FindSetBit();
-                    Tmp.ClearLowestBit();
-                    Att = p->GetAtkFr(nFlight) & p->GetMask(nSide, 0);
-                    Att.ClrBit(nFr);
-                    if (!Att)
+                    CBitBoard att;
+                    nFlight = (tmp).FindSetBit();
+                    tmp.ClearLowestBit();
+                    att = p->GetAtkFr(nFlight) & p->GetMask(nSide, 0);
+                    att.ClrBit(nFr);
+                    if (!att)
                         nFree++;
                     if (nFree)
                         break;
-                } while (Tmp);
+                } while (tmp);
                 if (nFree)
                     continue;
             }
             if (p->GetAtkTo(nEkp).TstBit(nTo)) {
                 /* contact check */
-                CBitBoard Ray;
-                Tmp = p->GetAtkFr(nTo);
-                Tmp.ClrBit(nFr);
-                Tmp.ClrBit(nEkp);
+                CBitBoard ray;
+                tmp = p->GetAtkFr(nTo);
+                tmp.ClrBit(nFr);
+                tmp.ClrBit(nEkp);
                 /* square is defended by opponent */
-                if (p->GetMask(nOside, 0) & Tmp)
+                if (p->GetMask(nOside, 0) & tmp)
                     continue;
                 /* check if we have defenders 'from behind' */
-                Ray = ::Ray[nTo][nFr] & p->GetAtkFr(nFr);
-                if ((p->GetMask(nOside, Queen) & Ray) ||
-                    (p->GetMask(nOside, Rook) & Ray) ||
-                    (p->GetMask(nOside, Bishop) & Ray))
+                ray = ::Ray[nTo][nFr] & p->GetAtkFr(nFr);
+                if ((p->GetMask(nOside, Queen) & ray) ||
+                    (p->GetMask(nOside, Rook) & ray) ||
+                    (p->GetMask(nOside, Bishop) & ray))
                     continue;
                 /* If supported by a friendly piece, its mate! */
-                if (p->GetMask(nSide, 0) & Tmp) {
+                if (p->GetMask(nSide, 0) & tmp) {
                     return true;
                 }
                 /* check for supporters 'from behind' */
-                if ((p->GetMask(nSide, Bishop) & Ray) ||
-                    (p->GetMask(nSide, Rook) & Ray) ||
-                    (p->GetMask(nSide, Queen) & Ray)) {
+                if ((p->GetMask(nSide, Bishop) & ray) ||
+                    (p->GetMask(nSide, Rook) & ray) ||
+                    (p->GetMask(nSide, Queen) & ray)) {
                     return true;
                 }
             } else {
                 /* distant check */
                 int nInter;
                 int nDef = 0;
-                Tmp = p->GetAtkFr(nTo);
-                Tmp.ClrBit(nFr);
+                tmp = p->GetAtkFr(nTo);
+                tmp.ClrBit(nFr);
                 /* check if defended by opponent */
-                if (p->GetMask(nOside, 0) & Tmp)
+                if (p->GetMask(nOside, 0) & tmp)
                     continue;
-                Tmp = InterPath[nTo][nEkp];
-                while (Tmp) {
-                    CBitBoard Tmp2;
-                    nInter = (Tmp).FindSetBit();
-                    Tmp.ClearLowestBit();
-                    Tmp2 = p->GetAtkFr(nInter) & p->GetMask(nOside, 0);
-                    if ((Tmp2).CountBits() < 2)
+                tmp = InterPath[nTo][nEkp];
+                while (tmp) {
+                    CBitBoard tmp2;
+                    nInter = (tmp).FindSetBit();
+                    tmp.ClearLowestBit();
+                    tmp2 = p->GetAtkFr(nInter) & p->GetMask(nOside, 0);
+                    if ((tmp2).CountBits() < 2)
                         continue;
                     nDef++;
                     break;
@@ -149,73 +149,73 @@ bool MateThreat(CPosition *p, int nSide) {
         pcs.ClearLowestBit();
         Moves = (p->GetAtkTo(nFr) & RookEPM[nEkp]) & ~p->GetMask(nSide, 0);
         while (Moves) {
-            CBitBoard Tmp;
+            CBitBoard tmp;
             nTo = (Moves).FindSetBit();
             Moves.ClearLowestBit();
             /* check whether path is obstructed */
-            Tmp = InterPath[nEkp][nTo];
-            if ((p->GetMask(White, 0) & Tmp) || (p->GetMask(Black, 0) & Tmp))
+            tmp = InterPath[nEkp][nTo];
+            if ((p->GetMask(White, 0) & tmp) || (p->GetMask(Black, 0) & tmp))
                 continue;
             /* check wether all flight squares are covered */
-            Tmp = KSafe & ~RookEPM[nTo];
-            if (Tmp) {
+            tmp = ksafe & ~RookEPM[nTo];
+            if (tmp) {
                 int nFlight;
                 int nFree = 0;
                 do {
-                    CBitBoard Att;
-                    nFlight = (Tmp).FindSetBit();
-                    Tmp.ClearLowestBit();
-                    Att = p->GetAtkFr(nFlight) & p->GetMask(nSide, 0);
-                    Att.ClrBit(nFr);
-                    if (!Att)
+                    CBitBoard att;
+                    nFlight = (tmp).FindSetBit();
+                    tmp.ClearLowestBit();
+                    att = p->GetAtkFr(nFlight) & p->GetMask(nSide, 0);
+                    att.ClrBit(nFr);
+                    if (!att)
                         nFree++;
                     if (nFree)
                         break;
-                } while (Tmp);
+                } while (tmp);
                 if (nFree)
                     continue;
             }
             if (p->GetAtkTo(nEkp).TstBit(nTo)) {
                 /* contact check */
-                CBitBoard Ray;
-                Tmp = p->GetAtkFr(nTo);
-                Tmp.ClrBit(nFr);
-                Tmp.ClrBit(nEkp);
+                CBitBoard ray;
+                tmp = p->GetAtkFr(nTo);
+                tmp.ClrBit(nFr);
+                tmp.ClrBit(nEkp);
                 /* square is defended by opponent */
-                if (p->GetMask(nOside, 0) & Tmp)
+                if (p->GetMask(nOside, 0) & tmp)
                     continue;
                 /* check if we have defenders 'from behind' */
-                Ray = ::Ray[nTo][nFr] & p->GetAtkFr(nFr);
-                if ((p->GetMask(nOside, Queen) & Ray) ||
-                    (p->GetMask(nOside, Rook) & Ray) ||
-                    (p->GetMask(nOside, Bishop) & Ray))
+                ray = ::Ray[nTo][nFr] & p->GetAtkFr(nFr);
+                if ((p->GetMask(nOside, Queen) & ray) ||
+                    (p->GetMask(nOside, Rook) & ray) ||
+                    (p->GetMask(nOside, Bishop) & ray))
                     continue;
                 /* If supported by a friendly piece, its mate! */
-                if (p->GetMask(nSide, 0) & Tmp) {
+                if (p->GetMask(nSide, 0) & tmp) {
                     return true;
                 }
                 /* check for supporters 'from behind' */
-                if ((p->GetMask(nSide, Bishop) & Ray) ||
-                    (p->GetMask(nSide, Rook) & Ray) ||
-                    (p->GetMask(nSide, Queen) & Ray)) {
+                if ((p->GetMask(nSide, Bishop) & ray) ||
+                    (p->GetMask(nSide, Rook) & ray) ||
+                    (p->GetMask(nSide, Queen) & ray)) {
                     return true;
                 }
             } else {
                 /* distant check */
                 int nInter;
                 int nDef = 0;
-                Tmp = p->GetAtkFr(nTo);
-                Tmp.ClrBit(nFr);
+                tmp = p->GetAtkFr(nTo);
+                tmp.ClrBit(nFr);
                 /* check if defended by opponent */
-                if (p->GetMask(nOside, 0) & Tmp)
+                if (p->GetMask(nOside, 0) & tmp)
                     continue;
-                Tmp = InterPath[nTo][nEkp];
-                while (Tmp) {
-                    CBitBoard Tmp2;
-                    nInter = (Tmp).FindSetBit();
-                    Tmp.ClearLowestBit();
-                    Tmp2 = p->GetAtkFr(nInter) & p->GetMask(nOside, 0);
-                    if ((Tmp2).CountBits() < 2)
+                tmp = InterPath[nTo][nEkp];
+                while (tmp) {
+                    CBitBoard tmp2;
+                    nInter = (tmp).FindSetBit();
+                    tmp.ClearLowestBit();
+                    tmp2 = p->GetAtkFr(nInter) & p->GetMask(nOside, 0);
+                    if ((tmp2).CountBits() < 2)
                         continue;
                     nDef++;
                     break;
@@ -239,73 +239,73 @@ bool MateThreat(CPosition *p, int nSide) {
         pcs.ClearLowestBit();
         Moves = (p->GetAtkTo(nFr) & BishopEPM[nEkp]) & ~p->GetMask(nSide, 0);
         while (Moves) {
-            CBitBoard Tmp;
+            CBitBoard tmp;
             nTo = (Moves).FindSetBit();
             Moves.ClearLowestBit();
             /* check whether path is obstructed */
-            Tmp = InterPath[nEkp][nTo];
-            if ((p->GetMask(White, 0) & Tmp) || (p->GetMask(Black, 0) & Tmp))
+            tmp = InterPath[nEkp][nTo];
+            if ((p->GetMask(White, 0) & tmp) || (p->GetMask(Black, 0) & tmp))
                 continue;
             /* check wether all flight squares are covered */
-            Tmp = KSafe & ~BishopEPM[nTo];
-            if (Tmp) {
+            tmp = ksafe & ~BishopEPM[nTo];
+            if (tmp) {
                 int nFlight;
                 int nFree = 0;
                 do {
-                    CBitBoard Att;
-                    nFlight = (Tmp).FindSetBit();
-                    Tmp.ClearLowestBit();
-                    Att = p->GetAtkFr(nFlight) & p->GetMask(nSide, 0);
-                    Att.ClrBit(nFr);
-                    if (!Att)
+                    CBitBoard att;
+                    nFlight = (tmp).FindSetBit();
+                    tmp.ClearLowestBit();
+                    att = p->GetAtkFr(nFlight) & p->GetMask(nSide, 0);
+                    att.ClrBit(nFr);
+                    if (!att)
                         nFree++;
                     if (nFree)
                         break;
-                } while (Tmp);
+                } while (tmp);
                 if (nFree)
                     continue;
             }
             if (p->GetAtkTo(nEkp).TstBit(nTo)) {
                 /* contact check */
-                CBitBoard Ray;
-                Tmp = p->GetAtkFr(nTo);
-                Tmp.ClrBit(nFr);
-                Tmp.ClrBit(nEkp);
+                CBitBoard ray;
+                tmp = p->GetAtkFr(nTo);
+                tmp.ClrBit(nFr);
+                tmp.ClrBit(nEkp);
                 /* square is defended by opponent */
-                if (p->GetMask(nOside, 0) & Tmp)
+                if (p->GetMask(nOside, 0) & tmp)
                     continue;
                 /* check if we have defenders 'from behind' */
-                Ray = ::Ray[nTo][nFr] & p->GetAtkFr(nFr);
-                if ((p->GetMask(nOside, Queen) & Ray) ||
-                    (p->GetMask(nOside, Rook) & Ray) ||
-                    (p->GetMask(nOside, Bishop) & Ray))
+                ray = ::Ray[nTo][nFr] & p->GetAtkFr(nFr);
+                if ((p->GetMask(nOside, Queen) & ray) ||
+                    (p->GetMask(nOside, Rook) & ray) ||
+                    (p->GetMask(nOside, Bishop) & ray))
                     continue;
                 /* If supported by a friendly piece, its mate! */
-                if (p->GetMask(nSide, 0) & Tmp) {
+                if (p->GetMask(nSide, 0) & tmp) {
                     return true;
                 }
                 /* check for supporters 'from behind' */
-                if ((p->GetMask(nSide, Bishop) & Ray) ||
-                    (p->GetMask(nSide, Rook) & Ray) ||
-                    (p->GetMask(nSide, Queen) & Ray)) {
+                if ((p->GetMask(nSide, Bishop) & ray) ||
+                    (p->GetMask(nSide, Rook) & ray) ||
+                    (p->GetMask(nSide, Queen) & ray)) {
                     return true;
                 }
             } else {
                 /* distant check */
                 int nInter;
                 int nDef = 0;
-                Tmp = p->GetAtkFr(nTo);
-                Tmp.ClrBit(nFr);
+                tmp = p->GetAtkFr(nTo);
+                tmp.ClrBit(nFr);
                 /* check if defended by opponent */
-                if (p->GetMask(nOside, 0) & Tmp)
+                if (p->GetMask(nOside, 0) & tmp)
                     continue;
-                Tmp = InterPath[nTo][nEkp];
-                while (Tmp) {
-                    CBitBoard Tmp2;
-                    nInter = (Tmp).FindSetBit();
-                    Tmp.ClearLowestBit();
-                    Tmp2 = p->GetAtkFr(nInter) & p->GetMask(nOside, 0);
-                    if ((Tmp2).CountBits() < 2)
+                tmp = InterPath[nTo][nEkp];
+                while (tmp) {
+                    CBitBoard tmp2;
+                    nInter = (tmp).FindSetBit();
+                    tmp.ClearLowestBit();
+                    tmp2 = p->GetAtkFr(nInter) & p->GetMask(nOside, 0);
+                    if ((tmp2).CountBits() < 2)
                         continue;
                     nDef++;
                     break;
@@ -339,32 +339,32 @@ bool MateThreat(CPosition *p, int nSide) {
             def = p->GetAtkFr(nTo) & p->GetMask(nOside, 0);
             if ((def).CountBits() == 1) {
                 int nDe = (def).FindSetBit();
-                CBitBoard Tmp;
+                CBitBoard tmp;
                 if (RookEPM[nEkp] & def) {
-                    Tmp = p->GetAtkFr(nDe) & ::Ray[nEkp][nDe];
-                    if (!(p->GetMask(nSide, Queen) & Tmp) &&
-                        !(p->GetMask(nSide, Rook) & Tmp))
+                    tmp = p->GetAtkFr(nDe) & ::Ray[nEkp][nDe];
+                    if (!(p->GetMask(nSide, Queen) & tmp) &&
+                        !(p->GetMask(nSide, Rook) & tmp))
                         continue;
                 } else if (BishopEPM[nEkp] & def) {
-                    Tmp = p->GetAtkFr(nDe) & ::Ray[nEkp][nDe];
-                    if (!(p->GetMask(nSide, Queen) & Tmp) &&
-                        !(p->GetMask(nSide, Bishop) & Tmp))
+                    tmp = p->GetAtkFr(nDe) & ::Ray[nEkp][nDe];
+                    if (!(p->GetMask(nSide, Queen) & tmp) &&
+                        !(p->GetMask(nSide, Bishop) & tmp))
                         continue;
                 } else
                     continue;
             } else if (def)
                 continue;
-            def = KSafe & ~KnightEPM[nTo];
+            def = ksafe & ~KnightEPM[nTo];
             if (def) {
                 int nFlight;
                 int nFree = 0;
                 do {
-                    CBitBoard Att;
+                    CBitBoard att;
                     nFlight = (def).FindSetBit();
                     def.ClearLowestBit();
-                    Att = p->GetAtkFr(nFlight) & p->GetMask(nSide, 0);
-                    Att.ClrBit(nFr);
-                    if (!Att)
+                    att = p->GetAtkFr(nFlight) & p->GetMask(nSide, 0);
+                    att.ClrBit(nFr);
+                    if (!att)
                         nFree++;
                     if (nFree)
                         break;

@@ -116,20 +116,20 @@ static int RecognizerKK(const CPosition *p, int *pScore) {
 }
 
 static int RecognizerKBK(const CPosition *p, int *pScore) {
-    CBitBoard Pcs;
+    CBitBoard pcs;
     int nColor = White;
 
     if (p->GetMaterialSignature(Black)) {
         nColor = Black;
     }
 
-    Pcs = p->GetMask(nColor, Bishop);
+    pcs = p->GetMask(nColor, Bishop);
 
     /*
      * drawn if there is only one bishop
      */
 
-    if ((Pcs).CountBits() < 2) {
+    if ((pcs).CountBits() < 2) {
         *pScore = 0;
         return ExactScore;
     }
@@ -138,7 +138,7 @@ static int RecognizerKBK(const CPosition *p, int *pScore) {
      * drawn if the bishops are all of the same color
      */
 
-    if (!((Pcs & WhiteSquaresMask) && (Pcs & BlackSquaresMask))) {
+    if (!((pcs & WhiteSquaresMask) && (pcs & BlackSquaresMask))) {
         *pScore = 0;
         return ExactScore;
     }

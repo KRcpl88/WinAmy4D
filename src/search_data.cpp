@@ -161,7 +161,7 @@ CMove CSearchData::NextMove() {
     heap_section_t pSection = pSd->m_hHeap->current_section;
     struct SSearchStatus *pSt = pSd->m_pCurrent;
     CPosition *p = pSd->m_pPosition;
-    CMove Move;
+    CMove move;
 
     switch (pSt->st_phase) {
     case HashMove:
@@ -183,21 +183,21 @@ CMove CSearchData::NextMove() {
         /*
          * Generate captures.
          */
-        CBitBoard Targets = p->GetMask(OPP(p->GetTurn()), 0);
-        while (Targets) {
-            CSCoord To = (Targets).FindSetBitCoord();
-            Targets.ClearLowestBit();
+        CBitBoard targets = p->GetMask(OPP(p->GetTurn()), 0);
+        while (targets) {
+            CSCoord to = (targets).FindSetBitCoord();
+            targets.ClearLowestBit();
 
-            p->GenTo(To, pSd->m_hHeap);
+            p->GenTo(to, pSd->m_hHeap);
         }
 
         CBitBoard PromotingPawns =
             p->GetMask(p->GetTurn(), Pawn) & PrePromoRank[p->GetTurn()];
         while (PromotingPawns) {
-            CSCoord From = (PromotingPawns).FindSetBitCoord();
+            CSCoord from = (PromotingPawns).FindSetBitCoord();
             PromotingPawns.ClearLowestBit();
 
-            p->GenFrom(From, pSd->m_hHeap);
+            p->GenFrom(from, pSd->m_hHeap);
         }
 
         GrowDataHeap(pSd);
@@ -231,45 +231,45 @@ CMove CSearchData::NextMove() {
                 }
             }
             if (nBest >= 0) {
-                Move = pSd->m_hHeap->data[dwBestI];
+                move = pSd->m_hHeap->data[dwBestI];
                 pSection->end--;
 
                 pSd->m_hHeap->data[dwBestI] = pSd->m_hHeap->data[pSection->end];
                 pSd->m_pnDataHeap[dwBestI] = pSd->m_pnDataHeap[pSection->end];
 
-                if (Move == pSt->st_hashmove)
+                if (move == pSt->st_hashmove)
                     continue;
 
-                return Move;
+                return move;
             } else
                 break;
         }
     /* fall through */
     case Killer1: {
-        Move = pSd->m_pKiller->killer1;
+        move = pSd->m_pKiller->killer1;
 #ifdef VERBOSE
         Print(9, "Killer1\n");
 #endif
         pSt->st_k1 = M_NONE;
-        if (Move != pSt->st_hashmove && p->LegalMove(Move)) {
+        if (move != pSt->st_hashmove && p->LegalMove(move)) {
             pSt->st_phase = Killer2;
-            pSt->st_k1 = Move;
+            pSt->st_k1 = move;
 
-            return Move;
+            return move;
         }
     }
     /* fall through */
     case Killer2: {
-        Move = pSd->m_pKiller->killer2;
+        move = pSd->m_pKiller->killer2;
 #ifdef VERBOSE
         Print(9, "Killer2\n");
 #endif
         pSt->st_k2 = M_NONE;
-        if (Move != pSt->st_hashmove && p->LegalMove(Move)) {
+        if (move != pSt->st_hashmove && p->LegalMove(move)) {
             pSt->st_phase = CounterMv;
-            pSt->st_k2 = Move;
+            pSt->st_k2 = move;
 
-            return Move;
+            return move;
         }
     }
     /* fall through */
@@ -281,14 +281,14 @@ CMove CSearchData::NextMove() {
 #endif
         pSt->st_cm = M_NONE;
         if (LastMove != M_NULL) {
-            Move = pSd->m_rgCounterTab[p->GetTurn()][LastMove.GetFromCoord().BitOffset()][LastMove.GetToCoord().BitOffset()];
+            move = pSd->m_rgCounterTab[p->GetTurn()][LastMove.GetFromCoord().BitOffset()][LastMove.GetToCoord().BitOffset()];
 
-            if (Move != M_NONE && Move != pSt->st_hashmove &&
-                Move != pSt->st_k1 && Move != pSt->st_k2 && p->LegalMove(Move)) {
+            if (move != M_NONE && move != pSt->st_hashmove &&
+                move != pSt->st_k1 && move != pSt->st_k2 && p->LegalMove(move)) {
                 pSt->st_phase = Killer3;
-                pSt->st_cm = Move;
+                pSt->st_cm = move;
 
-                return Move;
+                return move;
             }
         }
     }
@@ -299,18 +299,18 @@ CMove CSearchData::NextMove() {
 #endif
         pSt->st_k3 = M_NONE;
         if (pSd->m_wPly >= 2) {
-            Move = (pSd->m_pKiller - 2)->killer1;
+            move = (pSd->m_pKiller - 2)->killer1;
 
-            if (Move == pSt->st_hashmove || Move == pSt->st_k1 ||
-                Move == pSt->st_k2 || Move == pSt->st_cm || !p->LegalMove(Move))
-                Move = (pSd->m_pKiller - 2)->killer2;
+            if (move == pSt->st_hashmove || move == pSt->st_k1 ||
+                move == pSt->st_k2 || move == pSt->st_cm || !p->LegalMove(move))
+                move = (pSd->m_pKiller - 2)->killer2;
 
-            if (Move != pSt->st_hashmove && Move != pSt->st_k1 &&
-                Move != pSt->st_k2 && Move != pSt->st_cm && p->LegalMove(Move)) {
+            if (move != pSt->st_hashmove && move != pSt->st_k1 &&
+                move != pSt->st_k2 && move != pSt->st_cm && p->LegalMove(move)) {
                 pSt->st_phase = LoosingCapture;
-                pSt->st_k3 = Move;
+                pSt->st_k3 = move;
 
-                return Move;
+                return move;
             }
         }
         /* fallthrough */
@@ -330,7 +330,7 @@ CMove CSearchData::NextMove() {
                 }
             }
 
-            Move = pSd->m_hHeap->data[dwBestI];
+            move = pSd->m_hHeap->data[dwBestI];
             pSection->end--;
 
             pSd->m_hHeap->data[dwBestI] = pSd->m_hHeap->data[pSection->end];
@@ -338,10 +338,10 @@ CMove CSearchData::NextMove() {
 
             pSt->st_phase = LoosingCapture;
 
-            if (Move == pSt->st_hashmove)
+            if (move == pSt->st_hashmove)
                 continue;
 
-            return Move;
+            return move;
         }
         /* fallthrough */
 
@@ -349,7 +349,7 @@ CMove CSearchData::NextMove() {
 #ifdef VERBOSE
         Print(9, "GenerateRest\n");
 #endif
-        const CBitBoard Empty = ~(p->GetMask(White, 0) | p->GetMask(Black, 0));
+        const CBitBoard empty = ~(p->GetMask(White, 0) | p->GetMask(Black, 0));
 
         if (p->GetCastle() & CastleMask[p->GetTurn()][0]) {
             append_to_heap(pSd->m_hHeap,
@@ -367,41 +367,41 @@ CMove CSearchData::NextMove() {
         while (NonPawn) {
             int nFrom = (NonPawn).FindSetBit();
             NonPawn.ClearLowestBit();
-            CBitBoard Attacks = p->GetAtkTo(nFrom) & Empty;
-            while (Attacks) {
-                int nTo = (Attacks).FindSetBit();
-                Attacks.ClearLowestBit();
+            CBitBoard attacks = p->GetAtkTo(nFrom) & empty;
+            while (attacks) {
+                int nTo = (attacks).FindSetBit();
+                attacks.ClearLowestBit();
                 append_to_heap(pSd->m_hHeap, make_move(nFrom, nTo, 0));
             }
         }
 
         {
             const int nDirection = (p->GetTurn() == White) ? 1 : -1;
-            CBitBoard Pawns = p->GetMask(p->GetTurn(), Pawn) & ~PrePromoRank[p->GetTurn()];
-            while (Pawns) {
-                CSCoord FromCoord = Pawns.FindSetBitCoord();
-                Pawns.ClearLowestBit();
-                const int nWidth = static_cast<int>(CBitBoard::LEVEL_WIDTH[FromCoord.m_nLevel]);
+            CBitBoard pawns = p->GetMask(p->GetTurn(), Pawn) & ~PrePromoRank[p->GetTurn()];
+            while (pawns) {
+                CSCoord fromCoord = pawns.FindSetBitCoord();
+                pawns.ClearLowestBit();
+                const int nWidth = static_cast<int>(CBitBoard::LEVEL_WIDTH[fromCoord.m_nLevel]);
                 const uint16_t nNewRank =
-                    static_cast<uint16_t>(static_cast<int>(FromCoord.m_nRank) + nDirection);
+                    static_cast<uint16_t>(static_cast<int>(fromCoord.m_nRank) + nDirection);
                 if (nNewRank >= nWidth)
                     continue;
-                CSCoord ToCoord(FromCoord.m_nLevel, FromCoord.m_nFile, nNewRank);
-                if (is_promo_square(ToCoord) || p->GetPiece(ToCoord.BitOffset()) != Neutral ||
-                    !pawn_may_move_to(ToCoord))
+                CSCoord toCoord(fromCoord.m_nLevel, fromCoord.m_nFile, nNewRank);
+                if (is_promo_square(toCoord) || p->GetPiece(toCoord.BitOffset()) != Neutral ||
+                    !pawn_may_move_to(toCoord))
                     continue;
-                append_to_heap(pSd->m_hHeap, make_move(FromCoord, ToCoord, 0));
+                append_to_heap(pSd->m_hHeap, make_move(fromCoord, toCoord, 0));
                 const uint16_t nHomeRank =
                     static_cast<uint16_t>((p->GetTurn() == White) ? 1 : (nWidth - 2));
-                if (FromCoord.m_nLevel == MAIN_LEVEL &&
-                    FromCoord.m_nRank == nHomeRank) {
+                if (fromCoord.m_nLevel == MAIN_LEVEL &&
+                    fromCoord.m_nRank == nHomeRank) {
                     const uint16_t nDblRank =
-                        static_cast<uint16_t>(static_cast<int>(FromCoord.m_nRank) + 2 * nDirection);
+                        static_cast<uint16_t>(static_cast<int>(fromCoord.m_nRank) + 2 * nDirection);
                     if (nDblRank < nWidth) {
-                        CSCoord DblCoord(FromCoord.m_nLevel, FromCoord.m_nFile, nDblRank);
-                        if (!is_promo_square(DblCoord) &&
-                            p->GetPiece(DblCoord.BitOffset()) == Neutral) {
-                            append_to_heap(pSd->m_hHeap, make_move(FromCoord, DblCoord, M_PAWND));
+                        CSCoord dblCoord(fromCoord.m_nLevel, fromCoord.m_nFile, nDblRank);
+                        if (!is_promo_square(dblCoord) &&
+                            p->GetPiece(dblCoord.BitOffset()) == Neutral) {
+                            append_to_heap(pSd->m_hHeap, make_move(fromCoord, dblCoord, M_PAWND));
                         }
                     }
                 }
@@ -429,16 +429,16 @@ CMove CSearchData::NextMove() {
                     nBestI = i;
                 }
             }
-            Move = pSd->m_hHeap->data[nBestI];
+            move = pSd->m_hHeap->data[nBestI];
 
             pSection->end--;
             pSd->m_hHeap->data[nBestI] = pSd->m_hHeap->data[pSection->end];
 
-            if (Move == pSt->st_hashmove || Move == pSt->st_k1 ||
-                Move == pSt->st_k2 || Move == pSt->st_k3 || Move == pSt->st_cm)
+            if (move == pSt->st_hashmove || move == pSt->st_k1 ||
+                move == pSt->st_k2 || move == pSt->st_k3 || move == pSt->st_cm)
                 continue;
 
-            return Move;
+            return move;
         }
 
     default:
@@ -458,7 +458,7 @@ CMove CSearchData::NextEvasion() {
     heap_section_t pSection = pSd->m_hHeap->current_section;
     struct SSearchStatus *pSt = pSd->m_pCurrent;
     CPosition *p = pSd->m_pPosition;
-    CMove Move;
+    CMove move;
 
     switch (pSt->st_phase) {
     case HashMove:
@@ -485,13 +485,13 @@ CMove CSearchData::NextEvasion() {
 
         int nKp = p->GetKingSq(p->GetTurn()).BitOffset();
 
-        CBitBoard Targets =
+        CBitBoard targets =
             (p->GetAtkFr(nKp) | p->GetAtkTo(nKp)) & p->GetMask(OPP(p->GetTurn()), 0);
 
-        while (Targets) {
-            CSCoord To = (Targets).FindSetBitCoord();
-            Targets.ClearLowestBit();
-            p->GenTo(To, pSd->m_hHeap);
+        while (targets) {
+            CSCoord to = (targets).FindSetBitCoord();
+            targets.ClearLowestBit();
+            p->GenTo(to, pSd->m_hHeap);
         }
 
         GrowDataHeap(pSd);
@@ -520,7 +520,7 @@ CMove CSearchData::NextEvasion() {
                 }
             }
             if (nBest >= 0) {
-                Move = pSd->m_hHeap->data[dwBestI];
+                move = pSd->m_hHeap->data[dwBestI];
                 pSection->end--;
 
                 pSd->m_hHeap->data[dwBestI] = pSd->m_hHeap->data[pSection->end];
@@ -528,39 +528,39 @@ CMove CSearchData::NextEvasion() {
 
                 pSt->st_phase = GainingCapture;
 
-                if (Move == pSt->st_hashmove)
+                if (move == pSt->st_hashmove)
                     continue;
 
-                return Move;
+                return move;
             } else
                 break;
         }
         /* fall through */
     case Killer1: {
-        Move = pSd->m_pKiller->killer1;
+        move = pSd->m_pKiller->killer1;
 #ifdef VERBOSE
         Print(9, "Killer1\n");
 #endif
         pSt->st_k1 = M_NONE;
-        if (Move != pSt->st_hashmove && p->LegalMove(Move)) {
+        if (move != pSt->st_hashmove && p->LegalMove(move)) {
             pSt->st_phase = Killer2;
-            pSt->st_k1 = Move;
+            pSt->st_k1 = move;
 
-            return Move;
+            return move;
         }
     }
         /* fall through */
     case Killer2: {
-        Move = pSd->m_pKiller->killer2;
+        move = pSd->m_pKiller->killer2;
 #ifdef VERBOSE
         Print(9, "Killer2\n");
 #endif
         pSt->st_k2 = M_NONE;
-        if (Move != pSt->st_hashmove && p->LegalMove(Move)) {
+        if (move != pSt->st_hashmove && p->LegalMove(move)) {
             pSt->st_phase = CounterMv;
-            pSt->st_k2 = Move;
+            pSt->st_k2 = move;
 
-            return Move;
+            return move;
         }
     }
         /* fall through */
@@ -572,14 +572,14 @@ CMove CSearchData::NextEvasion() {
 #endif
         pSt->st_cm = M_NONE;
         if (LastMove != M_NULL) {
-            Move = pSd->m_rgCounterTab[p->GetTurn()][LastMove.GetFromCoord().BitOffset()][LastMove.GetToCoord().BitOffset()];
+            move = pSd->m_rgCounterTab[p->GetTurn()][LastMove.GetFromCoord().BitOffset()][LastMove.GetToCoord().BitOffset()];
 
-            if (Move != M_NONE && Move != pSt->st_hashmove &&
-                Move != pSt->st_k1 && Move != pSt->st_k2 && p->LegalMove(Move)) {
+            if (move != M_NONE && move != pSt->st_hashmove &&
+                move != pSt->st_k1 && move != pSt->st_k2 && p->LegalMove(move)) {
                 pSt->st_phase = Killer3;
-                pSt->st_cm = Move;
+                pSt->st_cm = move;
 
-                return Move;
+                return move;
             }
         }
     }
@@ -590,18 +590,18 @@ CMove CSearchData::NextEvasion() {
 #endif
         pSt->st_k3 = M_NONE;
         if (pSd->m_wPly >= 2) {
-            Move = (pSd->m_pKiller - 2)->killer1;
+            move = (pSd->m_pKiller - 2)->killer1;
 
-            if (Move == pSt->st_hashmove || Move == pSt->st_k1 ||
-                Move == pSt->st_k2 || Move == pSt->st_cm || !p->LegalMove(Move))
-                Move = (pSd->m_pKiller - 2)->killer2;
+            if (move == pSt->st_hashmove || move == pSt->st_k1 ||
+                move == pSt->st_k2 || move == pSt->st_cm || !p->LegalMove(move))
+                move = (pSd->m_pKiller - 2)->killer2;
 
-            if (Move != pSt->st_hashmove && Move != pSt->st_k1 &&
-                Move != pSt->st_k2 && Move != pSt->st_cm && p->LegalMove(Move)) {
+            if (move != pSt->st_hashmove && move != pSt->st_k1 &&
+                move != pSt->st_k2 && move != pSt->st_cm && p->LegalMove(move)) {
                 pSt->st_phase = /* HistoryMoves; */ LoosingCapture;
-                pSt->st_k3 = Move;
+                pSt->st_k3 = move;
 
-                return Move;
+                return move;
             }
         }
         /* fall through */
@@ -619,7 +619,7 @@ CMove CSearchData::NextEvasion() {
                     dwBestI = i;
                 }
             }
-            Move = pSd->m_hHeap->data[dwBestI];
+            move = pSd->m_hHeap->data[dwBestI];
 
             pSection->end--;
             pSd->m_hHeap->data[dwBestI] = pSd->m_hHeap->data[pSection->end];
@@ -627,10 +627,10 @@ CMove CSearchData::NextEvasion() {
 
             pSt->st_phase = LoosingCapture;
 
-            if (Move == pSt->st_hashmove)
+            if (move == pSt->st_hashmove)
                 continue;
 
-            return Move;
+            return move;
         }
 
         /* fall through */
@@ -641,9 +641,9 @@ CMove CSearchData::NextEvasion() {
 
         const int nKp =
             p->GetKingSq(p->GetTurn()).BitOffset(); /* (Mask[Side][King]).FindSetBit(); */
-        const CBitBoard Empty = ~(p->GetMask(White, 0) | p->GetMask(Black, 0));
+        const CBitBoard empty = ~(p->GetMask(White, 0) | p->GetMask(Black, 0));
 
-        CBitBoard KingFlightSquares = p->GetAtkTo(nKp) & Empty;
+        CBitBoard KingFlightSquares = p->GetAtkTo(nKp) & empty;
 
         while (KingFlightSquares) {
             int nTo = (KingFlightSquares).FindSetBit();
@@ -657,12 +657,12 @@ CMove CSearchData::NextEvasion() {
              p->GetMask(OPP(p->GetTurn()), Queen)) &
             p->GetAtkFr(nKp);
 
-        CBitBoard Interpositions;
+        CBitBoard interpositions;
 
         while (SlidingAttackers) {
             int nAttackerSq = (SlidingAttackers).FindSetBit();
             SlidingAttackers.ClearLowestBit();
-            Interpositions = InterPath[nKp][nAttackerSq];
+            interpositions = InterPath[nKp][nAttackerSq];
         }
 
         CBitBoard NonPawns = (p->GetMask(p->GetTurn(), 0) & ~p->GetMask(p->GetTurn(), King)) &
@@ -671,46 +671,46 @@ CMove CSearchData::NextEvasion() {
         while (NonPawns) {
             int nFrom = (NonPawns).FindSetBit();
             NonPawns.ClearLowestBit();
-            CBitBoard Blocking = p->GetAtkTo(nFrom) & Empty & Interpositions;
+            CBitBoard blocking = p->GetAtkTo(nFrom) & empty & interpositions;
 
-            while (Blocking) {
-                int nTo = (Blocking).FindSetBit();
-                Blocking.ClearLowestBit();
+            while (blocking) {
+                int nTo = (blocking).FindSetBit();
+                blocking.ClearLowestBit();
                 append_to_heap(pSd->m_hHeap, make_move(nFrom, nTo, 0));
             }
         }
 
         {
             const int nDirection = (p->GetTurn() == White) ? 1 : -1;
-            CBitBoard Pawns = p->GetMask(p->GetTurn(), Pawn);
-            while (Pawns) {
-                CSCoord FromCoord = Pawns.FindSetBitCoord();
-                Pawns.ClearLowestBit();
-                const int nWidth = static_cast<int>(CBitBoard::LEVEL_WIDTH[FromCoord.m_nLevel]);
-                const int nNewRank = static_cast<int>(FromCoord.m_nRank) + nDirection;
+            CBitBoard pawns = p->GetMask(p->GetTurn(), Pawn);
+            while (pawns) {
+                CSCoord fromCoord = pawns.FindSetBitCoord();
+                pawns.ClearLowestBit();
+                const int nWidth = static_cast<int>(CBitBoard::LEVEL_WIDTH[fromCoord.m_nLevel]);
+                const int nNewRank = static_cast<int>(fromCoord.m_nRank) + nDirection;
                 if (nNewRank < 0 || nNewRank >= nWidth)
                     continue;
-                CSCoord ToCoord(FromCoord.m_nLevel, FromCoord.m_nFile,
+                CSCoord toCoord(fromCoord.m_nLevel, fromCoord.m_nFile,
                                 static_cast<uint16_t>(nNewRank));
-                if (p->GetPiece(ToCoord.BitOffset()) != Neutral)
+                if (p->GetPiece(toCoord.BitOffset()) != Neutral)
                     continue;
-                if (is_promo_square(ToCoord)) {
-                    append_to_heap(pSd->m_hHeap, make_promotion(FromCoord, ToCoord, Queen, 0));
-                    append_to_heap(pSd->m_hHeap, make_promotion(FromCoord, ToCoord, Knight, 0));
-                    append_to_heap(pSd->m_hHeap, make_promotion(FromCoord, ToCoord, Rook, 0));
-                    append_to_heap(pSd->m_hHeap, make_promotion(FromCoord, ToCoord, Bishop, 0));
-                } else if (pawn_may_move_to(ToCoord)) {
-                    append_to_heap(pSd->m_hHeap, make_move(FromCoord, ToCoord, 0));
+                if (is_promo_square(toCoord)) {
+                    append_to_heap(pSd->m_hHeap, make_promotion(fromCoord, toCoord, Queen, 0));
+                    append_to_heap(pSd->m_hHeap, make_promotion(fromCoord, toCoord, Knight, 0));
+                    append_to_heap(pSd->m_hHeap, make_promotion(fromCoord, toCoord, Rook, 0));
+                    append_to_heap(pSd->m_hHeap, make_promotion(fromCoord, toCoord, Bishop, 0));
+                } else if (pawn_may_move_to(toCoord)) {
+                    append_to_heap(pSd->m_hHeap, make_move(fromCoord, toCoord, 0));
                     const int nHomeRank = (p->GetTurn() == White) ? 1 : (nWidth - 2);
-                    if (FromCoord.m_nLevel == MAIN_LEVEL &&
-                        static_cast<int>(FromCoord.m_nRank) == nHomeRank) {
-                        const int nDblRank = static_cast<int>(FromCoord.m_nRank) + 2 * nDirection;
+                    if (fromCoord.m_nLevel == MAIN_LEVEL &&
+                        static_cast<int>(fromCoord.m_nRank) == nHomeRank) {
+                        const int nDblRank = static_cast<int>(fromCoord.m_nRank) + 2 * nDirection;
                         if (nDblRank >= 0 && nDblRank < nWidth) {
-                            CSCoord DblCoord(FromCoord.m_nLevel, FromCoord.m_nFile,
+                            CSCoord dblCoord(fromCoord.m_nLevel, fromCoord.m_nFile,
                                             static_cast<uint16_t>(nDblRank));
-                            if (!is_promo_square(DblCoord) &&
-                                p->GetPiece(DblCoord.BitOffset()) == Neutral) {
-                                append_to_heap(pSd->m_hHeap, make_move(FromCoord, DblCoord, M_PAWND));
+                            if (!is_promo_square(dblCoord) &&
+                                p->GetPiece(dblCoord.BitOffset()) == Neutral) {
+                                append_to_heap(pSd->m_hHeap, make_move(fromCoord, dblCoord, M_PAWND));
                             }
                         }
                     }
@@ -740,16 +740,16 @@ CMove CSearchData::NextEvasion() {
                     dwBestI = i;
                 }
             }
-            Move = pSd->m_hHeap->data[dwBestI];
+            move = pSd->m_hHeap->data[dwBestI];
 
             pSection->end--;
             pSd->m_hHeap->data[dwBestI] = pSd->m_hHeap->data[pSection->end];
 
-            if (Move == pSt->st_hashmove || Move == pSt->st_k1 ||
-                Move == pSt->st_k2 || Move == pSt->st_k3 || Move == pSt->st_cm)
+            if (move == pSt->st_hashmove || move == pSt->st_k1 ||
+                move == pSt->st_k2 || move == pSt->st_k3 || move == pSt->st_cm)
                 continue;
 
-            return Move;
+            return move;
         }
     default:
         break;
@@ -804,12 +804,12 @@ static void EmitQCapture(CSearchData *pSd, CPosition *p, int nFrom, int nTo) {
 static void GenerateQCaptures(CSearchData *pSd, int nAlpha) {
     heap_section_t pSection = pSd->m_hHeap->current_section;
     CPosition *p = pSd->m_pPosition;
-    CBitBoard Pwn7th;
-    CBitBoard Att, Def;
+    CBitBoard pwn7th;
+    CBitBoard att, def;
     int nScore;
     int i;
 
-    Att = p->GetMask(p->GetTurn(), 0);
+    att = p->GetMask(p->GetTurn(), 0);
 
     /*
      * Handle the non-capturing promotion pushes first.  A pawn can only push
@@ -818,23 +818,23 @@ static void GenerateQCaptures(CSearchData *pSd, int nAlpha) {
      * per-victim loops below (via EmitQCapture), which decide promotion from the
      * destination square, so the pre-promotion pawns are NOT removed from "Att".
      */
-    Pwn7th = p->GetMask(p->GetTurn(), Pawn) & PrePromoRank[p->GetTurn()];
+    pwn7th = p->GetMask(p->GetTurn(), Pawn) & PrePromoRank[p->GetTurn()];
 
-    while (Pwn7th) {
+    while (pwn7th) {
         int nNext;
 
-        i = (Pwn7th).FindSetBit();
-        Pwn7th.ClearLowestBit();
-        const CSCoord ICoord(static_cast<uint16_t>(i));
+        i = (pwn7th).FindSetBit();
+        pwn7th.ClearLowestBit();
+        const CSCoord iCoord(static_cast<uint16_t>(i));
         nNext = (p->GetTurn() == White)
-                   ? i + static_cast<int>(CBitBoard::LEVEL_WIDTH[ICoord.m_nLevel])
-                   : i - static_cast<int>(CBitBoard::LEVEL_WIDTH[ICoord.m_nLevel]);
+                   ? i + static_cast<int>(CBitBoard::LEVEL_WIDTH[iCoord.m_nLevel])
+                   : i - static_cast<int>(CBitBoard::LEVEL_WIDTH[iCoord.m_nLevel]);
 
         if (p->GetPiece(nNext) == Neutral && is_promo_square(CSCoord(static_cast<uint16_t>(nNext)))) {
-            CMove Move = make_promotion(i, nNext, Queen, 0);
+            CMove move = make_promotion(i, nNext, Queen, 0);
             int nSw;
-            if ((nSw = SwapOff(p, Move)) >= 0) {
-                append_to_heap(pSd->m_hHeap, Move);
+            if ((nSw = SwapOff(p, move)) >= 0) {
+                append_to_heap(pSd->m_hHeap, move);
                 GrowDataHeap(pSd);
                 pSd->m_pnDataHeap[pSection->end - 1] = nSw;
             }
@@ -849,61 +849,61 @@ static void GenerateQCaptures(CSearchData *pSd, int nAlpha) {
 
     if (nScore + Value[Queen] <= nAlpha)
         return;
-    Def = p->GetMask(OPP(p->GetTurn()), Queen);
-    while (Def) {
-        CBitBoard Tmp2;
+    def = p->GetMask(OPP(p->GetTurn()), Queen);
+    while (def) {
+        CBitBoard tmp2;
         int j;
-        i = (Def).FindSetBit();
-        Def.ClearLowestBit();
-        Tmp2 = p->GetAtkFr(i) & Att;
-        while (Tmp2) {
-            j = (Tmp2).FindSetBit();
-            Tmp2.ClearLowestBit();
+        i = (def).FindSetBit();
+        def.ClearLowestBit();
+        tmp2 = p->GetAtkFr(i) & att;
+        while (tmp2) {
+            j = (tmp2).FindSetBit();
+            tmp2.ClearLowestBit();
             EmitQCapture(pSd, p, j, i);
         }
     }
     if (nScore + Value[Rook] <= nAlpha)
         return;
-    Def = p->GetMask(OPP(p->GetTurn()), Rook);
-    while (Def) {
-        CBitBoard Tmp2;
+    def = p->GetMask(OPP(p->GetTurn()), Rook);
+    while (def) {
+        CBitBoard tmp2;
         int j;
-        i = (Def).FindSetBit();
-        Def.ClearLowestBit();
-        Tmp2 = p->GetAtkFr(i) & Att;
-        while (Tmp2) {
-            j = (Tmp2).FindSetBit();
-            Tmp2.ClearLowestBit();
+        i = (def).FindSetBit();
+        def.ClearLowestBit();
+        tmp2 = p->GetAtkFr(i) & att;
+        while (tmp2) {
+            j = (tmp2).FindSetBit();
+            tmp2.ClearLowestBit();
             EmitQCapture(pSd, p, j, i);
         }
     }
     if (nScore + Value[Bishop] <= nAlpha)
         return;
-    Def = p->GetMask(OPP(p->GetTurn()), Bishop) | p->GetMask(OPP(p->GetTurn()), Knight);
-    while (Def) {
-        CBitBoard Tmp2;
+    def = p->GetMask(OPP(p->GetTurn()), Bishop) | p->GetMask(OPP(p->GetTurn()), Knight);
+    while (def) {
+        CBitBoard tmp2;
         int j;
-        i = (Def).FindSetBit();
-        Def.ClearLowestBit();
-        Tmp2 = p->GetAtkFr(i) & Att;
-        while (Tmp2) {
-            j = (Tmp2).FindSetBit();
-            Tmp2.ClearLowestBit();
+        i = (def).FindSetBit();
+        def.ClearLowestBit();
+        tmp2 = p->GetAtkFr(i) & att;
+        while (tmp2) {
+            j = (tmp2).FindSetBit();
+            tmp2.ClearLowestBit();
             EmitQCapture(pSd, p, j, i);
         }
     }
     if (nScore + Value[Pawn] <= nAlpha)
         return;
-    Def = p->GetMask(OPP(p->GetTurn()), Pawn);
-    while (Def) {
-        CBitBoard Tmp2;
+    def = p->GetMask(OPP(p->GetTurn()), Pawn);
+    while (def) {
+        CBitBoard tmp2;
         int j;
-        i = (Def).FindSetBit();
-        Def.ClearLowestBit();
-        Tmp2 = p->GetAtkFr(i) & Att;
-        while (Tmp2) {
-            j = (Tmp2).FindSetBit();
-            Tmp2.ClearLowestBit();
+        i = (def).FindSetBit();
+        def.ClearLowestBit();
+        tmp2 = p->GetAtkFr(i) & att;
+        while (tmp2) {
+            j = (tmp2).FindSetBit();
+            tmp2.ClearLowestBit();
             EmitQCapture(pSd, p, j, i);
         }
     }
@@ -918,7 +918,7 @@ CMove CSearchData::NextMoveQ(int nAlpha) {
     CSearchData *pSd = this;
     heap_section_t pSection = pSd->m_hHeap->current_section;
     struct SSearchStatus *pSt = pSd->m_pCurrent;
-    CMove Move;
+    CMove move;
 
     switch (pSt->st_phase) {
     case HashMove:
@@ -945,12 +945,12 @@ CMove CSearchData::NextMoveQ(int nAlpha) {
                 }
             }
 
-            Move = pSd->m_hHeap->data[dwBestI];
+            move = pSd->m_hHeap->data[dwBestI];
             pSection->end--;
             pSd->m_hHeap->data[dwBestI] = pSd->m_hHeap->data[pSection->end];
             pSd->m_pnDataHeap[dwBestI] = pSd->m_pnDataHeap[pSection->end];
 
-            return Move;
+            return move;
         }
     default:
         break;
@@ -978,15 +978,15 @@ void CSearchData::PutKiller(CMove Move) {
         pK->kcount2 += 1;
         if (pK->kcount2 > pK->kcount1) {
             int nTmpCount;
-            CMove TmpMove;
+            CMove tmpMove;
 
             nTmpCount = pK->kcount1;
             pK->kcount1 = pK->kcount2;
             pK->kcount2 = nTmpCount;
 
-            TmpMove = pK->killer1;
+            tmpMove = pK->killer1;
             pK->killer1 = pK->killer2;
-            pK->killer2 = TmpMove;
+            pK->killer2 = tmpMove;
         }
     } else {
         if (pK->killer1 == M_NONE) {

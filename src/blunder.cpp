@@ -175,19 +175,19 @@ void BlunderCheck(char *file_name) {
                 p->DoMove(LastMove);
             }
 
-            CMove TheMove = p->ParseSAN(szMove);
+            CMove themove = p->ParseSAN(szMove);
 
-            if (TheMove == M_NONE)
+            if (themove == M_NONE)
                 break;
 
             if ((p->GetPly() % 2) == 0) {
                 fprintf(fout, "%d. ", 1 + p->GetPly() / 2);
             }
-            fprintf(fout, "%s ", p->SAN(TheMove, szSanBuffer));
+            fprintf(fout, "%s ", p->SAN(themove, szSanBuffer));
 
-            if (TheMove != M_NONE) {
-                p->DoMove(TheMove);
-                LastMove = TheMove;
+            if (themove != M_NONE) {
+                p->DoMove(themove);
+                LastMove = themove;
             } else {
                 break;
             }

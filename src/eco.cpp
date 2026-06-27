@@ -75,9 +75,9 @@ void ParseEcoPgn(char *pszFname) {
         if (fgets(szBuffer, 1024, pFin) != NULL) {
             for (x = strtok(szBuffer, " \n\r\t"); x;
                  x = strtok(NULL, " \n\r\t")) {
-                CMove Move = p->ParseSAN(x);
-                if (Move != M_NONE) {
-                    p->DoMove(Move);
+                CMove move = p->ParseSAN(x);
+                if (move != M_NONE) {
+                    p->DoMove(move);
                 }
             }
 

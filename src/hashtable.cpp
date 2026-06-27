@@ -154,25 +154,25 @@ static inline struct HTEntry GetHTEntry(hash_t qwKey) {
     acquire_read_lock(pMutex);
 #endif /* MP */
 
-    struct HTEntry Entry = TranspositionTable[(qwKey >> 32) & HT_Mask];
+    struct HTEntry entry = TranspositionTable[(qwKey >> 32) & HT_Mask];
 
 #if MP
     release_read_lock(pMutex);
 #endif /* MP */
 
-    return Entry;
+    return entry;
 }
 
 /**
  * Puts an entry to the global transposition table.
  */
-static inline void PutHTEntry(hash_t qwKey, struct HTEntry Entry) {
+static inline void PutHTEntry(hash_t qwKey, struct HTEntry entry) {
 #if MP
     std::atomic<int> *pMutex = TranspositionMutex + ((qwKey >> 32) & MUTEX_MASK);
     acquire_write_lock(pMutex);
 #endif /* MP */
 
-    TranspositionTable[(qwKey >> 32) & HT_Mask] = Entry;
+    TranspositionTable[(qwKey >> 32) & HT_Mask] = entry;
 
 #if MP
     release_write_lock(pMutex);
@@ -182,52 +182,52 @@ static inline void PutHTEntry(hash_t qwKey, struct HTEntry Entry) {
 /**
  *
  */
-static inline bool PutHTEntryBestEffort(hash_t qwKey, struct HTEntry Entry,
+static inline bool PutHTEntryBestEffort(hash_t qwKey, struct HTEntry entry,
                                         int nDepth) {
     const hash_t qwKey1 = qwKey;
     const hash_t qwKey2 = qwKey + 1;
 
-    struct HTEntry Entry1 = GetHTEntry(qwKey1);
-    struct HTEntry Entry2 = GetHTEntry(qwKey2);
+    struct HTEntry entry1 = GetHTEntry(qwKey1);
+    struct HTEntry entry2 = GetHTEntry(qwKey2);
 
     /* Overwrite any matching entry. */
-    if (Entry1.ht_Signature == (unsigned int)qwKey) {
-        PutHTEntry(qwKey1, Entry);
+    if (entry1.ht_Signature == (unsigned int)qwKey) {
+        PutHTEntry(qwKey1, entry);
         return true;
     }
-    if (Entry2.ht_Signature == (unsigned int)qwKey) {
-        PutHTEntry(qwKey2, Entry);
+    if (entry2.ht_Signature == (unsigned int)qwKey) {
+        PutHTEntry(qwKey2, entry);
         return true;
     }
 
     /* Overwrite entries with lower depth. */
-    if (Entry1.ht_Depth <= Entry2.ht_Depth) {
-        if (Entry1.ht_Depth <= nDepth) {
-            PutHTEntry(qwKey1, Entry);
+    if (entry1.ht_Depth <= entry2.ht_Depth) {
+        if (entry1.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey1, entry);
             return true;
         }
-        if (Entry2.ht_Depth <= nDepth) {
-            PutHTEntry(qwKey2, Entry);
+        if (entry2.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey2, entry);
             return true;
         }
     } else {
-        if (Entry2.ht_Depth <= nDepth) {
-            PutHTEntry(qwKey2, Entry);
+        if (entry2.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey2, entry);
             return true;
         }
-        if (Entry1.ht_Depth <= nDepth) {
-            PutHTEntry(qwKey1, Entry);
+        if (entry1.ht_Depth <= nDepth) {
+            PutHTEntry(qwKey1, entry);
             return true;
         }
     }
 
     /* Overwrite entries from older generation. */
-    if ((Entry1.ht_Flags & HT_AGE) != HTGeneration) {
-        PutHTEntry(qwKey1, Entry);
+    if ((entry1.ht_Flags & HT_AGE) != HTGeneration) {
+        PutHTEntry(qwKey1, entry);
         return true;
     }
-    if ((Entry2.ht_Flags & HT_AGE) != HTGeneration) {
-        PutHTEntry(qwKey2, Entry);
+    if ((entry2.ht_Flags & HT_AGE) != HTGeneration) {
+        PutHTEntry(qwKey2, entry);
         return true;
     }
 
@@ -371,20 +371,20 @@ void StoreHT(hash_t qwKey, int best, int nAlpha, int beta, CMove bestm, int nDep
 #endif
 ) {
     hash_t qwEffectiveKey = qwKey;
-    struct HTEntry Entry = GetHTEntry(qwEffectiveKey);
-    bool fFound = Entry.ht_Signature == (unsigned int)qwKey;
+    struct HTEntry entry = GetHTEntry(qwEffectiveKey);
+    bool fFound = entry.ht_Signature == (unsigned int)qwKey;
 
     if (!fFound) {
         qwEffectiveKey++;
-        Entry = GetHTEntry(qwEffectiveKey);
-        fFound = Entry.ht_Signature == (unsigned int)qwKey;
+        entry = GetHTEntry(qwEffectiveKey);
+        fFound = entry.ht_Signature == (unsigned int)qwKey;
     }
 
     HTStoreTried++;
 
 #if MP
     if (!fFound) {
-        Entry = pLocalHT[(qwKey >> 32) & L_HT_Mask];
+        entry = pLocalHT[(qwKey >> 32) & L_HT_Mask];
     }
 #endif
 
@@ -404,41 +404,41 @@ void StoreHT(hash_t qwKey, int best, int nAlpha, int beta, CMove bestm, int nDep
     }
 
 #if MP
-    if (Entry.ht_Signature == (unsigned int)qwKey && nDepth == Entry.ht_Depth) {
-        if ((Entry.ht_Flags & HT_NCPU) > 0) {
-            Entry.ht_Flags = (Entry.ht_Flags & HT_NCPU) - HT_NCPU_INCREMENT;
+    if (entry.ht_Signature == (unsigned int)qwKey && nDepth == entry.ht_Depth) {
+        if ((entry.ht_Flags & HT_NCPU) > 0) {
+            entry.ht_Flags = (entry.ht_Flags & HT_NCPU) - HT_NCPU_INCREMENT;
         }
     } else {
-        Entry.ht_Signature = (unsigned int)qwKey;
-        Entry.ht_Flags = 0;
+        entry.ht_Signature = (unsigned int)qwKey;
+        entry.ht_Flags = 0;
     }
 #else
-    Entry.ht_Signature = (unsigned int)qwKey;
+    entry.ht_Signature = (unsigned int)qwKey;
 #endif /* MP */
 
-    Entry.ht_Move = bestm;
-    Entry.ht_Depth = (short)nDepth;
-    Entry.ht_Score = nReduced;
+    entry.ht_Move = bestm;
+    entry.ht_Depth = (short)nDepth;
+    entry.ht_Score = nReduced;
 #if MP
-    Entry.ht_Flags |= (short)HTGeneration;
+    entry.ht_Flags |= (short)HTGeneration;
 #else
-    Entry.ht_Flags = (short)HTGeneration;
+    entry.ht_Flags = (short)HTGeneration;
 #endif /* MP */
     if (best <= nAlpha)
-        Entry.ht_Flags |= HT_UBOUND;
+        entry.ht_Flags |= HT_UBOUND;
     else if (best >= beta)
-        Entry.ht_Flags |= HT_LBOUND;
+        entry.ht_Flags |= HT_LBOUND;
     else
-        Entry.ht_Flags |= HT_EXACT;
+        entry.ht_Flags |= HT_EXACT;
 
     if (nThreat)
-        Entry.ht_Flags |= HT_THREAT;
+        entry.ht_Flags |= HT_THREAT;
 
-    bool fSuccess = PutHTEntryBestEffort(qwKey, Entry, nDepth);
+    bool fSuccess = PutHTEntryBestEffort(qwKey, entry, nDepth);
     if (!fSuccess) {
         HTStoreFailed++;
 #if MP
-        pLocalHT[(qwKey >> 32) & L_HT_Mask] = Entry;
+        pLocalHT[(qwKey >> 32) & L_HT_Mask] = entry;
 #endif
     }
 }

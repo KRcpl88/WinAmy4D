@@ -42,9 +42,9 @@ static void test_get_best_move_from_comment(void) {
                      "g3:12, h3:8, Na3:11, Nc3:19, Nf3:35, Nh3:7, a4:7, b4:31, "
                      "c4:24, d4:62, e4:64, f4:9, g4:10, h4:9]";
 
-    CMove Move = get_best_move_from_comment(comment, p, szEvalBuf);
+    CMove move = get_best_move_from_comment(comment, p, szEvalBuf);
 
-    assert(Move == make_move(he2, he4, M_PAWND));
+    assert(move == make_move(he2, he4, M_PAWND));
     assert(strcmp(szEvalBuf, "0.5003") == 0);
 
     CPosition::Free(p);

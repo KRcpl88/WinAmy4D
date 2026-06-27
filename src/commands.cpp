@@ -155,9 +155,9 @@ static struct SCommandEntry Commands[] = {
 char AutoSaveFileName[64];
 
 struct SCommand *ParseInput(char *pszLine) {
-    static struct SCommand TheCommand;
+    static struct SCommand theCommand;
     char *pszToken;
-    CMove Move;
+    CMove move;
     struct SCommandEntry *pEntry;
 
     pszToken = nextToken(&pszLine, " \t\n\r");
@@ -168,27 +168,27 @@ struct SCommand *ParseInput(char *pszLine) {
      * Try to interpret as move.
      */
 
-    Move = CurrentPosition->ParseSAN(pszToken);
-    if (Move == M_NONE) {
-        Move = CurrentPosition->ParseGSAN(pszToken);
+    move = CurrentPosition->ParseSAN(pszToken);
+    if (move == M_NONE) {
+        move = CurrentPosition->ParseGSAN(pszToken);
     }
 
-    if (Move != M_NONE) {
-        TheCommand.move = Move;
-        TheCommand.command_func = NULL;
-        TheCommand.args = NULL;
-        return &TheCommand;
+    if (move != M_NONE) {
+        theCommand.move = move;
+        theCommand.command_func = NULL;
+        theCommand.args = NULL;
+        return &theCommand;
     }
 
     pEntry = Commands;
     while (pEntry->name) {
         if (!strcmp(pEntry->name, pszToken)) {
-            TheCommand.move = M_NONE;
-            TheCommand.command_func = pEntry->command_func;
-            TheCommand.allowed_during_search = pEntry->allowed_during_search;
-            TheCommand.interrupts_search = pEntry->interrupts_search;
-            TheCommand.args = nextToken(&pszLine, "\n\r");
-            return &TheCommand;
+            theCommand.move = M_NONE;
+            theCommand.command_func = pEntry->command_func;
+            theCommand.allowed_during_search = pEntry->allowed_during_search;
+            theCommand.interrupts_search = pEntry->interrupts_search;
+            theCommand.args = nextToken(&pszLine, "\n\r");
+            return &theCommand;
         }
         pEntry++;
     }
@@ -254,7 +254,7 @@ static void Test(char *pszFname) {
     fout = fopen("nsolved.epd", "w");
 
     for (i = 1;; i++) {
-        CMove Move;
+        CMove move;
         int j;
         bool fCorrect = false;
 
@@ -270,16 +270,16 @@ static void Test(char *pszFname) {
 
         /* TestSwap(); */
 
-        Move = p->Iterate(NULL, M_NONE, NULL);
+        move = p->Iterate(NULL, M_NONE, NULL);
         for (j = 0; goodmove[j] != M_NONE; j++)
-            if (Move == goodmove[j])
+            if (move == goodmove[j])
                 fCorrect = true;
 
         if (!fCorrect && badmove[0] != M_NONE) {
             fCorrect = true;
 
             for (j = 0; badmove[j] != M_NONE; j++)
-                if (Move == badmove[j])
+                if (move == badmove[j])
                     fCorrect = false;
         }
 
@@ -563,23 +563,23 @@ static void RunAnnotate(char *pszFname, int nSide) {
     CPosition *p;
 
     if (fin) {
-        struct PGNHeader Header;
+        struct PGNHeader header;
         char szMove[16];
 
-        while (!scanHeader(fin, &Header)) {
+        while (!scanHeader(fin, &header)) {
             p = CPosition::Initial();
             while (!scanMove(fin, szMove)) {
-                CMove TheMove = p->ParseSAN(szMove);
-                if (TheMove != M_NONE) {
+                CMove themove = p->ParseSAN(szMove);
+                if (themove != M_NONE) {
                     char szSanBuffer[16];
                     p->ShowPosition();
                     Print(0, "%s(%d): ", p->GetTurn() == White ? "White" : "Black",
                           (p->GetPly() / 2) + 1);
-                    Print(0, "%s\n", p->SAN(TheMove, szSanBuffer));
+                    Print(0, "%s\n", p->SAN(themove, szSanBuffer));
                     if (nSide == -1 || (nSide == p->GetTurn())) {
                         p->Iterate(NULL, M_NONE, NULL);
                     }
-                    p->DoMove(TheMove);
+                    p->DoMove(themove);
                 }
             }
             CPosition::Free(p);
@@ -685,7 +685,7 @@ static void Help(char *pszArgs) {
 
 static void Benchmark(char *pszArgs) {
     (void)pszArgs;
-    CMove Move = make_move(hg1, hf3, 0);
+    CMove move = make_move(hg1, hf3, 0);
     int i;
     const int nCycles = 10000000;
     unsigned long dwStart, dwEnd;
@@ -697,8 +697,8 @@ static void Benchmark(char *pszArgs) {
     dwStart = GetTime();
 
     for (i = nCycles; i > 0; i--) {
-        p->DoMove(Move);
-        p->UndoMove(Move);
+        p->DoMove(move);
+        p->UndoMove(move);
     }
 
     dwEnd = GetTime();
@@ -723,15 +723,15 @@ static BitBoardBits SearchFully(CPosition *p, BitBoardBits qwCnt, int nDepth,
 
     for (i = heap->current_section->start; i < heap->current_section->end;
          i++) {
-        CMove Move = heap->data[i];
-        if (Move.IsCastle() && !p->MayCastle(Move))
+        CMove move = heap->data[i];
+        if (move.IsCastle() && !p->MayCastle(move))
             continue;
 
-        p->DoMove(Move);
+        p->DoMove(move);
         if (!p->InCheck(OPP(p->GetTurn()))) {
             qwCnt = SearchFully(p, qwCnt, nDepth - 1, heap);
         }
-        p->UndoMove(Move);
+        p->UndoMove(move);
     }
     pop_section(heap);
 

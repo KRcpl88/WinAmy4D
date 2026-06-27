@@ -224,12 +224,12 @@ void SaveEvaluationConfig(char *pszFileName) {
  */
 static void print_piece_square_table(FILE *pFout, int16_t *pPieceSquareTable) {
     for (unsigned int dwOffset = 0; dwOffset < CBitBoard::SIZE; dwOffset++) {
-        const CSCoord Square(static_cast<int>(dwOffset));
-        if (Square.m_nFile == 0) {
+        const CSCoord square(static_cast<int>(dwOffset));
+        if (square.m_nFile == 0) {
             fprintf(pFout, "    ");
         }
-        fprintf(pFout, "%5d, ", (int)pPieceSquareTable[static_cast<int>(Square)]);
-        if (Square.m_nFile == 7) {
+        fprintf(pFout, "%5d, ", (int)pPieceSquareTable[static_cast<int>(square)]);
+        if (square.m_nFile == 7) {
             fprintf(pFout, "\n");
         }
     }
@@ -254,10 +254,10 @@ static void print_array(FILE *pFout, const char *pszPrefix, int16_t *pArray,
  * Set a named parameter.
  */
 static void set_parameter(struct YamlNode *pNode, const char *pszName, int *pParameter) {
-    struct IntLookupResult Result = get_as_int(pNode, pszName);
-    if (Result.result_code == OK) {
-        Print(9, "%s: %d\n", pszName, Result.result);
-        *pParameter = Result.result;
+    struct IntLookupResult result = get_as_int(pNode, pszName);
+    if (result.result_code == OK) {
+        Print(9, "%s: %d\n", pszName, result.result);
+        *pParameter = result.result;
     }
 }
 
@@ -308,10 +308,10 @@ static void set_array(struct YamlNode *pNode, const char *pszName, int16_t *pTar
 }
 
 static void configure_name(struct YamlNode *pNode) {
-    struct StringLookupResult Result = get_as_string(pNode, "name");
+    struct StringLookupResult result = get_as_string(pNode, "name");
 
-    if (Result.result_code == OK) {
-        ConfigurationName = Result.result;
+    if (result.result_code == OK) {
+        ConfigurationName = result.result;
         Print(0, "Using configuration name: %s\n", ConfigurationName);
     }
 }

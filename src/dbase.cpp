@@ -2401,24 +2401,24 @@ static CMove parse_san_with_heap(CPosition *p, const char *pszSan, heap_t heap) 
      * (level letter a-o + file letter a-h + rank digit 1-8); detect that
      * 3-character form first so SAN round-trips. */
     char szDis[8];
-    int nDis = 0;
+    int ndis = 0;
     for (const char *q = pszPrefix; q < pszPrefixEnd; q++) {
         if (*q == 'x' || *q == '+' || *q == '#') {
             continue;
         }
-        if (nDis >= static_cast<int>(sizeof(szDis))) {
+        if (ndis >= static_cast<int>(sizeof(szDis))) {
             return M_NONE;
         }
-        szDis[nDis++] = *q;
+        szDis[ndis++] = *q;
     }
 
-    if (nDis == 3 && szDis[0] >= 'a' && szDis[0] <= 'o' && szDis[1] >= 'a' &&
+    if (ndis == 3 && szDis[0] >= 'a' && szDis[0] <= 'o' && szDis[1] >= 'a' &&
         szDis[1] <= 'h' && szDis[2] >= '1' && szDis[2] <= '8') {
         nFll = szDis[0] - 'a';
         nFfl = szDis[1] - 'a';
         nFrk = szDis[2] - '1';
     } else {
-        for (int k = 0; k < nDis; k++) {
+        for (int k = 0; k < ndis; k++) {
             char cDisambiguation = szDis[k];
             if (cDisambiguation >= 'a' && cDisambiguation <= 'h') {
                 nFfl = cDisambiguation - 'a';
@@ -2584,24 +2584,24 @@ CMove ParseSANList(char *pszSan, Color nSide, CMove *pMvs, int nCnt, int *pmap) 
      * (level letter a-o + file letter a-h + rank digit 1-8); detect that
      * 3-character form first so SAN round-trips. */
     char szDis[8];
-    int nDis = 0;
+    int ndis = 0;
     for (const char *q = pszPrefix; q < pszPrefixEnd; q++) {
         if (*q == 'x' || *q == '+' || *q == '#') {
             continue;
         }
-        if (nDis >= static_cast<int>(sizeof(szDis))) {
+        if (ndis >= static_cast<int>(sizeof(szDis))) {
             return M_NONE;
         }
-        szDis[nDis++] = *q;
+        szDis[ndis++] = *q;
     }
 
-    if (nDis == 3 && szDis[0] >= 'a' && szDis[0] <= 'o' && szDis[1] >= 'a' &&
+    if (ndis == 3 && szDis[0] >= 'a' && szDis[0] <= 'o' && szDis[1] >= 'a' &&
         szDis[1] <= 'h' && szDis[2] >= '1' && szDis[2] <= '8') {
         nFll = szDis[0] - 'a';
         nFfl = szDis[1] - 'a';
         nFrk = szDis[2] - '1';
     } else {
-        for (int k = 0; k < nDis; k++) {
+        for (int k = 0; k < ndis; k++) {
             char cDisambiguation = szDis[k];
             if (cDisambiguation >= 'a' && cDisambiguation <= 'h') {
                 nFfl = cDisambiguation - 'a';

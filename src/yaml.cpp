@@ -57,8 +57,8 @@ void free_tree_node(tree_node_t *tree);
 static bool is_word_char(char c) { return isalnum(c) || c == '_' || c == '-'; }
 
 static struct YamlToken token_from_type(YamlTokenType nType) {
-    struct YamlToken Result = {.type = nType, .text = NULL};
-    return Result;
+    struct YamlToken result = {.type = nType, .text = NULL};
+    return result;
 }
 
 struct YamlToken parse_word(struct TokenizerState *pState) {
@@ -84,8 +84,8 @@ struct YamlToken parse_word(struct TokenizerState *pState) {
     memcpy(pszBuffer, pszBegin, dwLength);
     pszBuffer[dwLength] = '\0';
 
-    struct YamlToken Result = {.type = TT_WORD, .text = pszBuffer};
-    return Result;
+    struct YamlToken result = {.type = TT_WORD, .text = pszBuffer};
+    return result;
 }
 
 static bool is_sequence_header(struct TokenizerState *pState) {
@@ -160,10 +160,10 @@ static struct YamlToken next_token(struct TokenizerState *pState) {
         }
 
         if (pState->check_indent) {
-            struct YamlToken Result = handle_indent(pState, dwIndent);
+            struct YamlToken result = handle_indent(pState, dwIndent);
             // printf("handle_indent() returned %d\n", Result.type);
-            if (Result.type != CONTINUE) {
-                return Result;
+            if (result.type != CONTINUE) {
+                return result;
             }
         }
 
@@ -209,15 +209,15 @@ struct YamlListNode *parse_list(struct TokenizerState *pState) {
     struct YamlListNode *pResult = NULL;
     struct YamlListNode *pLastNode = NULL;
 
-    struct YamlToken Token = next_token(pState);
+    struct YamlToken token = next_token(pState);
 
     for (;;) {
-        if (Token.type == TT_WORD) {
+        if (token.type == TT_WORD) {
             struct YamlNode *pValue =
                 (struct YamlNode *)safe_malloc(sizeof(struct YamlNode));
 
             pValue->type = SCALAR;
-            pValue->payload = Token.text;
+            pValue->payload = token.text;
             // printf("Parsed list element: %s\n", Token.text);
 
             struct YamlListNode *pNextNode =
@@ -234,15 +234,15 @@ struct YamlListNode *parse_list(struct TokenizerState *pState) {
                 pLastNode = pNextNode;
             }
 
-            Token = next_token(pState);
-            if (Token.type == CLOSING_BRACKET) {
+            token = next_token(pState);
+            if (token.type == CLOSING_BRACKET) {
                 // printf("List done.\n");
                 return pResult;
-            } else if (Token.type == COMMA) {
-                Token = next_token(pState);
+            } else if (token.type == COMMA) {
+                token = next_token(pState);
                 continue;
             }
-        } else if (Token.type == CLOSING_BRACKET) {
+        } else if (token.type == CLOSING_BRACKET) {
             // printf("List done.\n");
             return pResult;
         }
@@ -256,53 +256,53 @@ struct YamlNode *parse_dict(struct TokenizerState *pState) {
     tree_node_t *pResultDict = NULL;
 
     for (;;) {
-        struct YamlToken Token = next_token(pState);
-        if (Token.type == TT_WORD) {
+        struct YamlToken token = next_token(pState);
+        if (token.type == TT_WORD) {
             struct YamlToken ExpectedColon = next_token(pState);
             if (ExpectedColon.type != COLON) {
-                free(Token.text);
+                free(token.text);
                 printf("Expected ':', got token %d!\n", ExpectedColon.type);
                 return NULL;
             }
             struct YamlToken ExpectedValue = next_token(pState);
             if (ExpectedValue.type == TT_WORD) {
-                struct YamlNode Node = {.type = SCALAR,
+                struct YamlNode node = {.type = SCALAR,
                                     .payload = ExpectedValue.text};
                 pResultDict =
-                    add_node(pResultDict, Token.text, strlen(Token.text) + 1,
-                             &Node, sizeof(struct YamlNode));
+                    add_node(pResultDict, token.text, strlen(token.text) + 1,
+                             &node, sizeof(struct YamlNode));
             } else if (ExpectedValue.type == OPENING_BRACKET) {
                 struct YamlListNode *pListNode = parse_list(pState);
                 if (pListNode == NULL) {
-                    free(Token.text);
+                    free(token.text);
                     free_tree_node(pResultDict);
                     // printf("Failed to parse list!\n");
                     return NULL;
                 }
-                struct YamlNode Node = {.type = LIST, .payload = pListNode};
+                struct YamlNode node = {.type = LIST, .payload = pListNode};
                 pResultDict =
-                    add_node(pResultDict, Token.text, strlen(Token.text) + 1,
-                             &Node, sizeof(struct YamlNode));
+                    add_node(pResultDict, token.text, strlen(token.text) + 1,
+                             &node, sizeof(struct YamlNode));
             } else if (ExpectedValue.type == OPENING_BRACE) {
                 struct YamlNode *pDictNode = parse_dict(pState);
                 if (pDictNode == NULL) {
-                    free(Token.text);
+                    free(token.text);
                     free_tree_node(pResultDict);
                     // printf("Failed to parse dict!\n");
                     return NULL;
                 }
                 pResultDict =
-                    add_node(pResultDict, Token.text, strlen(Token.text) + 1,
+                    add_node(pResultDict, token.text, strlen(token.text) + 1,
                              pDictNode, sizeof(struct YamlNode));
                 free(pDictNode);
             } else {
                 // printf("Unexpected token %d!\n", ExpectedValue.type);
-                free(Token.text);
+                free(token.text);
                 free_tree_node(pResultDict);
                 return NULL;
             }
 
-            free(Token.text);
+            free(token.text);
         } else {
             break;
         }
@@ -320,12 +320,12 @@ struct YamlNode *parse_dict(struct TokenizerState *pState) {
 }
 
 struct YamlNode *parse_yaml(const char *pszText) {
-    struct TokenizerState State = {.ptr = pszText,
+    struct TokenizerState state = {.ptr = pszText,
                                    .indent_level = 0,
                                    .check_indent = true,
                                    .flow_style = false,
                                    .in_sequence = false};
-    return parse_dict(&State);
+    return parse_dict(&state);
 }
 
 struct YamlNode *get_node(struct YamlNode *pNode, const char *pszPath) {

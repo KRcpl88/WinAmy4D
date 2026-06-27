@@ -155,13 +155,13 @@ static struct TimeControl parse_timecontrol_xboard(char *rgArgs[]) {
     }
     sscanf(rgArgs[2], "%d", &nInc);
 
-    struct TimeControl Result = {};
-    Result.first.moves = nTtmoves;
-    Result.first.total_time = nTtime;
-    Result.first.increment = nInc;
-    Result.hasSecondTimeControl = false;
+    struct TimeControl result = {};
+    result.first.moves = nTtmoves;
+    result.first.total_time = nTtime;
+    result.first.increment = nInc;
+    result.hasSecondTimeControl = false;
 
-    return Result;
+    return result;
 }
 
 /** Literal for 'sudden death' time control. */
@@ -174,7 +174,7 @@ static struct TimeControl parse_timecontrol(char *rgArgs[]) {
     int nTtmoves, nTtime, nInc = 0;
     int nTtmoves2, nTtime2;
 
-    struct TimeControl Result = globalTimeControl;
+    struct TimeControl result = globalTimeControl;
 
     char *x = strtok(rgArgs[0], "/+ \t\n\r");
     if (x) {
@@ -209,26 +209,26 @@ static struct TimeControl parse_timecontrol(char *rgArgs[]) {
                 }
             }
             if (nTtmoves >= 0) {
-                Result.first.moves = nTtmoves;
-                Result.first.total_time = nTtime * 60;
-                Result.first.increment = nInc;
-                Result.hasSecondTimeControl = false;
+                result.first.moves = nTtmoves;
+                result.first.total_time = nTtime * 60;
+                result.first.increment = nInc;
+                result.hasSecondTimeControl = false;
 
             } else {
-                Result.first.moves = -1;
-                Result.first.total_time = nTtime;
-                Result.first.increment = 0;
-                Result.hasSecondTimeControl = false;
+                result.first.moves = -1;
+                result.first.total_time = nTtime;
+                result.first.increment = 0;
+                result.hasSecondTimeControl = false;
             }
             if (TwoTimeControls) {
-                Result.second.moves = nTtmoves2;
-                Result.second.total_time = nTtime2 * 60;
-                Result.second.increment = 0;
-                Result.hasSecondTimeControl = true;
+                result.second.moves = nTtmoves2;
+                result.second.total_time = nTtime2 * 60;
+                result.second.increment = 0;
+                result.hasSecondTimeControl = true;
             }
         }
     }
-    return Result;
+    return result;
 }
 
 /**

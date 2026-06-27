@@ -6,14 +6,14 @@ CPoly::CPoly(const CUCoordFloat& p0, const CUCoordFloat& p1, const CUCoordFloat&
     m_rgPoints[2] = p2;
 }
 
-bool CPoly::operator==(const CPoly& Other) const {
-    if (!(m_rgPoints[0] == Other.m_rgPoints[0])) {
+bool CPoly::operator==(const CPoly& other) const {
+    if (!(m_rgPoints[0] == other.m_rgPoints[0])) {
         return false;
     }
-    if (!(m_rgPoints[1] == Other.m_rgPoints[1])) {
+    if (!(m_rgPoints[1] == other.m_rgPoints[1])) {
         return false;
     }
-    if (!(m_rgPoints[2] == Other.m_rgPoints[2])) {
+    if (!(m_rgPoints[2] == other.m_rgPoints[2])) {
         return false;
     }
     return true;
