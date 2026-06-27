@@ -123,6 +123,7 @@ class CSearchData {
 #else
     int NegaScout(int nAlpha, int nBeta, int nDepth, int nNodeType);
 #endif
+    void IterateInt();
 };
 
 #endif

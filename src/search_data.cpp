@@ -38,16 +38,22 @@
 #include "search.h"
 #include "dbase.h"
 #include "evaluation.h"
+#include "hashtable.h"
 #include "heap.h"
 #include "init.h"
 #include "inline.h"
+#include "probe.h"
+#include "random.h"
 #include "safe_malloc.h"
+#include "search_io.h"
 #include "swap.h"
 #include "utils.h"
 #include <string.h>
-#if MP
-#include "hashtable.h"
+#if HAVE_UNISTD_H
+#include <unistd.h>
 #endif
+
+extern OPTIONAL_ATOMIC unsigned long TotalNodes;
 
 /**
  * Description: Creates and initializes per-search state for move ordering and node bookkeeping.
@@ -996,5 +1002,516 @@ void CSearchData::PutKiller(CMove Move) {
             pK->killer2 = Move;
             pK->kcount2 = 1;
         }
+    }
+}
+
+#define ALTERNATE_DELTA 1500
+
+/*
+ * This routine searches a chess position. It uses iterative deepening,
+ * aspiration window and scout search.
+ */
+void CSearchData::IterateInt() {
+    unsigned long rgNodes[256];
+    int nLast = 0;
+    double dElapsed;
+    CPosition *p;
+    bool fAnyPvPrinted = false;
+    bool fPvValid = false;
+
+    if (!m_fMaster) {
+#ifdef _WIN32
+        Sleep((DWORD)((50.0 + 100.0 * Random()) / 1000.0));
+#else
+        usleep((useconds_t)(50 + 100 * Random()));
+#endif
+    }
+    p = m_pPosition;
+
+    InitSearch();
+    m_wRootMoves = (uint16_t)p->LegalMoves(m_hHeap);
+
+    // The root move list lives at a fixed index range within the shared search
+    // heap. Move generation deeper in the search appends to that same heap, and
+    // append_to_heap() may realloc() the underlying data buffer, relocating it
+    // and invalidating any cached pointer into it. Remember the root section
+    // start index and re-derive `mvs` from the (possibly moved) heap->data after
+    // every operation that can grow the heap, so we never read through a
+    // dangling pointer (which previously yielded a corrupt best move that
+    // crashed in CPosition::SAN).
+    const unsigned int dwRootStart = m_hHeap->current_section->start;
+    CMove *pMvs = m_hHeap->data + dwRootStart;
+
+    /*
+     * Drop any caller-excluded root moves (used to emulate MultiPV by repeated
+     * searches that each exclude the previously found best move). Compacting the
+     * move array in place and shrinking m_wRootMoves makes the rest of the
+     * search ignore them entirely. The default (empty) set is a no-op.
+     */
+    if (cExcludedRootMoves > 0) {
+        uint16_t wWriteIndex = 0;
+        for (uint16_t r = 0; r < m_wRootMoves; r++) {
+            bool fExcluded = false;
+            for (uint16_t e = 0; e < cExcludedRootMoves; e++) {
+                if (pMvs[r] == rgExcludedRootMoves[e]) {
+                    fExcluded = true;
+                    break;
+                }
+            }
+            if (!fExcluded) {
+                pMvs[wWriteIndex++] = pMvs[r];
+            }
+        }
+        m_wRootMoves = wWriteIndex;
+    }
+
+    m_nBestScore = p->GetMaterial(p->GetTurn()) - p->GetMaterial(OPP(p->GetTurn()));
+
+    /*
+     * If every legal move was excluded there is nothing to search. Bail out with
+     * no best move rather than dereferencing mvs[0] below.
+     */
+    if (m_wRootMoves == 0) {
+        /*
+         * No legal root moves were generated (stalemate/checkmate, or every
+         * move was excluded above). Log the guard so a search that bails out
+         * with no best move can be distinguished from other early exits when
+         * auditing the log file.
+         */
+        PrintDebug(2, "IterateInt: no legal root moves (%s); returning M_NONE.\n",
+                   m_fMaster ? "master" : "helper");
+        m_BestMove = M_NONE;
+        if (!m_fMaster) {
+            PrintDebug(2, "IterateInt: freeing helper clone %p.\n",
+                       (void *)m_pPosition);
+            CPosition::Free(m_pPosition);
+            delete this;
+        }
+        return;
+    }
+
+    if (!pMvs[0].IsTactical()) {
+        PutKiller(pMvs[0]);
+    }
+
+    MaxDepth = MAX_TREE_SIZE - 1;
+
+    for (m_wDepth = 1; m_wDepth < MaxSearchDepth; m_wDepth++) {
+        int nAlpha = m_nBestScore - PVWindow;
+        int nBeta = m_nBestScore + PVWindow;
+        bool fIsPv = true;
+        bool fPvStable = true;
+
+        for (m_wMoveNum = 0; m_wMoveNum < m_wRootMoves; m_wMoveNum++) {
+            int nTmp;
+            int nNextDepth = (m_wDepth - 2) * OnePly;
+            CMove move = pMvs[m_wMoveNum];
+            bool fIsAlternate = !fIsPv && move == m_AlternateMove;
+
+            rgNodes[m_wMoveNum] = m_ulNodesCount;
+
+            if (m_fMaster && PrintOK) {
+                char szTimeBuffer[16];
+                char szSanBuffer[32];
+
+                PrintDebug(
+                    2, "%2d  %s   %2d/%2d  %s      \r", m_wDepth,
+                    FormatTime(CurTime - StartTime, szTimeBuffer,
+                               sizeof(szTimeBuffer)),
+                    m_wMoveNum + 1, m_wRootMoves,
+                    p->NumberedSAN(move, szSanBuffer, sizeof(szSanBuffer)));
+            }
+
+            p->DoMove(move);
+            /*
+             * Root moves come from LegalMoves(), so the side that just moved
+             * must not have left its own king in check. If it has, an illegal
+             * move slipped into the root list (the class of bug behind the
+             * "engine recommended an illegal move" reports): log it and trap
+             * into the debugger so the position/move can be inspected.
+             */
+            AMY_ASSERT(
+                !p->InCheck(OPP(p->GetTurn())),
+                "Illegal root move left own king in check: from L%d/F%d/R%d "
+                "to L%d/F%d/R%d\n",
+                move.GetFromCoord().m_nLevel, move.GetFromCoord().m_nFile,
+                move.GetFromCoord().m_nRank, move.GetToCoord().m_nLevel,
+                move.GetToCoord().m_nFile, move.GetToCoord().m_nRank);
+            if (p->InCheck(p->GetTurn())) {
+                nNextDepth += ExtendInCheck;
+            }
+
+            if (nNextDepth >= 0) {
+                int nEffectiveAlpha =
+                    fIsAlternate ? (nAlpha - ALTERNATE_DELTA) : nAlpha;
+#if MP
+                nTmp = -NegaScout(-nBeta, -nEffectiveAlpha, nNextDepth,
+                                  fIsPv ? PVNode : CutNode, 0);
+#else
+                nTmp = -NegaScout(-nBeta, -nEffectiveAlpha, nNextDepth,
+                                  fIsPv ? PVNode : CutNode);
+#endif
+                if (fIsAlternate) {
+                    m_nAlternateScore = nTmp;
+                }
+            } else {
+                nTmp = -Quies(-nBeta, -nAlpha, 0);
+            }
+            p->UndoMove(move);
+            // Move generation during the search above may have realloc'd the
+            // heap; re-derive `mvs` so it points into the live data buffer.
+            pMvs = m_hHeap->data + dwRootStart;
+            if (AbortSearch) {
+                goto final;
+            }
+
+            if (fIsPv && nTmp <= nAlpha) {
+
+                /*
+                 * Fail low on principal variation.
+                 * Open window, take some time, and re-search.
+                 */
+
+                fPvStable = false;
+
+                if (m_fMaster && PrintOK) {
+                    char szSanBuffer[32];
+                    SearchOutputFailHighLow(
+                        m_wDepth, CurTime - StartTime, false,
+                        p->NumberedSAN(move, szSanBuffer, sizeof(szSanBuffer)),
+                        m_ulNodesCount + m_ulQNodesCount);
+                }
+
+                NeedTime = true;
+
+                nBeta = nTmp;
+                nAlpha = nTmp - ResearchWindow;
+
+                p->DoMove(move);
+                if (nNextDepth >= 0) {
+#if MP
+                    nTmp = -NegaScout(-nBeta, -nAlpha, nNextDepth, PVNode, 0);
+#else
+                    nTmp = -NegaScout(-nBeta, -nAlpha, nNextDepth, PVNode);
+#endif
+                } else {
+                    nTmp = -Quies(-nBeta, -nAlpha, 0);
+                }
+                p->UndoMove(move);
+                pMvs = m_hHeap->data + dwRootStart;
+                if (AbortSearch) {
+                    goto final;
+                }
+
+                if (nTmp <= nAlpha) {
+                    nBeta = nTmp;
+                    nAlpha = -INF;
+
+                    p->DoMove(move);
+                    if (nNextDepth >= 0) {
+#if MP
+                        nTmp = -NegaScout(-nBeta, -nAlpha, nNextDepth, PVNode, 0);
+#else
+                        nTmp = -NegaScout(-nBeta, -nAlpha, nNextDepth, PVNode);
+#endif
+                    } else {
+                        nTmp = -Quies(-nBeta, -nAlpha, 0);
+                    }
+                    p->UndoMove(move);
+                    pMvs = m_hHeap->data + dwRootStart;
+                    if (AbortSearch) {
+                        goto final;
+                    }
+                }
+                rgNodes[m_wMoveNum] = m_ulNodesCount - rgNodes[m_wMoveNum];
+            } else if (nTmp >= nBeta) {
+
+                /*
+                 * Fail high.
+                 * Re-search with open window.
+                 */
+
+                fPvStable = false;
+
+                if (m_wMoveNum != 0) {
+                    unsigned long dwTn = rgNodes[m_wMoveNum];
+                    int j;
+
+                    for (j = m_wMoveNum; j > 0; j--) {
+                        pMvs[j] = pMvs[j - 1];
+                        rgNodes[j] = rgNodes[j - 1];
+                    }
+                    pMvs[0] = move;
+                    rgNodes[0] = dwTn;
+
+                    if (!(move.IsTactical())) {
+                        PutKiller(move);
+                    }
+                    PBMove = M_NONE;
+                    fIsPv = true;
+
+                    FHTime = (CurTime - StartTime) / ONE_SECOND;
+                }
+
+                if (m_fMaster && PrintOK) {
+                    char szSanBuffer[32];
+                    SearchOutputFailHighLow(
+                        m_wDepth, CurTime - StartTime, true,
+                        p->NumberedSAN(pMvs[0], szSanBuffer, sizeof(szSanBuffer)),
+                        m_ulNodesCount + m_ulQNodesCount);
+                }
+
+                nAlpha = nTmp;
+                nBeta = nTmp + ResearchWindow;
+
+                p->DoMove(move);
+                if (nNextDepth >= 0) {
+#if MP
+                    nTmp = -NegaScout(-nBeta, -nAlpha, nNextDepth, PVNode, 0);
+#else
+                    nTmp = -NegaScout(-nBeta, -nAlpha, nNextDepth, PVNode);
+#endif
+                } else {
+                    nTmp = -Quies(-nBeta, -nAlpha, 0);
+                }
+                p->UndoMove(move);
+                pMvs = m_hHeap->data + dwRootStart;
+                if (AbortSearch) {
+                    goto final;
+                }
+
+                if (nTmp >= nBeta) {
+                    nAlpha = nTmp;
+                    nBeta = INF;
+
+                    p->DoMove(move);
+                    if (nNextDepth >= 0) {
+#if MP
+                        nTmp = -NegaScout(-nBeta, -nAlpha, nNextDepth, PVNode, 0);
+#else
+                        nTmp = -NegaScout(-nBeta, -nAlpha, nNextDepth, PVNode);
+#endif
+                    } else {
+                        nTmp = -Quies(-nBeta, -nAlpha, 0);
+                    }
+                    p->UndoMove(move);
+                    pMvs = m_hHeap->data + dwRootStart;
+                    if (AbortSearch) {
+                        goto final;
+                    }
+                }
+                rgNodes[0] = m_ulNodesCount - rgNodes[0];
+            } else {
+                rgNodes[m_wMoveNum] = m_ulNodesCount - rgNodes[m_wMoveNum];
+            }
+
+            if (AbortSearch) {
+                goto final;
+            }
+
+            if (fIsPv) {
+                m_nBestScore = nTmp;
+
+                if (m_fMaster) {
+                    char szScoreAsText[16];
+                    p->AnalyzeHT(pMvs[0]);
+                    fPvValid = true;
+
+                    snprintf(AnalysisLine, sizeof(AnalysisLine),
+                             "%2d: (%7s) %s", m_wDepth,
+                             FormatScore(m_nBestScore, szScoreAsText,
+                                         sizeof(szScoreAsText)),
+                             BestLine);
+
+                    if (PrintOK) {
+                        SearchOutput(m_wDepth, CurTime - StartTime,
+                                     (p->GetTurn()) ? -m_nBestScore
+                                                    : m_nBestScore,
+                                     BestLine, m_ulNodesCount + m_ulQNodesCount);
+
+                        fAnyPvPrinted = true;
+                    }
+                }
+
+                nAlpha = m_nBestScore;
+                nBeta = m_nBestScore + 1;
+                fIsPv = false;
+            }
+
+            if (m_fMaster && m_wMoveNum == 0 && !NeedTime &&
+                CurTime > SoftLimit) {
+                if (SearchMode == Searching) {
+                    AbortSearch = true;
+                    goto final;
+                } else if (SearchMode == Pondering) {
+                    DoneAtRoot = true;
+                }
+            }
+        }
+
+        if (m_fMaster && (PrintOK || (m_wDepth > MateDepth &&
+                                      (m_nBestScore < -CMLIMIT ||
+                                       m_nBestScore > CMLIMIT)))) {
+            SearchOutput(m_wDepth, CurTime - StartTime,
+                         (p->GetTurn()) ? -m_nBestScore : m_nBestScore, BestLine,
+                         m_ulNodesCount + m_ulQNodesCount);
+
+            fAnyPvPrinted = true;
+        }
+
+        if (m_nBestScore < -CMLIMIT || m_nBestScore > CMLIMIT) {
+            if (nLast > CMLIMIT && m_nBestScore >= nLast &&
+                m_wDepth > MateDepth) {
+                if (SearchMode == Searching) {
+                    break;
+                } else {
+                    DoneAtRoot = true;
+                }
+            }
+            if (SearchMode == Searching && nLast < CMLIMIT &&
+                m_nBestScore <= nLast && m_wDepth > MateDepth) {
+                break;
+            }
+            nLast = m_nBestScore;
+        }
+
+        NeedTime = false;
+        pMvs = m_hHeap->data + dwRootStart;
+        ResortMovesList(m_wRootMoves, pMvs, rgNodes);
+
+        /*
+            if(Depth > 5 && pv_stable) {
+                double pv_percentage;
+                int matval = NPVal[Side] / Value[Knight];
+                double easy_threshold;
+                if(matval > 10) matval = 10;
+
+                easy_threshold = 0.95 - matval * 0.017;
+
+                nodes_per_iteration = Nodes - nodes_per_iteration;
+                pv_percentage = (double) nodes[0] /
+                                (double) (nodes_per_iteration);
+
+                if(pv_percentage >= easy_threshold) {
+                    Print(1, "                    -> easy move\n");
+
+                    SoftLimit = StartTime +
+                                2 * (SoftLimit - StartTime) / 3;
+                }
+            }
+        */
+
+        CurTime = GetTime();
+
+        if (m_wDepth > 3) {
+            /*
+             * Do ten checks per second.
+             */
+
+            dElapsed = (double)(CurTime - StartTime) / (double)ONE_SECOND;
+
+            NodesPerCheck =
+                (dElapsed == 0.0)
+                    ? 1000
+                    : (int)((m_ulNodesCount + m_ulQNodesCount) / dElapsed / 10);
+        }
+
+        if (SearchMode == Puzzling && m_wDepth > 4) {
+            break;
+        }
+
+        if (m_fMaster &&
+            ((CurTime > SoftLimit) || (fPvStable && CurTime > SoftLimit2))) {
+            if (SearchMode == Searching) {
+                AbortSearch = true;
+                break;
+            } else if (SearchMode == Pondering) {
+                DoneAtRoot = true;
+            }
+        }
+    }
+
+final:
+
+    if (CurTime <= StartTime) {
+        StartTime--;
+    }
+    dElapsed = (double)(CurTime - StartTime) / (double)ONE_SECOND;
+
+    if (m_fMaster) {
+        if (fPvValid && !fAnyPvPrinted) {
+            // Make sure there is a PV printed
+            SearchOutput(m_wDepth, CurTime - StartTime,
+                         (p->GetTurn()) ? -m_nBestScore : m_nBestScore, BestLine,
+                         m_ulNodesCount + m_ulQNodesCount);
+        }
+
+        char szBuf1[16], szBuf2[16], szBuf3[16], szBuf4[16], szBuf5[16], szBuf6[16],
+            szBuf7[16];
+
+        unsigned long dwNps = (unsigned long)(TotalNodes / dElapsed);
+
+        Print(2, "Nodes = %s, QPerc: %d %%, time = %g secs, %s nodes/s\n",
+              FormatCount(TotalNodes, szBuf1, sizeof(szBuf1)),
+              Percentage(m_ulQNodesCount, m_ulNodesCount + m_ulQNodesCount),
+              dElapsed, FormatCount(dwNps, szBuf2, sizeof(szBuf2)));
+
+        Print(2,
+              "Extensions: Check: %s  DblChk: %s  DiscChk: %s  SingReply: %s\n"
+              "            Recapture: %s   Passed Pawn: %s   Zugzwang: %s\n",
+              FormatCount(ChkExt, szBuf1, sizeof(szBuf1)),
+              FormatCount(DblExt, szBuf2, sizeof(szBuf2)),
+              FormatCount(DiscExt, szBuf3, sizeof(szBuf3)),
+              FormatCount(SingExt, szBuf4, sizeof(szBuf4)),
+              FormatCount(RCExt, szBuf5, sizeof(szBuf5)),
+              FormatCount(PPExt, szBuf6, sizeof(szBuf6)),
+              FormatCount(ZZExt, szBuf7, sizeof(szBuf7)));
+
+        Print(2,
+              "Hashing: Trans: %s/%s = %d %%   Pawn: %s/%s = %d %%\n"
+              "         Eval: %s/%s = %d %%\n",
+              FormatCount(HHit, szBuf1, sizeof(szBuf1)),
+              FormatCount(HTry, szBuf2, sizeof(szBuf2)), Percentage(HHit, HTry),
+              FormatCount(PHit, szBuf3, sizeof(szBuf3)),
+              FormatCount(PTry, szBuf4, sizeof(szBuf4)), Percentage(PHit, PTry),
+              FormatCount(SHit, szBuf5, sizeof(szBuf5)),
+              FormatCount(STry, szBuf6, sizeof(szBuf6)), Percentage(SHit, STry));
+
+        if (EGTBProbe != 0) {
+            Print(2, "EGTB Hits/Probes = %s/%s\n",
+                  FormatCount(EGTBProbeSucc, szBuf1, sizeof(szBuf1)),
+                  FormatCount(EGTBProbe, szBuf2, sizeof(szBuf2)));
+        }
+
+        ShowHashStatistics();
+    }
+
+    // Reached via the normal loop exit or via `goto final`; re-derive `mvs` one
+    // last time in case the heap moved, so the returned best move is read from
+    // the live buffer rather than a stale (freed) one.
+    pMvs = m_hHeap->data + dwRootStart;
+    m_BestMove = pMvs[0];
+
+    /*
+     * The returned best move must be legal in the (now restored) root position.
+     * Returning an illegal move here is exactly the failure mode behind the
+     * reported "engine recommended an illegal move" bug, so assert it: the
+     * failure is logged and trapped in the debugger (no-op in release).
+     */
+    AMY_ASSERT(m_BestMove == M_NONE || p->LegalMove(m_BestMove),
+               "IterateInt returning an illegal best move: from L%d/F%d/R%d "
+               "to L%d/F%d/R%d\n",
+               m_BestMove.GetFromCoord().m_nLevel,
+               m_BestMove.GetFromCoord().m_nFile,
+               m_BestMove.GetFromCoord().m_nRank,
+               m_BestMove.GetToCoord().m_nLevel,
+               m_BestMove.GetToCoord().m_nFile,
+               m_BestMove.GetToCoord().m_nRank);
+
+    if (!m_fMaster) {
+        PrintDebug(2, "IterateInt: freeing helper clone %p.\n",
+                   (void *)m_pPosition);
+        CPosition::Free(m_pPosition);
+        delete this;
     }
 }
