@@ -630,6 +630,11 @@ Please make IterateInt a member of the CSearchData class.   Remove the  void* x 
 
 
 
+# this pointer usage
+
+Please review all explicit referneces to the "this" pointer.  Any cases where the reference is not needed, please refactor to not explicitly reference this.  If the code assigns "this" to another local variable withing the scope of a member function, and then uses the lovcsal pointer instead of implicitly referencing this by invoking member functions or variables, then remove the local variable and just use implicit member variable and member function invocations.
+
+
 # future cleanup:
 - Remove tbindex.cpp, it uses 8x8 fixed board sizes to compute well known endgames for 2D chess, irrelvant for 4D, not even sure how this compiles.  This is fundamentally broken
 - . src/recog.cpp:183–251 — KBNKTab[64] indexed by BitOffset ⚠️ BUGGY
