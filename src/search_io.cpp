@@ -44,29 +44,29 @@
 
 static void PrintPV(char *pv) {
     char PVBuffer[512];
-    char *x;
-    size_t len = 21;
+    char *pszX;
+    size_t qwLen = 21;
 
     strncpy(PVBuffer, pv, sizeof(PVBuffer) - 1);
 
-    for (x = PVBuffer; *x;) {
-        char *y = x;
+    for (pszX = PVBuffer; *pszX;) {
+        char *pszY = pszX;
 
-        while (*y != ' ' && *y != '\0')
-            y++;
-        if (*y == '\0')
-            *(y + 1) = '\0';
-        *y = '\0';
+        while (*pszY != ' ' && *pszY != '\0')
+            pszY++;
+        if (*pszY == '\0')
+            *(pszY + 1) = '\0';
+        *pszY = '\0';
 
-        len += strlen(x);
+        qwLen += strlen(pszX);
 
-        if (len >= 79) {
+        if (qwLen >= 79) {
             Print(1, "\n                    ");
-            len = 21 + strlen(x);
+            qwLen = 21 + strlen(pszX);
         }
-        Print(1, "%s ", x);
-        len += 1;
-        x = y + 1;
+        Print(1, "%s ", pszX);
+        qwLen += 1;
+        pszX = pszY + 1;
     }
     Print(1, "\n");
 }
@@ -75,58 +75,58 @@ void SearchHeader(void) {
     Print(1, "It    Time   Score  principal Variation\n");
 }
 
-void SearchOutput(int depth, unsigned long time, int score, char *line,
-                  unsigned long nodes) {
-    char time_as_text[16];
-    char score_as_text[16];
+void SearchOutput(int nDepth, unsigned long dwTime, int nScore, char *pszLine,
+                  unsigned long dwNodes) {
+    char szTimeAsText[16];
+    char szScoreAsText[16];
 
-    Print(1, "%2d  %s %7s  ", depth,
-          FormatTime(time, time_as_text, sizeof(time_as_text)),
-          FormatScore(score, score_as_text, sizeof(score_as_text)));
-    PrintPV(line);
+    Print(1, "%2d  %s %7s  ", nDepth,
+          FormatTime(dwTime, szTimeAsText, sizeof(szTimeAsText)),
+          FormatScore(nScore, szScoreAsText, sizeof(szScoreAsText)));
+    PrintPV(pszLine);
 
     if (PostMode) {
-        char *short_line = _strdup(line);
-        int s = score / 10;
+        char *pszShortLine = _strdup(pszLine);
+        int nS = nScore / 10;
 
-        if (s >= 9999) {
-            s = 9999;
-        } else if (s <= -9999) {
-            s = -9999;
+        if (nS >= 9999) {
+            nS = 9999;
+        } else if (nS <= -9999) {
+            nS = -9999;
         }
 
-        if (short_line) {
-            if (strlen(short_line) > 80) {
-                int idx;
-                for (idx = 80; idx > 1; idx--) {
-                    if (short_line[idx] == ' ' && short_line[idx - 1] != '.') {
+        if (pszShortLine) {
+            if (strlen(pszShortLine) > 80) {
+                int nIdx;
+                for (nIdx = 80; nIdx > 1; nIdx--) {
+                    if (pszShortLine[nIdx] == ' ' && pszShortLine[nIdx - 1] != '.') {
                         break;
                     }
                 }
-                short_line[idx] = '\0';
+                pszShortLine[nIdx] = '\0';
             }
-            PrintDebug(0, "%d %d %d %lu %s\n", depth, s, time, nodes,
-                       short_line);
-            free(short_line);
+            PrintDebug(0, "%d %d %d %lu %s\n", nDepth, nS, dwTime, dwNodes,
+                       pszShortLine);
+            free(pszShortLine);
         }
     }
 }
 
-void SearchOutputFailHighLow(int depth, unsigned long time, int isfailhigh,
-                             char *move, unsigned long nodes) {
-    char time_as_text[16];
+void SearchOutputFailHighLow(int nDepth, unsigned long dwTime, int nIsfailhigh,
+                             char *pszMove, unsigned long dwNodes) {
+    char szTimeAsText[16];
 
-    if (isfailhigh) {
-        Print(1, "%2d  %s     +++  %s\n", depth,
-              FormatTime(time, time_as_text, sizeof(time_as_text)), move);
+    if (nIsfailhigh) {
+        Print(1, "%2d  %s     +++  %s\n", nDepth,
+              FormatTime(dwTime, szTimeAsText, sizeof(szTimeAsText)), pszMove);
         if (PostMode) {
-            PrintDebug(0, "%d 0 %d %lu %s!\n", depth, time, nodes, move);
+            PrintDebug(0, "%d 0 %d %lu %s!\n", nDepth, dwTime, dwNodes, pszMove);
         }
     } else {
-        Print(1, "%2d  %s     ---  %s\n", depth,
-              FormatTime(time, time_as_text, sizeof(time_as_text)), move);
+        Print(1, "%2d  %s     ---  %s\n", nDepth,
+              FormatTime(dwTime, szTimeAsText, sizeof(szTimeAsText)), pszMove);
         if (PostMode) {
-            PrintDebug(0, "%d 0 %d %lu %s?\n", depth, time, nodes, move);
+            PrintDebug(0, "%d 0 %d %lu %s?\n", nDepth, dwTime, dwNodes, pszMove);
         }
     }
 }

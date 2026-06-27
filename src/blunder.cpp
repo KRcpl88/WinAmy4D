@@ -46,7 +46,7 @@
 #define THRESHOLD 2000
 
 CMove get_best_move_from_comment(char *comment, CPosition *p,
-                                  char *eval_buf) {
+                                  char *pszEvalBuf) {
     char *ptr = comment;
 
     CMove best_move = M_NONE;
@@ -57,38 +57,38 @@ CMove get_best_move_from_comment(char *comment, CPosition *p,
     }
     ptr++;
 
-    char *start_eval = ptr;
+    char *pszStartEval = ptr;
 
     while (*ptr && *ptr != ';') {
         ptr++;
     }
     ptr++;
 
-    size_t eval_len = ptr - start_eval - 1;
-    strncpy(eval_buf, start_eval, eval_len);
-    eval_buf[eval_len] = '\0';
+    size_t qwEvalLen = ptr - pszStartEval - 1;
+    strncpy(pszEvalBuf, pszStartEval, qwEvalLen);
+    pszEvalBuf[qwEvalLen] = '\0';
 
     while (*ptr && *ptr != '[') {
         ptr++;
     }
     ptr++;
 
-    size_t len = strlen(ptr);
+    size_t qwLen = strlen(ptr);
 
-    char *buffer = (char *)safe_malloc(len + 1);
+    char *buffer = (char *)safe_malloc(qwLen + 1);
 
-    strncpy(buffer, ptr, len + 1);
+    strncpy(buffer, ptr, qwLen + 1);
 
     char *brko;
 
-    for (char *elem = strtok_r(buffer, ", ]", &brko); elem;
-         elem = strtok_r(NULL, ", ]", &brko)) {
+    for (char *pszElem = strtok_r(buffer, ", ]", &brko); pszElem;
+         pszElem = strtok_r(NULL, ", ]", &brko)) {
         char *brki;
 
-        char *move = strtok_r(elem, ":", &brki);
+        char *pszMove = strtok_r(pszElem, ":", &brki);
         char *count = strtok_r(NULL, ":", &brki);
 
-        CMove parsed_move = p->ParseSAN(move);
+        CMove parsed_move = p->ParseSAN(pszMove);
 
         if (parsed_move != M_NONE) {
             int parsed_count = atoi(count);
@@ -106,9 +106,9 @@ CMove get_best_move_from_comment(char *comment, CPosition *p,
 
 void BlunderCheck(char *file_name) {
     struct PGNHeader header;
-    char move[12];
+    char szMove[12];
     char comment[2048];
-    char san_buffer[16];
+    char szSanBuffer[16];
 
     FILE *fin = fopen(file_name, "r");
     if (fin == NULL) {
@@ -136,46 +136,46 @@ void BlunderCheck(char *file_name) {
 
         CMove last_move = M_NONE;
 
-        while (!scanMove(fin, move)) {
-            if (!(strlen(move) < 12)) {
-                printf("\n<%s>\n", move);
+        while (!scanMove(fin, szMove)) {
+            if (!(strlen(szMove) < 12)) {
+                printf("\n<%s>\n", szMove);
                 exit(1);
             }
 
             get_and_reset_comment(comment, sizeof(comment) - 1);
 
             if (last_move != M_NONE && strlen(comment) != 0) {
-                char sanbuf[16], evalbuf[16];
+                char szSanbuf[16], szEvalbuf[16];
 
                 p->UndoMove(last_move);
 
                 CMove best_move =
-                    get_best_move_from_comment(comment, p, evalbuf);
+                    get_best_move_from_comment(comment, p, szEvalbuf);
 
-                int search_evaluation;
-                int alternate_evaluation;
+                int nSearchEvaluation;
+                int nAlternateEvaluation;
 
-                CMove optimal_move = p->Iterate(&search_evaluation, best_move,
-                                                &alternate_evaluation);
-                int score_diff = search_evaluation - alternate_evaluation;
+                CMove optimal_move = p->Iterate(&nSearchEvaluation, best_move,
+                                                &nAlternateEvaluation);
+                int nScoreDiff = nSearchEvaluation - nAlternateEvaluation;
 
-                if (optimal_move != best_move && score_diff >= 1500) {
+                if (optimal_move != best_move && nScoreDiff >= 1500) {
                     p->ShowPosition();
                     Print(1, ">>> best move from comment: %s\n",
-                          p->SAN(best_move, sanbuf));
+                          p->SAN(best_move, szSanbuf));
                     Print(1, ">>> optimal move: %s\n",
-                          p->SAN(optimal_move, sanbuf));
+                          p->SAN(optimal_move, szSanbuf));
                     Print(1, ">>> score diff: %d\n",
-                          search_evaluation - alternate_evaluation);
+                          nSearchEvaluation - nAlternateEvaluation);
 
-                    fprintf(fout, "{ q=%s; p=[%s:100] } ", evalbuf,
-                            p->SAN(optimal_move, sanbuf));
+                    fprintf(fout, "{ q=%s; p=[%s:100] } ", szEvalbuf,
+                            p->SAN(optimal_move, szSanbuf));
                 }
 
                 p->DoMove(last_move);
             }
 
-            CMove themove = p->ParseSAN(move);
+            CMove themove = p->ParseSAN(szMove);
 
             if (themove == M_NONE)
                 break;
@@ -183,7 +183,7 @@ void BlunderCheck(char *file_name) {
             if ((p->GetPly() % 2) == 0) {
                 fprintf(fout, "%d. ", 1 + p->GetPly() / 2);
             }
-            fprintf(fout, "%s ", p->SAN(themove, san_buffer));
+            fprintf(fout, "%s ", p->SAN(themove, szSanBuffer));
 
             if (themove != M_NONE) {
                 p->DoMove(themove);

@@ -223,8 +223,8 @@ void SaveEvaluationConfig(char *file_name) {
  * Writes a piece-square table to file fout.
  */
 static void print_piece_square_table(FILE *fout, int16_t *piece_square_table) {
-    for (unsigned int offset = 0; offset < CBitBoard::SIZE; offset++) {
-        const CSCoord square(static_cast<int>(offset));
+    for (unsigned int dwOffset = 0; dwOffset < CBitBoard::SIZE; dwOffset++) {
+        const CSCoord square(static_cast<int>(dwOffset));
         if (square.m_nFile == 0) {
             fprintf(fout, "    ");
         }
@@ -238,12 +238,12 @@ static void print_piece_square_table(FILE *fout, int16_t *piece_square_table) {
 /**
  * Writes an array to file fout in a single line.
  */
-static void print_array(FILE *fout, const char *prefix, int16_t *array,
+static void print_array(FILE *fout, const char *prefix, int16_t *pArray,
                         size_t count) {
     fprintf(fout, "  %s: [", prefix);
-    for (size_t i = 0; i < count; i++) {
-        fprintf(fout, "%d, ", (int)array[i]);
-        if ((i % 10) == 9) {
+    for (size_t qwI = 0; qwI < count; qwI++) {
+        fprintf(fout, "%d, ", (int)pArray[qwI]);
+        if ((qwI % 10) == 9) {
             fprintf(fout, "\n    ");
         }
     }
@@ -262,7 +262,7 @@ static void set_parameter(struct YamlNode *node, const char *name, int *paramete
 }
 
 static void set_piece_square_table(struct YamlNode *node, const char *name,
-                                   int16_t *target_table) {
+                                   int16_t *pTargetTable) {
     int piece_square_table[CBitBoard::SIZE];
 
     struct IntArrayLookupResult array_result =
@@ -274,17 +274,17 @@ static void set_piece_square_table(struct YamlNode *node, const char *name,
                   static_cast<int>(CBitBoard::SIZE), name, array_result.elements_read);
         }
         Print(9, "%s:\n", name);
-        for (unsigned int i = 0; i < array_result.elements_read; i++) {
-            target_table[i] = (int16_t)piece_square_table[i];
-            Print(9, "%5d, ", piece_square_table[i]);
-            if (i % CBitBoard::MAX_LEVEL_WIDTH == (CBitBoard::MAX_LEVEL_WIDTH - 1)) {
+        for (unsigned int dwI = 0; dwI < array_result.elements_read; dwI++) {
+            pTargetTable[dwI] = (int16_t)piece_square_table[dwI];
+            Print(9, "%5d, ", piece_square_table[dwI]);
+            if (dwI % CBitBoard::MAX_LEVEL_WIDTH == (CBitBoard::MAX_LEVEL_WIDTH - 1)) {
                 Print(9, "\n");
             }
         }
     }
 }
 
-static void set_array(struct YamlNode *node, const char *name, int16_t *target_array,
+static void set_array(struct YamlNode *node, const char *name, int16_t *pTargetArray,
                       unsigned int count) {
     int *destination = (int *)safe_malloc(sizeof(int) * count);
 
@@ -297,9 +297,9 @@ static void set_array(struct YamlNode *node, const char *name, int16_t *target_a
                   name, array_result.elements_read);
         }
         Print(9, "%s: ", name);
-        for (unsigned int i = 0; i < array_result.elements_read; i++) {
-            target_array[i] = (int16_t)destination[i];
-            Print(9, "%d, ", destination[i]);
+        for (unsigned int dwI = 0; dwI < array_result.elements_read; dwI++) {
+            pTargetArray[dwI] = (int16_t)destination[dwI];
+            Print(9, "%d, ", destination[dwI]);
         }
         Print(9, "\n");
     }
@@ -420,7 +420,7 @@ static char *read_file(char *file_name) {
 
     const size_t page_size = 1024;
     size_t buf_size = page_size;
-    size_t total_bytes_read = 0;
+    size_t qwTotalBytesRead = 0;
 
     char *buffer = (char *)safe_malloc(buf_size);
 
@@ -433,18 +433,18 @@ static char *read_file(char *file_name) {
             break;
 
         ptr += bytes_read;
-        total_bytes_read += bytes_read;
+        qwTotalBytesRead += bytes_read;
 
-        if ((total_bytes_read + page_size) >= buf_size) {
+        if ((qwTotalBytesRead + page_size) >= buf_size) {
             buf_size *= 2;
             buffer = (char *)safe_realloc(buffer, buf_size);
-            ptr = buffer + total_bytes_read;
+            ptr = buffer + qwTotalBytesRead;
         }
     }
 
     fclose(fin);
 
-    if ((total_bytes_read + 1) >= buf_size) {
+    if ((qwTotalBytesRead + 1) >= buf_size) {
         buf_size += 1;
         buffer = (char *)safe_realloc(buffer, buf_size);
     }
@@ -452,5 +452,4 @@ static char *read_file(char *file_name) {
 
     return buffer;
 }
-
 

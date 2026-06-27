@@ -47,18 +47,18 @@ static const char *MAGIC = "ATRE";
 /**
  * Allocate a tree node.
  */
-static tree_node_t *allocate_node(void *key_data, size_t key_len,
-                                  void *value_data, size_t value_len) {
+static tree_node_t *allocate_node(void *pKeyData, size_t qwKeyLen,
+                                  void *pValueData, size_t qwValueLen) {
     tree_node_t *node = (tree_node_t *)safe_malloc(sizeof(tree_node_t));
 
-    node->key_data = (char *)safe_malloc(key_len);
-    node->key_len = key_len;
+    node->key_data = (char *)safe_malloc(qwKeyLen);
+    node->key_len = qwKeyLen;
 
-    node->value_data = safe_malloc(value_len);
-    node->value_len = value_len;
+    node->value_data = safe_malloc(qwValueLen);
+    node->value_len = qwValueLen;
 
-    memcpy(node->key_data, key_data, key_len);
-    memcpy(node->value_data, value_data, value_len);
+    memcpy(node->key_data, pKeyData, qwKeyLen);
+    memcpy(node->value_data, pValueData, qwValueLen);
 
     node->left_child = NULL;
     node->right_child = NULL;
@@ -85,16 +85,16 @@ void free_node(tree_node_t *node) {
 /**
  * Compare two keys.
  */
-static int cmp_keys(const char *key1, size_t len1, const char *key2,
-                    size_t len2) {
-    size_t min_len = (len1 < len2) ? len1 : len2;
-    int result = memcmp(key1, key2, min_len);
+static int cmp_keys(const char *pKey1, size_t qwLen1, const char *pKey2,
+                    size_t qwLen2) {
+    size_t qwMinLen = (qwLen1 < qwLen2) ? qwLen1 : qwLen2;
+    int nResult = memcmp(pKey1, pKey2, qwMinLen);
 
-    if (result != 0) {
-        return result;
+    if (nResult != 0) {
+        return nResult;
     }
 
-    return (int)(len1 - len2);
+    return (int)(qwLen1 - qwLen2);
 }
 
 /**
@@ -120,11 +120,11 @@ static void update_depth(tree_node_t *node) {
         node->depth = 0;
         return;
     }
-    unsigned int left_depth = get_depth(node->left_child);
-    unsigned int right_depth = get_depth(node->right_child);
-    unsigned int max_depth =
-        (left_depth > right_depth) ? left_depth : right_depth;
-    node->depth = max_depth + 1;
+    unsigned int dwLeftDepth = get_depth(node->left_child);
+    unsigned int dwRightDepth = get_depth(node->right_child);
+    unsigned int dwMaxDepth =
+        (dwLeftDepth > dwRightDepth) ? dwLeftDepth : dwRightDepth;
+    node->depth = dwMaxDepth + 1;
 }
 
 /**
@@ -132,10 +132,10 @@ static void update_depth(tree_node_t *node) {
  */
 static tree_node_t *rotate_right(tree_node_t *node) {
     tree_node_t *child = node->left_child;
-    tree_node_t *tmp = child->right_child;
+    tree_node_t *pTmp = child->right_child;
 
     child->right_child = node;
-    node->left_child = tmp;
+    node->left_child = pTmp;
 
     update_depth(node);
     update_depth(child);
@@ -148,10 +148,10 @@ static tree_node_t *rotate_right(tree_node_t *node) {
  */
 static tree_node_t *rotate_left(tree_node_t *node) {
     tree_node_t *child = node->right_child;
-    tree_node_t *tmp = child->left_child;
+    tree_node_t *pTmp = child->left_child;
 
     child->left_child = node;
-    node->right_child = tmp;
+    node->right_child = pTmp;
 
     update_depth(node);
     update_depth(child);
@@ -187,16 +187,16 @@ static tree_node_t *rotate_left_full(tree_node_t *node) {
  * Balance a node.
  */
 tree_node_t *balance(tree_node_t *node) {
-    unsigned int left_depth = get_depth(node->left_child);
-    unsigned int right_depth = get_depth(node->right_child);
+    unsigned int dwLeftDepth = get_depth(node->left_child);
+    unsigned int dwRightDepth = get_depth(node->right_child);
 
-    int imbalance = left_depth - right_depth;
+    int nImbalance = dwLeftDepth - dwRightDepth;
 
-    if (abs(imbalance) < 2) {
+    if (abs(nImbalance) < 2) {
         return node;
     }
 
-    if (imbalance > 0) {
+    if (nImbalance > 0) {
         return rotate_right_full(node);
     } else {
         return rotate_left_full(node);
@@ -206,29 +206,29 @@ tree_node_t *balance(tree_node_t *node) {
 /**
  * Add a node to the tree.
  */
-tree_node_t *add_node(tree_node_t *node, void *key_data, size_t key_len,
-                      void *value_data, size_t value_len) {
+tree_node_t *add_node(tree_node_t *node, void *pKeyData, size_t qwKeyLen,
+                      void *pValueData, size_t qwValueLen) {
     if (node == NULL) {
-        return allocate_node(key_data, key_len, value_data, value_len);
+        return allocate_node(pKeyData, qwKeyLen, pValueData, qwValueLen);
     }
 
     int comparison =
-        cmp_keys((const char *)key_data, key_len, node->key_data, node->key_len);
+        cmp_keys((const char *)pKeyData, qwKeyLen, node->key_data, node->key_len);
 
     if (comparison == 0) {
-        node->value_data = safe_realloc(node->value_data, value_len);
+        node->value_data = safe_realloc(node->value_data, qwValueLen);
         if (node->value_data == NULL) {
             perror("Failed to allocate value_data");
             exit(1);
         }
-        memcpy(node->value_data, value_data, value_len);
+        memcpy(node->value_data, pValueData, qwValueLen);
         return node;
     } else if (comparison < 0) {
-        node->left_child = add_node(node->left_child, key_data, key_len,
-                                    value_data, value_len);
+        node->left_child = add_node(node->left_child, pKeyData, qwKeyLen,
+                                    pValueData, qwValueLen);
     } else {
-        node->right_child = add_node(node->right_child, key_data, key_len,
-                                     value_data, value_len);
+        node->right_child = add_node(node->right_child, pKeyData, qwKeyLen,
+                                     pValueData, qwValueLen);
     }
     update_depth(node);
 
@@ -238,28 +238,28 @@ tree_node_t *add_node(tree_node_t *node, void *key_data, size_t key_len,
 /**
  * Lookup a value in the tree.
  */
-static void *lookup_value_internal(tree_node_t *node, const char *key_data,
-                                   size_t key_len, size_t *value_len,
+static void *lookup_value_internal(tree_node_t *node, const char *pKeyData,
+                                   size_t qwKeyLen, size_t *pValueLen,
                                    int depth) {
     if (node == NULL) {
         return NULL;
     }
 
-    int comparison = cmp_keys(key_data, key_len, node->key_data, node->key_len);
+    int comparison = cmp_keys(pKeyData, qwKeyLen, node->key_data, node->key_len);
 
     if (comparison == 0) {
-        if (value_len != NULL) {
-            *value_len = node->value_len;
+        if (pValueLen != NULL) {
+            *pValueLen = node->value_len;
         }
         char *buffer = (char *)safe_malloc(node->value_len);
         memcpy(buffer, node->value_data, node->value_len);
         return buffer;
     } else if (comparison < 0) {
-        return lookup_value_internal(node->left_child, key_data, key_len,
-                                     value_len, depth + 1);
+        return lookup_value_internal(node->left_child, pKeyData, qwKeyLen,
+                                     pValueLen, depth + 1);
     } else {
-        return lookup_value_internal(node->right_child, key_data, key_len,
-                                     value_len, depth + 1);
+        return lookup_value_internal(node->right_child, pKeyData, qwKeyLen,
+                                     pValueLen, depth + 1);
     }
 }
 
@@ -268,10 +268,10 @@ static void *lookup_value_internal(tree_node_t *node, const char *key_data,
  * contain the key. Otherwise, a copy of the value is returned.
  * Use free() on the return value to free the memory of the copy.
  */
-void *lookup_value(tree_node_t *node, const void *key_data, size_t key_len,
-                   size_t *value_len) {
-    return lookup_value_internal(node, (const char *)key_data, key_len, value_len,
-                                 0);
+void *lookup_value(tree_node_t *node, const void *pKeyData, size_t qwKeyLen,
+                   size_t *pValueLen) {
+    return lookup_value_internal(node, (const char *)pKeyData, qwKeyLen,
+                                 pValueLen, 0);
 }
 
 /**
@@ -279,16 +279,16 @@ void *lookup_value(tree_node_t *node, const void *key_data, size_t key_len,
  * by saving only 7 bits of the value and setting a continuation
  * bit if the value exceeds seven bits.
  */
-static inline void write_size(size_t value, FILE *fout) {
+static inline void write_size(size_t qwValue, FILE *fout) {
     for (;;) {
-        int output_value = value & 0x7f;
-        value >>= 7;
-        if (value) {
-            output_value |= 0x80;
+        int nOutputValue = qwValue & 0x7f;
+        qwValue >>= 7;
+        if (qwValue) {
+            nOutputValue |= 0x80;
         }
-        fputc(output_value, fout);
+        fputc(nOutputValue, fout);
 
-        if (value == 0)
+        if (qwValue == 0)
             break;
     }
 }
@@ -314,8 +314,8 @@ static void save_tree_recursive(tree_node_t *node, FILE *fout) {
  * Save the tree to a file.
  */
 void save_tree(tree_node_t *node, FILE *fout) {
-    size_t records_written = fwrite(MAGIC, 4, 1, fout);
-    if (records_written != 1)
+    size_t qwRecordsWritten = fwrite(MAGIC, 4, 1, fout);
+    if (qwRecordsWritten != 1)
         return;
     save_tree_recursive(node, fout);
 }
@@ -325,17 +325,17 @@ void save_tree(tree_node_t *node, FILE *fout) {
  * value written by write_size.
  */
 static inline size_t read_size(FILE *fin) {
-    size_t value = 0;
+    size_t qwValue = 0;
     for (;;) {
-        int input_value = fgetc(fin);
-        if (input_value == EOF)
+        int nInputValue = fgetc(fin);
+        if (nInputValue == EOF)
             return 0;
 
-        value = (value << 7) | (input_value & 0x7f);
-        if ((input_value & 0x80) == 0)
+        qwValue = (qwValue << 7) | (nInputValue & 0x7f);
+        if ((nInputValue & 0x80) == 0)
             break;
     }
-    return value;
+    return qwValue;
 }
 
 /**
@@ -343,35 +343,35 @@ static inline size_t read_size(FILE *fin) {
  */
 static tree_node_t *load_tree_internal(FILE *fin) {
     tree_node_t *node = NULL;
-    size_t key_len;
-    size_t value_len;
-    char *key_data = (char *)safe_malloc(8);
-    char *value_data = (char *)safe_malloc(256);
+    size_t qwKeyLen;
+    size_t qwValueLen;
+    char *pKeyData = (char *)safe_malloc(8);
+    char *pValueData = (char *)safe_malloc(256);
 
     for (;;) {
-        key_len = read_size(fin);
-        if (key_len == 0)
+        qwKeyLen = read_size(fin);
+        if (qwKeyLen == 0)
             break;
 
-        key_data = (char *)safe_realloc(key_data, key_len);
-        size_t amount_read = fread(key_data, key_len, 1, fin);
-        if (amount_read != 1)
+        pKeyData = (char *)safe_realloc(pKeyData, qwKeyLen);
+        size_t qwAmountRead = fread(pKeyData, qwKeyLen, 1, fin);
+        if (qwAmountRead != 1)
             break;
 
-        value_len = read_size(fin);
-        if (value_len == 0)
+        qwValueLen = read_size(fin);
+        if (qwValueLen == 0)
             break;
 
-        value_data = (char *)safe_realloc(value_data, value_len);
-        amount_read = fread(value_data, value_len, 1, fin);
-        if (amount_read != 1)
+        pValueData = (char *)safe_realloc(pValueData, qwValueLen);
+        qwAmountRead = fread(pValueData, qwValueLen, 1, fin);
+        if (qwAmountRead != 1)
             break;
 
-        node = add_node(node, key_data, key_len, value_data, value_len);
+        node = add_node(node, pKeyData, qwKeyLen, pValueData, qwValueLen);
     }
 
-    free(key_data);
-    free(value_data);
+    free(pKeyData);
+    free(pValueData);
 
     return node;
 }
@@ -381,8 +381,8 @@ static tree_node_t *load_tree_internal(FILE *fin) {
  */
 tree_node_t *load_tree(FILE *fin) {
     char buffer[4];
-    size_t records_read = fread(buffer, 4, 1, fin);
-    if (records_read != 1)
+    size_t qwRecordsRead = fread(buffer, 4, 1, fin);
+    if (qwRecordsRead != 1)
         return NULL;
 
     if (memcmp(buffer, MAGIC, 4) != 0)

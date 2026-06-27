@@ -1186,145 +1186,145 @@ static bool is_edge(CSCoord);
  */
 
 static int EvaluatePawns(const CPosition *p,
-                         struct PawnFacts *pawnFacts) {
+                         struct PawnFacts *pPawnFacts) {
     CBitBoard pcs;
-    int score = 0;
+    int nScore = 0;
     int file = 0;
-    int tmp_w, tmp_b;
+    int nTmpW, nTmpB;
 
-    int kside_open_files = 0;
-    int qside_open_files = 0;
-    int kside_hopen_files_w = 0;
-    int kside_hopen_files_b = 0;
-    int qside_hopen_files_w = 0;
-    int qside_hopen_files_b = 0;
+    int nKsideOpenFiles = 0;
+    int nQsideOpenFiles = 0;
+    int nKsideHopenFilesW = 0;
+    int nKsideHopenFilesB = 0;
+    int nQsideHopenFilesW = 0;
+    int nQsideHopenFilesB = 0;
 
-    int kside_pawns_w = 0;
-    int qside_pawns_w = 0;
-    int kside_pawns_b = 0;
-    int qside_pawns_b = 0;
+    int nKsidePawnsW = 0;
+    int nQsidePawnsW = 0;
+    int nKsidePawnsB = 0;
+    int nQsidePawnsB = 0;
 
-    pawnFacts->pf_WhitePassers = {};
+    pPawnFacts->pf_WhitePassers = {};
 
     pcs = p->GetMask(White, Pawn);
     while (pcs) {
         CSCoord sqCoord = (pcs).FindSetBitCoord();
-        const uint16_t sq = sqCoord.BitOffset();
+        const uint16_t wSq = sqCoord.BitOffset();
         pcs.ClearLowestBit();
 
-        score += WPawnPos[sq];
+        nScore += WPawnPos[wSq];
 
         /*
          * check if passed
          */
 
-        if (!(p->GetMask(Black, Pawn) & PassedMaskW[sq])) {
-            pawnFacts->pf_WhitePassers.SetBit(sq);
+        if (!(p->GetMask(Black, Pawn) & PassedMaskW[wSq])) {
+            pPawnFacts->pf_WhitePassers.SetBit(wSq);
         }
 
         /*
          * check if doubled
          */
 
-        if (p->GetMask(White, Pawn) & ForwardRayW[sq])
-            score += DoubledPawn;
+        if (p->GetMask(White, Pawn) & ForwardRayW[wSq])
+            nScore += DoubledPawn;
 
         /*
          * check if isolated or backward
          */
 
         if (!(p->GetMask(White, Pawn) & IsoMask[sqCoord.m_nFile])) {
-            score += IsolatedPawn[sqCoord.m_nFile];
+            nScore += IsolatedPawn[sqCoord.m_nFile];
 #ifdef DEBUG
             if (DebugWhat & DebugPawnStructure)
-                Print(2, "isolated pawn on %c%c\n", SQUARE(sq));
+                Print(2, "isolated pawn on %c%c\n", SQUARE(wSq));
 #endif
-        } else if (!(p->GetMask(White, Pawn) & WPawnBackwardMask[sq]) &&
-                   (p->GetAtkFr(sq + CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]) &
+        } else if (!(p->GetMask(White, Pawn) & WPawnBackwardMask[wSq]) &&
+                   (p->GetAtkFr(wSq + CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]) &
                     p->GetMask(Black, Pawn))) {
-            if (p->GetMask(Black, Pawn) & ForwardRayW[sq]) {
-                score += HiddenBackwardPawn;
+            if (p->GetMask(Black, Pawn) & ForwardRayW[wSq]) {
+                nScore += HiddenBackwardPawn;
 #ifdef DEBUG
                 if (DebugWhat & DebugPawnStructure)
-                    Print(2, "hidden backward pawn on %c%c\n", SQUARE(sq));
+                    Print(2, "hidden backward pawn on %c%c\n", SQUARE(wSq));
 #endif
             } else {
 #ifdef DEBUG
                 if (DebugWhat & DebugPawnStructure)
-                    Print(2, "backward pawn on %c%c\n", SQUARE(sq));
+                    Print(2, "backward pawn on %c%c\n", SQUARE(wSq));
 #endif
-                score += BackwardPawn;
+                nScore += BackwardPawn;
             }
         }
 
-        const uint16_t levelWidth =
+        const uint16_t wLevelWidth =
             static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
         const uint16_t file = sqCoord.m_nFile;
-        if (file < (levelWidth - 1) &&
-            p->GetMask(White, Pawn).TstBit(sq + 1)) {
-            score += PawnDuo;
+        if (file < (wLevelWidth - 1) &&
+            p->GetMask(White, Pawn).TstBit(wSq + 1)) {
+            nScore += PawnDuo;
         }
     }
 
-    pawnFacts->pf_BlackPassers = {};
+    pPawnFacts->pf_BlackPassers = {};
     pcs = p->GetMask(Black, Pawn);
 
     while (pcs) {
         CSCoord sqCoord = (pcs).FindSetBitCoord();
-        const uint16_t sq = sqCoord.BitOffset();
+        const uint16_t wSq = sqCoord.BitOffset();
 
         pcs.ClearLowestBit();
-        score -= BPawnPos[sq];
+        nScore -= BPawnPos[wSq];
 
         /*
          * check if passed
          */
 
-        if (!(p->GetMask(White, Pawn) & PassedMaskB[sq])) {
-            pawnFacts->pf_BlackPassers.SetBit(sq);
+        if (!(p->GetMask(White, Pawn) & PassedMaskB[wSq])) {
+            pPawnFacts->pf_BlackPassers.SetBit(wSq);
         }
 
         /*
          * check if doubled
          */
 
-        if (p->GetMask(Black, Pawn) & ForwardRayB[sq])
-            score -= DoubledPawn;
+        if (p->GetMask(Black, Pawn) & ForwardRayB[wSq])
+            nScore -= DoubledPawn;
 
         /*
          * check if isolated or backward
          */
 
         if (!(p->GetMask(Black, Pawn) & IsoMask[sqCoord.m_nFile])) {
-            score -= IsolatedPawn[sqCoord.m_nFile];
+            nScore -= IsolatedPawn[sqCoord.m_nFile];
 #ifdef DEBUG
             if (DebugWhat & DebugPawnStructure)
-                Print(2, "isolated pawn on %c%c\n", SQUARE(sq));
+                Print(2, "isolated pawn on %c%c\n", SQUARE(wSq));
 #endif
-        } else if (!(p->GetMask(Black, Pawn) & BPawnBackwardMask[sq]) &&
-                   (p->GetAtkFr(sq - CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]) &
+        } else if (!(p->GetMask(Black, Pawn) & BPawnBackwardMask[wSq]) &&
+                   (p->GetAtkFr(wSq - CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]) &
                     p->GetMask(White, Pawn))) {
-            if (p->GetMask(White, Pawn) & ForwardRayB[sq]) {
-                score -= HiddenBackwardPawn;
+            if (p->GetMask(White, Pawn) & ForwardRayB[wSq]) {
+                nScore -= HiddenBackwardPawn;
 #ifdef DEBUG
                 if (DebugWhat & DebugPawnStructure)
-                    Print(2, "hidden backward pawn on %c%c\n", SQUARE(sq));
+                    Print(2, "hidden backward pawn on %c%c\n", SQUARE(wSq));
 #endif
             } else {
-                score -= BackwardPawn;
+                nScore -= BackwardPawn;
 #ifdef DEBUG
                 if (DebugWhat & DebugPawnStructure)
-                    Print(2, "backward pawn on %c%c\n", SQUARE(sq));
+                    Print(2, "backward pawn on %c%c\n", SQUARE(wSq));
 #endif
             }
         }
 
-        const unsigned int levelWidth =
+        const unsigned int dwLevelWidth =
             CBitBoard::LEVEL_WIDTH[static_cast<unsigned int>(sqCoord.m_nLevel)];
         const unsigned int file = static_cast<unsigned int>(sqCoord.m_nFile);
-        if (file < (levelWidth - 1) &&
-            p->GetMask(Black, Pawn).TstBit(sq + 1)) {
-            score -= PawnDuo;
+        if (file < (dwLevelWidth - 1) &&
+            p->GetMask(Black, Pawn).TstBit(wSq + 1)) {
+            nScore -= PawnDuo;
         }
     }
 
@@ -1333,74 +1333,74 @@ static int EvaluatePawns(const CPosition *p,
      * without doubled pawns.
      */
 
-    tmp_w = (p->GetMask(White, Pawn) & KingSideMask).CountBits();
-    tmp_b = (p->GetMask(Black, Pawn) & KingSideMask).CountBits();
+    nTmpW = (p->GetMask(White, Pawn) & KingSideMask).CountBits();
+    nTmpB = (p->GetMask(Black, Pawn) & KingSideMask).CountBits();
 
-    if (tmp_w != tmp_b) {
-        tmp_w = tmp_b = 0;
+    if (nTmpW != nTmpB) {
+        nTmpW = nTmpB = 0;
         for (file = 0; file < 4; file++) {
             if (p->GetMask(White, Pawn) & FileMask[file])
-                tmp_w++;
+                nTmpW++;
             if (p->GetMask(Black, Pawn) & FileMask[file])
-                tmp_b++;
+                nTmpB++;
         }
 
-        if (tmp_w > tmp_b) {
-            score += PawnMajority;
-        } else if (tmp_b > tmp_w) {
-            score -= PawnMajority;
+        if (nTmpW > nTmpB) {
+            nScore += PawnMajority;
+        } else if (nTmpB > nTmpW) {
+            nScore -= PawnMajority;
         }
     }
 
-    tmp_w = (p->GetMask(White, Pawn) & QueenSideMask).CountBits();
-    tmp_b = (p->GetMask(Black, Pawn) & QueenSideMask).CountBits();
+    nTmpW = (p->GetMask(White, Pawn) & QueenSideMask).CountBits();
+    nTmpB = (p->GetMask(Black, Pawn) & QueenSideMask).CountBits();
 
-    if (tmp_w != tmp_b) {
-        tmp_w = tmp_b = 0;
+    if (nTmpW != nTmpB) {
+        nTmpW = nTmpB = 0;
         for (unsigned int fileIndex = CBitBoard::MAX_LEVEL_WIDTH / 2;
              fileIndex < CBitBoard::MAX_LEVEL_WIDTH;
              fileIndex++) {
             if (p->GetMask(White, Pawn) & FileMask[fileIndex])
-                tmp_w++;
+                nTmpW++;
             if (p->GetMask(Black, Pawn) & FileMask[fileIndex])
-                tmp_b++;
+                nTmpB++;
         }
 
-        if (tmp_w > tmp_b) {
-            score += PawnMajority;
-        } else if (tmp_b > tmp_w) {
-            score -= PawnMajority;
+        if (nTmpW > nTmpB) {
+            nScore += PawnMajority;
+        } else if (nTmpB > nTmpW) {
+            nScore -= PawnMajority;
         }
     }
 
     for (file = 0; file < 3; file++) {
-        int open_w = !(p->GetMask(White, Pawn) & FileMask[file]);
-        int open_b = !(p->GetMask(Black, Pawn) & FileMask[file]);
+        int nOpenW = !(p->GetMask(White, Pawn) & FileMask[file]);
+        int nOpenB = !(p->GetMask(Black, Pawn) & FileMask[file]);
 
         /*
          * Check the queen side
          */
 
-        if (open_w && open_b) {
-            qside_open_files++;
+        if (nOpenW && nOpenB) {
+            nQsideOpenFiles++;
         } else {
-            if (open_w) {
-                qside_hopen_files_w++;
+            if (nOpenW) {
+                nQsideHopenFilesW++;
             } else {
                 if (!p->GetMask(White, Pawn).TstBit(ha2 + file)) {
-                    qside_pawns_w++;
+                    nQsidePawnsW++;
                     if (!p->GetMask(White, Pawn).TstBit(ha3 + file)) {
-                        qside_pawns_w++;
+                        nQsidePawnsW++;
                     }
                 }
             }
-            if (open_b) {
-                qside_hopen_files_b++;
+            if (nOpenB) {
+                nQsideHopenFilesB++;
             } else {
                 if (!p->GetMask(Black, Pawn).TstBit(ha7 + file)) {
-                    qside_pawns_b++;
+                    nQsidePawnsB++;
                     if (!p->GetMask(Black, Pawn).TstBit(ha6 + file)) {
-                        qside_pawns_b++;
+                        nQsidePawnsB++;
                     }
                 }
             }
@@ -1410,30 +1410,30 @@ static int EvaluatePawns(const CPosition *p,
          * Check the king side
          */
 
-        open_w = !(p->GetMask(White, Pawn) & FileMask[7 - file]);
-        open_b = !(p->GetMask(Black, Pawn) & FileMask[7 - file]);
+        nOpenW = !(p->GetMask(White, Pawn) & FileMask[7 - file]);
+        nOpenB = !(p->GetMask(Black, Pawn) & FileMask[7 - file]);
 
-        if (open_w && open_b) {
-            kside_open_files++;
+        if (nOpenW && nOpenB) {
+            nKsideOpenFiles++;
         } else {
-            if (open_w) {
-                kside_hopen_files_w++;
+            if (nOpenW) {
+                nKsideHopenFilesW++;
             } else {
                 if (!p->GetMask(White, Pawn).TstBit(hh2 - file)) {
-                    kside_pawns_w++;
+                    nKsidePawnsW++;
                     if (!p->GetMask(White, Pawn).TstBit(hh3 - file)) {
-                        kside_pawns_w++;
+                        nKsidePawnsW++;
                     }
                 }
             }
 
-            if (open_b) {
-                kside_hopen_files_b++;
+            if (nOpenB) {
+                nKsideHopenFilesB++;
             } else {
                 if (!p->GetMask(Black, Pawn).TstBit(hh7 - file)) {
-                    kside_pawns_b++;
+                    nKsidePawnsB++;
                     if (!p->GetMask(Black, Pawn).TstBit(hh6 - file)) {
-                        kside_pawns_b++;
+                        nKsidePawnsB++;
                     }
                 }
             }
@@ -1443,86 +1443,86 @@ static int EvaluatePawns(const CPosition *p,
 #ifdef DEBUG
     if (DebugWhat & DebugPawnStructure) {
         Print(0, "open : %d %d hopen k: %d %d hopen q: %d %d\n",
-              kside_open_files, qside_open_files, kside_hopen_files_w,
-              kside_hopen_files_b, qside_hopen_files_w, qside_hopen_files_b);
-        Print(0, "pawns w: %d %d pawns b: %d %d\n", kside_pawns_w,
-              qside_pawns_w, kside_pawns_b, qside_pawns_b);
+              nKsideOpenFiles, nQsideOpenFiles, nKsideHopenFilesW,
+              nKsideHopenFilesB, nQsideHopenFilesW, nQsideHopenFilesB);
+        Print(0, "pawns w: %d %d pawns b: %d %d\n", nKsidePawnsW,
+              nQsidePawnsW, nKsidePawnsB, nQsidePawnsB);
     }
 #endif /* DEBUG */
 
-    pawnFacts->pf_WhiteKingSide =
-        (char)(kside_pawns_w + ScaleHalfOpenFilesMine[kside_hopen_files_w] +
-               ScaleHalfOpenFilesYours[kside_hopen_files_b] +
-               ScaleOpenFiles[kside_open_files]);
+    pPawnFacts->pf_WhiteKingSide =
+        (char)(nKsidePawnsW + ScaleHalfOpenFilesMine[nKsideHopenFilesW] +
+               ScaleHalfOpenFilesYours[nKsideHopenFilesB] +
+               ScaleOpenFiles[nKsideOpenFiles]);
 
-    pawnFacts->pf_BlackKingSide =
-        (char)(kside_pawns_b + ScaleHalfOpenFilesMine[kside_hopen_files_b] +
-               ScaleHalfOpenFilesYours[kside_hopen_files_w] +
-               ScaleOpenFiles[kside_open_files]);
+    pPawnFacts->pf_BlackKingSide =
+        (char)(nKsidePawnsB + ScaleHalfOpenFilesMine[nKsideHopenFilesB] +
+               ScaleHalfOpenFilesYours[nKsideHopenFilesW] +
+               ScaleOpenFiles[nKsideOpenFiles]);
 
-    pawnFacts->pf_WhiteQueenSide =
-        (char)(qside_pawns_w + ScaleHalfOpenFilesMine[qside_hopen_files_w] +
-               ScaleHalfOpenFilesYours[qside_hopen_files_b] +
-               ScaleOpenFiles[qside_open_files]);
+    pPawnFacts->pf_WhiteQueenSide =
+        (char)(nQsidePawnsW + ScaleHalfOpenFilesMine[nQsideHopenFilesW] +
+               ScaleHalfOpenFilesYours[nQsideHopenFilesB] +
+               ScaleOpenFiles[nQsideOpenFiles]);
 
-    pawnFacts->pf_BlackQueenSide =
-        (char)(qside_pawns_b + ScaleHalfOpenFilesMine[qside_hopen_files_b] +
-               ScaleHalfOpenFilesYours[qside_hopen_files_w] +
-               ScaleOpenFiles[qside_open_files]);
+    pPawnFacts->pf_BlackQueenSide =
+        (char)(nQsidePawnsB + ScaleHalfOpenFilesMine[nQsideHopenFilesB] +
+               ScaleHalfOpenFilesYours[nQsideHopenFilesW] +
+               ScaleOpenFiles[nQsideOpenFiles]);
 
 #ifdef DEBUG
     if (DebugWhat & DebugPawnStructure) {
-        Print(0, "king safety white: %d %d\n", pawnFacts->pf_WhiteKingSide,
-              pawnFacts->pf_WhiteQueenSide);
+        Print(0, "king safety white: %d %d\n", pPawnFacts->pf_WhiteKingSide,
+              pPawnFacts->pf_WhiteQueenSide);
 
-        Print(0, "king safety black: %d %d\n", pawnFacts->pf_BlackKingSide,
-              pawnFacts->pf_BlackQueenSide);
+        Print(0, "king safety black: %d %d\n", pPawnFacts->pf_BlackKingSide,
+              pPawnFacts->pf_BlackQueenSide);
     }
 #endif /* DEBUG */
 
-    pawnFacts->pf_Flags = 0;
+    pPawnFacts->pf_Flags = 0;
 
     pcs = p->GetMask(White, Pawn) | p->GetMask(Black, Pawn);
 
     if (pcs & KingSideMask) {
-        pawnFacts->pf_Flags |= PawnsOnKingSide;
+        pPawnFacts->pf_Flags |= PawnsOnKingSide;
     }
 
     if (pcs & QueenSideMask) {
-        pawnFacts->pf_Flags |= PawnsOnQueenSide;
+        pPawnFacts->pf_Flags |= PawnsOnQueenSide;
     }
 
     if ((p->GetMask(White, Pawn) & FianchettoMaskWhiteKingSide) ==
         FianchettoMaskWhiteKingSide) {
-        pawnFacts->pf_Flags |= FianchettoWhiteKingSide;
+        pPawnFacts->pf_Flags |= FianchettoWhiteKingSide;
     }
 
     if ((p->GetMask(Black, Pawn) & FianchettoMaskBlackKingSide) ==
         FianchettoMaskBlackKingSide) {
-        pawnFacts->pf_Flags |= FianchettoBlackKingSide;
+        pPawnFacts->pf_Flags |= FianchettoBlackKingSide;
     }
 
     if ((p->GetMask(White, Pawn) & FianchettoMaskWhiteQueenSide) ==
         FianchettoMaskWhiteQueenSide) {
-        pawnFacts->pf_Flags |= FianchettoWhiteQueenSide;
+        pPawnFacts->pf_Flags |= FianchettoWhiteQueenSide;
     }
 
     if ((p->GetMask(Black, Pawn) & FianchettoMaskBlackQueenSide) ==
         FianchettoMaskBlackQueenSide) {
-        pawnFacts->pf_Flags |= FianchettoBlackQueenSide;
+        pPawnFacts->pf_Flags |= FianchettoBlackQueenSide;
     }
 
     if (p->GetMask(White, Pawn).TstBit(hd4) && p->GetMask(Black, Pawn).TstBit(hd5)) {
-        pawnFacts->pf_Flags |= QueensPawnOpening;
+        pPawnFacts->pf_Flags |= QueensPawnOpening;
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPawnStructure) {
-        Print(2, "EvaluatePawns returns %d\n", score);
+        Print(2, "EvaluatePawns returns %d\n", nScore);
     }
 #endif
 
-    return score;
+    return nScore;
 }
 
 /**
@@ -1533,18 +1533,18 @@ static int EvaluatePawns(const CPosition *p,
  */
 
 static int EvaluatePawnsHashed(const CPosition *p,
-                               struct PawnFacts *pawnFacts) {
-    int score;
+                               struct PawnFacts *pPawnFacts) {
+    int nScore;
 
     PTry++;
-    if (ProbePT(p->GetPawnKey(), &score, pawnFacts) != Useful) {
-        score = EvaluatePawns(p, pawnFacts);
-        StorePT(p->GetPawnKey(), score, pawnFacts);
+    if (ProbePT(p->GetPawnKey(), &nScore, pPawnFacts) != Useful) {
+        nScore = EvaluatePawns(p, pPawnFacts);
+        StorePT(p->GetPawnKey(), nScore, pPawnFacts);
     } else {
         PHit++;
     }
 
-    return score;
+    return nScore;
 }
 
 /**
@@ -1552,8 +1552,8 @@ static int EvaluatePawnsHashed(const CPosition *p,
  */
 
 static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
-                               struct PawnFacts *pawnFacts) {
-    int score = 0;
+                               struct PawnFacts *pPawnFacts) {
+    int nScore = 0;
     int wdistant = 0;
     int bdistant = 0;
 
@@ -1564,98 +1564,98 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
     CBitBoard wrunner;
     CBitBoard brunner;
 
-    pcs = pawnFacts->pf_WhitePassers;
+    pcs = pPawnFacts->pf_WhitePassers;
 
     while (pcs) {
 #ifdef DEBUG
-        int score_at_start = score;
+        int nScoreAtStart = nScore;
 #endif
         CSCoord sqCoord = (pcs).FindSetBitCoord();
-        const uint16_t sq = sqCoord.BitOffset();
-        const uint16_t levelWidth =
+        const uint16_t wSq = sqCoord.BitOffset();
+        const uint16_t wLevelWidth =
             static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
-        int rank = sqCoord.m_nRank;
+        int nRank = sqCoord.m_nRank;
         const uint16_t file = sqCoord.m_nFile;
 
         pcs.ClearLowestBit();
 
         /* Basic score */
 
-        if (!p->GetMask(Black, 0).TstBit(sq + levelWidth)) {
-            score += ScaleDown[wphase] * PassedPawn[rank] / 16;
+        if (!p->GetMask(Black, 0).TstBit(wSq + wLevelWidth)) {
+            nScore += ScaleDown[wphase] * PassedPawn[nRank] / 16;
         } else {
-            score += ScaleDown[wphase] * PassedPawnBlocked[rank] / 16;
+            nScore += ScaleDown[wphase] * PassedPawnBlocked[nRank] / 16;
         }
 
 #ifdef DEBUG
         if (DebugWhat & DebugPassedPawns) {
-            int increment = score - score_at_start;
-            Print(0, "score increment from %c%c: %d\n", SQUARE(sq), increment);
+            int nIncrement = nScore - nScoreAtStart;
+            Print(0, "score increment from %c%c: %d\n", SQUARE(wSq), nIncrement);
         }
 #endif
 
         /* Evaluate covered passed pawns. */
 
-        if (p->GetAtkFr(sq) & p->GetMask(White, Pawn)) {
-            if (rank == 5) {
-                score += CoveredPassedPawn6th;
+        if (p->GetAtkFr(wSq) & p->GetMask(White, Pawn)) {
+            if (nRank == 5) {
+                nScore += CoveredPassedPawn6th;
             }
-            if (rank == 6) {
-                score += CoveredPassedPawn7th;
+            if (nRank == 6) {
+                nScore += CoveredPassedPawn7th;
             }
         }
 
 #ifdef DEBUG
         if (DebugWhat & DebugPassedPawns) {
-            int increment = score - score_at_start;
-            Print(0, "score increment from %c%c: %d\n", SQUARE(sq), increment);
+            int nIncrement = nScore - nScoreAtStart;
+            Print(0, "score increment from %c%c: %d\n", SQUARE(wSq), nIncrement);
         }
 #endif
 
-        if (ConnectedMask[sq] & pawnFacts->pf_WhitePassers) {
-            int max_rank = rank;
-            CBitBoard tmp2 = ConnectedMask[sq] & pawnFacts->pf_WhitePassers;
+        if (ConnectedMask[wSq] & pPawnFacts->pf_WhitePassers) {
+            int nMaxRank = nRank;
+            CBitBoard tmp2 = ConnectedMask[wSq] & pPawnFacts->pf_WhitePassers;
             while (tmp2) {
                 CSCoord sq2Coord = (tmp2).FindSetBitCoord();
                 tmp2.ClearLowestBit();
-                int rank2 = sq2Coord.m_nRank;
-                max_rank = MAX(rank2, max_rank);
+                int nRank2 = sq2Coord.m_nRank;
+                nMaxRank = MAX(nRank2, nMaxRank);
             }
-            score += ScaleDown[wphase] * PassedPawnConnected[max_rank] / 16;
+            nScore += ScaleDown[wphase] * PassedPawnConnected[nMaxRank] / 16;
         }
 
 #ifdef DEBUG
         if (DebugWhat & DebugPassedPawns) {
-            int increment = score - score_at_start;
-            Print(0, "score increment from %c%c: %d\n", SQUARE(sq), increment);
+            int nIncrement = nScore - nScoreAtStart;
+            Print(0, "score increment from %c%c: %d\n", SQUARE(wSq), nIncrement);
         }
 #endif
 
         /* Check for rook attacks 'from behind' */
 
-        tmp = p->GetAtkFr(sq) & ForwardRayB[sq];
+        tmp = p->GetAtkFr(wSq) & ForwardRayB[wSq];
 
         if (tmp & p->GetMask(White, Rook)) {
-            score += ScaleDown[wphase] * RookBehindPasser;
+            nScore += ScaleDown[wphase] * RookBehindPasser;
         } else if (tmp & p->GetMask(Black, Rook)) {
-            score -= ScaleDown[wphase] * RookBehindPasser;
+            nScore -= ScaleDown[wphase] * RookBehindPasser;
         }
 
 #ifdef DEBUG
         if (DebugWhat & DebugPassedPawns) {
-            int increment = score - score_at_start;
-            Print(0, "score increment from %c%c: %d\n", SQUARE(sq), increment);
+            int nIncrement = nScore - nScoreAtStart;
+            Print(0, "score increment from %c%c: %d\n", SQUARE(wSq), nIncrement);
         }
 #endif
 
         /* Check if pawn is out of the king's square */
         if (p->GetNonPawn(Black) == 0) {
-            int sq2 = (p->GetTurn() == White) ? sq : sq - levelWidth;
-            if (!(p->GetMask(Black, King) & KingSquareW[sq2])) {
-                wrunner.SetBit(sq);
+            int nSq2 = (p->GetTurn() == White) ? wSq : wSq - wLevelWidth;
+            if (!(p->GetMask(Black, King) & KingSquareW[nSq2])) {
+                wrunner.SetBit(wSq);
 #ifdef DEBUG
                 if (DebugWhat & DebugPassedPawns) {
-                    Print(0, "white runner on %c%c\n", SQUARE(sq));
+                    Print(0, "white runner on %c%c\n", SQUARE(wSq));
                 }
 #endif
             }
@@ -1667,11 +1667,11 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             !(p->GetMask(Black, Pawn) & LeftOf[file + 2])) {
 #ifdef DEBUG
             if (DebugWhat & DebugPassedPawns) {
-                Print(0, "white outside passed pawn on %c%c\n", SQUARE(sq));
+                Print(0, "white outside passed pawn on %c%c\n", SQUARE(wSq));
             }
 #endif
 
-            wdistant = MAX(wdistant, rank);
+            wdistant = MAX(wdistant, nRank);
         }
 
         if (file > ((CBitBoard::MAX_LEVEL_WIDTH / 2) - 1) &&
@@ -1680,112 +1680,112 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             !(p->GetMask(Black, Pawn) & RightOf[file - 2])) {
 #ifdef DEBUG
             if (DebugWhat & DebugPassedPawns) {
-                Print(0, "white outside passed pawn on %c%c\n", SQUARE(sq));
+                Print(0, "white outside passed pawn on %c%c\n", SQUARE(wSq));
             }
 #endif
 
-            wdistant = MAX(wdistant, rank);
+            wdistant = MAX(wdistant, nRank);
         }
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPassedPawns) {
-        Print(0, "After white pawn basic scoring: %d\n", score);
+        Print(0, "After white pawn basic scoring: %d\n", nScore);
     }
 #endif
 
-    pcs = pawnFacts->pf_BlackPassers;
+    pcs = pPawnFacts->pf_BlackPassers;
 
     while (pcs) {
 #ifdef DEBUG
-        int score_at_start = score;
+        int nScoreAtStart = nScore;
 #endif
         CSCoord sqCoord = (pcs).FindSetBitCoord();
-        const uint16_t sq = sqCoord.BitOffset();
-        const uint16_t levelWidth =
+        const uint16_t wSq = sqCoord.BitOffset();
+        const uint16_t wLevelWidth =
             static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sqCoord.m_nLevel]);
-        int rank = (levelWidth - 1) - sqCoord.m_nRank;
+        int nRank = (wLevelWidth - 1) - sqCoord.m_nRank;
         const uint16_t file = sqCoord.m_nFile;
 
         pcs.ClearLowestBit(); //(pcs, sq);
 
         /* Basic score */
 
-        if (!p->GetMask(White, 0).TstBit(sq - levelWidth)) {
-            score -= ScaleDown[bphase] * PassedPawn[rank] / 16;
+        if (!p->GetMask(White, 0).TstBit(wSq - wLevelWidth)) {
+            nScore -= ScaleDown[bphase] * PassedPawn[nRank] / 16;
         } else {
-            score -= ScaleDown[bphase] * PassedPawnBlocked[rank] / 16;
+            nScore -= ScaleDown[bphase] * PassedPawnBlocked[nRank] / 16;
         }
 
 #ifdef DEBUG
         if (DebugWhat & DebugPassedPawns) {
-            int increment = score - score_at_start;
-            Print(0, "score increment from %c%c: %d\n", SQUARE(sq), increment);
+            int nIncrement = nScore - nScoreAtStart;
+            Print(0, "score increment from %c%c: %d\n", SQUARE(wSq), nIncrement);
         }
 #endif
 
         /* Evaluate covered passed pawns. */
 
-        if (p->GetAtkFr(sq) & p->GetMask(Black, Pawn)) {
-            if (rank == 5) {
-                score -= CoveredPassedPawn6th;
+        if (p->GetAtkFr(wSq) & p->GetMask(Black, Pawn)) {
+            if (nRank == 5) {
+                nScore -= CoveredPassedPawn6th;
             }
-            if (rank == 6) {
-                score -= CoveredPassedPawn7th;
+            if (nRank == 6) {
+                nScore -= CoveredPassedPawn7th;
             }
         }
 
 #ifdef DEBUG
         if (DebugWhat & DebugPassedPawns) {
-            int increment = score - score_at_start;
-            Print(0, "score increment from %c%c: %d\n", SQUARE(sq), increment);
+            int nIncrement = nScore - nScoreAtStart;
+            Print(0, "score increment from %c%c: %d\n", SQUARE(wSq), nIncrement);
         }
 #endif
 
-        if (ConnectedMask[sq] & pawnFacts->pf_BlackPassers) {
-            int max_rank = rank;
-            CBitBoard tmp2 = ConnectedMask[sq] & pawnFacts->pf_BlackPassers;
+        if (ConnectedMask[wSq] & pPawnFacts->pf_BlackPassers) {
+            int nMaxRank = nRank;
+            CBitBoard tmp2 = ConnectedMask[wSq] & pPawnFacts->pf_BlackPassers;
             while (tmp2) {
                 CSCoord sq2Coord = (tmp2).FindSetBitCoord();
                 tmp2.ClearLowestBit();
-                int rank2 = (levelWidth - 1) - sq2Coord.m_nRank;
-                max_rank = MAX(rank2, max_rank);
+                int nRank2 = (wLevelWidth - 1) - sq2Coord.m_nRank;
+                nMaxRank = MAX(nRank2, nMaxRank);
             }
-            score -= ScaleDown[bphase] * PassedPawnConnected[max_rank] / 16;
+            nScore -= ScaleDown[bphase] * PassedPawnConnected[nMaxRank] / 16;
         }
 
 #ifdef DEBUG
         if (DebugWhat & DebugPassedPawns) {
-            int increment = score - score_at_start;
-            Print(0, "score increment from %c%c: %d\n", SQUARE(sq), increment);
+            int nIncrement = nScore - nScoreAtStart;
+            Print(0, "score increment from %c%c: %d\n", SQUARE(wSq), nIncrement);
         }
 #endif
 
         /* Check for rook attacks 'from behind' */
 
-        tmp = p->GetAtkFr(sq) & ForwardRayW[sq];
+        tmp = p->GetAtkFr(wSq) & ForwardRayW[wSq];
 
         if (tmp & p->GetMask(White, Rook)) {
-            score += ScaleDown[bphase] * RookBehindPasser;
+            nScore += ScaleDown[bphase] * RookBehindPasser;
         } else if (tmp & p->GetMask(Black, Rook)) {
-            score -= ScaleDown[bphase] * RookBehindPasser;
+            nScore -= ScaleDown[bphase] * RookBehindPasser;
         }
 
 #ifdef DEBUG
         if (DebugWhat & DebugPassedPawns) {
-            int increment = score - score_at_start;
-            Print(0, "score increment from %c%c: %d\n", SQUARE(sq), increment);
+            int nIncrement = nScore - nScoreAtStart;
+            Print(0, "score increment from %c%c: %d\n", SQUARE(wSq), nIncrement);
         }
 #endif
 
         /* Check if pawn is out of the king's square */
         if (p->GetNonPawn(White) == 0) {
-            int sq2 = (p->GetTurn() == Black) ? sq : sq + levelWidth;
-            if (!(p->GetMask(White, King) & KingSquareB[sq2])) {
-                brunner.SetBit(sq);
+            int nSq2 = (p->GetTurn() == Black) ? wSq : wSq + wLevelWidth;
+            if (!(p->GetMask(White, King) & KingSquareB[nSq2])) {
+                brunner.SetBit(wSq);
 #ifdef DEBUG
                 if (DebugWhat & DebugPassedPawns) {
-                    Print(0, "black runner on %c%c\n", SQUARE(sq));
+                    Print(0, "black runner on %c%c\n", SQUARE(wSq));
                 }
 #endif
             }
@@ -1797,11 +1797,11 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             !(p->GetMask(White, Pawn) & LeftOf[file + 2])) {
 #ifdef DEBUG
             if (DebugWhat & DebugPassedPawns) {
-                Print(0, "black outside passed pawn on %c%c\n", SQUARE(sq));
+                Print(0, "black outside passed pawn on %c%c\n", SQUARE(wSq));
             }
 #endif
 
-            bdistant = MAX(bdistant, rank);
+            bdistant = MAX(bdistant, nRank);
         }
 
         if (file > ((CBitBoard::MAX_LEVEL_WIDTH / 2) - 1) &&
@@ -1810,17 +1810,17 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
             !(p->GetMask(White, Pawn) & RightOf[file - 2])) {
 #ifdef DEBUG
             if (DebugWhat & DebugPassedPawns) {
-                Print(0, "black outside passed pawn on %c%c\n", SQUARE(sq));
+                Print(0, "black outside passed pawn on %c%c\n", SQUARE(wSq));
             }
 #endif
 
-            bdistant = MAX(bdistant, rank);
+            bdistant = MAX(bdistant, nRank);
         }
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPassedPawns) {
-        Print(0, "After black pawn basic scoring: %d\n", score);
+        Print(0, "After black pawn basic scoring: %d\n", nScore);
     }
 #endif
 
@@ -1830,7 +1830,7 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 
     if (wrunner) {
         if (!brunner) {
-            score += PawnOutrunsKing;
+            nScore += PawnOutrunsKing;
         } else {
 
             /*
@@ -1865,20 +1865,20 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 
             if (p->GetTurn() == White) {
                 if (wdist < bdist) {
-                    score += PawnOutrunsKing;
+                    nScore += PawnOutrunsKing;
                 } else if (bdist <= (wdist - 2)) {
-                    score -= PawnOutrunsKing;
+                    nScore -= PawnOutrunsKing;
                 }
             } else {
                 if (bdist < wdist) {
-                    score -= PawnOutrunsKing;
+                    nScore -= PawnOutrunsKing;
                 } else if (wdist <= (bdist - 2)) {
-                    score += PawnOutrunsKing;
+                    nScore += PawnOutrunsKing;
                 }
             }
         }
     } else if (brunner) {
-        score -= PawnOutrunsKing;
+        nScore -= PawnOutrunsKing;
     }
 
     /*
@@ -1903,24 +1903,24 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
 #endif
 
     if (wdistant && !bdistant) {
-        score += DistantPassedPawn[wphase];
+        nScore += DistantPassedPawn[wphase];
     } else if (bdistant && !wdistant) {
-        score -= DistantPassedPawn[bphase];
+        nScore -= DistantPassedPawn[bphase];
     } else if (wdistant && bdistant) {
         if (wdistant > bdistant) {
-            score += DistantPassedPawn[wphase];
+            nScore += DistantPassedPawn[wphase];
         } else if (bdistant > wdistant) {
-            score -= DistantPassedPawn[bphase];
+            nScore -= DistantPassedPawn[bphase];
         }
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPassedPawns) {
-        Print(0, "After runner scoring: %d\n", score);
+        Print(0, "After runner scoring: %d\n", nScore);
     }
 #endif
 
-    return score;
+    return nScore;
 }
 
 /**
@@ -1928,11 +1928,11 @@ static int EvaluatePassedPawns(const CPosition *p, int wphase, int bphase,
  */
 
 static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
-                              struct PawnFacts *pawnFacts) {
-    int score = 0;
+                              struct PawnFacts *pPawnFacts) {
+    int nScore = 0;
 
-    int king_safety_w = 0;
-    int king_safety_b = 0;
+    int nKingSafetyW = 0;
+    int nKingSafetyB = 0;
 
     /*
      * white king safety
@@ -1942,16 +1942,16 @@ static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
 
         /* king side */
 
-        king_safety_w = pawnFacts->pf_WhiteKingSide;
+        nKingSafetyW = pPawnFacts->pf_WhiteKingSide;
 
         /* test for fianchetto */
 
-        if (pawnFacts->pf_Flags & FianchettoWhiteKingSide) {
+        if (pPawnFacts->pf_Flags & FianchettoWhiteKingSide) {
             if (p->GetMask(White, Bishop).TstBit(hg2)) {
-                king_safety_w -= 1;
+                nKingSafetyW -= 1;
             } else if (!(p->GetMask(White, Bishop) & WhiteSquaresMask) &&
                        (p->GetMask(Black, Bishop) & WhiteSquaresMask)) {
-                king_safety_w += 2;
+                nKingSafetyW += 2;
             }
         }
 
@@ -1959,22 +1959,22 @@ static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
 
         /* queen side */
 
-        king_safety_w = pawnFacts->pf_WhiteQueenSide;
+        nKingSafetyW = pPawnFacts->pf_WhiteQueenSide;
 
         /* test for fianchetto */
 
-        if (pawnFacts->pf_Flags & FianchettoWhiteQueenSide) {
+        if (pPawnFacts->pf_Flags & FianchettoWhiteQueenSide) {
             if (p->GetMask(White, Bishop).TstBit(hb2)) {
-                king_safety_w -= 1;
+                nKingSafetyW -= 1;
             } else if (!(p->GetMask(White, Bishop) & BlackSquaresMask) &&
                        (p->GetMask(Black, Bishop) & BlackSquaresMask)) {
-                king_safety_w += 2;
+                nKingSafetyW += 2;
             }
         }
     }
 
     if (p->GetMask(Black, Queen)) {
-        king_safety_w *= 2;
+        nKingSafetyW *= 2;
     }
 
     /*
@@ -1985,16 +1985,16 @@ static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
 
         /* king side */
 
-        king_safety_b = pawnFacts->pf_BlackKingSide;
+        nKingSafetyB = pPawnFacts->pf_BlackKingSide;
 
         /* test for fianchetto, which is ok */
 
-        if (pawnFacts->pf_Flags & FianchettoBlackKingSide) {
+        if (pPawnFacts->pf_Flags & FianchettoBlackKingSide) {
             if (p->GetMask(Black, Bishop).TstBit(hg7)) {
-                king_safety_b -= 1;
+                nKingSafetyB -= 1;
             } else if (!(p->GetMask(Black, Bishop) & BlackSquaresMask) &&
                        (p->GetMask(White, Bishop) & BlackSquaresMask)) {
-                king_safety_b += 2;
+                nKingSafetyB += 2;
             }
         }
 
@@ -2002,34 +2002,34 @@ static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
 
         /* queen side */
 
-        king_safety_b = pawnFacts->pf_BlackQueenSide;
+        nKingSafetyB = pPawnFacts->pf_BlackQueenSide;
 
         /* test for fianchetto, which is ok */
 
-        if (pawnFacts->pf_Flags & FianchettoBlackQueenSide) {
+        if (pPawnFacts->pf_Flags & FianchettoBlackQueenSide) {
             if (p->GetMask(Black, Bishop).TstBit(hb7)) {
-                king_safety_b -= 1;
+                nKingSafetyB -= 1;
             } else if (!(p->GetMask(Black, Bishop) & WhiteSquaresMask) &&
                        (p->GetMask(White, Bishop) & WhiteSquaresMask)) {
-                king_safety_b += 2;
+                nKingSafetyB += 2;
             }
         }
     }
 
     if (p->GetMask(White, Queen)) {
-        king_safety_b *= 2;
+        nKingSafetyB *= 2;
     }
 
-    score = -ScaleUp[wphase] * king_safety_w + ScaleUp[bphase] * king_safety_b;
+    nScore = -ScaleUp[wphase] * nKingSafetyW + ScaleUp[bphase] * nKingSafetyB;
 
 #ifdef DEBUG
     if (DebugWhat & DebugKingSafety) {
-        Print(0, "king safety w: %d b: %d total: %d\n", king_safety_w,
-              king_safety_b, score);
+        Print(0, "king safety w: %d b: %d total: %d\n", nKingSafetyW,
+              nKingSafetyB, nScore);
     }
 #endif
 
-    return (KingSafetyScale * score) / 256;
+    return (KingSafetyScale * nScore) / 256;
 }
 
 /**
@@ -2037,7 +2037,7 @@ static int EvaluateKingSafety(const CPosition *p, int wphase, int bphase,
  */
 
 static int EvaluateDevelopment(const CPosition *p) {
-    int score = 0;
+    int nScore = 0;
     CBitBoard pcs;
 
     /*
@@ -2045,10 +2045,10 @@ static int EvaluateDevelopment(const CPosition *p) {
      */
 
     if (p->GetMask(White, Pawn).TstBit(he2) && p->GetMask(White, 0).TstBit(he3)) {
-        score += PawnDevelopmentBlocked;
+        nScore += PawnDevelopmentBlocked;
     }
     if (p->GetMask(White, Pawn).TstBit(hd2) && p->GetMask(White, 0).TstBit(hd3)) {
-        score += PawnDevelopmentBlocked;
+        nScore += PawnDevelopmentBlocked;
     }
 
     /*
@@ -2056,10 +2056,10 @@ static int EvaluateDevelopment(const CPosition *p) {
      */
 
     if (p->GetMask(Black, Pawn).TstBit(he7) && p->GetMask(Black, 0).TstBit(he6)) {
-        score -= PawnDevelopmentBlocked;
+        nScore -= PawnDevelopmentBlocked;
     }
     if (p->GetMask(Black, Pawn).TstBit(hd7) && p->GetMask(Black, 0).TstBit(hd6)) {
-        score -= PawnDevelopmentBlocked;
+        nScore -= PawnDevelopmentBlocked;
     }
 
     /*
@@ -2067,11 +2067,11 @@ static int EvaluateDevelopment(const CPosition *p) {
      */
 
     if (p->GetMask(White, King) & WKingOpeningMask) {
-        score += KingInCenter;
+        nScore += KingInCenter;
     }
 
     if (p->GetMask(Black, King) & BKingOpeningMask) {
-        score -= KingInCenter;
+        nScore -= KingInCenter;
     }
 
     /*
@@ -2082,17 +2082,17 @@ static int EvaluateDevelopment(const CPosition *p) {
     while (pcs) {
         CSCoord sq = (pcs).FindSetBitCoord();
         pcs.ClearLowestBit();
-        score += QueenPosDevelopment[sq.BitOffset()];
+        nScore += QueenPosDevelopment[sq.BitOffset()];
     }
 
     pcs = p->GetMask(Black, Queen);
     while (pcs) {
         CSCoord sq = (pcs).FindSetBitCoord();
         pcs.ClearLowestBit();
-        score -= QueenPosDevelopment[sq.ReflectRank().BitOffset()];
+        nScore -= QueenPosDevelopment[sq.ReflectRank().BitOffset()];
     }
 
-    return score;
+    return nScore;
 }
 
 /**
@@ -2100,9 +2100,9 @@ static int EvaluateDevelopment(const CPosition *p) {
  */
 
 int MaterialBalance(const CPosition *p) {
-    int score = p->GetMaterial(White) - p->GetMaterial(Black);
+    int nScore = p->GetMaterial(White) - p->GetMaterial(Black);
 
-    return score;
+    return nScore;
 }
 
 /**
@@ -2110,15 +2110,15 @@ int MaterialBalance(const CPosition *p) {
  */
 
 static int EvaluatePositionForWhite(const CPosition *p) {
-    int score;
+    int nScore;
 
     int wphase;
     int bphase;
-    const int16_t *kingPST;
+    const int16_t *pKingPST;
     int fastscore;
     int diff;
 
-    int tmp;
+    int nTmp;
     CSCoord sq;
     CBitBoard pcs;
     CBitBoard tmpboard;
@@ -2130,26 +2130,26 @@ static int EvaluatePositionForWhite(const CPosition *p) {
 
 #ifndef DEBUG
     STry++;
-    if (ProbeST(p->GetHashKey(), &score) == Useful) {
+    if (ProbeST(p->GetHashKey(), &nScore) == Useful) {
         SHit++;
-        return score;
+        return nScore;
     }
 #endif
 
-    score = MaterialBalance(p);
-    fastscore = score;
+    nScore = MaterialBalance(p);
+    fastscore = nScore;
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After material balance: %d\n", score);
+        Print(0, "After material balance: %d\n", nScore);
     }
 #endif
 
-    score += EvaluatePawnsHashed(p, &pawnFacts);
+    nScore += EvaluatePawnsHashed(p, &pawnFacts);
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After hashed pawns: %d\n", score);
+        Print(0, "After hashed pawns: %d\n", nScore);
     }
 #endif
 
@@ -2162,11 +2162,11 @@ static int EvaluatePositionForWhite(const CPosition *p) {
     wphase = MIN(31, p->GetNonPawn(Black) / Value[Pawn]);
     bphase = MIN(31, p->GetNonPawn(White) / Value[Pawn]);
 
-    score += EvaluateKingSafety(p, wphase, bphase, &pawnFacts);
+    nScore += EvaluateKingSafety(p, wphase, bphase, &pawnFacts);
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After king safety: %d\n", score);
+        Print(0, "After king safety: %d\n", nScore);
     }
 #endif
 
@@ -2176,11 +2176,11 @@ static int EvaluatePositionForWhite(const CPosition *p) {
      *
      *************************************************************/
 
-    score += EvaluatePassedPawns(p, wphase, bphase, &pawnFacts);
+    nScore += EvaluatePassedPawns(p, wphase, bphase, &pawnFacts);
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After passed pawns: %d\n", score);
+        Print(0, "After passed pawns: %d\n", nScore);
     }
 #endif
 
@@ -2193,27 +2193,27 @@ static int EvaluatePositionForWhite(const CPosition *p) {
     if (p->GetMask(White, Bishop).TstBit(ha7) &&
         p->GetMask(Black, Pawn).TstBit(hb6) &&
         (p->GetAtkFr(hb6) & p->GetMask(Black, Pawn))) {
-        score += BishopTrapped;
+        nScore += BishopTrapped;
     }
     if (p->GetMask(White, Bishop).TstBit(hh7) &&
         p->GetMask(Black, Pawn).TstBit(hg6) &&
         (p->GetAtkFr(hg6) & p->GetMask(Black, Pawn))) {
-        score += BishopTrapped;
+        nScore += BishopTrapped;
     }
     if (p->GetMask(Black, Bishop).TstBit(ha2) &&
         p->GetMask(White, Pawn).TstBit(hb3) &&
         (p->GetAtkFr(hb3) & p->GetMask(White, Pawn))) {
-        score -= BishopTrapped;
+        nScore -= BishopTrapped;
     }
     if (p->GetMask(Black, Bishop).TstBit(hh2) &&
         p->GetMask(White, Pawn).TstBit(hg3) &&
         (p->GetAtkFr(hg3) & p->GetMask(White, Pawn))) {
-        score -= BishopTrapped;
+        nScore -= BishopTrapped;
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After trapped bishops: %d\n", score);
+        Print(0, "After trapped bishops: %d\n", nScore);
     }
 #endif
 
@@ -2224,12 +2224,12 @@ static int EvaluatePositionForWhite(const CPosition *p) {
      *************************************************************/
 
     if (RootGamePhase == Opening) {
-        score += EvaluateDevelopment(p);
+        nScore += EvaluateDevelopment(p);
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After development: %d\n", score);
+        Print(0, "After development: %d\n", nScore);
     }
 #endif
 
@@ -2243,22 +2243,22 @@ static int EvaluatePositionForWhite(const CPosition *p) {
      * Determine which piece/square table to use for kings in the endgame.
      */
 
-    tmp = pawnFacts.pf_Flags & (PawnsOnKingSide | PawnsOnQueenSide);
+    nTmp = pawnFacts.pf_Flags & (PawnsOnKingSide | PawnsOnQueenSide);
 
-    if (tmp == PawnsOnKingSide) {
-        kingPST = KingPosEndgameKingSide;
-    } else if (tmp == PawnsOnQueenSide) {
-        kingPST = KingPosEndgameQueenSide;
+    if (nTmp == PawnsOnKingSide) {
+        pKingPST = KingPosEndgameKingSide;
+    } else if (nTmp == PawnsOnQueenSide) {
+        pKingPST = KingPosEndgameQueenSide;
     } else {
-        kingPST = KingPosEndgame;
+        pKingPST = KingPosEndgame;
     }
 
     /*
      * Evaluate white king
      */
 
-    score += (KingPosMiddlegame[p->GetKingSq(White).BitOffset()] * ScaleUp[wphase] +
-              kingPST[p->GetKingSq(White).BitOffset()] * ScaleDown[wphase]) >>
+    nScore += (KingPosMiddlegame[p->GetKingSq(White).BitOffset()] * ScaleUp[wphase] +
+              pKingPST[p->GetKingSq(White).BitOffset()] * ScaleDown[wphase]) >>
              4;
 
     /*
@@ -2269,15 +2269,15 @@ static int EvaluatePositionForWhite(const CPosition *p) {
          (p->GetMask(White, Rook) & WRookTrapped1)) ||
         ((p->GetMask(White, King) & WKingTrapsRook2) &&
          (p->GetMask(White, Rook) & WRookTrapped2))) {
-        score += KingBlocksRook;
+        nScore += KingBlocksRook;
     };
 
     /*
      * Evaluate black king
      */
 
-    score -= (KingPosMiddlegame[p->GetKingSq(Black).ReflectRank().BitOffset()] * ScaleUp[bphase] +
-              kingPST[p->GetKingSq(Black).ReflectRank().BitOffset()] * ScaleDown[bphase]) >>
+    nScore -= (KingPosMiddlegame[p->GetKingSq(Black).ReflectRank().BitOffset()] * ScaleUp[bphase] +
+              pKingPST[p->GetKingSq(Black).ReflectRank().BitOffset()] * ScaleDown[bphase]) >>
              4;
 
     /*
@@ -2288,12 +2288,12 @@ static int EvaluatePositionForWhite(const CPosition *p) {
          (p->GetMask(Black, Rook) & BRookTrapped1)) ||
         ((p->GetMask(Black, King) & BKingTrapsRook2) &&
          (p->GetMask(Black, Rook) & BRookTrapped2))) {
-        score -= KingBlocksRook;
+        nScore -= KingBlocksRook;
     };
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After king: %d\n", score);
+        Print(0, "After king: %d\n", nScore);
     }
 #endif
 
@@ -2312,23 +2312,23 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         sq = (pcs).FindSetBitCoord();
         pcs.ClearLowestBit();
 
-        score += KnightPos[sq.BitOffset()];
+        nScore += KnightPos[sq.BitOffset()];
 
         if (is_edge(sq)) {
-            score += KnightEdgePenalty;
+            nScore += KnightEdgePenalty;
         }
 
         if (!(p->GetMask(Black, Pawn) & OutpostMaskW[sq.BitOffset()])) {
-            score += KnightOutpost[sq.BitOffset()];
+            nScore += KnightOutpost[sq.BitOffset()];
         }
 
-        score += (ScaleUp[wphase] * KnightKingProximity *
+        nScore += (ScaleUp[wphase] * KnightKingProximity *
                   (4 - KingDist(sq, p->GetKingSq(Black)))) >>
                  4;
 
         if (sq.BitOffset() == hc3 && pawnFacts.pf_Flags & QueensPawnOpening &&
             p->GetMask(White, Pawn).TstBit(hc2)) {
-            score += KnightBlocksCPawn;
+            nScore += KnightBlocksCPawn;
         }
     }
 
@@ -2341,29 +2341,29 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         sq = (pcs).FindSetBitCoord();
         pcs.ClearLowestBit();
 
-        score -= KnightPos[sq.ReflectRank().BitOffset()];
+        nScore -= KnightPos[sq.ReflectRank().BitOffset()];
 
         if (is_edge(sq)) {
-            score -= KnightEdgePenalty;
+            nScore -= KnightEdgePenalty;
         }
 
         if (!(p->GetMask(White, Pawn) & OutpostMaskB[sq.BitOffset()])) {
-            score -= KnightOutpost[sq.ReflectRank().BitOffset()];
+            nScore -= KnightOutpost[sq.ReflectRank().BitOffset()];
         }
 
-        score -= (ScaleUp[bphase] * KnightKingProximity *
+        nScore -= (ScaleUp[bphase] * KnightKingProximity *
                   (4 - KingDist(sq, p->GetKingSq(White)))) >>
                  4;
 
         if (sq.BitOffset() == hc6 && pawnFacts.pf_Flags & QueensPawnOpening &&
             p->GetMask(Black, Pawn).TstBit(hc7)) {
-            score -= KnightBlocksCPawn;
+            nScore -= KnightBlocksCPawn;
         }
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After knights: %d\n", score);
+        Print(0, "After knights: %d\n", nScore);
     }
 #endif
 
@@ -2380,19 +2380,19 @@ static int EvaluatePositionForWhite(const CPosition *p) {
     pcs = p->GetMask(White, Bishop);
 
     if ((pcs & WhiteSquaresMask) && (pcs & BlackSquaresMask)) {
-        score += BishopPair[(p->GetMask(White, Pawn)).CountBits()];
+        nScore += BishopPair[(p->GetMask(White, Pawn)).CountBits()];
     }
 
     while (pcs) {
         sq = (pcs).FindSetBitCoord();
         pcs.ClearLowestBit();
 
-        score += (ScaleUp[wphase] * BishopPos[sq.BitOffset()]) >> 4;
+        nScore += (ScaleUp[wphase] * BishopPos[sq.BitOffset()]) >> 4;
 
-        tmp = (p->GetAtkTo(sq.BitOffset()) & ~p->GetMask(White, 0)).CountBits();
-        score += BishopMobility * (tmp - 7);
+        nTmp = (p->GetAtkTo(sq.BitOffset()) & ~p->GetMask(White, 0)).CountBits();
+        nScore += BishopMobility * (nTmp - 7);
 
-        score += (ScaleUp[wphase] * BishopKingProximity *
+        nScore += (ScaleUp[wphase] * BishopKingProximity *
                   (4 - KingDist(sq, p->GetKingSq(Black)))) >>
                  4;
     }
@@ -2404,26 +2404,26 @@ static int EvaluatePositionForWhite(const CPosition *p) {
     pcs = p->GetMask(Black, Bishop);
 
     if ((pcs & WhiteSquaresMask) && (pcs & BlackSquaresMask)) {
-        score -= BishopPair[(p->GetMask(Black, Pawn)).CountBits()];
+        nScore -= BishopPair[(p->GetMask(Black, Pawn)).CountBits()];
     }
 
     while (pcs) {
         sq = (pcs).FindSetBitCoord();
         pcs.ClearLowestBit();
 
-        score -= (ScaleUp[bphase] * BishopPos[sq.ReflectRank().BitOffset()]) >> 4;
+        nScore -= (ScaleUp[bphase] * BishopPos[sq.ReflectRank().BitOffset()]) >> 4;
 
-        tmp = (p->GetAtkTo(sq.BitOffset()) & ~p->GetMask(Black, 0)).CountBits();
-        score -= BishopMobility * (tmp - 7);
+        nTmp = (p->GetAtkTo(sq.BitOffset()) & ~p->GetMask(Black, 0)).CountBits();
+        nScore -= BishopMobility * (nTmp - 7);
 
-        score -= (ScaleUp[bphase] * BishopKingProximity *
+        nScore -= (ScaleUp[bphase] * BishopKingProximity *
                   (4 - KingDist(sq, p->GetKingSq(White)))) >>
                  4;
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After bishops: %d\n", score);
+        Print(0, "After bishops: %d\n", nScore);
     }
 #endif
 
@@ -2445,30 +2445,30 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         pcs.ClearLowestBit();
         file = sq.m_nFile;
 
-        score += (ScaleUp[wphase] * RookPos[sq.BitOffset()]) >> 4;
+        nScore += (ScaleUp[wphase] * RookPos[sq.BitOffset()]) >> 4;
 
-        tmp = (p->GetAtkTo(sq.BitOffset()) & ~p->GetMask(White, 0)).CountBits();
-        score += RookMobility * (tmp - 7);
+        nTmp = (p->GetAtkTo(sq.BitOffset()) & ~p->GetMask(White, 0)).CountBits();
+        nScore += RookMobility * (nTmp - 7);
 
         if (!(FileMask[file] & p->GetMask(White, Pawn))) {
             if (!(FileMask[file] & p->GetMask(Black, Pawn))) {
-                score += RookOnOpenFile;
+                nScore += RookOnOpenFile;
             } else {
-                score += RookOnSemiOpenFile;
+                nScore += RookOnSemiOpenFile;
             }
         }
 
-        score += (ScaleUp[wphase] * RookKingProximity *
+        nScore += (ScaleUp[wphase] * RookKingProximity *
                   (4 - KingDist(sq, p->GetKingSq(Black)))) >>
                  4;
 
         tmpboard = p->GetAtkTo(sq.BitOffset()) & ForwardRayW[sq.BitOffset()];
         if (tmpboard & p->GetMask(White, Rook)) {
-            score += RookConnected;
+            nScore += RookConnected;
         }
 
         if (sq.m_nRank == 6 && p->GetKingSq(Black).m_nRank == 7) {
-            score += RookOn7thRank;
+            nScore += RookOn7thRank;
         }
     }
 
@@ -2483,36 +2483,36 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         pcs.ClearLowestBit();
         file = sq.m_nFile;
 
-        score -= (ScaleUp[bphase] * RookPos[sq.ReflectRank().BitOffset()]) >> 4;
+        nScore -= (ScaleUp[bphase] * RookPos[sq.ReflectRank().BitOffset()]) >> 4;
 
-        tmp = (p->GetAtkTo(sq.BitOffset()) & ~p->GetMask(Black, 0)).CountBits();
-        score -= RookMobility * (tmp - 7);
+        nTmp = (p->GetAtkTo(sq.BitOffset()) & ~p->GetMask(Black, 0)).CountBits();
+        nScore -= RookMobility * (nTmp - 7);
 
         if (!(FileMask[file] & p->GetMask(Black, Pawn))) {
             if (!(FileMask[file] & p->GetMask(White, Pawn))) {
-                score -= RookOnOpenFile;
+                nScore -= RookOnOpenFile;
             } else {
-                score -= RookOnSemiOpenFile;
+                nScore -= RookOnSemiOpenFile;
             }
         }
 
-        score -= (ScaleUp[bphase] * RookKingProximity *
+        nScore -= (ScaleUp[bphase] * RookKingProximity *
                   (4 - KingDist(sq, p->GetKingSq(White)))) >>
                  4;
 
         tmpboard = p->GetAtkTo(sq.BitOffset()) & ForwardRayB[sq.BitOffset()];
         if (tmpboard & p->GetMask(Black, Rook)) {
-            score -= RookConnected;
+            nScore -= RookConnected;
         }
 
         if (sq.m_nRank == 1 && p->GetKingSq(White).m_nRank == 0) {
-            score -= RookOn7thRank;
+            nScore -= RookOn7thRank;
         }
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After rooks: %d\n", score);
+        Print(0, "After rooks: %d\n", nScore);
     }
 #endif
 
@@ -2531,9 +2531,9 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         sq = (pcs).FindSetBitCoord();
         pcs.ClearLowestBit();
 
-        score += QueenPos[sq.BitOffset()];
+        nScore += QueenPos[sq.BitOffset()];
 
-        score += (ScaleUp[wphase] * QueenKingProximity *
+        nScore += (ScaleUp[wphase] * QueenKingProximity *
                   (4 - KingDist(sq, p->GetKingSq(Black)))) >>
                  4;
     }
@@ -2547,16 +2547,16 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         sq = (pcs).FindSetBitCoord();
         pcs.ClearLowestBit();
 
-        score -= QueenPos[sq.ReflectRank().BitOffset()];
+        nScore -= QueenPos[sq.ReflectRank().BitOffset()];
 
-        score -= (ScaleUp[bphase] * QueenKingProximity *
+        nScore -= (ScaleUp[bphase] * QueenKingProximity *
                   (4 - KingDist(sq, p->GetKingSq(White)))) >>
                  4;
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After queens: %d\n", score);
+        Print(0, "After queens: %d\n", nScore);
     }
 #endif
 
@@ -2582,14 +2582,14 @@ static int EvaluatePositionForWhite(const CPosition *p) {
         if (white_single_colored && black_single_colored) {
             if ((white_on_white && black_on_black) ||
                 (white_on_black && black_on_white)) {
-                score = 4 * score / 5;
+                nScore = 4 * nScore / 5;
             }
         }
     }
 
 #ifdef DEBUG
     if (DebugWhat & DebugPieces) {
-        Print(0, "After bishop adjustment: %d\n", score);
+        Print(0, "After bishop adjustment: %d\n", nScore);
     }
 #endif
 
@@ -2598,22 +2598,22 @@ static int EvaluatePositionForWhite(const CPosition *p) {
      * MaxPos, adjust MaxPos. Otherwise slowly tune MaxPos down to MaxPosInit.
      */
 
-    diff = ABS(score - fastscore);
+    diff = ABS(nScore - fastscore);
     if (diff > MaxPos) {
         MaxPos = MAX(diff, MaxPos + 100);
     } else {
         MaxPos = (MaxPosInit + 31 * MaxPos) >> 5;
     }
 
-    if (score >= 0) {
-        score = (score + 7) & ~15;
+    if (nScore >= 0) {
+        nScore = (nScore + 7) & ~15;
     } else {
-        score = -((-score + 7) & ~15);
+        nScore = -((-nScore + 7) & ~15);
     }
 
-    StoreST(p->GetHashKey(), score);
+    StoreST(p->GetHashKey(), nScore);
 
-    return score;
+    return nScore;
 }
 
 /**
@@ -2633,7 +2633,7 @@ int EvaluatePosition(const CPosition *p) {
  */
 
 void InitEvaluation(const CPosition *p) {
-    int eg_threshold = Value[Queen] + Value[Bishop];
+    int nEgThreshold = Value[Queen] + Value[Bishop];
 
     int npmat = (p->GetNonPawn(White) + p->GetNonPawn(Black)) / Value[Pawn];
 
@@ -2653,17 +2653,17 @@ void InitEvaluation(const CPosition *p) {
      * Setup pawn piece/square tables
      */
 
-    for (unsigned int level = 0; level < CBitBoard::NUM_LEVELS; level++) {
-        const unsigned int levelWidth = CBitBoard::LEVEL_WIDTH[level];
-        for (unsigned int rank = 1; rank < levelWidth - 1; rank++) {
-            for (unsigned int file = 0; file < levelWidth; file++) {
-                const uint16_t sqOffset =
-                    CSCoord(static_cast<uint16_t>(level),
+    for (unsigned int dwLevel = 0; dwLevel < CBitBoard::NUM_LEVELS; dwLevel++) {
+        const unsigned int dwLevelWidth = CBitBoard::LEVEL_WIDTH[dwLevel];
+        for (unsigned int dwRank = 1; dwRank < dwLevelWidth - 1; dwRank++) {
+            for (unsigned int file = 0; file < dwLevelWidth; file++) {
+                const uint16_t wSqOffset =
+                    CSCoord(static_cast<uint16_t>(dwLevel),
                             static_cast<uint16_t>(file),
-                            static_cast<uint16_t>(rank))
+                            static_cast<uint16_t>(dwRank))
                         .BitOffset();
-                int wrank = static_cast<int>(rank) - 1;
-                int brank = static_cast<int>(levelWidth) - 2 - static_cast<int>(rank);
+                int wrank = static_cast<int>(dwRank) - 1;
+                int brank = static_cast<int>(dwLevelWidth) - 2 - static_cast<int>(dwRank);
                 unsigned int wfile = static_cast<unsigned int>(file);
                 unsigned int bfile = static_cast<unsigned int>(file);
 
@@ -2672,29 +2672,29 @@ void InitEvaluation(const CPosition *p) {
                 if (bkfile < halfBoardWidth)
                     bfile = (CBitBoard::MAX_LEVEL_WIDTH - 1) - bfile;
 
-                if (p->GetNonPawn(Black) < eg_threshold) {
-                    WPawnPos[sqOffset] = (int16_t)(PawnAdvanceEndgame[wfile] * wrank);
+                if (p->GetNonPawn(Black) < nEgThreshold) {
+                    WPawnPos[wSqOffset] = (int16_t)(PawnAdvanceEndgame[wfile] * wrank);
                 } else if (p->GetCastle() & 3) {
-                    WPawnPos[sqOffset] = (int16_t)(PawnAdvanceOpening[wfile] * wrank);
+                    WPawnPos[wSqOffset] = (int16_t)(PawnAdvanceOpening[wfile] * wrank);
                 } else {
-                    WPawnPos[sqOffset] = (int16_t)(PawnAdvanceMiddlegame[wfile] * wrank);
+                    WPawnPos[wSqOffset] = (int16_t)(PawnAdvanceMiddlegame[wfile] * wrank);
                     if (pawnstorm == 1 && wfile > halfBoardWidth) {
-                        WPawnPos[sqOffset] += PawnStorm * wrank;
+                        WPawnPos[wSqOffset] += PawnStorm * wrank;
                     } else if (pawnstorm == 2 && wfile < (halfBoardWidth - 1)) {
-                        WPawnPos[sqOffset] += PawnStorm * wrank;
+                        WPawnPos[wSqOffset] += PawnStorm * wrank;
                     }
                 }
 
-                if (p->GetNonPawn(White) < eg_threshold) {
-                    BPawnPos[sqOffset] = (int16_t)(PawnAdvanceEndgame[bfile] * brank);
+                if (p->GetNonPawn(White) < nEgThreshold) {
+                    BPawnPos[wSqOffset] = (int16_t)(PawnAdvanceEndgame[bfile] * brank);
                 } else if (p->GetCastle() & 12) {
-                    BPawnPos[sqOffset] = (int16_t)(PawnAdvanceOpening[bfile] * brank);
+                    BPawnPos[wSqOffset] = (int16_t)(PawnAdvanceOpening[bfile] * brank);
                 } else {
-                    BPawnPos[sqOffset] = (int16_t)(PawnAdvanceMiddlegame[bfile] * brank);
+                    BPawnPos[wSqOffset] = (int16_t)(PawnAdvanceMiddlegame[bfile] * brank);
                     if (pawnstorm == 1 && bfile < (halfBoardWidth - 1)) {
-                        BPawnPos[sqOffset] += PawnStorm * brank;
+                        BPawnPos[wSqOffset] += PawnStorm * brank;
                     } else if (pawnstorm == 2 && bfile > halfBoardWidth) {
-                        BPawnPos[sqOffset] += PawnStorm * brank;
+                        BPawnPos[wSqOffset] += PawnStorm * brank;
                     }
                 }
             }
@@ -2750,14 +2750,14 @@ static bool is_edge(CSCoord coord) {
             coord.m_nRank == (width - 1));
 }
 
-static void create_mirrored_piece_square_table(int16_t *src, int16_t *dest) {
-    for (unsigned int src_idx = 0; src_idx < CBitBoard::SIZE; src_idx++) {
-        const CSCoord source(static_cast<uint16_t>(src_idx));
-        const uint16_t levelWidth =
+static void create_mirrored_piece_square_table(int16_t *pSrc, int16_t *dest) {
+    for (unsigned int dwSrcIdx = 0; dwSrcIdx < CBitBoard::SIZE; dwSrcIdx++) {
+        const CSCoord source(static_cast<uint16_t>(dwSrcIdx));
+        const uint16_t wLevelWidth =
             static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[source.m_nLevel]);
-        const uint16_t mirroredFile =
-            static_cast<uint16_t>(levelWidth - 1u - source.m_nFile);
-        const CSCoord mirrored(source.m_nLevel, mirroredFile, source.m_nRank);
-        dest[mirrored.BitOffset()] = src[src_idx];
+        const uint16_t wMirroredFile =
+            static_cast<uint16_t>(wLevelWidth - 1u - source.m_nFile);
+        const CSCoord mirrored(source.m_nLevel, wMirroredFile, source.m_nRank);
+        dest[mirrored.BitOffset()] = pSrc[dwSrcIdx];
     }
 }

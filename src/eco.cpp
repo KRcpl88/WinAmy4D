@@ -63,19 +63,19 @@ void ParseEcoPgn(char *fname) {
     tree_node_t *node = NULL;
 
     while (fgets(buffer, sizeof(buffer) - 1, fin) != NULL) {
-        char *x;
+        char *pszX;
         strtok(buffer, " \t");
-        x = strtok(NULL, "]\n\r");
-        strncpy(name, x, sizeof(name) - 1);
+        pszX = strtok(NULL, "]\n\r");
+        strncpy(name, pszX, sizeof(name) - 1);
 
         Print(0, ".");
 
         CPosition *p = CPosition::Initial();
 
         if (fgets(buffer, 1024, fin) != NULL) {
-            for (x = strtok(buffer, " \n\r\t"); x;
-                 x = strtok(NULL, " \n\r\t")) {
-                CMove move = p->ParseSAN(x);
+            for (pszX = strtok(buffer, " \n\r\t"); pszX;
+                 pszX = strtok(NULL, " \n\r\t")) {
+                CMove move = p->ParseSAN(pszX);
                 if (move != M_NONE) {
                     p->DoMove(move);
                 }
@@ -109,7 +109,7 @@ void ParseEcoPgn(char *fname) {
 static tree_node_t *EcoDB = NULL;
 
 char *GetEcoCode(hash_t hkey) {
-    char *retval = NULL;
+    char *pszRetval = NULL;
 
     if (EcoDB == NULL) {
         FILE *fin = fopen(ECO_NAME, "rb");
@@ -129,27 +129,27 @@ char *GetEcoCode(hash_t hkey) {
     }
 
     if (EcoDB != NULL) {
-        retval = (char *)lookup_value(EcoDB, (char *)&hkey, sizeof(hkey), NULL);
+        pszRetval = (char *)lookup_value(EcoDB, (char *)&hkey, sizeof(hkey), NULL);
     }
 
-    return retval;
+    return pszRetval;
 }
 
-bool FindEcoCode(const CPosition *p, char *result) {
+bool FindEcoCode(const CPosition *p, char *pszResult) {
     int ply = 0;
-    char *res;
+    char *pszRes;
     bool found = false;
 
     while (ply <= p->GetPly()) {
-        hash_t key = p->GetGameLog()[ply].gl_HashKey;
+        hash_t qwKey = p->GetGameLog()[ply].gl_HashKey;
         if (ply == p->GetPly()) {
-            key = p->GetHashKey();
+            qwKey = p->GetHashKey();
         }
-        res = GetEcoCode(key);
-        if (res != NULL) {
-            strcpy(result, res);
+        pszRes = GetEcoCode(qwKey);
+        if (pszRes != NULL) {
+            strcpy(pszResult, pszRes);
             found = true;
-            free(res);
+            free(pszRes);
         }
         ply++;
     }

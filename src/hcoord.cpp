@@ -7,8 +7,8 @@
 const int CHCoord::Relu16[15]{0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7};
 const int CHCoord::NegRelu16[15]{7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0};
 
-CHCoord::CHCoord(int level, int file, int rank)
-    : m_nLevel(level), m_nRank(rank), m_nFile(file) {
+CHCoord::CHCoord(int nLevel, int file, int nRank)
+    : m_nLevel(nLevel), m_nRank(nRank), m_nFile(file) {
 }
 
 CHCoord::CHCoord(const CSCoord& scoord) {
@@ -29,22 +29,22 @@ bool CHCoord::IsValid() const {
     return IsValid(m_nLevel, m_nFile, m_nRank);
 }
 
-bool CHCoord::IsValid(int level, int file, int rank) {
-    const int maxLevelWidth = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH);
-    if ((level < 0) || (level >= maxLevelWidth)) {
+bool CHCoord::IsValid(int nLevel, int file, int nRank) {
+    const int nMaxLevelWidth = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH);
+    if ((nLevel < 0) || (nLevel >= nMaxLevelWidth)) {
         return false;
     }
 
-    if ((rank < 0) || (rank >= maxLevelWidth)) {
+    if ((nRank < 0) || (nRank >= nMaxLevelWidth)) {
         return false;
     }
 
-    if (rank < level) {
-        if ((file < (maxLevelWidth - RankWidth(level, rank))) || (file >= maxLevelWidth)) {
+    if (nRank < nLevel) {
+        if ((file < (nMaxLevelWidth - RankWidth(nLevel, nRank))) || (file >= nMaxLevelWidth)) {
             return false;
         }
     } else {
-        if ((file < 0) || (file >= (maxLevelWidth - RankWidth(level, rank)))) {
+        if ((file < 0) || (file >= (nMaxLevelWidth - RankWidth(nLevel, nRank)))) {
             return false;
         }
     }
@@ -52,13 +52,13 @@ bool CHCoord::IsValid(int level, int file, int rank) {
     return true;
 }
 
-int CHCoord::RankWidth(int level, int rank) {
-    return static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH) - Relu16[7 + rank - level] -
-           NegRelu16[7 + rank - level];
+int CHCoord::RankWidth(int nLevel, int nRank) {
+    return static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH) - Relu16[7 + nRank - nLevel] -
+           NegRelu16[7 + nRank - nLevel];
 }
 
-bool CHCoord::IsValid(int offset) {
-    return (offset >= 0) && (static_cast<unsigned int>(offset) < CBitBoard::SIZE);
+bool CHCoord::IsValid(int nOffset) {
+    return (nOffset >= 0) && (static_cast<unsigned int>(nOffset) < CBitBoard::SIZE);
 }
 
 CHCoord::operator int() const {

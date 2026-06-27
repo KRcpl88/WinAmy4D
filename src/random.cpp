@@ -103,8 +103,8 @@ struct mt19937_64 {
 static struct mt19937_64 context;
 
 /* initializes mt[NN] with a seed */
-void init_genrand64(unsigned long long seed) {
-    context.mt[0] = seed;
+void init_genrand64(unsigned long long qwSeed) {
+    context.mt[0] = qwSeed;
     for (context.mti = 1; context.mti < NN; context.mti++)
         context.mt[context.mti] =
             (6364136223846793005ULL * (context.mt[context.mti - 1] ^
@@ -114,15 +114,15 @@ void init_genrand64(unsigned long long seed) {
 
 ran_t Random64(void) {
     /* This is the altered Cocoa with Love implementation. */
-    size_t i;
-    size_t j;
-    unsigned long long result;
+    size_t qwI;
+    size_t qwJ;
+    unsigned long long qwResult;
 
     if (context.mti >= NN) { /* generate NN words at one time */
-        size_t mid = NN / 2;
-        unsigned long long stateMid = context.mt[mid];
-        unsigned long long x;
-        unsigned long long y;
+        size_t qwMid = NN / 2;
+        unsigned long long qwStateMid = context.mt[qwMid];
+        unsigned long long qwX;
+        unsigned long long qwY;
 
         /* NOTE: this "untwist" code is modified from the original to improve
          * performance, as described here:
@@ -130,35 +130,35 @@ ran_t Random64(void) {
          * These modifications are offered for use under the original icense at
          * the top of this file.
          */
-        for (i = 0, j = mid; i != mid - 1; i++, j++) {
-            x = (context.mt[i] & UM) | (context.mt[i + 1] & LM);
-            context.mt[i] = context.mt[i + mid] ^ (x >> 1) ^
-                            ((context.mt[i + 1] & 1) * MATRIX_A);
-            y = (context.mt[j] & UM) | (context.mt[j + 1] & LM);
-            context.mt[j] = context.mt[j - mid] ^ (y >> 1) ^
-                            ((context.mt[j + 1] & 1) * MATRIX_A);
+        for (qwI = 0, qwJ = qwMid; qwI != qwMid - 1; qwI++, qwJ++) {
+            qwX = (context.mt[qwI] & UM) | (context.mt[qwI + 1] & LM);
+            context.mt[qwI] = context.mt[qwI + qwMid] ^ (qwX >> 1) ^
+                              ((context.mt[qwI + 1] & 1) * MATRIX_A);
+            qwY = (context.mt[qwJ] & UM) | (context.mt[qwJ + 1] & LM);
+            context.mt[qwJ] = context.mt[qwJ - qwMid] ^ (qwY >> 1) ^
+                              ((context.mt[qwJ + 1] & 1) * MATRIX_A);
         }
-        x = (context.mt[mid - 1] & UM) | (stateMid & LM);
-        context.mt[mid - 1] =
-            context.mt[NN - 1] ^ (x >> 1) ^ ((stateMid & 1) * MATRIX_A);
-        y = (context.mt[NN - 1] & UM) | (context.mt[0] & LM);
+        qwX = (context.mt[qwMid - 1] & UM) | (qwStateMid & LM);
+        context.mt[qwMid - 1] =
+            context.mt[NN - 1] ^ (qwX >> 1) ^ ((qwStateMid & 1) * MATRIX_A);
+        qwY = (context.mt[NN - 1] & UM) | (context.mt[0] & LM);
         context.mt[NN - 1] =
-            context.mt[mid - 1] ^ (y >> 1) ^ ((context.mt[0] & 1) * MATRIX_A);
+            context.mt[qwMid - 1] ^ (qwY >> 1) ^ ((context.mt[0] & 1) * MATRIX_A);
 
         context.mti = 0;
     }
 
-    result = context.mt[context.mti];
+    qwResult = context.mt[context.mti];
     context.mti = context.mti + 1;
 
-    result ^= (result >> 29) & 0x5555555555555555ULL;
-    result ^= (result << 17) & 0x71D67FFFEDA60000ULL;
-    result ^= (result << 37) & 0xFFF7EEE000000000ULL;
-    result ^= (result >> 43);
+    qwResult ^= (qwResult >> 29) & 0x5555555555555555ULL;
+    qwResult ^= (qwResult << 17) & 0x71D67FFFEDA60000ULL;
+    qwResult ^= (qwResult << 37) & 0xFFF7EEE000000000ULL;
+    qwResult ^= (qwResult >> 43);
 
-    return result;
+    return qwResult;
 }
 
 double Random(void) { return (Random64() >> 11) * (1.0 / 9007199254740991.0); }
 
-void InitRandom(ran_t seed) { init_genrand64(seed); }
+void InitRandom(ran_t qwSeed) { init_genrand64(qwSeed); }

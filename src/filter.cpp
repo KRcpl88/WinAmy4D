@@ -42,9 +42,9 @@
 
 void FilterQuiescentPositions(char *file_name) {
     struct PGNHeader header;
-    char move[12];
+    char szMove[12];
     char comment[2048];
-    char san_buffer[16];
+    char szSanBuffer[16];
 
     FILE *fin = fopen(file_name, "r");
     if (fin == NULL) {
@@ -70,21 +70,21 @@ void FilterQuiescentPositions(char *file_name) {
 
         print_header(fout, &header);
 
-        bool last_position_was_quiet = true;
+        bool fLastPositionWasQuiet = true;
 
-        while (!scanMove(fin, move)) {
-            if (!(strlen(move) < 12)) {
-                printf("\n<%s>\n", move);
+        while (!scanMove(fin, szMove)) {
+            if (!(strlen(szMove) < 12)) {
+                printf("\n<%s>\n", szMove);
                 exit(1);
             }
 
             get_and_reset_comment(comment, sizeof(comment) - 1);
 
-            if (last_position_was_quiet) {
+            if (fLastPositionWasQuiet) {
                 fprintf(fout, "{ %s }\n", strip(comment));
             }
 
-            CMove themove = p->ParseSAN(move);
+            CMove themove = p->ParseSAN(szMove);
 
             if (themove == M_NONE)
                 break;
@@ -92,30 +92,30 @@ void FilterQuiescentPositions(char *file_name) {
             if ((p->GetPly() % 2) == 0) {
                 fprintf(fout, "%d. ", 1 + p->GetPly() / 2);
             }
-            fprintf(fout, "%s ", p->SAN(themove, san_buffer));
+            fprintf(fout, "%s ", p->SAN(themove, szSanBuffer));
 
-            last_position_was_quiet = true;
+            fLastPositionWasQuiet = true;
 
             if (!p->GameEnd()) {
-                const int static_evaluation = EvaluatePosition(p);
-                const int dynamic_evaluation = p->QuiescenceSearch();
+                const int nStaticEvaluation = EvaluatePosition(p);
+                const int nDynamicEvaluation = p->QuiescenceSearch();
 
-                const int diff = ABS(static_evaluation - dynamic_evaluation);
+                const int diff = ABS(nStaticEvaluation - nDynamicEvaluation);
 
                 if (diff > THRESHOLD) {
                     // p->ShowPosition();
-                    // Print(0, "Static: %d Dynamic: %d\n", static_evaluation,
-                    //      dynamic_evaluation);
-                    last_position_was_quiet = false;
+                    // Print(0, "Static: %d Dynamic: %d\n", nStaticEvaluation,
+                    //      nDynamicEvaluation);
+                    fLastPositionWasQuiet = false;
                 } else {
-                    int search_evaluation;
-                    p->Iterate(&search_evaluation, M_NONE, NULL);
+                    int nSearchEvaluation;
+                    p->Iterate(&nSearchEvaluation, M_NONE, NULL);
 
-                    const int search_diff =
-                        ABS(static_evaluation - search_evaluation);
+                    const int nSearchDiff =
+                        ABS(nStaticEvaluation - nSearchEvaluation);
 
-                    if (search_diff > THRESHOLD) {
-                        last_position_was_quiet = false;
+                    if (nSearchDiff > THRESHOLD) {
+                        fLastPositionWasQuiet = false;
                     }
                 }
             }

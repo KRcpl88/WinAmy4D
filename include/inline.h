@@ -62,30 +62,30 @@ static inline CBitBoard ShiftRight(CBitBoard x) {
  * Calculate the 'king distance' between two squares.
  */
 static inline int KingDist(CSCoord sq1, CSCoord sq2) {
-    int file_dist = ABS(sq1.m_nFile - sq2.m_nFile);
-    int rank_dist = ABS(sq1.m_nRank - sq2.m_nRank);
+    int nFileDist = ABS(sq1.m_nFile - sq2.m_nFile);
+    int nRankDist = ABS(sq1.m_nRank - sq2.m_nRank);
 
-    return MAX(file_dist, rank_dist);
+    return MAX(nFileDist, nRankDist);
 }
 
 /**
  * Calculate the 'minimum distance' between two squares.
  */
 static inline int MinDist(CSCoord sq1, CSCoord sq2) {
-    int file_dist = ABS(sq1.m_nFile - sq2.m_nFile);
-    int rank_dist = ABS(sq1.m_nRank - sq2.m_nRank);
+    int nFileDist = ABS(sq1.m_nFile - sq2.m_nFile);
+    int nRankDist = ABS(sq1.m_nRank - sq2.m_nRank);
 
-    return MIN(file_dist, rank_dist);
+    return MIN(nFileDist, nRankDist);
 }
 
 /**
  * Calculate the 'Manhattan distance' between two squares.
  */
 static inline int ManhattanDist(CSCoord sq1, CSCoord sq2) {
-    int file_dist = ABS(sq1.m_nFile - sq2.m_nFile);
-    int rank_dist = ABS(sq1.m_nRank - sq2.m_nRank);
+    int nFileDist = ABS(sq1.m_nFile - sq2.m_nFile);
+    int nRankDist = ABS(sq1.m_nRank - sq2.m_nRank);
 
-    return file_dist + rank_dist;
+    return nFileDist + nRankDist;
 }
 
 static inline int FileDist(CSCoord sq1, CSCoord sq2) {
@@ -96,36 +96,36 @@ static inline int FileDist(CSCoord sq1, CSCoord sq2) {
  * Calculate the distance of 'sq' to any edge on the chessboard
  */
 static inline int EdgeDist(CSCoord sq) {
-    const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
-    int filedist = MIN(sq.m_nFile, (width - 1) - sq.m_nFile);
-    int rankdist = MIN(sq.m_nRank, (width - 1) - sq.m_nRank);
+    const uint16_t wWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
+    int nFileDist = MIN(sq.m_nFile, (wWidth - 1) - sq.m_nFile);
+    int nRankDist = MIN(sq.m_nRank, (wWidth - 1) - sq.m_nRank);
 
-    return MAX(filedist, rankdist);
+    return MAX(nFileDist, nRankDist);
 }
 
 /**
  * Create a move from from square, to square and flags.
  */
-static inline CMove make_move(CSCoord from, CSCoord to, int flags) {
-    return CMove(from, to, static_cast<uint32_t>(flags));
+static inline CMove make_move(CSCoord from, CSCoord to, int nFlags) {
+    return CMove(from, to, static_cast<uint32_t>(nFlags));
 }
 
-static inline CMove make_move(int from, int to, int flags) {
-    return make_move(CSCoord(from), CSCoord(to), flags);
+static inline CMove make_move(int nFrom, int nTo, int nFlags) {
+    return make_move(CSCoord(nFrom), CSCoord(nTo), nFlags);
 }
 
 /**
  * Create a promotion move from from square, to square and flags.
  */
-static inline CMove make_promotion(CSCoord from, CSCoord to, int type, int flags) {
-    CMove move = make_move(from, to, flags);
-    move.SetPromotionType(type);
+static inline CMove make_promotion(CSCoord from, CSCoord to, int nType, int nFlags) {
+    CMove move = make_move(from, to, nFlags);
+    move.SetPromotionType(nType);
     return move;
 }
 
-static inline CMove make_promotion(int from, int to, int type, int flags) {
-    CMove move = make_move(from, to, flags);
-    move.SetPromotionType(type);
+static inline CMove make_promotion(int nFrom, int nTo, int nType, int nFlags) {
+    CMove move = make_move(nFrom, nTo, nFlags);
+    move.SetPromotionType(nType);
     return move;
 }
 
@@ -136,8 +136,8 @@ static inline CMove make_promotion(int from, int to, int type, int flags) {
 static inline bool is_promo_square(CSCoord sq) {
     if (sq.m_nLevel < 5 || sq.m_nLevel > 9)
         return false;
-    const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
-    return sq.m_nRank == 0 || sq.m_nRank == (width - 1);
+    const uint16_t wWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
+    return sq.m_nRank == 0 || sq.m_nRank == (wWidth - 1);
 }
 
 /**
@@ -151,9 +151,9 @@ static inline bool is_promo_square(CSCoord sq) {
  * generation consistent with move legality.
  */
 static inline bool pawn_may_move_to(CSCoord sq) {
-    const uint16_t width = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
-    const bool edgeRank = (sq.m_nRank == 0) || (sq.m_nRank == (width - 1));
-    return !edgeRank || is_promo_square(sq);
+    const uint16_t wWidth = static_cast<uint16_t>(CBitBoard::LEVEL_WIDTH[sq.m_nLevel]);
+    const bool fEdgeRank = (sq.m_nRank == 0) || (sq.m_nRank == (wWidth - 1));
+    return !fEdgeRank || is_promo_square(sq);
 }
 
 /*

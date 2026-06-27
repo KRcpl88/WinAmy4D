@@ -40,17 +40,17 @@ void CBitBoard::ClearLowestBit() {
     }
 }
 
-CBitBoard CBitBoard::SetMask(uint16_t i) {
+CBitBoard CBitBoard::SetMask(uint16_t wI) {
     CBitBoard bb;
-    bb.SetBit(i);
+    bb.SetBit(wI);
     return bb;
 }
 
-CBitBoard CBitBoard::ClrMask(uint16_t i) {
+CBitBoard CBitBoard::ClrMask(uint16_t wI) {
     CBitBoard bb;
     for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w)
         bb.m_rgBits[w] = ~0ULL;
-    bb.ClrBit(i);
+    bb.ClrBit(wI);
     return bb;
 }
 
@@ -60,10 +60,10 @@ int CBitBoard::CountBits() const {
 #if HAVE___BUILTIN_POPCOUNTLL
         count += __builtin_popcountll(m_rgBits[w]);
 #else
-        BitBoardBits x = m_rgBits[w];
-        x = x - ((x >> 1) & 0x5555555555555555ULL);
-        x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
-        count += (int)((((x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FULL) * 0x0101010101010101ULL) >> 56);
+        BitBoardBits qwX = m_rgBits[w];
+        qwX = qwX - ((qwX >> 1) & 0x5555555555555555ULL);
+        qwX = (qwX & 0x3333333333333333ULL) + ((qwX >> 2) & 0x3333333333333333ULL);
+        count += (int)((((qwX + (qwX >> 4)) & 0x0F0F0F0F0F0F0F0FULL) * 0x0101010101010101ULL) >> 56);
 #endif
     }
     return count;
@@ -142,31 +142,31 @@ CBitBoard operator~(const CBitBoard &bb) {
     return result;
 }
 
-CBitBoard operator<<(const CBitBoard &bb, int shift) {
+CBitBoard operator<<(const CBitBoard &bb, int nShift) {
     CBitBoard result;
-    const int wordShift = shift / CBitBoard::ULONGLONG_SIZE_BITS;
-    const int bitShift = shift % CBitBoard::ULONGLONG_SIZE_BITS;
-    for (int i = CBitBoard::SIZE_ULONGLONG - 1; i >= 0; --i) {
-        const int src = i - wordShift;
-        if (src >= 0) {
-            result.m_rgBits[i] = bb.m_rgBits[src] << bitShift;
-            if (bitShift > 0 && src - 1 >= 0)
-                result.m_rgBits[i] |= bb.m_rgBits[src - 1] >> (CBitBoard::ULONGLONG_SIZE_BITS - bitShift);
+    const int wordShift = nShift / CBitBoard::ULONGLONG_SIZE_BITS;
+    const int bitShift = nShift % CBitBoard::ULONGLONG_SIZE_BITS;
+    for (int nI = CBitBoard::SIZE_ULONGLONG - 1; nI >= 0; --nI) {
+        const int nSrc = nI - wordShift;
+        if (nSrc >= 0) {
+            result.m_rgBits[nI] = bb.m_rgBits[nSrc] << bitShift;
+            if (bitShift > 0 && nSrc - 1 >= 0)
+                result.m_rgBits[nI] |= bb.m_rgBits[nSrc - 1] >> (CBitBoard::ULONGLONG_SIZE_BITS - bitShift);
         }
     }
     return result;
 }
 
-CBitBoard operator>>(const CBitBoard &bb, int shift) {
+CBitBoard operator>>(const CBitBoard &bb, int nShift) {
     CBitBoard result;
-    const int wordShift = shift / CBitBoard::ULONGLONG_SIZE_BITS;
-    const int bitShift = shift % CBitBoard::ULONGLONG_SIZE_BITS;
-    for (int i = 0; i < CBitBoard::SIZE_ULONGLONG; ++i) {
-        const int src = i + wordShift;
-        if (src < CBitBoard::SIZE_ULONGLONG) {
-            result.m_rgBits[i] = bb.m_rgBits[src] >> bitShift;
-            if (bitShift > 0 && src + 1 < CBitBoard::SIZE_ULONGLONG)
-                result.m_rgBits[i] |= bb.m_rgBits[src + 1] << (CBitBoard::ULONGLONG_SIZE_BITS - bitShift);
+    const int wordShift = nShift / CBitBoard::ULONGLONG_SIZE_BITS;
+    const int bitShift = nShift % CBitBoard::ULONGLONG_SIZE_BITS;
+    for (int nI = 0; nI < CBitBoard::SIZE_ULONGLONG; ++nI) {
+        const int nSrc = nI + wordShift;
+        if (nSrc < CBitBoard::SIZE_ULONGLONG) {
+            result.m_rgBits[nI] = bb.m_rgBits[nSrc] >> bitShift;
+            if (bitShift > 0 && nSrc + 1 < CBitBoard::SIZE_ULONGLONG)
+                result.m_rgBits[nI] |= bb.m_rgBits[nSrc + 1] << (CBitBoard::ULONGLONG_SIZE_BITS - bitShift);
         }
     }
     return result;
@@ -190,13 +190,13 @@ CBitBoard &CBitBoard::operator^=(const CBitBoard &rhs) {
     return *this;
 }
 
-CBitBoard &CBitBoard::operator<<=(int shift) {
-    *this = *this << shift;
+CBitBoard &CBitBoard::operator<<=(int nShift) {
+    *this = *this << nShift;
     return *this;
 }
 
-CBitBoard &CBitBoard::operator>>=(int shift) {
-    *this = *this >> shift;
+CBitBoard &CBitBoard::operator>>=(int nShift) {
+    *this = *this >> nShift;
     return *this;
 }
 

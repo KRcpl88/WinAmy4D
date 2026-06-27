@@ -68,8 +68,8 @@ static struct TimeControl globalTimeControl = {
     false,
 };
 
-void DoTC(CPosition *p, int mtime) {
-    Time[p->GetTurn()] += -mtime + Increment;
+void DoTC(CPosition *p, int nMtime) {
+    Time[p->GetTurn()] += -nMtime + Increment;
 
     if (Moves[p->GetTurn()] > 0) {
         Moves[p->GetTurn()] -= 1;
@@ -86,79 +86,79 @@ void DoTC(CPosition *p, int mtime) {
     }
 }
 
-void CalcTime(CPosition *p, float *soft, float *hard) {
-    char time_as_text[16];
+void CalcTime(CPosition *p, float *pSoft, float *hard) {
+    char szTimeAsText[16];
     if (TMoves >= 0) {
         if (Moves[p->GetTurn()] > 0) {
             /*  int limit = (13*TTime/TMoves)/8 + (3*Increment)/4;  */
-            float limit = (1.625f * TTime / TMoves) + (0.85f * Increment);
+            float fLimit = (1.625f * TTime / TMoves) + (0.85f * Increment);
 
             Print(1, "TC: %d moves in %s\n", Moves[p->GetTurn()],
                   FormatTime((unsigned int)(Time[p->GetTurn()]) * ONE_SECOND,
-                             time_as_text, sizeof(time_as_text)));
+                             szTimeAsText, sizeof(szTimeAsText)));
             /*  *soft = (7*Time[p->GetTurn()]/Moves[p->GetTurn()])/8 + (3*Increment)/4; */
-            *soft =
+            *pSoft =
                 (0.875f * Time[p->GetTurn()] / Moves[p->GetTurn()]) + (0.75f * Increment);
-            if (*soft > limit)
-                *soft = limit;
+            if (*pSoft > fLimit)
+                *pSoft = fLimit;
 
             if (TwoTimeControls && Moves[p->GetTurn()] <= 5) {
-                int moves = TMoves2;
-                int soft2;
-                if (moves == 0)
-                    moves = 60;
-                soft2 = TTime2 / moves;
+                int nMoves = TMoves2;
+                int nSoft2;
+                if (nMoves == 0)
+                   nMoves = 60;
+                nSoft2 = TTime2 / nMoves;
                 /*    *soft = ((*soft)+(float)soft2)/2;    */
-                *soft = 0.5f * ((*soft) + (float)soft2);
-                Print(1, "Adjusted timing to %.4f secs\n", *soft);
+                *pSoft = 0.5f * ((*pSoft) + (float)nSoft2);
+                Print(1, "Adjusted timing to %.4f secs\n", *pSoft);
             }
-            *hard = 4.0f * (*soft);
+            *hard = 4.0f * (*pSoft);
         } else {
             /*  expect additional game length of 60 moves beyond current move */
             /*  use equations from section above with fixed Moves[p->GetTurn()] of 60
              */
             /*  rearrange equation to eliminate floating point division  */
             /*  1.625 / 60 = 0.0271  */
-            float limit = 0.0271f * ((float)Time[p->GetTurn()] + 60 * Increment);
+            float fLimit = 0.0271f * ((float)Time[p->GetTurn()] + 60 * Increment);
 
             Print(1, "TC: all moves in %s\n",
                   FormatTime((unsigned int)(Time[p->GetTurn()]) * ONE_SECOND,
-                             time_as_text, sizeof(time_as_text)));
+                             szTimeAsText, sizeof(szTimeAsText)));
             /*  0.875 / 60.0 = 0.0146  */
-            *soft = 0.0146f * (float)Time[p->GetTurn()] + (0.85f * Increment);
-            if (*soft > limit)
-                *soft = limit;
-            *hard = 4.0f * (*soft);
+            *pSoft = 0.0146f * (float)Time[p->GetTurn()] + (0.85f * Increment);
+            if (*pSoft > fLimit)
+                *pSoft = fLimit;
+            *hard = 4.0f * (*pSoft);
         }
         if (*hard > Time[p->GetTurn()])
             *hard = 0.5f * (float)Time[p->GetTurn()];
-        if (*soft > *hard)
-            *soft = 0.67f * (*hard);
+        if (*pSoft > *hard)
+            *pSoft = 0.67f * (*hard);
 
-        Print(1, "TL: %.2f/%.2f\n", *soft, *hard);
+        Print(1, "TL: %.2f/%.2f\n", *pSoft, *hard);
     } else {
-        *soft = *hard = (float)TTime;
+        *pSoft = *hard = (float)TTime;
     }
 }
 
-static struct TimeControl parse_timecontrol_xboard(char *args[]) {
-    int ttmoves, ttime, tminutes, tseconds, inc = 0;
+static struct TimeControl parse_timecontrol_xboard(char *rgArgs[]) {
+    int nTtmoves, nTtime, nTminutes, nTseconds, nInc = 0;
 
-    sscanf(args[0], "%d", &ttmoves);
-    char *colon = strchr(args[1], ':'); /* check for time in xx:yy format */
+    sscanf(rgArgs[0], "%d", &nTtmoves);
+    char *colon = strchr(rgArgs[1], ':'); /* check for time in xx:yy format */
     if (colon) {
-        sscanf(args[1], "%d:%d", &tminutes, &tseconds);
-        ttime = (tminutes * 60) + tseconds;
+        sscanf(rgArgs[1], "%d:%d", &nTminutes, &nTseconds);
+        nTtime = (nTminutes * 60) + nTseconds;
     } else {
-        sscanf(args[1], "%d", &tminutes);
-        ttime = tminutes * 60;
+        sscanf(rgArgs[1], "%d", &nTminutes);
+        nTtime = nTminutes * 60;
     }
-    sscanf(args[2], "%d", &inc);
+    sscanf(rgArgs[2], "%d", &nInc);
 
     struct TimeControl result = {};
-    result.first.moves = ttmoves;
-    result.first.total_time = ttime;
-    result.first.increment = inc;
+    result.first.moves = nTtmoves;
+    result.first.total_time = nTtime;
+    result.first.increment = nInc;
     result.hasSecondTimeControl = false;
 
     return result;
@@ -170,59 +170,59 @@ static const char *const sudden_death = "sd";
 /** Literal for 'fixed' time control. */
 static const char *const fixed = "fixed";
 
-static struct TimeControl parse_timecontrol(char *args[]) {
-    int ttmoves, ttime, inc = 0;
-    int ttmoves2, ttime2;
+static struct TimeControl parse_timecontrol(char *rgArgs[]) {
+    int nTtmoves, nTtime, nInc = 0;
+    int nTtmoves2, nTtime2;
 
     struct TimeControl result = globalTimeControl;
 
-    char *x = strtok(args[0], "/+ \t\n\r");
-    if (x) {
-        if (!strcmp(x, sudden_death))
-            ttmoves = 0;
-        else if (!strcmp(x, fixed))
-            ttmoves = -1;
+    char *pszX = strtok(rgArgs[0], "/+ \t\n\r");
+    if (pszX) {
+        if (!strcmp(pszX, sudden_death))
+            nTtmoves = 0;
+        else if (!strcmp(pszX, fixed))
+            nTtmoves = -1;
         else
-            sscanf(x, "%d", &ttmoves);
-        x = strtok(NULL, "/ \t\n\r");
-        if (x) {
-            sscanf(x, "%d", &ttime);
-            for (x++; *x; x++) {
-                if (*x == '+') {
-                    sscanf(x + 1, "%d", &inc);
+            sscanf(pszX, "%d", &nTtmoves);
+        pszX = strtok(NULL, "/ \t\n\r");
+        if (pszX) {
+            sscanf(pszX, "%d", &nTtime);
+            for (pszX++; *pszX; pszX++) {
+                if (*pszX == '+') {
+                    sscanf(pszX + 1, "%d", &nInc);
                     break;
                 }
             }
-            if (args[1] != NULL) {
-                x = strtok(args[1], " /\n\t\r");
-                ttmoves2 = -1;
-                if (!strcmp(x, sudden_death))
-                    ttmoves2 = 0;
+            if (rgArgs[1] != NULL) {
+                pszX = strtok(rgArgs[1], " /\n\t\r");
+                nTtmoves2 = -1;
+                if (!strcmp(pszX, sudden_death))
+                    nTtmoves2 = 0;
                 else
-                    sscanf(x, "%d", &ttmoves2);
-                x = strtok(NULL, " /\n\t\r");
-                if (x) {
-                    ttime2 = -1;
-                    sscanf(x, "%d", &ttime2);
-                    if (ttmoves2 >= 0 && ttime2 > 0)
+                    sscanf(pszX, "%d", &nTtmoves2);
+                pszX = strtok(NULL, " /\n\t\r");
+                if (pszX) {
+                    nTtime2 = -1;
+                    sscanf(pszX, "%d", &nTtime2);
+                    if (nTtmoves2 >= 0 && nTtime2 > 0)
                         TwoTimeControls = true;
                 }
             }
-            if (ttmoves >= 0) {
-                result.first.moves = ttmoves;
-                result.first.total_time = ttime * 60;
-                result.first.increment = inc;
+            if (nTtmoves >= 0) {
+                result.first.moves = nTtmoves;
+                result.first.total_time = nTtime * 60;
+                result.first.increment = nInc;
                 result.hasSecondTimeControl = false;
 
             } else {
                 result.first.moves = -1;
-                result.first.total_time = ttime;
+                result.first.total_time = nTtime;
                 result.first.increment = 0;
                 result.hasSecondTimeControl = false;
             }
             if (TwoTimeControls) {
-                result.second.moves = ttmoves2;
-                result.second.total_time = ttime2 * 60;
+                result.second.moves = nTtmoves2;
+                result.second.total_time = nTtime2 * 60;
                 result.second.increment = 0;
                 result.hasSecondTimeControl = true;
             }
@@ -239,13 +239,13 @@ static struct TimeControl parse_timecontrol(char *args[]) {
  *     xboard_flag: indicates whether the format is expected to be
  *         for xboard or not
  */
-void SetTimeControl(char *args[], bool xboard_flag) {
-    if (xboard_flag) {
-        globalTimeControl = parse_timecontrol_xboard(args);
+void SetTimeControl(char *rgArgs[], bool fXboardFlag) {
+    if (fXboardFlag) {
+        globalTimeControl = parse_timecontrol_xboard(rgArgs);
     } else {
-        globalTimeControl = parse_timecontrol(args);
+        globalTimeControl = parse_timecontrol(rgArgs);
     }
-    ResetTimeControl(!xboard_flag);
+    ResetTimeControl(!fXboardFlag);
 }
 
 /**
@@ -254,7 +254,7 @@ void SetTimeControl(char *args[], bool xboard_flag) {
  * Args:
  *     verbose: if true, the settings are printed
  */
-void ResetTimeControl(bool verbose) {
+void ResetTimeControl(bool fVerbose) {
     TMoves = globalTimeControl.first.moves;
     TTime = globalTimeControl.first.total_time;
     Increment = globalTimeControl.first.increment;
@@ -267,7 +267,7 @@ void ResetTimeControl(bool verbose) {
     Moves[White] = Moves[Black] = TMoves;
     Time[White] = Time[Black] = TTime;
 
-    if (verbose) {
+    if (fVerbose) {
         Print(0, "Timecontrol is ");
         if (globalTimeControl.first.moves >= 0) {
             if (globalTimeControl.first.moves == 0)
@@ -312,12 +312,12 @@ void ResetTimeControl(bool verbose) {
  * Args:
  *     seconds: the per-move time budget in seconds (must be > 0).
  */
-void SetFixedTimePerMove(int seconds) {
-    if (seconds <= 0) {
+void SetFixedTimePerMove(int nSeconds) {
+    if (nSeconds <= 0) {
         return;
     }
     globalTimeControl.first.moves = -1;
-    globalTimeControl.first.total_time = seconds;
+    globalTimeControl.first.total_time = nSeconds;
     globalTimeControl.first.increment = 0;
     globalTimeControl.second.moves = 0;
     globalTimeControl.second.total_time = 0;

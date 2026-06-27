@@ -21,11 +21,11 @@ CUCoord::CUCoord(const CSCoordBase& scoord) {
     scoord.Validate();
 
     SetZ(scoord.m_nLevel);
-    const unsigned int levelIndex = static_cast<unsigned int>(scoord.m_nLevel);
-    const int levelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH - CBitBoard::LEVEL_WIDTH[levelIndex]);
-    const int fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[levelIndex]) - 1;
-    SetX(levelOffset + scoord.m_nFile + scoord.m_nRank);
-    SetY(levelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
+    const unsigned int dwLevelIndex = static_cast<unsigned int>(scoord.m_nLevel);
+    const int nLevelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH - CBitBoard::LEVEL_WIDTH[dwLevelIndex]);
+    const int fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[dwLevelIndex]) - 1;
+    SetX(nLevelOffset + scoord.m_nFile + scoord.m_nRank);
+    SetY(nLevelOffset + scoord.m_nRank - scoord.m_nFile + fileOffset);
 }
 
 CChord g_krgFullCellOutline[24]
@@ -211,17 +211,17 @@ CChord* g_krgpCellOutline[8]
     g_krgHex4CellOutline
 };
 
-bool CUCoord::GetOutline( __inout std::unordered_set<CChord> & Chords, EOutlineType eOutlineType ) const
+bool CUCoord::GetOutline( __inout std::unordered_set<CChord> & Chords, EOutlineType nEOutlineType ) const
 {
-    const size_t nIndex = static_cast<size_t>(eOutlineType);
+    const size_t nIndex = static_cast<size_t>(nEOutlineType);
     if (nIndex >= ARRAYSIZE(g_cCellOutline)) return false;
 
     CUCoordFloat Origin = (CUCoordFloat)(*this);
 
-    for (size_t i = 0; (g_cCellOutline[nIndex] > i); ++i)
+    for (size_t qwI = 0; (g_cCellOutline[nIndex] > qwI); ++qwI)
     {
-        Chords.insert( CChord(Origin + g_krgpCellOutline[nIndex][i].GetStart(), 
-            Origin + g_krgpCellOutline[nIndex][i].GetEnd()));
+        Chords.insert( CChord(Origin + g_krgpCellOutline[nIndex][qwI].GetStart(), 
+            Origin + g_krgpCellOutline[nIndex][qwI].GetEnd()));
     }
 
     return true;
@@ -253,34 +253,34 @@ void CUCoord::SetZ(int nValue) {
 
 CUCoord::operator CSCoord() const {
     CSCoord scoord;
-    const int level = GetZ();
-    const std::uint16_t invalidCoord = (std::numeric_limits<std::uint16_t>::max)();
+    const int nLevel = GetZ();
+    const std::uint16_t wInvalidCoord = (std::numeric_limits<std::uint16_t>::max)();
 
-    int levelOffset;
+    int nLevelOffset;
     int fileOffset;
-    if ((level >= 0) && (static_cast<unsigned int>(level) < CBitBoard::NUM_LEVELS)) {
-        scoord.m_nLevel = static_cast<std::uint16_t>(level);
-        const unsigned int levelIndex = static_cast<unsigned int>(level);
-        levelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH - CBitBoard::LEVEL_WIDTH[levelIndex]);
-        fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[levelIndex]) - 1;
+    if ((nLevel >= 0) && (static_cast<unsigned int>(nLevel) < CBitBoard::NUM_LEVELS)) {
+        scoord.m_nLevel = static_cast<std::uint16_t>(nLevel);
+        const unsigned int dwLevelIndex = static_cast<unsigned int>(nLevel);
+        nLevelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH - CBitBoard::LEVEL_WIDTH[dwLevelIndex]);
+        fileOffset = static_cast<int>(CBitBoard::LEVEL_WIDTH[dwLevelIndex]) - 1;
     } else {
-        scoord.m_nLevel = invalidCoord;
-        levelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH);
+        scoord.m_nLevel = wInvalidCoord;
+        nLevelOffset = static_cast<int>(CBitBoard::MAX_LEVEL_WIDTH);
         fileOffset = 0;
     }
 
     const int doubleFile = GetX() - GetY() + fileOffset;
     if ((doubleFile & 1) != 0) {
-        scoord.m_nFile = invalidCoord;
+        scoord.m_nFile = wInvalidCoord;
     } else {
         scoord.m_nFile = static_cast<std::uint16_t>(doubleFile >> 1);
     }
 
     const int doubleRank = GetX() + GetY() - fileOffset;
     if ((doubleRank & 1) != 0) {
-        scoord.m_nRank = invalidCoord;
+        scoord.m_nRank = wInvalidCoord;
     } else {
-        scoord.m_nRank = static_cast<std::uint16_t>((doubleRank >> 1) - levelOffset);
+        scoord.m_nRank = static_cast<std::uint16_t>((doubleRank >> 1) - nLevelOffset);
     }
 
     return scoord;

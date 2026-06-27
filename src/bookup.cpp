@@ -82,93 +82,93 @@ struct BookQuery {
 static tree_node_t *BookDB = NULL;
 static tree_node_t *LearnDB = NULL;
 
-static tree_node_t *PutBookEntry(tree_node_t *database, hash_t hk, int result,
-                                 int elo) {
+static tree_node_t *PutBookEntry(tree_node_t *pDatabase, hash_t hk, int nResult,
+                                 int nElo) {
     Print(9, "storing position\n");
-    struct BookEntry *entry = NULL;
+    struct BookEntry *pEntry = NULL;
 
-    if (database != NULL) {
-        entry = (struct BookEntry *)lookup_value(database, (char *)&hk,
-                                                 sizeof(hk), NULL);
+    if (pDatabase != NULL) {
+        pEntry = (struct BookEntry *)lookup_value(pDatabase, (char *)&hk,
+                                                  sizeof(hk), NULL);
     }
 
-    if (entry == NULL) {
-        entry = (BookEntry *)safe_calloc(1, sizeof(BookEntry));
+    if (pEntry == NULL) {
+        pEntry = (BookEntry *)safe_calloc(1, sizeof(BookEntry));
     }
 
-    if (result == 1) {
-        entry->win += 1;
-    } else if (result == 0) {
-        entry->draw += 1;
-    } else if (result == -1) {
-        entry->loss += 1;
+    if (nResult == 1) {
+        pEntry->win += 1;
+    } else if (nResult == 0) {
+        pEntry->draw += 1;
+    } else if (nResult == -1) {
+        pEntry->loss += 1;
     }
 #if WITH_ELO
-    if (elo != 0) {
-        entry->sumElo += elo;
-        entry->nElo += 1;
+    if (nElo != 0) {
+        pEntry->sumElo += nElo;
+        pEntry->nElo += 1;
     }
 #endif
 
-    database = add_node(database, (char *)&hk, sizeof(hk), (char *)entry,
-                        sizeof(struct BookEntry));
-    free(entry);
+    pDatabase = add_node(pDatabase, (char *)&hk, sizeof(hk), (char *)pEntry,
+                         sizeof(struct BookEntry));
+    free(pEntry);
 
-    return database;
+    return pDatabase;
 }
 
-static void OpenBookFile(tree_node_t **db) {
-    static bool error_printed = false;
+static void OpenBookFile(tree_node_t **pDb) {
+    static bool s_fErrorPrinted = false;
 
-    FILE *fin = fopen(BOOK_NAME, "rb");
+    FILE *pFin = fopen(BOOK_NAME, "rb");
 
 #ifdef DEFAULT_BOOK_NAME
-    if (fin == NULL) {
-        fin = fopen(DEFAULT_BOOK_NAME, "rb");
+    if (pFin == NULL) {
+        pFin = fopen(DEFAULT_BOOK_NAME, "rb");
     }
 #endif
 
-    if (fin == NULL) {
-        if (!error_printed) {
+    if (pFin == NULL) {
+        if (!s_fErrorPrinted) {
             Print(0, "Can't open database: %s\n", strerror(errno));
-            error_printed = true;
+            s_fErrorPrinted = true;
         }
         return;
     }
 
-    *db = load_tree(fin);
-    fclose(fin);
+    *pDb = load_tree(pFin);
+    fclose(pFin);
 }
 
 static struct BookEntry *GetBookEntry(hash_t hk) {
-    struct BookEntry *retval = NULL;
+    struct BookEntry *pRetval = NULL;
     if (BookDB == NULL) {
         OpenBookFile(&BookDB);
     }
     if (BookDB != NULL) {
-        retval = (struct BookEntry *)lookup_value(BookDB, (char *)&hk,
-                                                  sizeof(hk), NULL);
-    }
-
-    return retval;
-}
-
-static struct LearnEntry *GetLearnEntry(hash_t hk) {
-    struct LearnEntry *retval = NULL;
-
-    if (LearnDB == NULL) {
-        FILE *fin = fopen(LEARN_NAME, "rb");
-        if (fin != NULL) {
-            LearnDB = load_tree(fin);
-            fclose(fin);
-        }
-    }
-    if (LearnDB != NULL) {
-        retval = (struct LearnEntry *)lookup_value(LearnDB, (char *)&hk,
+        pRetval = (struct BookEntry *)lookup_value(BookDB, (char *)&hk,
                                                    sizeof(hk), NULL);
     }
 
-    return retval;
+    return pRetval;
+}
+
+static struct LearnEntry *GetLearnEntry(hash_t hk) {
+    struct LearnEntry *pRetval = NULL;
+
+    if (LearnDB == NULL) {
+        FILE *pFin = fopen(LEARN_NAME, "rb");
+        if (pFin != NULL) {
+            LearnDB = load_tree(pFin);
+            fclose(pFin);
+        }
+    }
+    if (LearnDB != NULL) {
+        pRetval = (struct LearnEntry *)lookup_value(LearnDB, (char *)&hk,
+                                                    sizeof(hk), NULL);
+    }
+
+    return pRetval;
 }
 
 void CloseBook(void) {
@@ -176,65 +176,65 @@ void CloseBook(void) {
     BookDB = NULL;
 }
 
-static void BookupInternal(char *file_name, int verbosity) {
+static void BookupInternal(char *pszFileName, int nVerbosity) {
     CPosition *p;
-    FILE *fin;
-    int afterEco = 0;
-    tree_node_t *database = NULL;
-    int lines = 0;
+    FILE *pFin;
+    int nAfterEco = 0;
+    tree_node_t *pDatabase = NULL;
+    int nLines = 0;
 
     struct PGNHeader header;
-    char move[12];
+    char szMove[12];
 
-    fin = fopen(file_name, "rb");
-    if (fin == NULL) {
+    pFin = fopen(pszFileName, "rb");
+    if (pFin == NULL) {
         Print(0, "Can't open bookfile.\n");
         return;
     } else {
-        Print(verbosity, "   Parsing PGN file %s. '.'= 100 Games\n", file_name);
+        Print(nVerbosity, "   Parsing PGN file %s. '.'= 100 Games\n", pszFileName);
     }
 
     CloseBook();
 
-    while (!scanHeader(fin, &header)) {
-        int result;
+    while (!scanHeader(pFin, &header)) {
+        int nResult;
 
         if (!strcmp(header.result, "1-0"))
-            result = 1;
+            nResult = 1;
         else if (!strcmp(header.result, "0-1"))
-            result = -1;
+            nResult = -1;
         else if (!strcmp(header.result, "1/2-1/2"))
-            result = 0;
+            nResult = 0;
         else
             continue;
 
         p = CPosition::Initial();
 
-        while (!scanMove(fin, move)) {
-            if (!(strlen(move) < 12)) {
-                printf("\n<%s>\n", move);
+        while (!scanMove(pFin, szMove)) {
+            if (!(strlen(szMove) < 12)) {
+                printf("\n<%s>\n", szMove);
                 exit(1);
             }
 
-            CMove themove = p->ParseSAN(move);
+            CMove themove = p->ParseSAN(szMove);
             if (themove != M_NONE) {
                 p->DoMove(themove);
-                char *eco_code = GetEcoCode(p->GetHashKey());
-                if (eco_code) {
-                    afterEco = 0;
-                    free(eco_code);
+                char *pszEcoCode = GetEcoCode(p->GetHashKey());
+                if (pszEcoCode) {
+                    nAfterEco = 0;
+                    free(pszEcoCode);
                 } else {
-                    afterEco++;
+                    nAfterEco++;
                 }
-                if (afterEco <= 20) {
+                if (nAfterEco <= 20) {
                     if (p->GetTurn() == Black) {
                         /* white played the move */
-                        database = PutBookEntry(database, p->GetHashKey(), result,
-                                                header.white_elo);
+                        pDatabase = PutBookEntry(pDatabase, p->GetHashKey(), nResult,
+                                                 header.white_elo);
                     } else {
                         /* black played the move */
-                        database = PutBookEntry(database, p->GetHashKey(), -result,
-                                                header.black_elo);
+                        pDatabase = PutBookEntry(pDatabase, p->GetHashKey(), -nResult,
+                                                 header.black_elo);
                     }
                 }
             }
@@ -242,63 +242,63 @@ static void BookupInternal(char *file_name, int verbosity) {
 
         CPosition::Free(p);
 
-        lines++;
-        if ((lines % 100) == 0) {
+        nLines++;
+        if ((nLines % 100) == 0) {
             Print(0, ".");
 
-            if ((lines % 7000) == 0) {
-                Print(0, "(%d)\n", lines);
+            if ((nLines % 7000) == 0) {
+                Print(0, "(%d)\n", nLines);
             }
         }
     }
 
-    Print(verbosity, "(%d)\n", lines);
-    fclose(fin);
+    Print(nVerbosity, "(%d)\n", nLines);
+    fclose(pFin);
 
-    FILE *fout = fopen(BOOK_NAME, "wb");
-    if (fout == NULL) {
+    FILE *pFout = fopen(BOOK_NAME, "wb");
+    if (pFout == NULL) {
         Print(0, "Can't write database: %s\n", strerror(errno));
         return;
     }
 
-    save_tree(database, fout);
-    fclose(fout);
+    save_tree(pDatabase, pFout);
+    fclose(pFout);
 
-    free_node(database);
+    free_node(pDatabase);
 }
 
-void Bookup(char *file_name) { BookupInternal(file_name, 0); }
+void Bookup(char *pszFileName) { BookupInternal(pszFileName, 0); }
 
-void BookupQuiet(char *file_name) { BookupInternal(file_name, 9); }
+void BookupQuiet(char *pszFileName) { BookupInternal(pszFileName, 9); }
 
 static void GetAllBookMoves(CPosition *p, int *cnt, CMove *book_moves,
-                            struct BookQuery *entries) {
-    unsigned int i;
+                            struct BookQuery *pEntries) {
+    unsigned int dwI;
 
     heap_t heap = allocate_heap();
     p->LegalMoves(heap);
 
-    for (i = heap->current_section->start; i < heap->current_section->end;
-         i++) {
-        CMove move = heap->data[i];
+    for (dwI = heap->current_section->start; dwI < heap->current_section->end;
+         dwI++) {
+        CMove move = heap->data[dwI];
         struct BookEntry *be = NULL;
-        struct LearnEntry *le = NULL;
+        struct LearnEntry *pLe = NULL;
 
         p->DoMove(move);
         /* If the move leads to a repetition, do not accept it. */
         if (!p->Repeated(false)) {
             be = GetBookEntry(p->GetHashKey());
-            le = GetLearnEntry(p->GetHashKey());
+            pLe = GetLearnEntry(p->GetHashKey());
         }
         p->UndoMove(move);
 
         if (be) {
-            memset(entries + *cnt, 0, sizeof(struct BookQuery));
+            memset(pEntries + *cnt, 0, sizeof(struct BookQuery));
             book_moves[*cnt] = move;
-            entries[*cnt].be = *be;
-            if (le) {
-                entries[*cnt].le = *le;
-                free(le);
+            pEntries[*cnt].be = *be;
+            if (pLe) {
+                pEntries[*cnt].le = *pLe;
+                free(pLe);
             }
             (*cnt)++;
             free(be);
@@ -308,27 +308,27 @@ static void GetAllBookMoves(CPosition *p, int *cnt, CMove *book_moves,
     free_heap(heap);
 }
 
-static void SortBook(int cnt, CMove *mvs, struct BookQuery *entries) {
+static void SortBook(int cnt, CMove *pMvs, struct BookQuery *pEntries) {
     bool done = false;
 
     while (!done) {
-        int i;
+        int nI;
 
         done = true;
 
-        for (i = 1; i < cnt; i++) {
-            int f1 = entries[i - 1].be.win + entries[i - 1].be.loss +
-                     entries[i - 1].be.draw;
+        for (nI = 1; nI < cnt; nI++) {
+            int f1 = pEntries[nI - 1].be.win + pEntries[nI - 1].be.loss +
+                     pEntries[nI - 1].be.draw;
             int f2 =
-                entries[i].be.win + entries[i].be.loss + entries[i].be.draw;
+                pEntries[nI].be.win + pEntries[nI].be.loss + pEntries[nI].be.draw;
             if (f1 < f2) {
-                struct BookQuery betmp = entries[i];
+                struct BookQuery betmp = pEntries[nI];
                 CMove move;
-                entries[i] = entries[i - 1];
-                entries[i - 1] = betmp;
-                move = mvs[i];
-                mvs[i] = mvs[i - 1];
-                mvs[i - 1] = move;
+                pEntries[nI] = pEntries[nI - 1];
+                pEntries[nI - 1] = betmp;
+                move = pMvs[nI];
+                pMvs[nI] = pMvs[nI - 1];
+                pMvs[nI - 1] = move;
 
                 done = false;
             }
@@ -336,87 +336,87 @@ static void SortBook(int cnt, CMove *mvs, struct BookQuery *entries) {
     }
 }
 
-static void CalculatePropabilities(int cnt, struct BookQuery *entries,
+static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
                                    double *props) {
-    int total = 0;
-    double totalprops;
-    int limit;
-    int i;
+    int nTotal = 0;
+    double dTotalprops;
+    int nLimit;
+    int nI;
 
-    for (i = 0; i < cnt; i++) {
-        total += entries[i].be.win + entries[i].be.loss + entries[i].be.draw;
+    for (nI = 0; nI < cnt; nI++) {
+        nTotal += pEntries[nI].be.win + pEntries[nI].be.loss + pEntries[nI].be.draw;
     }
 
-    limit = total / 16;
-    totalprops = 0.0;
+    nLimit = nTotal / 16;
+    dTotalprops = 0.0;
 
-    for (i = 0; i < cnt; i++) {
-        struct BookQuery *entry = entries + i;
-        int freq = entry->be.win + entry->be.loss + entry->be.draw;
+    for (nI = 0; nI < cnt; nI++) {
+        struct BookQuery *pEntry = pEntries + nI;
+        int freq = pEntry->be.win + pEntry->be.loss + pEntry->be.draw;
 
-        props[i] = 0.0;
-        if (freq > limit) {
-            int avelo = 2000;
+        props[nI] = 0.0;
+        if (freq > nLimit) {
+            int nAvelo = 2000;
 
 #if WITH_ELO
-            if (entry->be.nElo != 0) {
-                avelo = entry->be.sumElo / entry->be.nElo;
+            if (pEntry->be.nElo != 0) {
+                nAvelo = pEntry->be.sumElo / pEntry->be.nElo;
             }
 #endif
 
-            props[i] = avelo * freq *
-                       (double)(2 * entry->be.win + entry->be.draw) /
+            props[nI] = nAvelo * freq *
+                       (double)(2 * pEntry->be.win + pEntry->be.draw) /
                        (double)(freq);
 
-            if (entry->le.flags & GoodMove) {
-                props[i] *= 2;
+            if (pEntry->le.flags & GoodMove) {
+                props[nI] *= 2;
             }
 
-            if (entry->le.flags & BadMove) {
-                props[i] = 0.0;
+            if (pEntry->le.flags & BadMove) {
+                props[nI] = 0.0;
             }
 
             /*
              * Never choose a variation that doesn't have a single win.
              */
 
-            if (entry->be.win == 0) {
-                props[i] = 0.0;
+            if (pEntry->be.win == 0) {
+                props[nI] = 0.0;
             }
 
-            totalprops += props[i];
+            dTotalprops += props[nI];
         }
     }
 
-    if (totalprops != 0.0) {
-        totalprops = 1.0 / totalprops;
+    if (dTotalprops != 0.0) {
+        dTotalprops = 1.0 / dTotalprops;
     } else {
-        totalprops = 0.0;
+        dTotalprops = 0.0;
     }
 
-    for (i = 0; i < cnt; i++) {
-        props[i] *= totalprops;
+    for (nI = 0; nI < cnt; nI++) {
+        props[nI] *= dTotalprops;
     }
 }
 
 CMove SelectBook(CPosition *p) {
-    int i, cnt = 0;
+    int nI, cnt = 0;
     struct BookQuery be[32];
-    CMove moves[32];
+    CMove rgMoves[32];
     double props[32];
-    double random_value = Random();
+    double dRandomValue = Random();
 
-    GetAllBookMoves(p, &cnt, moves, be);
+    GetAllBookMoves(p, &cnt, rgMoves, be);
 
     if (cnt != 0) {
-        SortBook(cnt, moves, be);
+        SortBook(cnt, rgMoves, be);
         CalculatePropabilities(cnt, be, props);
 
-        for (i = 0; i < cnt; i++) {
-            if (props[i] > 0.0) {
-                random_value -= props[i];
-                if (random_value <= 0.0) {
-                    return moves[i];
+        for (nI = 0; nI < cnt; nI++) {
+            if (props[nI] > 0.0) {
+                dRandomValue -= props[nI];
+                if (dRandomValue <= 0.0) {
+                    return rgMoves[nI];
                 }
             }
         }
@@ -426,98 +426,98 @@ CMove SelectBook(CPosition *p) {
 }
 
 void QueryBook(CPosition *p) {
-    int i, cnt = 0;
+    int nI, cnt = 0;
     struct BookQuery be[32];
-    CMove moves[32];
+    CMove rgMoves[32];
     double props[32];
 
-    GetAllBookMoves(p, &cnt, moves, be);
-    SortBook(cnt, moves, be);
+    GetAllBookMoves(p, &cnt, rgMoves, be);
+    SortBook(cnt, rgMoves, be);
     CalculatePropabilities(cnt, be, props);
 
     Print(0, "\tmove    count  win loss draw av. elo prop\n");
-    for (i = 0; i < cnt; i++) {
-        struct BookQuery *entry = be + i;
-        int freq = entry->be.win + entry->be.loss + entry->be.draw;
-        char modifier = ' ';
+    for (nI = 0; nI < cnt; nI++) {
+        struct BookQuery *pEntry = be + nI;
+        int freq = pEntry->be.win + pEntry->be.loss + pEntry->be.draw;
+        char cModifier = ' ';
 
-        if (entry->le.flags & GoodMove) {
-            modifier = '!';
+        if (pEntry->le.flags & GoodMove) {
+            cModifier = '!';
         }
-        if (entry->le.flags & BadMove) {
-            modifier = '?';
+        if (pEntry->le.flags & BadMove) {
+            cModifier = '?';
         }
 
-        char san_buffer[16];
+        char szSanBuffer[16];
         Print(0, "\t%5s%c %6d %3d%% %3d%% %3d%% %5d %3.f\n",
-              p->SAN(moves[i], san_buffer), modifier, freq,
-              (100 * entry->be.win) / freq, (100 * entry->be.loss) / freq,
-              (100 * entry->be.draw) / freq,
+              p->SAN(rgMoves[nI], szSanBuffer), cModifier, freq,
+              (100 * pEntry->be.win) / freq, (100 * pEntry->be.loss) / freq,
+              (100 * pEntry->be.draw) / freq,
 #if WITH_ELO
-              entry->be.nElo ? entry->be.sumElo / entry->be.nElo : 0,
+              pEntry->be.nElo ? pEntry->be.sumElo / pEntry->be.nElo : 0,
 #else
               0,
 #endif
-              props[i] * 100.0);
+              props[nI] * 100.0);
     }
 
     Print(0, "\n");
 }
 
-static void PutLearnEntry(hash_t hk, int learn_value, int flags) {
+static void PutLearnEntry(hash_t hk, int nLearnValue, int flags) {
     if (LearnDB == NULL) {
-        FILE *fin = fopen(LEARN_NAME, "rb");
-        if (fin != NULL) {
-            LearnDB = load_tree(fin);
-            fclose(fin);
+        FILE *pFin = fopen(LEARN_NAME, "rb");
+        if (pFin != NULL) {
+            LearnDB = load_tree(pFin);
+            fclose(pFin);
         }
     }
 
     struct LearnEntry entry;
 
-    entry.learn_value = learn_value;
+    entry.learn_value = nLearnValue;
     entry.flags = flags;
 
     LearnDB = add_node(LearnDB, (char *)&hk, sizeof(hk), (char *)&entry,
                        sizeof(entry));
 }
 
-void CreateLearnDB(char *file_name) {
-    FILE *fin = fopen(file_name, "rb");
+void CreateLearnDB(char *pszFileName) {
+    FILE *pFin = fopen(pszFileName, "rb");
     char buffer[1024];
     CPosition *p;
 
-    if (fin == NULL) {
-        Print(0, "Can't open learn file %s\n", file_name);
+    if (pFin == NULL) {
+        Print(0, "Can't open learn file %s\n", pszFileName);
         return;
     }
 
-    while (fgets(buffer, 1023, fin)) {
-        char *x = buffer;
-        char *move;
+    while (fgets(buffer, 1023, pFin)) {
+        char *pszX = buffer;
+        char *pszMove;
 
         if (buffer[0] == '#')
             continue;
 
         p = CPosition::Initial();
 
-        while ((move = nextToken(&x, " \n\r\t")) != NULL) {
+        while ((pszMove = nextToken(&pszX, " \n\r\t")) != NULL) {
             int flags = 0;
-            char *modifier = move + strlen(move) - 1;
+            char *pszModifier = pszMove + strlen(pszMove) - 1;
             CMove themove;
 
-            if (*modifier == '!') {
+            if (*pszModifier == '!') {
                 flags = GoodMove;
-                *modifier = '\0';
-            } else if (*modifier == '?') {
+                *pszModifier = '\0';
+            } else if (*pszModifier == '?') {
                 flags = BadMove;
-                *modifier = '\0';
+                *pszModifier = '\0';
             }
 
-            themove = p->ParseSAN(move);
+            themove = p->ParseSAN(pszMove);
             if (themove != M_NONE) {
-                char san_buffer[16];
-                Print(0, "%s ", p->SAN(themove, san_buffer));
+                char szSanBuffer[16];
+                Print(0, "%s ", p->SAN(themove, szSanBuffer));
 
                 p->DoMove(themove);
 
@@ -525,7 +525,7 @@ void CreateLearnDB(char *file_name) {
                     PutLearnEntry(p->GetHashKey(), 0, flags);
                 }
             } else {
-                Print(0, "can't parse >%s<\n", move);
+                Print(0, "can't parse >%s<\n", pszMove);
                 break;
             }
         }
@@ -534,62 +534,62 @@ void CreateLearnDB(char *file_name) {
         CPosition::Free(p);
     }
 
-    fclose(fin);
+    fclose(pFin);
 
     if (LearnDB != NULL) {
-        FILE *fout = fopen(LEARN_NAME, "wb");
-        if (fout != NULL) {
-            save_tree(LearnDB, fout);
-            fclose(fout);
+        FILE *pFout = fopen(LEARN_NAME, "wb");
+        if (pFout != NULL) {
+            save_tree(LearnDB, pFout);
+            fclose(pFout);
         } else {
             Print(0, "Failed to save learn file: %s\n", strerror(errno));
         }
     }
 }
 
-static tree_node_t *flatten_internal(tree_node_t *source, tree_node_t *target,
-                                     unsigned int threshold, int *read,
-                                     int *written) {
-    if (source == NULL) {
-        return target;
+static tree_node_t *flatten_internal(tree_node_t *pSource, tree_node_t *pTarget,
+                                     unsigned int dwThreshold, int *pRead,
+                                     int *pWritten) {
+    if (pSource == NULL) {
+        return pTarget;
     }
-    struct BookEntry *entry = (struct BookEntry *)source->value_data;
-    (*read)++;
-    if ((entry->win + entry->draw + entry->loss) > threshold) {
-        target = add_node(target, source->key_data, source->key_len,
-                          source->value_data, source->value_len);
-        (*written)++;
+    struct BookEntry *pEntry = (struct BookEntry *)pSource->value_data;
+    (*pRead)++;
+    if ((pEntry->win + pEntry->draw + pEntry->loss) > dwThreshold) {
+        pTarget = add_node(pTarget, pSource->key_data, pSource->key_len,
+                           pSource->value_data, pSource->value_len);
+        (*pWritten)++;
     }
 
-    target =
-        flatten_internal(source->left_child, target, threshold, read, written);
-    target =
-        flatten_internal(source->right_child, target, threshold, read, written);
+    pTarget =
+        flatten_internal(pSource->left_child, pTarget, dwThreshold, pRead, pWritten);
+    pTarget =
+        flatten_internal(pSource->right_child, pTarget, dwThreshold, pRead, pWritten);
 
-    return target;
+    return pTarget;
 }
 
-void FlattenBook(unsigned int threshold) {
-    int read = 0;
-    int written = 0;
+void FlattenBook(unsigned int dwThreshold) {
+    int nRead = 0;
+    int nWritten = 0;
 
     if (BookDB == NULL) {
         OpenBookFile(&BookDB);
     }
     if (BookDB != NULL) {
-        tree_node_t *flattened =
-            flatten_internal(BookDB, NULL, threshold, &read, &written);
+        tree_node_t *pFlattened =
+            flatten_internal(BookDB, NULL, dwThreshold, &nRead, &nWritten);
 
-        PrintDebug(0, "Read %d entries, wrote %d entries\n", read, written);
+        PrintDebug(0, "Read %d entries, wrote %d entries\n", nRead, nWritten);
 
-        FILE *fout = fopen("Book2.db", "wb");
-        if (fout != NULL) {
-            save_tree(flattened, fout);
-            fclose(fout);
+        FILE *pFout = fopen("Book2.db", "wb");
+        if (pFout != NULL) {
+            save_tree(pFlattened, pFout);
+            fclose(pFout);
         } else {
             Print(0, "Can't write database: %s\n", strerror(errno));
         }
 
-        free_node(flattened);
+        free_node(pFlattened);
     }
 }

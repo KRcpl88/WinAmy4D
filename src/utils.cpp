@@ -77,20 +77,20 @@ void OpenLogFile(const char *name) {
 /**
  * Print something to stdout and to the logfile.
  */
-void CDECL Print(int vb, const char *fmt, ...) {
-    if (vb < g_nVerbosity) {
-        va_list va;
-        va_start(va, fmt);
-        vprintf(fmt, va);
+void CDECL Print(int nVb, const char *fmt, ...) {
+    if (nVb < g_nVerbosity) {
+        va_list pVa;
+        va_start(pVa, fmt);
+        vprintf(fmt, pVa);
         fflush(stdout);
-        va_end(va);
+        va_end(pVa);
     }
     if (LogFile) {
-        va_list va;
-        va_start(va, fmt);
-        vfprintf(LogFile, fmt, va);
+        va_list pVa;
+        va_start(pVa, fmt);
+        vfprintf(LogFile, fmt, pVa);
         fflush(LogFile);
-        va_end(va);
+        va_end(pVa);
     }
 }
 
@@ -106,21 +106,21 @@ void CDECL Print(int vb, const char *fmt, ...) {
  * file when g_nDebugMode is set, unconditionally of the verbosity level. The stdout
  * copy remains gated by g_nVerbosity for the console front-ends.
  */
-void CDECL PrintDebug(int vb, const char *fmt, ...) {
-    if (vb < g_nVerbosity) {
-        va_list va;
-        va_start(va, fmt);
-        vprintf(fmt, va);
+void CDECL PrintDebug(int nVb, const char *fmt, ...) {
+    if (nVb < g_nVerbosity) {
+        va_list pVa;
+        va_start(pVa, fmt);
+        vprintf(fmt, pVa);
         fflush(stdout);
-        va_end(va);
+        va_end(pVa);
     }
 
     if (g_nDebugMode && LogFile) {
-        va_list va;
-        va_start(va, fmt);
-        vfprintf(LogFile, fmt, va);
+        va_list pVa;
+        va_start(pVa, fmt);
+        vfprintf(LogFile, fmt, pVa);
         fflush(LogFile);
-        va_end(va);
+        va_end(pVa);
     }
 }
 
@@ -134,24 +134,24 @@ int ReadLine(char *buffer, int cnt) {
 /**
  * Convert an int representing a time in seconds to a string.
  */
-char *FormatTime(unsigned long secs, char *buffer, size_t len) {
-    if (secs >= 60 * ONE_SECOND) {
-        long mins;
-        secs = secs / ONE_SECOND;
-        mins = secs / 60;
-        secs -= mins * 60;
+char *FormatTime(unsigned long dwSecs, char *buffer, size_t qwLen) {
+    if (dwSecs >= 60 * ONE_SECOND) {
+        long nMins;
+        dwSecs = dwSecs / ONE_SECOND;
+        nMins = dwSecs / 60;
+        dwSecs -= nMins * 60;
 
-        if (mins >= 100)
-            snprintf(buffer, len, "%ld:%02ld", mins, secs);
-        else if (mins >= 10)
-            snprintf(buffer, len, " %ld:%02ld", mins, secs);
+        if (nMins >= 100)
+            snprintf(buffer, qwLen, "%ld:%02ld", nMins, dwSecs);
+        else if (nMins >= 10)
+            snprintf(buffer, qwLen, " %ld:%02ld", nMins, dwSecs);
         else
-            snprintf(buffer, len, "  %ld:%02ld", mins, secs);
+            snprintf(buffer, qwLen, "  %ld:%02ld", nMins, dwSecs);
     } else {
-        int tsecs = (secs % ONE_SECOND) / 10;
-        secs = secs / ONE_SECOND;
+        int nTsecs = (dwSecs % ONE_SECOND) / 10;
+        dwSecs = dwSecs / ONE_SECOND;
 
-        snprintf(buffer, len, "  %2ld.%d", secs, tsecs);
+        snprintf(buffer, qwLen, "  %2ld.%d", dwSecs, nTsecs);
     }
     return buffer;
 }
@@ -159,19 +159,19 @@ char *FormatTime(unsigned long secs, char *buffer, size_t len) {
 /**
  * Convert a score to a string.
  */
-char *FormatScore(int score, char *buffer, size_t len) {
-    if (score > CMLIMIT) {
-        snprintf(buffer, len, "+M%d", (INF - score) / 2 + 1);
-    } else if (score < -CMLIMIT) {
-        snprintf(buffer, len, "-M%d", (score + INF) / 2);
-    } else if (score == CMLIMIT) {
-        snprintf(buffer, len, "+Mate");
-    } else if (score == -CMLIMIT) {
-        snprintf(buffer, len, "-Mate");
-    } else if (score >= 0) {
-        snprintf(buffer, len, "+%d.%03d", score / 1000, score % 1000);
+char *FormatScore(int nScore, char *buffer, size_t qwLen) {
+    if (nScore > CMLIMIT) {
+        snprintf(buffer, qwLen, "+M%d", (INF - nScore) / 2 + 1);
+    } else if (nScore < -CMLIMIT) {
+        snprintf(buffer, qwLen, "-M%d", (nScore + INF) / 2);
+    } else if (nScore == CMLIMIT) {
+        snprintf(buffer, qwLen, "+Mate");
+    } else if (nScore == -CMLIMIT) {
+        snprintf(buffer, qwLen, "-Mate");
+    } else if (nScore >= 0) {
+        snprintf(buffer, qwLen, "+%d.%03d", nScore / 1000, nScore % 1000);
     } else {
-        snprintf(buffer, len, "-%d.%03d", (-score) / 1000, (-score) % 1000);
+        snprintf(buffer, qwLen, "-%d.%03d", (-nScore) / 1000, (-nScore) % 1000);
     }
     return buffer;
 }
@@ -187,30 +187,30 @@ char *FormatScore(int score, char *buffer, size_t len) {
  * Returns:
  *     the pointer to the buffer
  */
-char *FormatCount(unsigned long count, char *buffer, size_t len) {
+char *FormatCount(unsigned long count, char *buffer, size_t qwLen) {
     if (count < 1000) {
-        snprintf(buffer, len, "%lu", count);
+        snprintf(buffer, qwLen, "%lu", count);
     } else if (count < 10000ull) {
-        double scaled = count * 1e-3;
-        snprintf(buffer, len, "%.2fk", scaled);
+        double dScaled = count * 1e-3;
+        snprintf(buffer, qwLen, "%.2fk", dScaled);
     } else if (count < 100000ull) {
-        double scaled = count * 1e-3;
-        snprintf(buffer, len, "%.1fk", scaled);
+        double dScaled = count * 1e-3;
+        snprintf(buffer, qwLen, "%.1fk", dScaled);
     } else if (count < 1000000ull) {
-        int scaled = (int)(count * 1e-3);
-        snprintf(buffer, len, "%dk", scaled);
+        int nScaled = (int)(count * 1e-3);
+        snprintf(buffer, qwLen, "%dk", nScaled);
     } else if (count < 10000000ull) {
-        double scaled = count * 1e-6;
-        snprintf(buffer, len, "%.2fM", scaled);
+        double dScaled = count * 1e-6;
+        snprintf(buffer, qwLen, "%.2fM", dScaled);
     } else if (count < 100000000ull) {
-        double scaled = count * 1e-6;
-        snprintf(buffer, len, "%.1fM", scaled);
+        double dScaled = count * 1e-6;
+        snprintf(buffer, qwLen, "%.1fM", dScaled);
     } else if (count < 1000000000ull) {
-        int scaled = (int)(count * 1e-6);
-        snprintf(buffer, len, "%dM", scaled);
+        int nScaled = (int)(count * 1e-6);
+        snprintf(buffer, qwLen, "%dM", nScaled);
     } else {
-        double scaled = count * 1e-9;
-        snprintf(buffer, len, "%.2fG", scaled);
+        double dScaled = count * 1e-9;
+        snprintf(buffer, qwLen, "%.2fG", dScaled);
     }
     return buffer;
 }
@@ -236,15 +236,15 @@ unsigned long GetTime(void) {
 /**
  * Create a filename for a temporary file
  */
-void GetTmpFileName(char *file_name, size_t len) {
+void GetTmpFileName(char *file_name, size_t qwLen) {
     for (int cnt = 0;; cnt++) {
-        int result;
+        int nResult;
         struct stat dummy;
 
-        snprintf(file_name, len, "save_%03d.pgn", cnt);
-        result = stat(file_name, &dummy);
+        snprintf(file_name, qwLen, "save_%03d.pgn", cnt);
+        nResult = stat(file_name, &dummy);
 
-        if (result < 0)
+        if (nResult < 0)
             return;
     }
 }
@@ -262,9 +262,9 @@ int InputReady(void) {
     return select(1, &rfd, NULL, NULL, &timeout) > 0;
 #else
 #ifdef _WIN32
-    int i;
-    static int init = 0, pipe;
-    static HANDLE inh;
+    int nI;
+    static int nInit = 0, pipe;
+    static HANDLE hInh;
     DWORD dw;
 
     if (!XBoardMode && !_isatty(_fileno(stdin)))
@@ -274,29 +274,29 @@ int InputReady(void) {
         if (stdin->_cnt > 0)
             return stdin->_cnt;
 #endif
-        if (!init) {
-            init = 1;
-            inh = GetStdHandle(STD_INPUT_HANDLE);
-            pipe = !GetConsoleMode(inh, &dw);
+        if (!nInit) {
+            nInit = 1;
+            hInh = GetStdHandle(STD_INPUT_HANDLE);
+            pipe = !GetConsoleMode(hInh, &dw);
             if (!pipe) {
                 SetConsoleMode(
-                    inh, dw & ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
-                FlushConsoleInputBuffer(inh);
+                    hInh, dw & ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
+                FlushConsoleInputBuffer(hInh);
             }
         }
         if (pipe) {
-            if (!PeekNamedPipe(inh, NULL, 0, NULL, &dw, NULL)) {
+            if (!PeekNamedPipe(hInh, NULL, 0, NULL, &dw, NULL)) {
                 return 1;
             }
             return dw;
         } else {
-            GetNumberOfConsoleInputEvents(inh, &dw);
+            GetNumberOfConsoleInputEvents(hInh, &dw);
             return dw <= 1 ? 0 : dw;
         }
     } else {
-        i = _kbhit();
+        nI = _kbhit();
     }
-    return (i);
+    return (nI);
 #else
     return 1;
 #endif
@@ -306,44 +306,44 @@ int InputReady(void) {
 /**
  * Tokenize a string.
  */
-char *nextToken(char **string, const char *delim) {
-    char *start = *string;
-    char *end;
-    const char *t;
+char *nextToken(char **pString, const char *delim) {
+    char *pszStart = *pString;
+    char *pszEnd;
+    const char *pszT;
     bool flag = true;
 
-    if (start == NULL)
+    if (pszStart == NULL)
         return NULL;
 
     while (flag) {
         flag = false;
-        if (*start == '\0')
+        if (*pszStart == '\0')
             return NULL;
-        for (t = delim; *t; t++) {
-            if (*t == *start) {
+        for (pszT = delim; *pszT; pszT++) {
+            if (*pszT == *pszStart) {
                 flag = true;
-                start++;
+                pszStart++;
                 break;
             }
         }
     }
 
-    end = start + 1;
+    pszEnd = pszStart + 1;
 
     for (;;) {
-        if (*end == '\0') {
-            *string = end;
-            return start;
+        if (*pszEnd == '\0') {
+            *pString = pszEnd;
+            return pszStart;
         }
-        for (t = delim; *t; t++) {
-            if (*t == *end) {
-                *end = 0;
-                *string = end + 1;
-                return start;
+        for (pszT = delim; *pszT; pszT++) {
+            if (*pszT == *pszEnd) {
+                *pszEnd = 0;
+                *pString = pszEnd + 1;
+                return pszStart;
             }
         }
 
-        end++;
+        pszEnd++;
     }
 
     /* NEVER REACHED */
@@ -362,22 +362,22 @@ int Percentage(unsigned long dividend, unsigned long divisor) {
         return INT_MAX;
     }
 
-    double ratio = (double)dividend / (double)divisor;
-    return (int)(ratio * 100.0 + 0.5);
+    double dRatio = (double)dividend / (double)divisor;
+    return (int)(dRatio * 100.0 + 0.5);
 }
 
 char *strip(char *buffer) {
-    char *start = buffer;
-    while (*start == ' ') {
-        start++;
+    char *pszStart = buffer;
+    while (*pszStart == ' ') {
+        pszStart++;
     }
 
-    char *end = start + strlen(start) - 1;
+    char *pszEnd = pszStart + strlen(pszStart) - 1;
 
-    while (end > start && *end == ' ') {
-        *end = 0;
-        end--;
+    while (pszEnd > pszStart && *pszEnd == ' ') {
+        *pszEnd = 0;
+        pszEnd--;
     }
 
-    return start;
+    return pszStart;
 }
