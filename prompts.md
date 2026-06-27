@@ -628,6 +628,11 @@ Please add a new button labeled "look" for a new feature for both 2D and 3D mode
 
 
 
+#hungarian
+
+Please review all the variable names and add correct hungarian notation if the variable names don’t already have  hungarian notation.  This will include legacy code in the src and include directories.   Also please rename any multi word variables with ubderscores to use pascal case instead and remove underscores.   However, you may ignore variables if the already have correct hungarian nitation and the only issue is the case is incorrect.   If a variable has correct hungarian notation , including for class objects where correct hungarian notation is no notation, then you may leave the name unchanged.   Also if any variable names have hungarian notation but it is not correct you may also leave it unchanged.   As long as there is hungarian notation , even if its not correct, you may leave it unchanged.
+
+
 
 Please create a plan to make these improvements to the program:
 
