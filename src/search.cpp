@@ -1036,12 +1036,6 @@ void ResortMovesList(int nCnt, CMove *pMvs, unsigned long *pNodes) {
     }
 }
 
-/*
- * This routine searches a chess position. It uses iterative deepening,
- * aspiration window and scout search.
- * Implementation is in search_data.cpp as CSearchData::IterateInt().
- */
-
 #if MP
 /*
  * Helper threads used for the parallel (ABDADA) search. The master search runs
