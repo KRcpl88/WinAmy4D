@@ -47,37 +47,37 @@
 
 CMove get_best_move_from_comment(char *pszComment, CPosition *p,
                                   char *pszEvalBuf) {
-    char *pszPtr = pszComment;
+    char *psz = pszComment;
 
     CMove best_move = M_NONE;
     int best_count = -1;
 
-    while (*pszPtr && *pszPtr != '=') {
-        pszPtr++;
+    while (*psz && *psz != '=') {
+        psz++;
     }
-    pszPtr++;
+    psz++;
 
-    char *pszStartEval = pszPtr;
+    char *pszStartEval = psz;
 
-    while (*pszPtr && *pszPtr != ';') {
-        pszPtr++;
+    while (*psz && *psz != ';') {
+        psz++;
     }
-    pszPtr++;
+    psz++;
 
-    size_t qwEvalLen = pszPtr - pszStartEval - 1;
+    size_t qwEvalLen = psz - pszStartEval - 1;
     strncpy(pszEvalBuf, pszStartEval, qwEvalLen);
     pszEvalBuf[qwEvalLen] = '\0';
 
-    while (*pszPtr && *pszPtr != '[') {
-        pszPtr++;
+    while (*psz && *psz != '[') {
+        psz++;
     }
-    pszPtr++;
+    psz++;
 
-    size_t qwLen = strlen(pszPtr);
+    size_t qwLen = strlen(psz);
 
     char *pszBuffer = (char *)safe_malloc(qwLen + 1);
 
-    strncpy(pszBuffer, pszPtr, qwLen + 1);
+    strncpy(pszBuffer, psz, qwLen + 1);
 
     char *pszBrko;
 
