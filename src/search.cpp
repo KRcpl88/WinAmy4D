@@ -197,11 +197,10 @@ OPTIONAL_ATOMIC unsigned long HTry, HHit, PTry, PHit, STry, SHit;
  *
  */
 bool CSearchData::TerminateSearch() {
-    CSearchData *pSd = this;
-    if ((pSd->m_ulNodesCount + pSd->m_ulQNodesCount) > pSd->m_ulCheckNodesCount) {
+    if ((m_ulNodesCount + m_ulQNodesCount) > m_ulCheckNodesCount) {
         unsigned long dwNow = GetTime();
 
-        pSd->m_ulCheckNodesCount = pSd->m_ulNodesCount + pSd->m_ulQNodesCount + NodesPerCheck;
+        m_ulCheckNodesCount = m_ulNodesCount + m_ulQNodesCount + NodesPerCheck;
         if (AbortSearch)
             return true;
 
@@ -209,7 +208,7 @@ bool CSearchData::TerminateSearch() {
         if (CurTime > (StartTime + ONE_SECOND))
             PrintOK = true;
 
-        if (pSd->m_fMaster && InputReady()) {
+        if (m_fMaster && InputReady()) {
             char szBuffer[64];
             struct SCommand *pTheCommand;
 
@@ -221,8 +220,8 @@ bool CSearchData::TerminateSearch() {
 
             if (szBuffer[0] == '.') {
                 PrintDebug(0, "stat01: %d %ld %d %d %d\n",
-                           (CurTime - StartTime), TotalNodes, pSd->m_wDepth,
-                           pSd->m_wRootMoves - pSd->m_wMoveNum - 1, pSd->m_wRootMoves);
+                           (CurTime - StartTime), TotalNodes, m_wDepth,
+                           m_wRootMoves - m_wMoveNum - 1, m_wRootMoves);
             }
 
             pTheCommand = ParseInput(szBuffer);
@@ -297,17 +296,16 @@ static bool IsRecapture(int nPiece1, int nPiece2) {
 
 void CSearchData::StoreResult(int nScore, int nAlpha, int nBeta,
                         CMove move, int nDepth, int nThreat) {
-    CSearchData *pSd = this;
-    CPosition *p = pSd->m_pPosition;
+    CPosition *p = m_pPosition;
 
     if (!(move.IsTactical()) && nScore > nAlpha) {
-        pSd->m_rguHistoryTab[p->GetTurn()][move.GetFromCoord().BitOffset()][move.GetToCoord().BitOffset()] += nDepth * nDepth;
+        m_rguHistoryTab[p->GetTurn()][move.GetFromCoord().BitOffset()][move.GetToCoord().BitOffset()] += nDepth * nDepth;
     }
 
-    StoreHT(p->GetHashKey(), nScore, nAlpha, nBeta, move, nDepth, nThreat, pSd->m_wPly
+    StoreHT(p->GetHashKey(), nScore, nAlpha, nBeta, move, nDepth, nThreat, m_wPly
 #if MP
             ,
-            pSd->m_pLocalHashTable
+            m_pLocalHashTable
 #endif
     );
 }
@@ -321,20 +319,19 @@ void CSearchData::StoreResult(int nScore, int nAlpha, int nBeta,
  */
 
 int CSearchData::Quies(int nAlpha, int nBeta, int nDepth) {
-    CSearchData *pSd = this;
-    CPosition *p = pSd->m_pPosition;
+    CPosition *p = m_pPosition;
     int nBest;
     CMove move;
     int nTAlpha;
     int nTmp;
 
-    pSd->EnterNode();
+    EnterNode();
 
-    pSd->m_ulQNodesCount++;
+    m_ulQNodesCount++;
     TotalNodes++;
 
     /* max search depth reached */
-    if (pSd->m_wPly >= MaxDepth || p->Repeated(false)) {
+    if (m_wPly >= MaxDepth || p->Repeated(false)) {
         nBest = 0;
         goto EXIT;
     }
@@ -373,7 +370,7 @@ int CSearchData::Quies(int nAlpha, int nBeta, int nDepth) {
 
     nTAlpha = MAX(nAlpha, nBest);
 
-    while ((move = pSd->NextMoveQ(nAlpha)) != M_NONE) {
+    while ((move = NextMoveQ(nAlpha)) != M_NONE) {
         /*
          * A move that captures the opponent's king signals an illegal position
          * (the previous move left a king in check). Capturing the king wins, so
@@ -381,14 +378,14 @@ int CSearchData::Quies(int nAlpha, int nBeta, int nDepth) {
          * which would assert in DoMove.
          */
         if (p->IsKingCapture(move)) {
-            nBest = INF - pSd->m_wPly;
+            nBest = INF - m_wPly;
             goto EXIT;
         }
         p->DoMove(move);
         if (p->InCheck(OPP(p->GetTurn())))
             p->UndoMove(move);
         else {
-            nTmp = -pSd->Quies(-nBeta, -nTAlpha, nDepth - 1);
+            nTmp = -Quies(-nBeta, -nTAlpha, nDepth - 1);
             p->UndoMove(move);
             if (nTmp >= nBeta) {
                 nBest = nTmp;
@@ -405,7 +402,7 @@ int CSearchData::Quies(int nAlpha, int nBeta, int nDepth) {
 
 EXIT:
 
-    pSd->LeaveNode();
+    LeaveNode();
 
     return nBest;
 }
@@ -429,8 +426,7 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
                            int nExclusiveP
 #endif /* MP  */
 ) {
-    CSearchData *pSd = this;
-    CPosition *p = pSd->m_pPosition;
+    CPosition *p = m_pPosition;
     struct SSearchStatus *pSt;
     int nBest = -INF;
     CMove BestMove = M_NONE;
@@ -449,13 +445,13 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
     int nOptimistic = 0;
 #endif
 
-    pSd->EnterNode();
+    EnterNode();
 
-    pSd->m_ulNodesCount++;
+    m_ulNodesCount++;
     TotalNodes++;
 
     /* check for search termination */
-    if (pSd->m_fMaster && pSd->TerminateSearch()) {
+    if (m_fMaster && TerminateSearch()) {
         AbortSearch = true;
         goto EXIT;
     }
@@ -468,21 +464,21 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
      * termination keeps this off the hot path. Checking AbortSearch here also
      * lets helpers stop promptly when StopHelpers() joins them.
      */
-    if (!pSd->m_fMaster) {
+    if (!m_fMaster) {
         if (AbortSearch) {
             goto EXIT;
         }
-        if ((pSd->m_ulNodesCount + pSd->m_ulQNodesCount) >
-            pSd->m_ulCheckNodesCount) {
-            pSd->m_ulCheckNodesCount =
-                pSd->m_ulNodesCount + pSd->m_ulQNodesCount + NodesPerCheck;
+        if ((m_ulNodesCount + m_ulQNodesCount) >
+            m_ulCheckNodesCount) {
+            m_ulCheckNodesCount =
+                m_ulNodesCount + m_ulQNodesCount + NodesPerCheck;
             std::this_thread::yield();
         }
     }
 #endif /* MP */
 
     /* max search depth reached */
-    if (pSd->m_wPly >= MaxDepth)
+    if (m_wPly >= MaxDepth)
         goto EXIT;
 
     /*
@@ -508,14 +504,14 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
      * Check the hashtable
      */
 
-    pSt = pSd->m_pCurrent;
+    pSt = m_pCurrent;
 
     HTry++;
 #if MP
-    switch (ProbeHT(p->GetHashKey(), &nTmp, nDepth, &(pSt->st_hashmove), &fThreat, pSd->m_wPly,
-                    nExclusiveP, pSd->m_pLocalHashTable))
+    switch (ProbeHT(p->GetHashKey(), &nTmp, nDepth, &(pSt->st_hashmove), &fThreat, m_wPly,
+                    nExclusiveP, m_pLocalHashTable))
 #else
-    switch (ProbeHT(p->GetHashKey(), &nTmp, nDepth, &(pSt->st_hashmove), &fThreat, pSd->m_wPly))
+    switch (ProbeHT(p->GetHashKey(), &nTmp, nDepth, &(pSt->st_hashmove), &fThreat, m_wPly))
 #endif /* MP */
     {
     case ExactScore:
@@ -552,7 +548,7 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
      * Probe EGTB
      */
 
-    if (nDepth > EGTBDepth && ProbeEGTB(p, &nTmp, pSd->m_wPly)) {
+    if (nDepth > EGTBDepth && ProbeEGTB(p, &nTmp, m_wPly)) {
         nBest = nTmp;
         goto EXIT;
     }
@@ -599,12 +595,12 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
 
         p->DoNull();
         if (nNextDepth < 0) {
-            nNullMoveScore = -pSd->Quies(-nBeta, -nBeta + 1, 0);
+            nNullMoveScore = -Quies(-nBeta, -nBeta + 1, 0);
         } else {
 #if MP
-            nNullMoveScore = -pSd->NegaScout(-nBeta, -nBeta + 1, nNextDepth, AllNode, 0);
+            nNullMoveScore = -NegaScout(-nBeta, -nBeta + 1, nNextDepth, AllNode, 0);
 #else
-            nNullMoveScore = -pSd->NegaScout(-nBeta, -nBeta + 1, nNextDepth, AllNode);
+            nNullMoveScore = -NegaScout(-nBeta, -nBeta + 1, nNextDepth, AllNode);
 #endif
         }
         p->UndoNull();
@@ -617,13 +613,13 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
                 goto EXIT;
             } else {
                 if (nNextDepth < 0) {
-                    nNullMoveScore = pSd->Quies(nBeta - 1, nBeta, 0);
+                    nNullMoveScore = Quies(nBeta - 1, nBeta, 0);
                 } else {
 #if MP
-                    nNullMoveScore = pSd->NegaScout(nBeta - 1, nBeta, nNextDepth,
+                    nNullMoveScore = NegaScout(nBeta - 1, nBeta, nNextDepth,
                                     CutNodeNoNull, 0);
 #else
-                    nNullMoveScore = pSd->NegaScout(nBeta - 1, nBeta, nNextDepth,
+                    nNullMoveScore = NegaScout(nBeta - 1, nBeta, nNextDepth,
                                     CutNodeNoNull);
 #endif
                 }
@@ -643,7 +639,7 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
 #endif /* NULLMOVE */
 
     LastMove = (p->GetActLog() - 1)->gl_Move;
-    nReduceExtensions = (pSd->m_wPly > 2 * pSd->m_wDepth);
+    nReduceExtensions = (m_wPly > 2 * m_wDepth);
     nTAlpha = nAlpha;
 
     switch (nNodeType) {
@@ -678,18 +674,18 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
     if (nDepth > 2 * OnePly && ((nAlpha + 1) != nBeta) &&
         !p->LegalMove(pSt->st_hashmove)) {
 #if MP
-        pSd->NegaScout(nAlpha, nBeta, nDepth - 2 * OnePly, PVNode, 0);
+        NegaScout(nAlpha, nBeta, nDepth - 2 * OnePly, PVNode, 0);
 #else
-        pSd->NegaScout(nAlpha, nBeta, nDepth - 2 * OnePly, PVNode);
+        NegaScout(nAlpha, nBeta, nDepth - 2 * OnePly, PVNode);
 #endif
-        pSt->st_hashmove = pSd->m_rgPvSave[pSd->m_wPly + 1];
+        pSt->st_hashmove = m_rgPvSave[m_wPly + 1];
     }
 
     /*
      * Search all legal moves
      */
 
-    while ((move = fInCheck ? pSd->NextEvasion() : pSd->NextMove()) != M_NONE) {
+    while ((move = fInCheck ? NextEvasion() : NextMove()) != M_NONE) {
         int nNextDepth = nExtend;
 
         if (move.IsCastle() && !p->MayCastle(move))
@@ -705,7 +701,7 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
          */
 
         if (p->IsKingCapture(move)) {
-            nBest = INF - pSd->m_wPly;
+            nBest = INF - m_wPly;
             goto EXIT;
         }
 
@@ -817,30 +813,30 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
              */
 
             if (nNextDepth < 0) {
-                nTmp = -pSd->Quies(-nBeta, -nTAlpha, 0);
+                nTmp = -Quies(-nBeta, -nTAlpha, 0);
             } else if (BestMove != M_NONE && !fWasFutile) {
 #if MP
-                nTmp = -pSd->NegaScout(-nTAlpha - 1, -nTAlpha, nNextDepth,
+                nTmp = -NegaScout(-nTAlpha - 1, -nTAlpha, nNextDepth,
                                  nNextType, BestMove != M_NONE);
                 if (nTmp != ON_EVALUATION && nTmp > nTAlpha && nTmp < nBeta) {
-                    nTmp = -pSd->NegaScout(-nBeta, -nTmp, nNextDepth,
+                    nTmp = -NegaScout(-nBeta, -nTmp, nNextDepth,
                                      nNodeType == PVNode ? PVNode : AllNode,
                                      BestMove != M_NONE);
                 }
 #else
                 nTmp =
-                    -pSd->NegaScout(-nTAlpha - 1, -nTAlpha, nNextDepth, nNextType);
+                    -NegaScout(-nTAlpha - 1, -nTAlpha, nNextDepth, nNextType);
                 if (nTmp > nTAlpha && nTmp < nBeta) {
-                    nTmp = -pSd->NegaScout(-nBeta, -nTmp, nNextDepth,
+                    nTmp = -NegaScout(-nBeta, -nTmp, nNextDepth,
                                      nNodeType == PVNode ? PVNode : AllNode);
                 }
 #endif /* MP */
             } else {
 #if MP
-                nTmp = -pSd->NegaScout(-nBeta, -nTAlpha, nNextDepth, nNextType,
+                nTmp = -NegaScout(-nBeta, -nTAlpha, nNextDepth, nNextType,
                                  BestMove != M_NONE);
 #else
-                nTmp = -pSd->NegaScout(-nBeta, -nTAlpha, nNextDepth, nNextType);
+                nTmp = -NegaScout(-nBeta, -nTAlpha, nNextDepth, nNextType);
 #endif /* MP */
             }
 
@@ -855,8 +851,8 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
                  * This child is ON_EVALUATION. Remember move and
                  * depth.
                  */
-                append_to_heap(pSd->m_hDeferredHeap, move);
-                append_to_heap(pSd->m_hDeferredHeap,
+                append_to_heap(m_hDeferredHeap, move);
+                append_to_heap(m_hDeferredHeap,
                                EncodeDeferredDepth(nNextDepth +
                                                    DEFERRED_DEPTH_OFFSET));
             } else {
@@ -868,10 +864,10 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
 
                 if (nTmp >= nBeta) {
                     if (!(move.IsTactical())) {
-                        pSd->PutKiller(move);
-                        pSd->m_rgCounterTab[p->GetTurn()][LastMove.GetFromCoord().BitOffset()][LastMove.GetToCoord().BitOffset()] = move;
+                        PutKiller(move);
+                        m_rgCounterTab[p->GetTurn()][LastMove.GetFromCoord().BitOffset()][LastMove.GetToCoord().BitOffset()] = move;
                     }
-                    pSd->StoreResult(nTmp, nAlpha, nBeta, move, nDepth, fThreat);
+                    StoreResult(nTmp, nAlpha, nBeta, move, nDepth, fThreat);
                     nBest = nTmp;
                     goto EXIT;
                 }
@@ -903,25 +899,25 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
      * Now search all moves which were ON_EVALUATION in pass one.
      */
     for (unsigned int dwDeferredIndex =
-             pSd->m_hDeferredHeap->current_section->start;
-         dwDeferredIndex < pSd->m_hDeferredHeap->current_section->end;
+             m_hDeferredHeap->current_section->start;
+         dwDeferredIndex < m_hDeferredHeap->current_section->end;
          dwDeferredIndex += 2) {
 
-        move = pSd->m_hDeferredHeap->data[dwDeferredIndex];
+        move = m_hDeferredHeap->data[dwDeferredIndex];
         int nNextDepth =
-            DecodeDeferredDepth(pSd->m_hDeferredHeap->data[dwDeferredIndex + 1]) -
+            DecodeDeferredDepth(m_hDeferredHeap->data[dwDeferredIndex + 1]) -
             DEFERRED_DEPTH_OFFSET;
 
         p->DoMove(move);
 
-        nTmp = -pSd->NegaScout(-nTAlpha - 1, -nTAlpha, nNextDepth, nNextType, 0);
+        nTmp = -NegaScout(-nTAlpha - 1, -nTAlpha, nNextDepth, nNextType, 0);
 
         if (nTmp == ON_EVALUATION) {
             printf("Oops...\n");
         }
 
         if (nTmp > nTAlpha && nTmp < nBeta) {
-            nTmp = -pSd->NegaScout(-nBeta, -nTAlpha, nNextDepth,
+            nTmp = -NegaScout(-nBeta, -nTAlpha, nNextDepth,
                              nNodeType == PVNode ? PVNode : AllNode, 0);
         }
 
@@ -933,10 +929,10 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
 
         if (nTmp >= nBeta) {
             if (!(move.IsTactical())) {
-                pSd->PutKiller(move);
-                pSd->m_rgCounterTab[p->GetTurn()][LastMove.GetFromCoord().BitOffset()][LastMove.GetToCoord().BitOffset()] = move;
+                PutKiller(move);
+                m_rgCounterTab[p->GetTurn()][LastMove.GetFromCoord().BitOffset()][LastMove.GetToCoord().BitOffset()] = move;
             }
-            pSd->StoreResult(nTmp, nAlpha, nBeta, move, nDepth, fThreat);
+            StoreResult(nTmp, nAlpha, nBeta, move, nDepth, fThreat);
             nBest = nTmp;
             goto EXIT;
         }
@@ -966,22 +962,22 @@ int CSearchData::NegaScout(int nAlpha, int nBeta,
 
     if (BestMove == M_NONE) {
         if (fInCheck)
-            nBest = -INF + pSd->m_wPly;
+            nBest = -INF + m_wPly;
         else
             nBest = 0;
     }
 
     if (!fWasFutile) {
-        pSd->StoreResult(nBest, nAlpha, nBeta, BestMove, nDepth, fThreat);
+        StoreResult(nBest, nAlpha, nBeta, BestMove, nDepth, fThreat);
     }
 
 EXIT:
 
     if (nNodeType == PVNode) {
-        pSd->m_rgPvSave[pSd->m_wPly] = BestMove;
+        m_rgPvSave[m_wPly] = BestMove;
     }
 
-    pSd->LeaveNode();
+    LeaveNode();
     return nBest;
 }
 
@@ -989,9 +985,8 @@ EXIT:
  * Initialize the search variables.
  */
 void CSearchData::InitSearch() {
-    CSearchData *pSd = this;
-    pSd->m_wPly = 0;
-    pSd->m_ulNodesCount = pSd->m_ulQNodesCount = pSd->m_ulCheckNodesCount = 0;
+    m_wPly = 0;
+    m_ulNodesCount = m_ulQNodesCount = m_ulCheckNodesCount = 0;
     RCExt = ChkExt = DiscExt = DblExt = SingExt = PPExt = ZZExt = 0;
     PrintOK = (SearchMode == Analyzing) ? true : false;
     DoneAtRoot = false;
