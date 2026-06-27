@@ -707,12 +707,17 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
         SendMessageW(m_hCbSwapAxes, CB_SETCURSEL, 0, 0);
     }
 
-    // "Look" feature controls, placed to the right of the board-perspective
-    // controls. The Look button is a checkbox that behaves as a toggle: each
-    // click flips look mode on/off and the checkbox reflects the active state.
-    // Both controls remain available in 2D and 3D, so they are never hidden by
-    // SetViewMode; the piece-type dropdown is shown only while look mode is on.
+    // "Look" feature controls. The Look button is a checkbox that behaves as a
+    // toggle: each click flips look mode on/off and the checkbox reflects the
+    // active state. Both controls remain available in 2D and 3D, so they are
+    // never hidden by SetViewMode; the piece-type dropdown is shown only while
+    // look mode is on. Their x-origin depends on the view mode: in 3D they sit
+    // to the far right (here, after the 3D-only controls) so those controls
+    // have room; in 2D they move left next to the plane selector. SetViewMode
+    // calls PositionLookControls to switch between the two slots.
     {
+        m_nLookX3D = x; // far-right slot, used in 3D view.
+        m_nLookX2D = m_nDropdownX + DROPDOWN_W + BTN_GAP; // next to plane selector.
         m_hBtnLook = CreateWindowExW(0, L"BUTTON", L"Look",
             WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
             x, BTN_Y, 70, BTN_H, hWnd,
@@ -720,15 +725,16 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
         x += 70 + BTN_GAP;
         SendMessageW(m_hBtnLook, BM_SETCHECK, BST_UNCHECKED, 0);
 
-        int nCbH = 200; // includes dropdown extent (6 items + decorations).
+        int nCbH = 200; // includes dropdown extent (5 items + decorations).
         m_hCbLookPiece = CreateWindowExW(0, L"COMBOBOX", L"",
             WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
             x, BTN_Y, 110, nCbH, hWnd,
             (HMENU)(INT_PTR)IDC_CB_LOOK_PIECE, hInst, nullptr);
         x += 110 + BTN_GAP;
-        // Index order maps onto the Piece enum: combobox index N == (Pawn + N).
+        // Index order maps onto the Piece enum: combobox index N == (Knight + N).
+        // Pawn is intentionally omitted because a pawn's attack direction
+        // depends on its colour, which the side-agnostic Look mode cannot show.
         static const wchar_t* kLookPieceLabels[] = {
-            L"Pawn",
             L"Knight",
             L"Bishop",
             L"Rook",
@@ -739,8 +745,11 @@ void CWinAmy4dWnd::CreateControls(HWND hWnd) {
             SendMessageW(m_hCbLookPiece, CB_ADDSTRING, 0, (LPARAM)psz);
         }
         SendMessageW(m_hCbLookPiece, CB_SETCURSEL,
-                     (WPARAM)(m_nLookPiece - Pawn), 0);
+                     (WPARAM)(m_nLookPiece - Knight), 0);
     }
+
+    // Initial view is 2D, so dock the Look controls in their 2D slot.
+    PositionLookControls(m_nLookX2D);
 
     // Initial visibility for the current (2D) view mode: the 3D-only view
     // controls are hidden, while the 2D-only plane selector stays visible.
@@ -1123,12 +1132,6 @@ std::vector<CSCoord> CWinAmy4dWnd::ComputeLookAttackSquares() const {
 
     CBitBoard Attacks;
     switch (m_nLookPiece) {
-    case Pawn:
-        // Look mode is side-agnostic: a pawn on this square could be white or
-        // black, so highlight both forward-capture directions.
-        Attacks = ComputeLeapAttacks(m_LookSquare, Pawn)
-                | ComputeLeapAttacks(m_LookSquare, BPawn);
-        break;
     case Knight:
         Attacks = ComputeLeapAttacks(m_LookSquare, Knight);
         break;
@@ -1179,9 +1182,18 @@ void CWinAmy4dWnd::OnToggleLookMode() {
     }
 }
 
-// ---------------------------------------------------------------------------
-// OnSuggestMove — ask the engine to recommend a move for the human player
-// ---------------------------------------------------------------------------
+void CWinAmy4dWnd::PositionLookControls(int nBaseX) {
+    // Button width matches the value used when creating m_hBtnLook.
+    constexpr int nLookBtnW = 70;
+    if (m_hBtnLook) {
+        SetWindowPos(m_hBtnLook, nullptr, nBaseX, BTN_Y, 0, 0,
+                     SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    if (m_hCbLookPiece) {
+        SetWindowPos(m_hCbLookPiece, nullptr, nBaseX + nLookBtnW + BTN_GAP,
+                     BTN_Y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+}
 
 void CWinAmy4dWnd::OnSuggestMove() {
     if (m_Game.IsEngineRunning()) {
@@ -1929,6 +1941,9 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         ShowWindow(m_hBtnZoomOut,  SW_SHOW);
         ShowWindow(m_hBtnRotateGrid, SW_SHOW);
         ShowWindow(m_hCbSwapAxes,  SW_HIDE);
+        // Move the Look controls to their far-right slot so the 3D-only
+        // controls (grid type, rotate grid, zoom) have room on the left.
+        PositionLookControls(m_nLookX3D);
         // Enable the 3D-only View menu items.
         EnableMenuItem(hMenu, IDM_VIEW_SHOW_GRIDLINES, MF_BYCOMMAND | MF_ENABLED);
         EnableMenuItem(hMenu, IDM_VIEW_RESET_VIEW,     MF_BYCOMMAND | MF_ENABLED);
@@ -1957,6 +1972,9 @@ void CWinAmy4dWnd::SetViewMode(ViewMode mode) {
         ShowWindow(m_hBtnZoomOut,  SW_HIDE);
         ShowWindow(m_hBtnRotateGrid, SW_HIDE);
         ShowWindow(m_hCbSwapAxes,  SW_SHOW);
+        // Dock the Look controls next to the 2D plane selector now that the
+        // 3D-only controls are hidden.
+        PositionLookControls(m_nLookX2D);
         // Disable the 3D-only View menu items.
         EnableMenuItem(hMenu, IDM_VIEW_SHOW_GRIDLINES,
             MF_BYCOMMAND | MF_GRAYED | MF_DISABLED);
@@ -2389,11 +2407,11 @@ LRESULT CWinAmy4dWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             break;
 
         case IDC_CB_LOOK_PIECE:
-            // Look-mode piece selector: combobox index N maps to (Pawn + N).
+            // Look-mode piece selector: combobox index N maps to (Knight + N).
             if (code == CBN_SELCHANGE) {
                 int nSel = (int)SendMessageW(m_hCbLookPiece, CB_GETCURSEL, 0, 0);
                 if (nSel != CB_ERR) {
-                    m_nLookPiece = Pawn + nSel;
+                    m_nLookPiece = Knight + nSel;
                     InvalidateRect(m_hWnd, nullptr, TRUE);
                     if (m_hRender3D) {
                         InvalidateRect(m_hRender3D, nullptr, FALSE);

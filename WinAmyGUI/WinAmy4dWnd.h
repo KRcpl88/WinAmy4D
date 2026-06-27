@@ -88,9 +88,11 @@ private:
     // Toggle look mode from the button's checkbox state, updating control
     // visibility and repainting.
     void OnToggleLookMode();
+    // Position the Look button and its piece-type dropdown so their left edge
+    // starts at nBaseX (the dropdown follows the button).
+    void PositionLookControls(int nBaseX);
     // Compute every square the selected piece type attacks from the chosen
     // look location on the current board (empty if look mode is inactive).
-    // Pawns are side-agnostic: both white and black pawn attacks are included.
     std::vector<CSCoord> ComputeLookAttackSquares() const;
     // The square highlighted as "selected" for rendering: the look location
     // while look mode is active, otherwise the click-to-move selection.
@@ -147,6 +149,12 @@ private:
     // Shared toolbar x-origin for the grid-type (3D) and swap-axes (2D)
     // dropdowns so they occupy the same slot when the view mode changes.
     int  m_nDropdownX    = 0;
+
+    // Toolbar x-origins for the Look button in each view mode. In 2D the Look
+    // controls sit just right of the plane selector; in 3D they move to the far
+    // right so the 3D-only controls have room. SetViewMode repositions them.
+    int  m_nLookX2D      = 0;
+    int  m_nLookX3D      = 0;
 
     // ---- Owned subsystems (group B) ------------------------------------
     GameController   m_Game;
