@@ -476,10 +476,10 @@ void StoreST(hash_t qwKey, int nScore) {
  */
 
 void ClearHashTable(void) {
-    unsigned int dwI;
+    unsigned int i;
     struct HTEntry *h = TranspositionTable;
 
-    for (dwI = 0; dwI < HT_Size; dwI++, h++) {
+    for (i = 0; i < HT_Size; i++, h++) {
         h->ht_Signature = 0;
         h->ht_Flags = 0;
     }
@@ -494,17 +494,17 @@ void AgeHashTable(void) {
 }
 
 void ClearPawnHashTable(void) {
-    unsigned int dwI;
+    unsigned int i;
     struct PTEntry *ph;
     struct STEntry *pSh;
 
     ph = PawnTable;
-    for (dwI = 0; dwI < PT_Size; dwI++, ph++) {
+    for (i = 0; i < PT_Size; i++, ph++) {
         ph->pt_Score = PT_INVALID;
     }
 
     pSh = ScoreTable;
-    for (dwI = 0; dwI < ST_Size; dwI++, pSh++) {
+    for (i = 0; i < ST_Size; i++, pSh++) {
         pSh->st_Score = PT_INVALID;
     }
 }
@@ -567,20 +567,20 @@ void AllocateHT(void) {
           HT_Bits, PT_Bits, ST_Bits);
 
 #if MP
-    for (int nI = 0; nI < MUTEX_COUNT; nI++) {
-        TranspositionMutex[nI] = 0;
-        PawnMutex[nI] = 0;
-        ScoreMutex[nI] = 0;
+    for (int i = 0; i < MUTEX_COUNT; i++) {
+        TranspositionMutex[i] = 0;
+        PawnMutex[i] = 0;
+        ScoreMutex[i] = 0;
     }
 #endif
 }
 
 void ShowHashStatistics(void) {
-    unsigned int dwI;
+    unsigned int i;
     unsigned int dwCnt = 0;
     struct HTEntry *h = TranspositionTable;
 
-    for (dwI = 0; dwI < HT_Size; dwI++, h++) {
+    for (i = 0; i < HT_Size; i++, h++) {
         if ((h->ht_Flags & HT_AGE) == HTGeneration)
             dwCnt++;
     }
@@ -588,8 +588,8 @@ void ShowHashStatistics(void) {
     char szBuf1[16], szBuf2[16];
 
     Print(1, "Hashtable 1:  entries = %s, use = %s (%d %%)\n",
-          FormatCount(dwI, szBuf1, sizeof(szBuf1)),
-          FormatCount(dwCnt, szBuf2, sizeof(szBuf2)), Percentage(dwCnt, dwI));
+          FormatCount(i, szBuf1, sizeof(szBuf1)),
+          FormatCount(dwCnt, szBuf2, sizeof(szBuf2)), Percentage(dwCnt, i));
     Print(1, "              store failed = %s (%d %%)\n",
           FormatCount(HTStoreFailed, szBuf1, sizeof(szBuf1)),
           Percentage(HTStoreFailed, HTStoreTried));
@@ -644,24 +644,24 @@ void GuessHTSizes(char *pszSize) {
 }
 
 void HashInit(void) {
-    unsigned int dwI, dwJ, dwK;
+    unsigned int i, j, k;
 
     InitRandom(0);
 
-    for (dwI = 0; dwI < 2; dwI++) {
-        for (dwJ = 0; dwJ < 8; dwJ++) {
-            for (dwK = 0; dwK < CBitBoard::SIZE; dwK++) {
-                HashKeys[dwI][dwJ][dwK] = Random64();
+    for (i = 0; i < 2; i++) {
+        for (j = 0; j < 8; j++) {
+            for (k = 0; k < CBitBoard::SIZE; k++) {
+                HashKeys[i][j][k] = Random64();
             }
         }
     }
 
-    for (dwI = 0; dwI < CBitBoard::SIZE; dwI++) {
-        HashKeysEP[dwI] = Random64();
+    for (i = 0; i < CBitBoard::SIZE; i++) {
+        HashKeysEP[i] = Random64();
     }
 
-    for (dwI = 0; dwI < 16; dwI++) {
-        HashKeysCastle[dwI] = Random64();
+    for (i = 0; i < 16; i++) {
+        HashKeysCastle[i] = Random64();
     }
 
     STMKey = Random64();

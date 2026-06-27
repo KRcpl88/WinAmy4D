@@ -273,14 +273,14 @@ void BookupQuiet(char *pszFileName) { BookupInternal(pszFileName, 9); }
 
 static void GetAllBookMoves(CPosition *p, int *cnt, CMove *book_moves,
                             struct BookQuery *pEntries) {
-    unsigned int dwI;
+    unsigned int i;
 
     heap_t heap = allocate_heap();
     p->LegalMoves(heap);
 
-    for (dwI = heap->current_section->start; dwI < heap->current_section->end;
-         dwI++) {
-        CMove Move = heap->data[dwI];
+    for (i = heap->current_section->start; i < heap->current_section->end;
+         i++) {
+        CMove Move = heap->data[i];
         struct BookEntry *be = NULL;
         struct LearnEntry *pLe = NULL;
 
@@ -312,23 +312,23 @@ static void SortBook(int cnt, CMove *pMvs, struct BookQuery *pEntries) {
     bool fDone = false;
 
     while (!fDone) {
-        int nI;
+        int i;
 
         fDone = true;
 
-        for (nI = 1; nI < cnt; nI++) {
-            int nF1 = pEntries[nI - 1].be.win + pEntries[nI - 1].be.loss +
-                     pEntries[nI - 1].be.draw;
+        for (i = 1; i < cnt; i++) {
+            int nF1 = pEntries[i - 1].be.win + pEntries[i - 1].be.loss +
+                     pEntries[i - 1].be.draw;
             int nF2 =
-                pEntries[nI].be.win + pEntries[nI].be.loss + pEntries[nI].be.draw;
+                pEntries[i].be.win + pEntries[i].be.loss + pEntries[i].be.draw;
             if (nF1 < nF2) {
-                struct BookQuery betmp = pEntries[nI];
+                struct BookQuery betmp = pEntries[i];
                 CMove Move;
-                pEntries[nI] = pEntries[nI - 1];
-                pEntries[nI - 1] = betmp;
-                Move = pMvs[nI];
-                pMvs[nI] = pMvs[nI - 1];
-                pMvs[nI - 1] = Move;
+                pEntries[i] = pEntries[i - 1];
+                pEntries[i - 1] = betmp;
+                Move = pMvs[i];
+                pMvs[i] = pMvs[i - 1];
+                pMvs[i - 1] = Move;
 
                 fDone = false;
             }
@@ -341,20 +341,20 @@ static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
     int nTotal = 0;
     double dTotalprops;
     int nLimit;
-    int nI;
+    int i;
 
-    for (nI = 0; nI < cnt; nI++) {
-        nTotal += pEntries[nI].be.win + pEntries[nI].be.loss + pEntries[nI].be.draw;
+    for (i = 0; i < cnt; i++) {
+        nTotal += pEntries[i].be.win + pEntries[i].be.loss + pEntries[i].be.draw;
     }
 
     nLimit = nTotal / 16;
     dTotalprops = 0.0;
 
-    for (nI = 0; nI < cnt; nI++) {
-        struct BookQuery *pEntry = pEntries + nI;
+    for (i = 0; i < cnt; i++) {
+        struct BookQuery *pEntry = pEntries + i;
         int nFreq = pEntry->be.win + pEntry->be.loss + pEntry->be.draw;
 
-        rgdProps[nI] = 0.0;
+        rgdProps[i] = 0.0;
         if (nFreq > nLimit) {
             int nAvelo = 2000;
 
@@ -364,16 +364,16 @@ static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
             }
 #endif
 
-            rgdProps[nI] = nAvelo * nFreq *
+            rgdProps[i] = nAvelo * nFreq *
                        (double)(2 * pEntry->be.win + pEntry->be.draw) /
                        (double)(nFreq);
 
             if (pEntry->le.flags & GoodMove) {
-                rgdProps[nI] *= 2;
+                rgdProps[i] *= 2;
             }
 
             if (pEntry->le.flags & BadMove) {
-                rgdProps[nI] = 0.0;
+                rgdProps[i] = 0.0;
             }
 
             /*
@@ -381,10 +381,10 @@ static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
              */
 
             if (pEntry->be.win == 0) {
-                rgdProps[nI] = 0.0;
+                rgdProps[i] = 0.0;
             }
 
-            dTotalprops += rgdProps[nI];
+            dTotalprops += rgdProps[i];
         }
     }
 
@@ -394,13 +394,13 @@ static void CalculatePropabilities(int cnt, struct BookQuery *pEntries,
         dTotalprops = 0.0;
     }
 
-    for (nI = 0; nI < cnt; nI++) {
-        rgdProps[nI] *= dTotalprops;
+    for (i = 0; i < cnt; i++) {
+        rgdProps[i] *= dTotalprops;
     }
 }
 
 CMove SelectBook(CPosition *p) {
-    int nI, cnt = 0;
+    int i, cnt = 0;
     struct BookQuery be[32];
     CMove rgMoves[32];
     double rgdProps[32];
@@ -412,11 +412,11 @@ CMove SelectBook(CPosition *p) {
         SortBook(cnt, rgMoves, be);
         CalculatePropabilities(cnt, be, rgdProps);
 
-        for (nI = 0; nI < cnt; nI++) {
-            if (rgdProps[nI] > 0.0) {
-                dRandomValue -= rgdProps[nI];
+        for (i = 0; i < cnt; i++) {
+            if (rgdProps[i] > 0.0) {
+                dRandomValue -= rgdProps[i];
                 if (dRandomValue <= 0.0) {
-                    return rgMoves[nI];
+                    return rgMoves[i];
                 }
             }
         }
@@ -426,7 +426,7 @@ CMove SelectBook(CPosition *p) {
 }
 
 void QueryBook(CPosition *p) {
-    int nI, cnt = 0;
+    int i, cnt = 0;
     struct BookQuery be[32];
     CMove rgMoves[32];
     double rgdProps[32];
@@ -436,8 +436,8 @@ void QueryBook(CPosition *p) {
     CalculatePropabilities(cnt, be, rgdProps);
 
     Print(0, "\tmove    count  win loss draw av. elo prop\n");
-    for (nI = 0; nI < cnt; nI++) {
-        struct BookQuery *pEntry = be + nI;
+    for (i = 0; i < cnt; i++) {
+        struct BookQuery *pEntry = be + i;
         int nFreq = pEntry->be.win + pEntry->be.loss + pEntry->be.draw;
         char cModifier = ' ';
 
@@ -450,7 +450,7 @@ void QueryBook(CPosition *p) {
 
         char szSanBuffer[16];
         Print(0, "\t%5s%c %6d %3d%% %3d%% %3d%% %5d %3.f\n",
-              p->SAN(rgMoves[nI], szSanBuffer), cModifier, nFreq,
+              p->SAN(rgMoves[i], szSanBuffer), cModifier, nFreq,
               (100 * pEntry->be.win) / nFreq, (100 * pEntry->be.loss) / nFreq,
               (100 * pEntry->be.draw) / nFreq,
 #if WITH_ELO
@@ -458,7 +458,7 @@ void QueryBook(CPosition *p) {
 #else
               0,
 #endif
-              rgdProps[nI] * 100.0);
+              rgdProps[i] * 100.0);
     }
 
     Print(0, "\n");

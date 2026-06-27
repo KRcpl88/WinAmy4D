@@ -309,7 +309,7 @@ int InputReady(void) {
 char *nextToken(char **pString, const char *pszDelim) {
     char *pszStart = *pString;
     char *pszEnd;
-    const char *pszT;
+    const char *t;
     bool fFlag = true;
 
     if (pszStart == NULL)
@@ -319,8 +319,8 @@ char *nextToken(char **pString, const char *pszDelim) {
         fFlag = false;
         if (*pszStart == '\0')
             return NULL;
-        for (pszT = pszDelim; *pszT; pszT++) {
-            if (*pszT == *pszStart) {
+        for (t = pszDelim; *t; t++) {
+            if (*t == *pszStart) {
                 fFlag = true;
                 pszStart++;
                 break;
@@ -335,8 +335,8 @@ char *nextToken(char **pString, const char *pszDelim) {
             *pString = pszEnd;
             return pszStart;
         }
-        for (pszT = pszDelim; *pszT; pszT++) {
-            if (*pszT == *pszEnd) {
+        for (t = pszDelim; *t; t++) {
+            if (*t == *pszEnd) {
                 *pszEnd = 0;
                 *pString = pszEnd + 1;
                 return pszStart;

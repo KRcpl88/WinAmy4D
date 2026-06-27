@@ -119,7 +119,7 @@ int CPosition::CheckExtend() {
 
         CBitBoard ff;
 
-        int nI;
+        int i;
         int nCnt = 0;
 
         DblExt++;
@@ -128,15 +128,15 @@ int CPosition::CheckExtend() {
         Att &= p->m_SlidingPieces;
 
         while (Att) {
-            nI = (Att).FindSetBit();
+            i = (Att).FindSetBit();
             Att.ClearLowestBit();
-            ff &= ~Ray[nI][nKp];
+            ff &= ~Ray[i][nKp];
         }
 
         while (ff) {
-            nI = (ff).FindSetBit();
+            i = (ff).FindSetBit();
             ff.ClearLowestBit();
-            if (!(p->m_rgAtkFr[nI] & p->m_rgMask[OPP(p->m_nTurn)][0]))
+            if (!(p->m_rgAtkFr[i] & p->m_rgMask[OPP(p->m_nTurn)][0]))
                 nCnt++;
             if (nCnt > 1)
                 return ExtendDoubleCheck;
@@ -148,7 +148,7 @@ int CPosition::CheckExtend() {
 
         int nAtp = (Att).FindSetBit();
         int nCnt = 0;
-        int nI;
+        int i;
         int nNd = 0;
 
         /* discovered check */
@@ -159,15 +159,15 @@ int CPosition::CheckExtend() {
 
         ff = KingEPM[nKp] & ~p->m_rgMask[p->m_nTurn][0];
 
-        nI = (Att).FindSetBit();
-        if (p->m_SlidingPieces.TstBit(nI))
-            ff &= ~Ray[nI][nKp];
+        i = (Att).FindSetBit();
+        if (p->m_SlidingPieces.TstBit(i))
+            ff &= ~Ray[i][nKp];
 
         /* check for king flight squares */
         while (ff) {
-            nI = (ff).FindSetBit();
+            i = (ff).FindSetBit();
             ff.ClearLowestBit();
-            if (!(p->m_rgAtkFr[nI] & p->m_rgMask[OPP(p->m_nTurn)][0]))
+            if (!(p->m_rgAtkFr[i] & p->m_rgMask[OPP(p->m_nTurn)][0]))
                 nCnt++;
             if (nCnt > 1)
                 return nNd;
@@ -180,9 +180,9 @@ int CPosition::CheckExtend() {
               BishopEPM[nKp];
         while (Tmp) {
             CBitBoard Tmp2;
-            nI = (Tmp).FindSetBit();
+            i = (Tmp).FindSetBit();
             Tmp.ClearLowestBit();
-            Tmp2 = InterPath[nI][nKp];
+            Tmp2 = InterPath[i][nKp];
             if (Tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & Tmp2)) {
                 Tmp2 &= p->m_rgMask[p->m_nTurn][0];
                 if ((Tmp2).CountBits() == 1) {
@@ -195,9 +195,9 @@ int CPosition::CheckExtend() {
               RookEPM[nKp];
         while (Tmp) {
             CBitBoard Tmp2;
-            nI = (Tmp).FindSetBit();
+            i = (Tmp).FindSetBit();
             Tmp.ClearLowestBit();
-            Tmp2 = InterPath[nI][nKp];
+            Tmp2 = InterPath[i][nKp];
             if (Tmp2 && !(p->m_rgMask[OPP(p->m_nTurn)][0] & Tmp2)) {
                 Tmp2 &= p->m_rgMask[p->m_nTurn][0];
                 if ((Tmp2).CountBits() == 1) {
@@ -218,23 +218,23 @@ int CPosition::CheckExtend() {
             Tmp = InterPath[nAtp][nKp];
             while (Tmp) {
                 CBitBoard Tmp2;
-                nI = (Tmp).FindSetBit();
+                i = (Tmp).FindSetBit();
                 Tmp.ClearLowestBit();
-                if ((Tmp2 = p->m_rgAtkFr[nI] & def)) {
+                if ((Tmp2 = p->m_rgAtkFr[i] & def)) {
                     nCnt += (Tmp2).CountBits();
                 }
                 if (p->m_nTurn == White) {
                     const int nLw = static_cast<int>(
-                        CBitBoard::LEVEL_WIDTH[CSCoord(static_cast<uint16_t>(nI)).m_nLevel]);
-                    if ((nI - nLw) > 0 && p->m_rgMask[White][Pawn].TstBit(nI - nLw) &&
-                        def.TstBit(nI - nLw))
+                        CBitBoard::LEVEL_WIDTH[CSCoord(static_cast<uint16_t>(i)).m_nLevel]);
+                    if ((i - nLw) > 0 && p->m_rgMask[White][Pawn].TstBit(i - nLw) &&
+                        def.TstBit(i - nLw))
                         nCnt++;
                 }
                 if (p->m_nTurn == Black) {
                     const int nLw = static_cast<int>(
-                        CBitBoard::LEVEL_WIDTH[CSCoord(static_cast<uint16_t>(nI)).m_nLevel]);
-                    if ((nI + nLw) < static_cast<int>(CBitBoard::SIZE) &&
-                        p->m_rgMask[Black][Pawn].TstBit(nI + nLw) && def.TstBit(nI + nLw))
+                        CBitBoard::LEVEL_WIDTH[CSCoord(static_cast<uint16_t>(i)).m_nLevel]);
+                    if ((i + nLw) < static_cast<int>(CBitBoard::SIZE) &&
+                        p->m_rgMask[Black][Pawn].TstBit(i + nLw) && def.TstBit(i + nLw))
                         nCnt++;
                 }
                 if (nCnt > 1)

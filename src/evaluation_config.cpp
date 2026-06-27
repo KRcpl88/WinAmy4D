@@ -241,9 +241,9 @@ static void print_piece_square_table(FILE *pFout, int16_t *pPieceSquareTable) {
 static void print_array(FILE *pFout, const char *pszPrefix, int16_t *pArray,
                         size_t qwCount) {
     fprintf(pFout, "  %s: [", pszPrefix);
-    for (size_t qwI = 0; qwI < qwCount; qwI++) {
-        fprintf(pFout, "%d, ", (int)pArray[qwI]);
-        if ((qwI % 10) == 9) {
+    for (size_t i = 0; i < qwCount; i++) {
+        fprintf(pFout, "%d, ", (int)pArray[i]);
+        if ((i % 10) == 9) {
             fprintf(pFout, "\n    ");
         }
     }
@@ -274,10 +274,10 @@ static void set_piece_square_table(struct YamlNode *pNode, const char *pszName,
                   static_cast<int>(CBitBoard::SIZE), pszName, ArrayResult.elements_read);
         }
         Print(9, "%s:\n", pszName);
-        for (unsigned int dwI = 0; dwI < ArrayResult.elements_read; dwI++) {
-            pTargetTable[dwI] = (int16_t)rgPieceSquareTable[dwI];
-            Print(9, "%5d, ", rgPieceSquareTable[dwI]);
-            if (dwI % CBitBoard::MAX_LEVEL_WIDTH == (CBitBoard::MAX_LEVEL_WIDTH - 1)) {
+        for (unsigned int i = 0; i < ArrayResult.elements_read; i++) {
+            pTargetTable[i] = (int16_t)rgPieceSquareTable[i];
+            Print(9, "%5d, ", rgPieceSquareTable[i]);
+            if (i % CBitBoard::MAX_LEVEL_WIDTH == (CBitBoard::MAX_LEVEL_WIDTH - 1)) {
                 Print(9, "\n");
             }
         }
@@ -297,9 +297,9 @@ static void set_array(struct YamlNode *pNode, const char *pszName, int16_t *pTar
                   pszName, ArrayResult.elements_read);
         }
         Print(9, "%s: ", pszName);
-        for (unsigned int dwI = 0; dwI < ArrayResult.elements_read; dwI++) {
-            pTargetArray[dwI] = (int16_t)pDestination[dwI];
-            Print(9, "%d, ", pDestination[dwI]);
+        for (unsigned int i = 0; i < ArrayResult.elements_read; i++) {
+            pTargetArray[i] = (int16_t)pDestination[i];
+            Print(9, "%d, ", pDestination[i]);
         }
         Print(9, "\n");
     }

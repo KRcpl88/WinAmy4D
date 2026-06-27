@@ -176,34 +176,34 @@ static struct TimeControl parse_timecontrol(char *rgArgs[]) {
 
     struct TimeControl Result = globalTimeControl;
 
-    char *pszX = strtok(rgArgs[0], "/+ \t\n\r");
-    if (pszX) {
-        if (!strcmp(pszX, sudden_death))
+    char *x = strtok(rgArgs[0], "/+ \t\n\r");
+    if (x) {
+        if (!strcmp(x, sudden_death))
             nTtmoves = 0;
-        else if (!strcmp(pszX, fixed))
+        else if (!strcmp(x, fixed))
             nTtmoves = -1;
         else
-            sscanf(pszX, "%d", &nTtmoves);
-        pszX = strtok(NULL, "/ \t\n\r");
-        if (pszX) {
-            sscanf(pszX, "%d", &nTtime);
-            for (pszX++; *pszX; pszX++) {
-                if (*pszX == '+') {
-                    sscanf(pszX + 1, "%d", &nInc);
+            sscanf(x, "%d", &nTtmoves);
+        x = strtok(NULL, "/ \t\n\r");
+        if (x) {
+            sscanf(x, "%d", &nTtime);
+            for (x++; *x; x++) {
+                if (*x == '+') {
+                    sscanf(x + 1, "%d", &nInc);
                     break;
                 }
             }
             if (rgArgs[1] != NULL) {
-                pszX = strtok(rgArgs[1], " /\n\t\r");
+                x = strtok(rgArgs[1], " /\n\t\r");
                 nTtmoves2 = -1;
-                if (!strcmp(pszX, sudden_death))
+                if (!strcmp(x, sudden_death))
                     nTtmoves2 = 0;
                 else
-                    sscanf(pszX, "%d", &nTtmoves2);
-                pszX = strtok(NULL, " /\n\t\r");
-                if (pszX) {
+                    sscanf(x, "%d", &nTtmoves2);
+                x = strtok(NULL, " /\n\t\r");
+                if (x) {
                     nTtime2 = -1;
-                    sscanf(pszX, "%d", &nTtime2);
+                    sscanf(x, "%d", &nTtime2);
                     if (nTtmoves2 >= 0 && nTtime2 > 0)
                         TwoTimeControls = true;
                 }

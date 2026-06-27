@@ -218,10 +218,10 @@ bool CUCoord::GetOutline( __inout std::unordered_set<CChord> & Chords, EOutlineT
 
     CUCoordFloat Origin = (CUCoordFloat)(*this);
 
-    for (size_t qwI = 0; (g_cCellOutline[nIndex] > qwI); ++qwI)
+    for (size_t i = 0; (g_cCellOutline[nIndex] > i); ++i)
     {
-        Chords.insert( CChord(Origin + g_krgpCellOutline[nIndex][qwI].GetStart(), 
-            Origin + g_krgpCellOutline[nIndex][qwI].GetEnd()));
+        Chords.insert( CChord(Origin + g_krgpCellOutline[nIndex][i].GetStart(), 
+            Origin + g_krgpCellOutline[nIndex][i].GetEnd()));
     }
 
     return true;

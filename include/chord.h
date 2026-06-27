@@ -33,8 +33,8 @@ template <>
 struct hash<CUCoordFloat> {
     size_t operator()(const CUCoordFloat& v) const noexcept {
         size_t nHash = 0;
-        for (int nI = 0; nI < 3; ++nI) {
-            double dVal = v[nI];
+        for (int i = 0; i < 3; ++i) {
+            double dVal = v[i];
             size_t nBits;
             memcpy(&nBits, &dVal, sizeof(nBits));
             nHash ^= nBits + 0x9e3779b97f4a7c15ULL + (nHash << 6) + (nHash >> 2);

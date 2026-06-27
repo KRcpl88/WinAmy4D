@@ -70,14 +70,14 @@ static int sig(int nPawn, int nKnight, int nBishop, int nRook, int nQueen) {
 }
 
 void RecogInit(void) {
-    int nI;
+    int i;
 
-    for (nI = 0; nI < 64; nI++) {
-        Recognizers[nI] = NULL;
+    for (i = 0; i < 64; i++) {
+        Recognizers[i] = NULL;
     }
 
-    for (nI = 0; nI < 32; nI++) {
-        RecognizerAvailable[nI] = 0;
+    for (i = 0; i < 32; i++) {
+        RecognizerAvailable[i] = 0;
     }
 
     /*

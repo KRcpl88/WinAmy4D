@@ -94,7 +94,7 @@ void SaveGame(CPosition *p, char *pszFileName) {
     if (p->GetPly() > 0) {
         FILE *pFout = fopen(pszFileName, "w");
         if (pFout) {
-            int nI;
+            int i;
             int nPly = p->GetPly();
             int nWidth = 0;
             const char *pszGameend;
@@ -126,20 +126,20 @@ void SaveGame(CPosition *p, char *pszFileName) {
             fprintf(pFout, "[Black \"%s\"]\n", getBlackName());
             fprintf(pFout, "[Result \"%s\"]\n\n", szShortgameend);
 
-            for (nI = nPly; nI > 0; nI--) {
+            for (i = nPly; i > 0; i--) {
                 CMove Move = (p->GetActLog() - 1)->gl_Move;
-                PGNMoveHistory[nI - 1] = Move;
+                PGNMoveHistory[i - 1] = Move;
                 p->UndoMove(Move);
             }
 
-            for (nI = 0; nI < nPly; nI++) {
-                CMove Move = PGNMoveHistory[nI];
-                if ((nI & 1) == 0) {
-                    fprintf(pFout, "%d. ", (nI / 2) + 1);
+            for (i = 0; i < nPly; i++) {
+                CMove Move = PGNMoveHistory[i];
+                if ((i & 1) == 0) {
+                    fprintf(pFout, "%d. ", (i / 2) + 1);
                     nWidth += 3;
-                    if (nI > 18)
+                    if (i > 18)
                         nWidth++;
-                    if (nI > 98)
+                    if (i > 98)
                         nWidth++;
                 }
 

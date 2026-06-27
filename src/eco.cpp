@@ -63,19 +63,19 @@ void ParseEcoPgn(char *pszFname) {
     tree_node_t *pNode = NULL;
 
     while (fgets(szBuffer, sizeof(szBuffer) - 1, pFin) != NULL) {
-        char *pszX;
+        char *x;
         strtok(szBuffer, " \t");
-        pszX = strtok(NULL, "]\n\r");
-        strncpy(szName, pszX, sizeof(szName) - 1);
+        x = strtok(NULL, "]\n\r");
+        strncpy(szName, x, sizeof(szName) - 1);
 
         Print(0, ".");
 
         CPosition *p = CPosition::Initial();
 
         if (fgets(szBuffer, 1024, pFin) != NULL) {
-            for (pszX = strtok(szBuffer, " \n\r\t"); pszX;
-                 pszX = strtok(NULL, " \n\r\t")) {
-                CMove Move = p->ParseSAN(pszX);
+            for (x = strtok(szBuffer, " \n\r\t"); x;
+                 x = strtok(NULL, " \n\r\t")) {
+                CMove Move = p->ParseSAN(x);
                 if (Move != M_NONE) {
                     p->DoMove(Move);
                 }

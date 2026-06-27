@@ -201,16 +201,16 @@ CMove CSearchData::NextMove() {
         }
 
         GrowDataHeap(pSd);
-        for (unsigned int dwJ = pSection->start; dwJ < pSection->end; dwJ++) {
-            pSd->m_pnDataHeap[dwJ] = SwapOff(p, pSd->m_hHeap->data[dwJ]);
+        for (unsigned int j = pSection->start; j < pSection->end; j++) {
+            pSd->m_pnDataHeap[j] = SwapOff(p, pSd->m_hHeap->data[j]);
         }
 
         unsigned int dwLastEnd = pSection->end;
         p->GenEnpas(pSd->m_hHeap);
         GrowDataHeap(pSd);
 
-        for (unsigned int dwJ = dwLastEnd; dwJ < pSection->end; dwJ++) {
-            pSd->m_pnDataHeap[dwJ] = 0;
+        for (unsigned int j = dwLastEnd; j < pSection->end; j++) {
+            pSd->m_pnDataHeap[j] = 0;
         }
 
         pSt->st_phase = GainingCapture;
@@ -224,10 +224,10 @@ CMove CSearchData::NextMove() {
             unsigned int dwBestI = pSection->start;
             int nBest = pSd->m_pnDataHeap[dwBestI];
 
-            for (unsigned int dwI = pSection->start + 1; dwI < pSection->end; dwI++) {
-                if (pSd->m_pnDataHeap[dwI] > nBest) {
-                    nBest = pSd->m_pnDataHeap[dwI];
-                    dwBestI = dwI;
+            for (unsigned int i = pSection->start + 1; i < pSection->end; i++) {
+                if (pSd->m_pnDataHeap[i] > nBest) {
+                    nBest = pSd->m_pnDataHeap[i];
+                    dwBestI = i;
                 }
             }
             if (nBest >= 0) {
@@ -323,10 +323,10 @@ CMove CSearchData::NextMove() {
             unsigned int dwBestI = pSection->start;
             int nBest = pSd->m_pnDataHeap[dwBestI];
 
-            for (unsigned int dwI = pSection->start + 1; dwI < pSection->end; dwI++) {
-                if (pSd->m_pnDataHeap[dwI] > nBest) {
-                    nBest = pSd->m_pnDataHeap[dwI];
-                    dwBestI = dwI;
+            for (unsigned int i = pSection->start + 1; i < pSection->end; i++) {
+                if (pSd->m_pnDataHeap[i] > nBest) {
+                    nBest = pSd->m_pnDataHeap[i];
+                    dwBestI = i;
                 }
             }
 
@@ -420,13 +420,13 @@ CMove CSearchData::NextMove() {
             int nBest =
                 pSd->m_rguHistoryTab[p->GetTurn()][pSd->m_hHeap->data[nBestI].GetFromCoord().BitOffset()][pSd->m_hHeap->data[nBestI].GetToCoord().BitOffset()];
 
-            for (unsigned int dwI = pSection->start + 1; dwI < pSection->end; dwI++) {
+            for (unsigned int i = pSection->start + 1; i < pSection->end; i++) {
                 int nHval = pSd->m_rguHistoryTab[p->GetTurn()]
-                                        [pSd->m_hHeap->data[dwI].GetFromCoord().BitOffset()]
-                                        [pSd->m_hHeap->data[dwI].GetToCoord().BitOffset()];
+                                        [pSd->m_hHeap->data[i].GetFromCoord().BitOffset()]
+                                        [pSd->m_hHeap->data[i].GetToCoord().BitOffset()];
                 if (nHval > nBest) {
                     nBest = nHval;
-                    nBestI = dwI;
+                    nBestI = i;
                 }
             }
             Move = pSd->m_hHeap->data[nBestI];
@@ -495,16 +495,16 @@ CMove CSearchData::NextEvasion() {
         }
 
         GrowDataHeap(pSd);
-        for (unsigned int dwJ = pSection->start; dwJ < pSection->end; dwJ++) {
-            pSd->m_pnDataHeap[dwJ] = SwapOff(p, pSd->m_hHeap->data[dwJ]);
+        for (unsigned int j = pSection->start; j < pSection->end; j++) {
+            pSd->m_pnDataHeap[j] = SwapOff(p, pSd->m_hHeap->data[j]);
         }
 
         unsigned int dwLastEnd = pSection->end;
         p->GenEnpas(pSd->m_hHeap);
         GrowDataHeap(pSd);
 
-        for (unsigned int dwJ = dwLastEnd; dwJ < pSection->end; dwJ++) {
-            pSd->m_pnDataHeap[dwJ] = 0;
+        for (unsigned int j = dwLastEnd; j < pSection->end; j++) {
+            pSd->m_pnDataHeap[j] = 0;
         }
     }
         /* fall through */
@@ -513,10 +513,10 @@ CMove CSearchData::NextEvasion() {
             unsigned int dwBestI = pSection->start;
             int nBest = pSd->m_pnDataHeap[dwBestI];
 
-            for (unsigned int dwI = pSection->start + 1; dwI < pSection->end; dwI++) {
-                if (pSd->m_pnDataHeap[dwI] > nBest) {
-                    nBest = pSd->m_pnDataHeap[dwI];
-                    dwBestI = dwI;
+            for (unsigned int i = pSection->start + 1; i < pSection->end; i++) {
+                if (pSd->m_pnDataHeap[i] > nBest) {
+                    nBest = pSd->m_pnDataHeap[i];
+                    dwBestI = i;
                 }
             }
             if (nBest >= 0) {
@@ -613,10 +613,10 @@ CMove CSearchData::NextEvasion() {
             unsigned int dwBestI = pSection->start;
             int nBest = pSd->m_pnDataHeap[dwBestI];
 
-            for (unsigned int dwI = pSection->start + 1; dwI < pSection->end; dwI++) {
-                if (pSd->m_pnDataHeap[dwI] > nBest) {
-                    nBest = pSd->m_pnDataHeap[dwI];
-                    dwBestI = dwI;
+            for (unsigned int i = pSection->start + 1; i < pSection->end; i++) {
+                if (pSd->m_pnDataHeap[i] > nBest) {
+                    nBest = pSd->m_pnDataHeap[i];
+                    dwBestI = i;
                 }
             }
             Move = pSd->m_hHeap->data[dwBestI];
@@ -731,13 +731,13 @@ CMove CSearchData::NextEvasion() {
             int nBest =
                 pSd->m_rguHistoryTab[p->GetTurn()][pSd->m_hHeap->data[dwBestI].GetFromCoord().BitOffset()][pSd->m_hHeap->data[dwBestI].GetToCoord().BitOffset()];
 
-            for (unsigned int dwI = pSection->start + 1; dwI < pSection->end; dwI++) {
+            for (unsigned int i = pSection->start + 1; i < pSection->end; i++) {
                 int nHval = pSd->m_rguHistoryTab[p->GetTurn()]
-                                        [pSd->m_hHeap->data[dwI].GetFromCoord().BitOffset()]
-                                        [pSd->m_hHeap->data[dwI].GetToCoord().BitOffset()];
+                                        [pSd->m_hHeap->data[i].GetFromCoord().BitOffset()]
+                                        [pSd->m_hHeap->data[i].GetToCoord().BitOffset()];
                 if (nHval > nBest) {
                     nBest = nHval;
-                    dwBestI = dwI;
+                    dwBestI = i;
                 }
             }
             Move = pSd->m_hHeap->data[dwBestI];
@@ -807,7 +807,7 @@ static void GenerateQCaptures(CSearchData *pSd, int nAlpha) {
     CBitBoard Pwn7th;
     CBitBoard Att, Def;
     int nScore;
-    int nI;
+    int i;
 
     Att = p->GetMask(p->GetTurn(), 0);
 
@@ -823,15 +823,15 @@ static void GenerateQCaptures(CSearchData *pSd, int nAlpha) {
     while (Pwn7th) {
         int nNext;
 
-        nI = (Pwn7th).FindSetBit();
+        i = (Pwn7th).FindSetBit();
         Pwn7th.ClearLowestBit();
-        const CSCoord ICoord(static_cast<uint16_t>(nI));
+        const CSCoord ICoord(static_cast<uint16_t>(i));
         nNext = (p->GetTurn() == White)
-                   ? nI + static_cast<int>(CBitBoard::LEVEL_WIDTH[ICoord.m_nLevel])
-                   : nI - static_cast<int>(CBitBoard::LEVEL_WIDTH[ICoord.m_nLevel]);
+                   ? i + static_cast<int>(CBitBoard::LEVEL_WIDTH[ICoord.m_nLevel])
+                   : i - static_cast<int>(CBitBoard::LEVEL_WIDTH[ICoord.m_nLevel]);
 
         if (p->GetPiece(nNext) == Neutral && is_promo_square(CSCoord(static_cast<uint16_t>(nNext)))) {
-            CMove Move = make_promotion(nI, nNext, Queen, 0);
+            CMove Move = make_promotion(i, nNext, Queen, 0);
             int nSw;
             if ((nSw = SwapOff(p, Move)) >= 0) {
                 append_to_heap(pSd->m_hHeap, Move);
@@ -852,14 +852,14 @@ static void GenerateQCaptures(CSearchData *pSd, int nAlpha) {
     Def = p->GetMask(OPP(p->GetTurn()), Queen);
     while (Def) {
         CBitBoard Tmp2;
-        int nJ;
-        nI = (Def).FindSetBit();
+        int j;
+        i = (Def).FindSetBit();
         Def.ClearLowestBit();
-        Tmp2 = p->GetAtkFr(nI) & Att;
+        Tmp2 = p->GetAtkFr(i) & Att;
         while (Tmp2) {
-            nJ = (Tmp2).FindSetBit();
+            j = (Tmp2).FindSetBit();
             Tmp2.ClearLowestBit();
-            EmitQCapture(pSd, p, nJ, nI);
+            EmitQCapture(pSd, p, j, i);
         }
     }
     if (nScore + Value[Rook] <= nAlpha)
@@ -867,14 +867,14 @@ static void GenerateQCaptures(CSearchData *pSd, int nAlpha) {
     Def = p->GetMask(OPP(p->GetTurn()), Rook);
     while (Def) {
         CBitBoard Tmp2;
-        int nJ;
-        nI = (Def).FindSetBit();
+        int j;
+        i = (Def).FindSetBit();
         Def.ClearLowestBit();
-        Tmp2 = p->GetAtkFr(nI) & Att;
+        Tmp2 = p->GetAtkFr(i) & Att;
         while (Tmp2) {
-            nJ = (Tmp2).FindSetBit();
+            j = (Tmp2).FindSetBit();
             Tmp2.ClearLowestBit();
-            EmitQCapture(pSd, p, nJ, nI);
+            EmitQCapture(pSd, p, j, i);
         }
     }
     if (nScore + Value[Bishop] <= nAlpha)
@@ -882,14 +882,14 @@ static void GenerateQCaptures(CSearchData *pSd, int nAlpha) {
     Def = p->GetMask(OPP(p->GetTurn()), Bishop) | p->GetMask(OPP(p->GetTurn()), Knight);
     while (Def) {
         CBitBoard Tmp2;
-        int nJ;
-        nI = (Def).FindSetBit();
+        int j;
+        i = (Def).FindSetBit();
         Def.ClearLowestBit();
-        Tmp2 = p->GetAtkFr(nI) & Att;
+        Tmp2 = p->GetAtkFr(i) & Att;
         while (Tmp2) {
-            nJ = (Tmp2).FindSetBit();
+            j = (Tmp2).FindSetBit();
             Tmp2.ClearLowestBit();
-            EmitQCapture(pSd, p, nJ, nI);
+            EmitQCapture(pSd, p, j, i);
         }
     }
     if (nScore + Value[Pawn] <= nAlpha)
@@ -897,14 +897,14 @@ static void GenerateQCaptures(CSearchData *pSd, int nAlpha) {
     Def = p->GetMask(OPP(p->GetTurn()), Pawn);
     while (Def) {
         CBitBoard Tmp2;
-        int nJ;
-        nI = (Def).FindSetBit();
+        int j;
+        i = (Def).FindSetBit();
         Def.ClearLowestBit();
-        Tmp2 = p->GetAtkFr(nI) & Att;
+        Tmp2 = p->GetAtkFr(i) & Att;
         while (Tmp2) {
-            nJ = (Tmp2).FindSetBit();
+            j = (Tmp2).FindSetBit();
             Tmp2.ClearLowestBit();
-            EmitQCapture(pSd, p, nJ, nI);
+            EmitQCapture(pSd, p, j, i);
         }
     }
 }
@@ -938,10 +938,10 @@ CMove CSearchData::NextMoveQ(int nAlpha) {
             unsigned int dwBestI = pSection->start;
             int nBest = pSd->m_pnDataHeap[dwBestI];
 
-            for (unsigned int dwI = pSection->start + 1; dwI < pSection->end; dwI++) {
-                if (pSd->m_pnDataHeap[dwI] > nBest) {
-                    nBest = pSd->m_pnDataHeap[dwI];
-                    dwBestI = dwI;
+            for (unsigned int i = pSection->start + 1; i < pSection->end; i++) {
+                if (pSd->m_pnDataHeap[i] > nBest) {
+                    nBest = pSd->m_pnDataHeap[i];
+                    dwBestI = i;
                 }
             }
 

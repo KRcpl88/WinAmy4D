@@ -114,8 +114,8 @@ void init_genrand64(unsigned long long qwSeed) {
 
 ran_t Random64(void) {
     /* This is the altered Cocoa with Love implementation. */
-    size_t qwI;
-    size_t qwJ;
+    size_t i;
+    size_t j;
     unsigned long long qwResult;
 
     if (context.mti >= NN) { /* generate NN words at one time */
@@ -130,13 +130,13 @@ ran_t Random64(void) {
          * These modifications are offered for use under the original icense at
          * the top of this file.
          */
-        for (qwI = 0, qwJ = qwMid; qwI != qwMid - 1; qwI++, qwJ++) {
-            qwX = (context.mt[qwI] & UM) | (context.mt[qwI + 1] & LM);
-            context.mt[qwI] = context.mt[qwI + qwMid] ^ (qwX >> 1) ^
-                              ((context.mt[qwI + 1] & 1) * MATRIX_A);
-            qwY = (context.mt[qwJ] & UM) | (context.mt[qwJ + 1] & LM);
-            context.mt[qwJ] = context.mt[qwJ - qwMid] ^ (qwY >> 1) ^
-                              ((context.mt[qwJ + 1] & 1) * MATRIX_A);
+        for (i = 0, j = qwMid; i != qwMid - 1; i++, j++) {
+            qwX = (context.mt[i] & UM) | (context.mt[i + 1] & LM);
+            context.mt[i] = context.mt[i + qwMid] ^ (qwX >> 1) ^
+                            ((context.mt[i + 1] & 1) * MATRIX_A);
+            qwY = (context.mt[j] & UM) | (context.mt[j + 1] & LM);
+            context.mt[j] = context.mt[j - qwMid] ^ (qwY >> 1) ^
+                            ((context.mt[j + 1] & 1) * MATRIX_A);
         }
         qwX = (context.mt[qwMid - 1] & UM) | (qwStateMid & LM);
         context.mt[qwMid - 1] =

@@ -51,7 +51,7 @@ static int SwapValue[] = {
 static void SwapReRay(CPosition *p, int nSide, CBitBoard rgAtks[2], int nFrom,
                       int nTo, CBitBoard *pExclude) {
     CBitBoard tmp;
-    int nI;
+    int i;
     int nPc = TYPE(p->GetPiece(nFrom));
 
     rgAtks[nSide].ClrBit(nFrom);
@@ -60,12 +60,12 @@ static void SwapReRay(CPosition *p, int nSide, CBitBoard rgAtks[2], int nFrom,
     if (nPc == Pawn || nPc == Bishop || nPc == Queen) {
         tmp = p->GetAtkFr(nFrom) & *pExclude & Ray[nTo][nFrom];
         if (tmp) {
-            nI = (tmp).FindSetBit();
-            if (TYPE(p->GetPiece(nI)) == Bishop || TYPE(p->GetPiece(nI)) == Queen) {
-                if (p->GetPiece(nI) > 0) {
-                    rgAtks[White].SetBit(nI);
+            i = (tmp).FindSetBit();
+            if (TYPE(p->GetPiece(i)) == Bishop || TYPE(p->GetPiece(i)) == Queen) {
+                if (p->GetPiece(i) > 0) {
+                    rgAtks[White].SetBit(i);
                 } else {
-                    rgAtks[Black].SetBit(nI);
+                    rgAtks[Black].SetBit(i);
                 }
             }
         }
@@ -74,12 +74,12 @@ static void SwapReRay(CPosition *p, int nSide, CBitBoard rgAtks[2], int nFrom,
     if (nPc == Rook || nPc == Queen) {
         tmp = p->GetAtkFr(nFrom) & *pExclude & Ray[nTo][nFrom];
         if (tmp) {
-            nI = (tmp).FindSetBit();
-            if (TYPE(p->GetPiece(nI)) == Rook || TYPE(p->GetPiece(nI)) == Queen) {
-                if (p->GetPiece(nI) > 0) {
-                    rgAtks[White].SetBit(nI);
+            i = (tmp).FindSetBit();
+            if (TYPE(p->GetPiece(i)) == Rook || TYPE(p->GetPiece(i)) == Queen) {
+                if (p->GetPiece(i) > 0) {
+                    rgAtks[White].SetBit(i);
                 } else {
-                    rgAtks[Black].SetBit(nI);
+                    rgAtks[Black].SetBit(i);
                 }
             }
         }

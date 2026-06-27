@@ -44,29 +44,29 @@
 
 static void PrintPV(char *pszPv) {
     char szPVBuffer[512];
-    char *pszX;
+    char *x;
     size_t qwLen = 21;
 
     strncpy(szPVBuffer, pszPv, sizeof(szPVBuffer) - 1);
 
-    for (pszX = szPVBuffer; *pszX;) {
-        char *pszY = pszX;
+    for (x = szPVBuffer; *x;) {
+        char *y = x;
 
-        while (*pszY != ' ' && *pszY != '\0')
-            pszY++;
-        if (*pszY == '\0')
-            *(pszY + 1) = '\0';
-        *pszY = '\0';
+        while (*y != ' ' && *y != '\0')
+            y++;
+        if (*y == '\0')
+            *(y + 1) = '\0';
+        *y = '\0';
 
-        qwLen += strlen(pszX);
+        qwLen += strlen(x);
 
         if (qwLen >= 79) {
             Print(1, "\n                    ");
-            qwLen = 21 + strlen(pszX);
+            qwLen = 21 + strlen(x);
         }
-        Print(1, "%s ", pszX);
+        Print(1, "%s ", x);
         qwLen += 1;
-        pszX = pszY + 1;
+        x = y + 1;
     }
     Print(1, "\n");
 }

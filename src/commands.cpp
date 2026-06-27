@@ -211,7 +211,7 @@ static void Quit(char *pszArgs) {
     StopHelpers();
 #endif
     CPosition::Free(CurrentPosition);
-    Print(0, "\n\nI'll be back.\n");
+    Print(0, "\n\i'll be back.\n");
     exit(0);
 }
 
@@ -233,7 +233,7 @@ static void Test(char *pszFname) {
     CPosition *p;
     int nSolved = 0, nTotal = 0;
     FILE *fin, *fout;
-    int nI;
+    int i;
     int nBtav = 0;
     int nBtval;
     int nBsval;
@@ -253,14 +253,14 @@ static void Test(char *pszFname) {
 
     fout = fopen("nsolved.epd", "w");
 
-    for (nI = 1;; nI++) {
+    for (i = 1;; i++) {
         CMove Move;
-        int nJ;
+        int j;
         bool fCorrect = false;
 
         if (fgets(szLine, 256, fin) == NULL)
             break;
-        Print(0, "Problem %d:\n", nI);
+        Print(0, "Problem %d:\n", i);
         p = CPosition::CreateFromEPD(szLine);
         if (p == NULL) {
             Print(0, "Skipping invalid EPD.\n");
@@ -271,15 +271,15 @@ static void Test(char *pszFname) {
         /* TestSwap(); */
 
         Move = p->Iterate(NULL, M_NONE, NULL);
-        for (nJ = 0; goodmove[nJ] != M_NONE; nJ++)
-            if (Move == goodmove[nJ])
+        for (j = 0; goodmove[j] != M_NONE; j++)
+            if (Move == goodmove[j])
                 fCorrect = true;
 
         if (!fCorrect && badmove[0] != M_NONE) {
             fCorrect = true;
 
-            for (nJ = 0; badmove[nJ] != M_NONE; nJ++)
-                if (Move == badmove[nJ])
+            for (j = 0; badmove[j] != M_NONE; j++)
+                if (Move == badmove[j])
                     fCorrect = false;
         }
 
@@ -357,12 +357,12 @@ static void TestScore(char *pszFname) {
         int nScore = EvaluatePosition(p);
 
         if (fout) {
-            size_t qwL = strlen(szLine);
-            qwL--;
-            szLine[qwL] = '\0';
-            qwL--;
-            if (szLine[qwL] == ';') {
-                szLine[qwL] = '\0';
+            size_t l = strlen(szLine);
+            l--;
+            szLine[l] = '\0';
+            l--;
+            if (szLine[l] == ';') {
+                szLine[l] = '\0';
             }
 
             fprintf(fout, "%s; score %d;\n", szLine, nScore);
@@ -438,13 +438,13 @@ static void MoveNow(char *pszArgs) {
 void Edit(char *pszArgs) {
     (void)pszArgs;
     bool fEditing = true;
-    unsigned int dwI;
+    unsigned int i;
     int nSide = White;
     char szBuffer[16];
     CPosition *p = CurrentPosition;
 
-    for (dwI = 0; dwI < CBitBoard::SIZE; dwI++)
-        p->SetPiece(dwI, Neutral);
+    for (i = 0; i < CBitBoard::SIZE; i++)
+        p->SetPiece(i, Neutral);
     p->GetMask(White, 0) = p->GetMask(Black, 0) = {};
 
     while (fEditing) {
@@ -686,7 +686,7 @@ static void Help(char *pszArgs) {
 static void Benchmark(char *pszArgs) {
     (void)pszArgs;
     CMove Move = make_move(hg1, hf3, 0);
-    int nI;
+    int i;
     const int nCycles = 10000000;
     unsigned long dwStart, dwEnd;
     double dElapsed;
@@ -696,7 +696,7 @@ static void Benchmark(char *pszArgs) {
 
     dwStart = GetTime();
 
-    for (nI = nCycles; nI > 0; nI--) {
+    for (i = nCycles; i > 0; i--) {
         p->DoMove(Move);
         p->UndoMove(Move);
     }
@@ -712,7 +712,7 @@ static void Benchmark(char *pszArgs) {
 
 static BitBoardBits SearchFully(CPosition *p, BitBoardBits qwCnt, int nDepth,
                                 heap_t heap) {
-    unsigned int dwI;
+    unsigned int i;
 
     if (nDepth <= 0) {
         return qwCnt + 1;
@@ -721,9 +721,9 @@ static BitBoardBits SearchFully(CPosition *p, BitBoardBits qwCnt, int nDepth,
     push_section(heap);
     p->PLegalMoves(heap);
 
-    for (dwI = heap->current_section->start; dwI < heap->current_section->end;
-         dwI++) {
-        CMove Move = heap->data[dwI];
+    for (i = heap->current_section->start; i < heap->current_section->end;
+         i++) {
+        CMove Move = heap->data[i];
         if (Move.IsCastle() && !p->MayCastle(Move))
             continue;
 

@@ -70,45 +70,45 @@ static void RunAllTests(void) {
 }
 
 static void ProcessOptions(int nArgc, char *pArgv[]) {
-    int nI;
+    int i;
 
-    for (nI = 1; nI < nArgc; nI++) {
-        if (!strcmp(pArgv[nI], "-ht")) {
-            nI++;
-            if (nI < nArgc) {
-                GuessHTSizes(pArgv[nI]);
+    for (i = 1; i < nArgc; i++) {
+        if (!strcmp(pArgv[i], "-ht")) {
+            i++;
+            if (i < nArgc) {
+                GuessHTSizes(pArgv[i]);
             }
         }
 
-        if (!strcmp(pArgv[nI], "-conf")) {
-            nI++;
-            if (nI < nArgc) {
-                ConfigFileName = pArgv[nI];
+        if (!strcmp(pArgv[i], "-conf")) {
+            i++;
+            if (i < nArgc) {
+                ConfigFileName = pArgv[i];
             }
         }
 
-        if (!strcmp(pArgv[nI], "--test")) {
+        if (!strcmp(pArgv[i], "--test")) {
             RunAllTests();
             exit(0);
         }
 
-        if (!strcmp(pArgv[nI], "-debug")) {
+        if (!strcmp(pArgv[i], "-debug")) {
             g_nDebugMode = 1;
             /*
              * An optional verbosity level may follow -debug. When the next
              * token is a number it is consumed and used to set g_nVerbosity;
              * otherwise the verbosity is left unchanged.
              */
-            if (nI + 1 < nArgc && isdigit((unsigned char)pArgv[nI + 1][0])) {
-                nI++;
-                g_nVerbosity = (uint16_t)atoi(pArgv[nI]);
+            if (i + 1 < nArgc && isdigit((unsigned char)pArgv[i + 1][0])) {
+                i++;
+                g_nVerbosity = (uint16_t)atoi(pArgv[i]);
             }
         }
 #if MP
-        if (!strcmp(pArgv[nI], "-cpu")) {
-            nI++;
-            if (nI < nArgc) {
-                NumberOfCores = atoi(pArgv[nI]);
+        if (!strcmp(pArgv[i], "-cpu")) {
+            i++;
+            if (i < nArgc) {
+                NumberOfCores = atoi(pArgv[i]);
             }
         }
 #endif

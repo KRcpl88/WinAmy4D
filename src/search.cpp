@@ -1047,17 +1047,17 @@ static void ResortMovesList(int nCnt, CMove *pMvs, unsigned long *pNodes) {
 
     for (int nGapIndex = 0; nGapIndex < 5; nGapIndex++) {
         int nGap = gaps[nGapIndex];
-        for (int nI = nGap; nI < nCnt; nI++) {
-            int nJ;
-            CMove MoveTmp = pMvs[nI];
-            unsigned long dwNodesTmp = pNodes[nI];
+        for (int i = nGap; i < nCnt; i++) {
+            int j;
+            CMove MoveTmp = pMvs[i];
+            unsigned long dwNodesTmp = pNodes[i];
 
-            for (nJ = nI; (nJ >= nGap) && (pNodes[nJ - nGap] < dwNodesTmp); nJ -= nGap) {
-                pNodes[nJ] = pNodes[nJ - nGap];
-                pMvs[nJ] = pMvs[nJ - nGap];
+            for (j = i; (j >= nGap) && (pNodes[j - nGap] < dwNodesTmp); j -= nGap) {
+                pNodes[j] = pNodes[j - nGap];
+                pMvs[j] = pMvs[j - nGap];
             }
-            pNodes[nJ] = dwNodesTmp;
-            pMvs[nJ] = MoveTmp;
+            pNodes[j] = dwNodesTmp;
+            pMvs[j] = MoveTmp;
         }
     }
 }
@@ -1107,16 +1107,16 @@ void *IterateInt(void *pX) {
      */
     if (cExcludedRootMoves > 0) {
         uint16_t wWriteIndex = 0;
-        for (uint16_t wR = 0; wR < pSd->m_wRootMoves; wR++) {
+        for (uint16_t r = 0; r < pSd->m_wRootMoves; r++) {
             bool fExcluded = false;
-            for (uint16_t wE = 0; wE < cExcludedRootMoves; wE++) {
-                if (pMvs[wR] == rgExcludedRootMoves[wE]) {
+            for (uint16_t e = 0; e < cExcludedRootMoves; e++) {
+                if (pMvs[r] == rgExcludedRootMoves[e]) {
                     fExcluded = true;
                     break;
                 }
             }
             if (!fExcluded) {
-                pMvs[wWriteIndex++] = pMvs[wR];
+                pMvs[wWriteIndex++] = pMvs[r];
             }
         }
         pSd->m_wRootMoves = wWriteIndex;
@@ -1288,11 +1288,11 @@ void *IterateInt(void *pX) {
 
                 if (pSd->m_wMoveNum != 0) {
                     unsigned long dwTn = rgNodes[pSd->m_wMoveNum];
-                    int nJ;
+                    int j;
 
-                    for (nJ = pSd->m_wMoveNum; nJ > 0; nJ--) {
-                        pMvs[nJ] = pMvs[nJ - 1];
-                        rgNodes[nJ] = rgNodes[nJ - 1];
+                    for (j = pSd->m_wMoveNum; j > 0; j--) {
+                        pMvs[j] = pMvs[j - 1];
+                        rgNodes[j] = rgNodes[j - 1];
                     }
                     pMvs[0] = Move;
                     rgNodes[0] = dwTn;
@@ -1613,8 +1613,8 @@ void SetExcludedRootMoves(const CMove *pMoves, uint16_t cMoves) {
     if (cMoves > MAX_EXCLUDED_ROOT_MOVES) {
         cMoves = MAX_EXCLUDED_ROOT_MOVES;
     }
-    for (uint16_t wI = 0; wI < cMoves; wI++) {
-        rgExcludedRootMoves[wI] = pMoves[wI];
+    for (uint16_t i = 0; i < cMoves; i++) {
+        rgExcludedRootMoves[i] = pMoves[i];
     }
     cExcludedRootMoves = cMoves;
 }
