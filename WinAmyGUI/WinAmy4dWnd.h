@@ -84,6 +84,17 @@ private:
     void UpdateLegalMoveHighlightMenu();
     void UpdateSuggestMoveButton();
     std::vector<CSCoord> GetHintSquaresForRender() const;
+    // ---- Look feature helpers ------------------------------------------
+    // Toggle look mode from the button's checkbox state, updating control
+    // visibility and repainting.
+    void OnToggleLookMode();
+    // Compute every square the selected piece type attacks from the chosen
+    // look location on the current board (empty if look mode is inactive).
+    // Pawns are side-agnostic: both white and black pawn attacks are included.
+    std::vector<CSCoord> ComputeLookAttackSquares() const;
+    // The square highlighted as "selected" for rendering: the look location
+    // while look mode is active, otherwise the click-to-move selection.
+    const CSCoord* SelectionForRender() const;
     void OnSquareClick(POINT pt);
     void OnSquareClick3D(const CSCoord& sq);
     void MaybeStartEngine();
@@ -127,6 +138,12 @@ private:
     HWND m_hBtnRotateGrid = nullptr;
     HWND m_hCbSwapAxes   = nullptr;
 
+    // "Look" feature controls. m_hBtnLook is a push-like checkbox that toggles
+    // look mode; m_hCbLookPiece selects which piece type's attacks to preview
+    // and is shown only while look mode is active.
+    HWND m_hBtnLook      = nullptr;
+    HWND m_hCbLookPiece  = nullptr;
+
     // Shared toolbar x-origin for the grid-type (3D) and swap-axes (2D)
     // dropdowns so they occupy the same slot when the view mode changes.
     int  m_nDropdownX    = 0;
@@ -154,6 +171,17 @@ private:
     // Optional menu-driven highlight of all legal moves for a side.
     HighlightSide        m_eHighlightSide = HighlightSide::None;
     std::vector<CSCoord> m_LegalMoveHintSquares;
+
+    // "Look" mode state. When m_fLookMode is set, the board highlights every
+    // square the selected piece type (m_nLookPiece, a Piece enum value) would
+    // attack from m_LookSquare. The piece type and location are retained even
+    // while look mode is off so they are restored when it is re-enabled. The
+    // location may only be picked in 2D mode (an empty 3D square cannot be
+    // clicked accurately), but the highlight is shown in both views.
+    bool                 m_fLookMode = false;
+    bool                 m_fLookHaveSquare = false;
+    CSCoord              m_LookSquare;
+    int                  m_nLookPiece = Queen;
 
     // Scroll state (pixels scrolled from origin).
     int m_nScrollX = 0;
