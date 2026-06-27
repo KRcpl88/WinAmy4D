@@ -41,17 +41,17 @@ void CBitBoard::ClearLowestBit() {
 }
 
 CBitBoard CBitBoard::SetMask(uint16_t wI) {
-    CBitBoard Bb;
-    Bb.SetBit(wI);
-    return Bb;
+    CBitBoard BitBoard;
+    BitBoard.SetBit(wI);
+    return BitBoard;
 }
 
 CBitBoard CBitBoard::ClrMask(uint16_t wI) {
-    CBitBoard Bb;
+    CBitBoard BitBoard;
     for (uint16_t w = 0; w < SIZE_ULONGLONG; ++w)
-        Bb.m_rgBits[w] = ~0ULL;
-    Bb.ClrBit(wI);
-    return Bb;
+        BitBoard.m_rgBits[w] = ~0ULL;
+    BitBoard.ClrBit(wI);
+    return BitBoard;
 }
 
 int CBitBoard::CountBits() const {
@@ -135,39 +135,39 @@ CBitBoard operator^(const CBitBoard &Lhs, const CBitBoard &Rhs) {
     return Result;
 }
 
-CBitBoard operator~(const CBitBoard &Bb) {
+CBitBoard operator~(const CBitBoard &BitBoard) {
     CBitBoard Result;
     for (uint16_t w = 0; w < CBitBoard::SIZE_ULONGLONG; ++w)
-        Result.m_rgBits[w] = ~Bb.m_rgBits[w];
+        Result.m_rgBits[w] = ~BitBoard.m_rgBits[w];
     return Result;
 }
 
-CBitBoard operator<<(const CBitBoard &Bb, int nShift) {
+CBitBoard operator<<(const CBitBoard &BitBoard, int nShift) {
     CBitBoard Result;
     const int nWordShift = nShift / CBitBoard::ULONGLONG_SIZE_BITS;
     const int nBitShift = nShift % CBitBoard::ULONGLONG_SIZE_BITS;
     for (int i = CBitBoard::SIZE_ULONGLONG - 1; i >= 0; --i) {
         const int nSrc = i - nWordShift;
         if (nSrc >= 0) {
-            Result.m_rgBits[i] = Bb.m_rgBits[nSrc] << nBitShift;
+            Result.m_rgBits[i] = BitBoard.m_rgBits[nSrc] << nBitShift;
             if (nBitShift > 0 && nSrc - 1 >= 0) {
-                Result.m_rgBits[i] |= Bb.m_rgBits[nSrc - 1] >> (CBitBoard::ULONGLONG_SIZE_BITS - nBitShift);
+                Result.m_rgBits[i] |= BitBoard.m_rgBits[nSrc - 1] >> (CBitBoard::ULONGLONG_SIZE_BITS - nBitShift);
             }
         }
     }
     return Result;
 }
 
-CBitBoard operator>>(const CBitBoard &Bb, int nShift) {
+CBitBoard operator>>(const CBitBoard &BitBoard, int nShift) {
     CBitBoard Result;
     const int nWordShift = nShift / CBitBoard::ULONGLONG_SIZE_BITS;
     const int nBitShift = nShift % CBitBoard::ULONGLONG_SIZE_BITS;
     for (int i = 0; i < CBitBoard::SIZE_ULONGLONG; ++i) {
         const int nSrc = i + nWordShift;
         if (nSrc < CBitBoard::SIZE_ULONGLONG) {
-            Result.m_rgBits[i] = Bb.m_rgBits[nSrc] >> nBitShift;
+            Result.m_rgBits[i] = BitBoard.m_rgBits[nSrc] >> nBitShift;
             if (nBitShift > 0 && nSrc + 1 < CBitBoard::SIZE_ULONGLONG) {
-                Result.m_rgBits[i] |= Bb.m_rgBits[nSrc + 1] << (CBitBoard::ULONGLONG_SIZE_BITS - nBitShift);
+                Result.m_rgBits[i] |= BitBoard.m_rgBits[nSrc + 1] << (CBitBoard::ULONGLONG_SIZE_BITS - nBitShift);
             }
         }
     }
@@ -208,6 +208,6 @@ CBitBoard operator*(const CBitBoard &Lhs, const CBitBoard &Rhs) {
     return Result;
 }
 
-bool operator!(const CBitBoard &Bb) {
-    return Bb.IsEmpty();
+bool operator!(const CBitBoard &BitBoard) {
+    return BitBoard.IsEmpty();
 }
