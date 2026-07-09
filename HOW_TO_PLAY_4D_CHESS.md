@@ -358,7 +358,34 @@ In 4D chess, both rooks are vulnerable on the right side of the board on level i
 
 ### Ruy Lopez
 
+```
+1. e4 e5
+2. Nf3 Nc6
+3. Bb5
+```
+
+Black Nie7hd6, Nie7hg5, or Phd7hd6
+
+
+Variant 3. Nib1ic3
+
+Black Phd7hd6, Nie7hg6, or Qhd8hf6
+
+
 ### Sicilian Defense
+
+Sicilian Defense
+
+```
+1.	E4 c5
+Classic 2. Nhg1hf3 Phd7hd6
+```
+
+3D variant 2. Nie1id3 – threatens black pawn at hc5.  Black can either defend the pawn with the classical 2. ... Phd7hd6, or white captures black pawn at hc5 (2. Nie1id3 Nib7ic5 3. Nid3xhc5)
+
+So, optimal response to 2. Nie1id3 is continue with classical Phd7hd6 (Najdorf Variation)
+
+
 
 ### Queen's gambit
 
