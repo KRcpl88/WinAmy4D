@@ -31,10 +31,12 @@ not necessarily at one point of the paper: their angle deficit is positive.
 
 JSON includes both the 3D solid and 2D net, ordered face boundaries, every edge,
 fold hinges, and paired cut seams. Coordinates are in edge-length units, with
-y up in the net; the SVG reverses y and uses 80 SVG units per edge. Face/vertex
-IDs identify the same objects in both exports. JSON coordinates are rounded to
-12 decimal places for reproducibility across Python versions. Equal cut-edge labels are glued
-together, matching endpoints by their solid_vertex IDs. No glue tabs are added.
+y up in the net; the SVG reverses y and uses 80 SVG units per edge. The SVG is
+plain geometry only: net edges and vertices, with no text, labels, or colors.
+Face/vertex IDs identify the same objects in both exports. JSON coordinates are
+rounded to 12 decimal places for reproducibility across Python versions. Equal
+cut-edge labels in the JSON are glued together, matching endpoints by their
+solid_vertex IDs. No glue tabs are added.
 """
 
 import argparse
@@ -453,79 +455,36 @@ def SerializeJson(Vertices, Faces, Edges, NetVertices, NetFaces, NetEdges, Strip
     return json.dumps(Canonicalize(Data), indent=2, allow_nan=False) + "\n"
 
 
-def SerializeSvg(NetVertices, NetFaces, NetEdges):
+def SerializeSvg(NetVertices, NetEdges):
     dScale, dMargin = 80.0, 55.0
     Points = [Vertex["position"] for Vertex in NetVertices.values()]
     dMinX, dMaxX = min(Point[0] for Point in Points), max(Point[0] for Point in Points)
     dMinY, dMaxY = min(Point[1] for Point in Points), max(Point[1] for Point in Points)
     dWidth = (dMaxX - dMinX) * dScale + 2 * dMargin
-    dHeight = (dMaxY - dMinY) * dScale + 2 * dMargin + 50.0
+    dHeight = (dMaxY - dMinY) * dScale + 2 * dMargin
 
     def Screen(Point):
-        return ((Point[0] - dMinX) * dScale + dMargin, (dMaxY - Point[1]) * dScale + dMargin + 30.0)
+        return ((Point[0] - dMinX) * dScale + dMargin, (dMaxY - Point[1]) * dScale + dMargin)
 
     Lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{dWidth:.6f}" height="{dHeight:.6f}" '
-        f'viewBox="0 0 {dWidth:.6f} {dHeight:.6f}" role="img" aria-labelledby="title description">',
-        '  <title id="title">Equilateral chamfered cube: 12 hexagons and 6 squares</title>',
-        '  <desc id="description">Unit-edge net with six horizontal alternating hexagons. '
-        'Top attachments SH--SH--SH--; bottom HS--HS--HS--, left to right. '
-        'Hexagon angles: 109.471220634491 degrees twice at opposite vertices, '
-        '125.264389682755 degrees four times. Square angles: 90 degrees. '
-        'Cut solid lines, fold dashed lines, and join identical E labels. '
-        'Cut vertex copies coincide only after folding. JSON supplies their exact correspondence.</desc>',
-        '  <style>',
-        '    .hexagon { fill: #fff0ce; } .square { fill: #dcedff; }',
-        '    .cut { stroke: #20252b; stroke-width: 1.3; }',
-        '    .fold { stroke: #276653; stroke-width: 1; stroke-dasharray: 5 4; }',
-        '    text { font-family: sans-serif; text-anchor: middle; fill: #20252b; }',
-        '    .face-label { font-size: 12px; } .seam-label { font-size: 8px; fill: #555; }',
-        '  </style>',
-        f'  <rect width="{dWidth:.6f}" height="{dHeight:.6f}" fill="white"/>',
-        f'  <text x="{dWidth / 2:.6f}" y="25" font-size="18">Equilateral chamfered cube</text>',
-        f'  <text x="{dWidth / 2:.6f}" y="45" font-size="12">'
-        '12 hexagons + 6 squares | all edges equal | fixed, non-overlapping net</text>',
-        '  <g id="faces">',
+        f'viewBox="0 0 {dWidth:.6f} {dHeight:.6f}">',
+        '  <g id="edges" fill="none" stroke="black" stroke-width="1">',
     ]
-    for szId, Face in NetFaces.items():
-        Polygon = [Screen(NetVertices[szVertex]["position"]) for szVertex in Face["vertices"]]
-        szPoints = " ".join(f"{dX:.6f},{dY:.6f}" for dX, dY in Polygon)
-        Lines.append(f'    <polygon id="{szId}" class="{Face["kind"]}" points="{szPoints}"/>')
-    Lines.extend(['  </g>', '  <g id="edges" fill="none">'])
     for Edge in NetEdges.values():
         Start, End = [Screen(NetVertices[szId]["position"]) for szId in Edge["vertices"]]
         Lines.append(
-            f'    <line id="{Edge["id"]}" class="{Edge["kind"]}" data-solid-edge="{Edge["solid_edge"]}" '
+            f'    <line id="{Edge["id"]}" '
             f'x1="{Start[0]:.6f}" y1="{Start[1]:.6f}" x2="{End[0]:.6f}" y2="{End[1]:.6f}"/>'
         )
-    Lines.extend(['  </g>', '  <g id="labels">'])
-    for szId, Face in NetFaces.items():
-        Position = Screen(Center([NetVertices[szVertex]["position"] for szVertex in Face["vertices"]]))
+    Lines.extend(['  </g>', '  <g id="vertices" fill="black" stroke="none">'])
+    for szId, Vertex in NetVertices.items():
+        Position = Screen(Vertex["position"])
         Lines.append(
-            f'    <text class="face-label" x="{Position[0]:.6f}" y="{Position[1]:.6f}" '
-            f'dominant-baseline="middle">{szId}</text>'
+            f'    <circle id="{szId}" cx="{Position[0]:.6f}" cy="{Position[1]:.6f}" r="2"/>'
         )
-    for Edge in NetEdges.values():
-        if Edge["kind"] == "cut":
-            Midpoint = Center([NetVertices[szId]["position"] for szId in Edge["vertices"]])
-            FaceCenter = Center([
-                NetVertices[szId]["position"] for szId in NetFaces[Edge["faces"][0]]["vertices"]
-            ])
-            Inward = Unit(Subtract(FaceCenter, Midpoint))
-            Position = Screen(tuple(dMid + 0.13 * dIn for dMid, dIn in zip(Midpoint, Inward)))
-            Lines.append(
-                f'    <text class="seam-label" x="{Position[0]:.6f}" y="{Position[1]:.6f}" '
-                f'dominant-baseline="middle">{Edge["solid_edge"]}</text>'
-            )
-    Lines.extend([
-        '  </g>',
-        f'  <text x="{dWidth / 2:.6f}" y="{dHeight - 30:.6f}" font-size="12">'
-        'Solid: cut | Dashed: fold | Join matching E labels (31 seam pairs) | No glue tabs</text>',
-        f'  <text x="{dWidth / 2:.6f}" y="{dHeight - 12:.6f}" font-size="11">'
-        'Hexagon angles: 109.47122&#176; (2 opposite), 125.26439&#176; (4) | Square angles: 90&#176;</text>',
-        '</svg>',
-    ])
+    Lines.extend(['  </g>', '</svg>'])
     return "\n".join(Lines) + "\n"
 
 
@@ -539,7 +498,7 @@ def Main():
     Validation = Validate(Vertices, Faces, Edges, NetVertices, NetFaces, NetEdges, Strip)
     Outputs = {
         "json": SerializeJson(Vertices, Faces, Edges, NetVertices, NetFaces, NetEdges, Strip, Validation),
-        "svg": SerializeSvg(NetVertices, NetFaces, NetEdges),
+        "svg": SerializeSvg(NetVertices, NetEdges),
     }
     Data = json.loads(Outputs["json"])
     # Check the rounded, exported geometry too, not just the in-memory model.
