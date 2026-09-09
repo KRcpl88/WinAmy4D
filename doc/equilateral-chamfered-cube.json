@@ -1,0 +1,2951 @@
+{
+  "schema_version": 1,
+  "name": "Equilateral chamfered cube",
+  "edge_length": 1,
+  "construction": {
+    "method": "Exact radical coordinates and a fixed hinge tree; no iterative layout.",
+    "s": "1/2",
+    "u": "1/2 + 1/sqrt(3)",
+    "t": "1/2 + 2/sqrt(3)",
+    "hexagon_angles_degrees": [
+      109.471220634491,
+      125.264389682755,
+      125.264389682755,
+      109.471220634491,
+      125.264389682755,
+      125.264389682755
+    ],
+    "square_angle_degrees": 90
+  },
+  "solid": {
+    "coordinate_system": "right-handed xyz, centered at the origin",
+    "vertices": [
+      {
+        "id": "V01",
+        "position": [
+          -1.07735026919,
+          -1.07735026919,
+          -1.07735026919
+        ]
+      },
+      {
+        "id": "V02",
+        "position": [
+          -1.07735026919,
+          -1.07735026919,
+          1.07735026919
+        ]
+      },
+      {
+        "id": "V03",
+        "position": [
+          -1.07735026919,
+          1.07735026919,
+          -1.07735026919
+        ]
+      },
+      {
+        "id": "V04",
+        "position": [
+          -1.07735026919,
+          1.07735026919,
+          1.07735026919
+        ]
+      },
+      {
+        "id": "V05",
+        "position": [
+          1.07735026919,
+          -1.07735026919,
+          -1.07735026919
+        ]
+      },
+      {
+        "id": "V06",
+        "position": [
+          1.07735026919,
+          -1.07735026919,
+          1.07735026919
+        ]
+      },
+      {
+        "id": "V07",
+        "position": [
+          1.07735026919,
+          1.07735026919,
+          -1.07735026919
+        ]
+      },
+      {
+        "id": "V08",
+        "position": [
+          1.07735026919,
+          1.07735026919,
+          1.07735026919
+        ]
+      },
+      {
+        "id": "V09",
+        "position": [
+          -1.654700538379,
+          -0.5,
+          -0.5
+        ]
+      },
+      {
+        "id": "V10",
+        "position": [
+          -1.654700538379,
+          -0.5,
+          0.5
+        ]
+      },
+      {
+        "id": "V11",
+        "position": [
+          -1.654700538379,
+          0.5,
+          -0.5
+        ]
+      },
+      {
+        "id": "V12",
+        "position": [
+          -1.654700538379,
+          0.5,
+          0.5
+        ]
+      },
+      {
+        "id": "V13",
+        "position": [
+          1.654700538379,
+          -0.5,
+          -0.5
+        ]
+      },
+      {
+        "id": "V14",
+        "position": [
+          1.654700538379,
+          -0.5,
+          0.5
+        ]
+      },
+      {
+        "id": "V15",
+        "position": [
+          1.654700538379,
+          0.5,
+          -0.5
+        ]
+      },
+      {
+        "id": "V16",
+        "position": [
+          1.654700538379,
+          0.5,
+          0.5
+        ]
+      },
+      {
+        "id": "V17",
+        "position": [
+          -0.5,
+          -1.654700538379,
+          -0.5
+        ]
+      },
+      {
+        "id": "V18",
+        "position": [
+          -0.5,
+          -1.654700538379,
+          0.5
+        ]
+      },
+      {
+        "id": "V19",
+        "position": [
+          -0.5,
+          1.654700538379,
+          -0.5
+        ]
+      },
+      {
+        "id": "V20",
+        "position": [
+          -0.5,
+          1.654700538379,
+          0.5
+        ]
+      },
+      {
+        "id": "V21",
+        "position": [
+          0.5,
+          -1.654700538379,
+          -0.5
+        ]
+      },
+      {
+        "id": "V22",
+        "position": [
+          0.5,
+          -1.654700538379,
+          0.5
+        ]
+      },
+      {
+        "id": "V23",
+        "position": [
+          0.5,
+          1.654700538379,
+          -0.5
+        ]
+      },
+      {
+        "id": "V24",
+        "position": [
+          0.5,
+          1.654700538379,
+          0.5
+        ]
+      },
+      {
+        "id": "V25",
+        "position": [
+          -0.5,
+          -0.5,
+          -1.654700538379
+        ]
+      },
+      {
+        "id": "V26",
+        "position": [
+          -0.5,
+          -0.5,
+          1.654700538379
+        ]
+      },
+      {
+        "id": "V27",
+        "position": [
+          -0.5,
+          0.5,
+          -1.654700538379
+        ]
+      },
+      {
+        "id": "V28",
+        "position": [
+          -0.5,
+          0.5,
+          1.654700538379
+        ]
+      },
+      {
+        "id": "V29",
+        "position": [
+          0.5,
+          -0.5,
+          -1.654700538379
+        ]
+      },
+      {
+        "id": "V30",
+        "position": [
+          0.5,
+          -0.5,
+          1.654700538379
+        ]
+      },
+      {
+        "id": "V31",
+        "position": [
+          0.5,
+          0.5,
+          -1.654700538379
+        ]
+      },
+      {
+        "id": "V32",
+        "position": [
+          0.5,
+          0.5,
+          1.654700538379
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "E01",
+        "vertices": [
+          "V01",
+          "V09"
+        ],
+        "faces": [
+          "Hxy--",
+          "Hxz--"
+        ]
+      },
+      {
+        "id": "E02",
+        "vertices": [
+          "V01",
+          "V17"
+        ],
+        "faces": [
+          "Hxy--",
+          "Hyz--"
+        ]
+      },
+      {
+        "id": "E03",
+        "vertices": [
+          "V01",
+          "V25"
+        ],
+        "faces": [
+          "Hxz--",
+          "Hyz--"
+        ]
+      },
+      {
+        "id": "E04",
+        "vertices": [
+          "V02",
+          "V10"
+        ],
+        "faces": [
+          "Hxy--",
+          "Hxz-+"
+        ]
+      },
+      {
+        "id": "E05",
+        "vertices": [
+          "V02",
+          "V18"
+        ],
+        "faces": [
+          "Hxy--",
+          "Hyz-+"
+        ]
+      },
+      {
+        "id": "E06",
+        "vertices": [
+          "V02",
+          "V26"
+        ],
+        "faces": [
+          "Hxz-+",
+          "Hyz-+"
+        ]
+      },
+      {
+        "id": "E07",
+        "vertices": [
+          "V03",
+          "V11"
+        ],
+        "faces": [
+          "Hxy-+",
+          "Hxz--"
+        ]
+      },
+      {
+        "id": "E08",
+        "vertices": [
+          "V03",
+          "V19"
+        ],
+        "faces": [
+          "Hxy-+",
+          "Hyz+-"
+        ]
+      },
+      {
+        "id": "E09",
+        "vertices": [
+          "V03",
+          "V27"
+        ],
+        "faces": [
+          "Hxz--",
+          "Hyz+-"
+        ]
+      },
+      {
+        "id": "E10",
+        "vertices": [
+          "V04",
+          "V12"
+        ],
+        "faces": [
+          "Hxy-+",
+          "Hxz-+"
+        ]
+      },
+      {
+        "id": "E11",
+        "vertices": [
+          "V04",
+          "V20"
+        ],
+        "faces": [
+          "Hxy-+",
+          "Hyz++"
+        ]
+      },
+      {
+        "id": "E12",
+        "vertices": [
+          "V04",
+          "V28"
+        ],
+        "faces": [
+          "Hxz-+",
+          "Hyz++"
+        ]
+      },
+      {
+        "id": "E13",
+        "vertices": [
+          "V05",
+          "V13"
+        ],
+        "faces": [
+          "Hxy+-",
+          "Hxz+-"
+        ]
+      },
+      {
+        "id": "E14",
+        "vertices": [
+          "V05",
+          "V21"
+        ],
+        "faces": [
+          "Hxy+-",
+          "Hyz--"
+        ]
+      },
+      {
+        "id": "E15",
+        "vertices": [
+          "V05",
+          "V29"
+        ],
+        "faces": [
+          "Hxz+-",
+          "Hyz--"
+        ]
+      },
+      {
+        "id": "E16",
+        "vertices": [
+          "V06",
+          "V14"
+        ],
+        "faces": [
+          "Hxy+-",
+          "Hxz++"
+        ]
+      },
+      {
+        "id": "E17",
+        "vertices": [
+          "V06",
+          "V22"
+        ],
+        "faces": [
+          "Hxy+-",
+          "Hyz-+"
+        ]
+      },
+      {
+        "id": "E18",
+        "vertices": [
+          "V06",
+          "V30"
+        ],
+        "faces": [
+          "Hxz++",
+          "Hyz-+"
+        ]
+      },
+      {
+        "id": "E19",
+        "vertices": [
+          "V07",
+          "V15"
+        ],
+        "faces": [
+          "Hxy++",
+          "Hxz+-"
+        ]
+      },
+      {
+        "id": "E20",
+        "vertices": [
+          "V07",
+          "V23"
+        ],
+        "faces": [
+          "Hxy++",
+          "Hyz+-"
+        ]
+      },
+      {
+        "id": "E21",
+        "vertices": [
+          "V07",
+          "V31"
+        ],
+        "faces": [
+          "Hxz+-",
+          "Hyz+-"
+        ]
+      },
+      {
+        "id": "E22",
+        "vertices": [
+          "V08",
+          "V16"
+        ],
+        "faces": [
+          "Hxy++",
+          "Hxz++"
+        ]
+      },
+      {
+        "id": "E23",
+        "vertices": [
+          "V08",
+          "V24"
+        ],
+        "faces": [
+          "Hxy++",
+          "Hyz++"
+        ]
+      },
+      {
+        "id": "E24",
+        "vertices": [
+          "V08",
+          "V32"
+        ],
+        "faces": [
+          "Hxz++",
+          "Hyz++"
+        ]
+      },
+      {
+        "id": "E25",
+        "vertices": [
+          "V09",
+          "V10"
+        ],
+        "faces": [
+          "Sx-",
+          "Hxy--"
+        ]
+      },
+      {
+        "id": "E26",
+        "vertices": [
+          "V09",
+          "V11"
+        ],
+        "faces": [
+          "Sx-",
+          "Hxz--"
+        ]
+      },
+      {
+        "id": "E27",
+        "vertices": [
+          "V10",
+          "V12"
+        ],
+        "faces": [
+          "Sx-",
+          "Hxz-+"
+        ]
+      },
+      {
+        "id": "E28",
+        "vertices": [
+          "V11",
+          "V12"
+        ],
+        "faces": [
+          "Sx-",
+          "Hxy-+"
+        ]
+      },
+      {
+        "id": "E29",
+        "vertices": [
+          "V13",
+          "V14"
+        ],
+        "faces": [
+          "Sx+",
+          "Hxy+-"
+        ]
+      },
+      {
+        "id": "E30",
+        "vertices": [
+          "V13",
+          "V15"
+        ],
+        "faces": [
+          "Sx+",
+          "Hxz+-"
+        ]
+      },
+      {
+        "id": "E31",
+        "vertices": [
+          "V14",
+          "V16"
+        ],
+        "faces": [
+          "Sx+",
+          "Hxz++"
+        ]
+      },
+      {
+        "id": "E32",
+        "vertices": [
+          "V15",
+          "V16"
+        ],
+        "faces": [
+          "Sx+",
+          "Hxy++"
+        ]
+      },
+      {
+        "id": "E33",
+        "vertices": [
+          "V17",
+          "V18"
+        ],
+        "faces": [
+          "Sy-",
+          "Hxy--"
+        ]
+      },
+      {
+        "id": "E34",
+        "vertices": [
+          "V17",
+          "V21"
+        ],
+        "faces": [
+          "Sy-",
+          "Hyz--"
+        ]
+      },
+      {
+        "id": "E35",
+        "vertices": [
+          "V18",
+          "V22"
+        ],
+        "faces": [
+          "Sy-",
+          "Hyz-+"
+        ]
+      },
+      {
+        "id": "E36",
+        "vertices": [
+          "V19",
+          "V20"
+        ],
+        "faces": [
+          "Sy+",
+          "Hxy-+"
+        ]
+      },
+      {
+        "id": "E37",
+        "vertices": [
+          "V19",
+          "V23"
+        ],
+        "faces": [
+          "Sy+",
+          "Hyz+-"
+        ]
+      },
+      {
+        "id": "E38",
+        "vertices": [
+          "V20",
+          "V24"
+        ],
+        "faces": [
+          "Sy+",
+          "Hyz++"
+        ]
+      },
+      {
+        "id": "E39",
+        "vertices": [
+          "V21",
+          "V22"
+        ],
+        "faces": [
+          "Sy-",
+          "Hxy+-"
+        ]
+      },
+      {
+        "id": "E40",
+        "vertices": [
+          "V23",
+          "V24"
+        ],
+        "faces": [
+          "Sy+",
+          "Hxy++"
+        ]
+      },
+      {
+        "id": "E41",
+        "vertices": [
+          "V25",
+          "V27"
+        ],
+        "faces": [
+          "Sz-",
+          "Hxz--"
+        ]
+      },
+      {
+        "id": "E42",
+        "vertices": [
+          "V25",
+          "V29"
+        ],
+        "faces": [
+          "Sz-",
+          "Hyz--"
+        ]
+      },
+      {
+        "id": "E43",
+        "vertices": [
+          "V26",
+          "V28"
+        ],
+        "faces": [
+          "Sz+",
+          "Hxz-+"
+        ]
+      },
+      {
+        "id": "E44",
+        "vertices": [
+          "V26",
+          "V30"
+        ],
+        "faces": [
+          "Sz+",
+          "Hyz-+"
+        ]
+      },
+      {
+        "id": "E45",
+        "vertices": [
+          "V27",
+          "V31"
+        ],
+        "faces": [
+          "Sz-",
+          "Hyz+-"
+        ]
+      },
+      {
+        "id": "E46",
+        "vertices": [
+          "V28",
+          "V32"
+        ],
+        "faces": [
+          "Sz+",
+          "Hyz++"
+        ]
+      },
+      {
+        "id": "E47",
+        "vertices": [
+          "V29",
+          "V31"
+        ],
+        "faces": [
+          "Sz-",
+          "Hxz+-"
+        ]
+      },
+      {
+        "id": "E48",
+        "vertices": [
+          "V30",
+          "V32"
+        ],
+        "faces": [
+          "Sz+",
+          "Hxz++"
+        ]
+      }
+    ],
+    "faces": [
+      {
+        "id": "Sx-",
+        "kind": "square",
+        "vertices": [
+          "V11",
+          "V09",
+          "V10",
+          "V12"
+        ],
+        "normal": [
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "id": "Sx+",
+        "kind": "square",
+        "vertices": [
+          "V14",
+          "V13",
+          "V15",
+          "V16"
+        ],
+        "normal": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "id": "Sy-",
+        "kind": "square",
+        "vertices": [
+          "V18",
+          "V17",
+          "V21",
+          "V22"
+        ],
+        "normal": [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      {
+        "id": "Sy+",
+        "kind": "square",
+        "vertices": [
+          "V23",
+          "V19",
+          "V20",
+          "V24"
+        ],
+        "normal": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "id": "Sz-",
+        "kind": "square",
+        "vertices": [
+          "V29",
+          "V25",
+          "V27",
+          "V31"
+        ],
+        "normal": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "id": "Sz+",
+        "kind": "square",
+        "vertices": [
+          "V28",
+          "V26",
+          "V30",
+          "V32"
+        ],
+        "normal": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "id": "Hxy--",
+        "kind": "hexagon",
+        "vertices": [
+          "V10",
+          "V09",
+          "V01",
+          "V17",
+          "V18",
+          "V02"
+        ],
+        "normal": [
+          -0.707106781187,
+          -0.707106781187,
+          0.0
+        ]
+      },
+      {
+        "id": "Hxy-+",
+        "kind": "hexagon",
+        "vertices": [
+          "V20",
+          "V19",
+          "V03",
+          "V11",
+          "V12",
+          "V04"
+        ],
+        "normal": [
+          -0.707106781187,
+          0.707106781187,
+          0.0
+        ]
+      },
+      {
+        "id": "Hxy+-",
+        "kind": "hexagon",
+        "vertices": [
+          "V22",
+          "V21",
+          "V05",
+          "V13",
+          "V14",
+          "V06"
+        ],
+        "normal": [
+          0.707106781187,
+          -0.707106781187,
+          0.0
+        ]
+      },
+      {
+        "id": "Hxy++",
+        "kind": "hexagon",
+        "vertices": [
+          "V16",
+          "V15",
+          "V07",
+          "V23",
+          "V24",
+          "V08"
+        ],
+        "normal": [
+          0.707106781187,
+          0.707106781187,
+          0.0
+        ]
+      },
+      {
+        "id": "Hxz--",
+        "kind": "hexagon",
+        "vertices": [
+          "V27",
+          "V25",
+          "V01",
+          "V09",
+          "V11",
+          "V03"
+        ],
+        "normal": [
+          -0.707106781187,
+          0.0,
+          -0.707106781187
+        ]
+      },
+      {
+        "id": "Hxz-+",
+        "kind": "hexagon",
+        "vertices": [
+          "V12",
+          "V10",
+          "V02",
+          "V26",
+          "V28",
+          "V04"
+        ],
+        "normal": [
+          -0.707106781187,
+          0.0,
+          0.707106781187
+        ]
+      },
+      {
+        "id": "Hxz+-",
+        "kind": "hexagon",
+        "vertices": [
+          "V15",
+          "V13",
+          "V05",
+          "V29",
+          "V31",
+          "V07"
+        ],
+        "normal": [
+          0.707106781187,
+          0.0,
+          -0.707106781187
+        ]
+      },
+      {
+        "id": "Hxz++",
+        "kind": "hexagon",
+        "vertices": [
+          "V32",
+          "V30",
+          "V06",
+          "V14",
+          "V16",
+          "V08"
+        ],
+        "normal": [
+          0.707106781187,
+          0.0,
+          0.707106781187
+        ]
+      },
+      {
+        "id": "Hyz--",
+        "kind": "hexagon",
+        "vertices": [
+          "V21",
+          "V17",
+          "V01",
+          "V25",
+          "V29",
+          "V05"
+        ],
+        "normal": [
+          0.0,
+          -0.707106781187,
+          -0.707106781187
+        ]
+      },
+      {
+        "id": "Hyz-+",
+        "kind": "hexagon",
+        "vertices": [
+          "V30",
+          "V26",
+          "V02",
+          "V18",
+          "V22",
+          "V06"
+        ],
+        "normal": [
+          0.0,
+          -0.707106781187,
+          0.707106781187
+        ]
+      },
+      {
+        "id": "Hyz+-",
+        "kind": "hexagon",
+        "vertices": [
+          "V31",
+          "V27",
+          "V03",
+          "V19",
+          "V23",
+          "V07"
+        ],
+        "normal": [
+          0.0,
+          0.707106781187,
+          -0.707106781187
+        ]
+      },
+      {
+        "id": "Hyz++",
+        "kind": "hexagon",
+        "vertices": [
+          "V24",
+          "V20",
+          "V04",
+          "V28",
+          "V32",
+          "V08"
+        ],
+        "normal": [
+          0.0,
+          0.707106781187,
+          0.707106781187
+        ]
+      }
+    ]
+  },
+  "net": {
+    "coordinate_system": "xy, x right, y up; unit edge length",
+    "coordinate_decimal_places": 12,
+    "strip_left_to_right": [
+      "Hxy++",
+      "Hyz+-",
+      "Hxz--",
+      "Hxy--",
+      "Hyz-+",
+      "Hxz++"
+    ],
+    "top_left_to_right": "SH--SH--SH--",
+    "bottom_left_to_right": "HS--HS--HS--",
+    "pattern_key": {
+      "S": "square",
+      "H": "hexagon",
+      "-": "unattached strip edge"
+    },
+    "bottom_order_note": "Pairs reverse locally, keeping squares opposite on strip faces 1, 3, 5.",
+    "assembly": "Fold dashed edges; join equal solid_edge cut labels, matching solid_vertex endpoints.",
+    "vertices": [
+      {
+        "id": "N01",
+        "position": [
+          0.0,
+          0.5
+        ],
+        "solid_vertex": "V16"
+      },
+      {
+        "id": "N02",
+        "position": [
+          0.816496580928,
+          1.07735026919
+        ],
+        "solid_vertex": "V15"
+      },
+      {
+        "id": "N03",
+        "position": [
+          1.75930562251,
+          0.744016935856
+        ],
+        "solid_vertex": "V07"
+      },
+      {
+        "id": "N04",
+        "position": [
+          1.75930562251,
+          -0.255983064144
+        ],
+        "solid_vertex": "V23"
+      },
+      {
+        "id": "N05",
+        "position": [
+          0.942809041582,
+          -0.833333333333
+        ],
+        "solid_vertex": "V24"
+      },
+      {
+        "id": "N06",
+        "position": [
+          0.0,
+          -0.5
+        ],
+        "solid_vertex": "V08"
+      },
+      {
+        "id": "N07",
+        "position": [
+          2.702114664092,
+          1.07735026919
+        ],
+        "solid_vertex": "V31"
+      },
+      {
+        "id": "N08",
+        "position": [
+          3.51861124502,
+          0.5
+        ],
+        "solid_vertex": "V27"
+      },
+      {
+        "id": "N09",
+        "position": [
+          3.51861124502,
+          -0.5
+        ],
+        "solid_vertex": "V03"
+      },
+      {
+        "id": "N10",
+        "position": [
+          2.575802203438,
+          -0.833333333333
+        ],
+        "solid_vertex": "V19"
+      },
+      {
+        "id": "N11",
+        "position": [
+          4.335107825947,
+          1.07735026919
+        ],
+        "solid_vertex": "V25"
+      },
+      {
+        "id": "N12",
+        "position": [
+          5.277916867529,
+          0.744016935856
+        ],
+        "solid_vertex": "V01"
+      },
+      {
+        "id": "N13",
+        "position": [
+          5.277916867529,
+          -0.255983064144
+        ],
+        "solid_vertex": "V09"
+      },
+      {
+        "id": "N14",
+        "position": [
+          4.461420286602,
+          -0.833333333333
+        ],
+        "solid_vertex": "V11"
+      },
+      {
+        "id": "N15",
+        "position": [
+          6.094413448457,
+          -0.833333333333
+        ],
+        "solid_vertex": "V10"
+      },
+      {
+        "id": "N16",
+        "position": [
+          6.220725909111,
+          1.07735026919
+        ],
+        "solid_vertex": "V17"
+      },
+      {
+        "id": "N17",
+        "position": [
+          7.037222490039,
+          0.5
+        ],
+        "solid_vertex": "V18"
+      },
+      {
+        "id": "N18",
+        "position": [
+          7.037222490039,
+          -0.5
+        ],
+        "solid_vertex": "V02"
+      },
+      {
+        "id": "N19",
+        "position": [
+          8.796528112549,
+          -0.255983064144
+        ],
+        "solid_vertex": "V30"
+      },
+      {
+        "id": "N20",
+        "position": [
+          7.980031531621,
+          -0.833333333333
+        ],
+        "solid_vertex": "V26"
+      },
+      {
+        "id": "N21",
+        "position": [
+          7.853719070967,
+          1.07735026919
+        ],
+        "solid_vertex": "V22"
+      },
+      {
+        "id": "N22",
+        "position": [
+          8.796528112549,
+          0.744016935856
+        ],
+        "solid_vertex": "V06"
+      },
+      {
+        "id": "N23",
+        "position": [
+          9.613024693477,
+          -0.833333333333
+        ],
+        "solid_vertex": "V32"
+      },
+      {
+        "id": "N24",
+        "position": [
+          9.739337154131,
+          1.07735026919
+        ],
+        "solid_vertex": "V14"
+      },
+      {
+        "id": "N25",
+        "position": [
+          10.555833735059,
+          0.5
+        ],
+        "solid_vertex": "V16"
+      },
+      {
+        "id": "N26",
+        "position": [
+          10.555833735059,
+          -0.5
+        ],
+        "solid_vertex": "V08"
+      },
+      {
+        "id": "N27",
+        "position": [
+          -0.57735026919,
+          1.316496580928
+        ],
+        "solid_vertex": "V14"
+      },
+      {
+        "id": "N28",
+        "position": [
+          0.239146311738,
+          1.893846850117
+        ],
+        "solid_vertex": "V13"
+      },
+      {
+        "id": "N29",
+        "position": [
+          0.544331053952,
+          2.039600717839
+        ],
+        "solid_vertex": "V13"
+      },
+      {
+        "id": "N30",
+        "position": [
+          1.172870415007,
+          2.817378495617
+        ],
+        "solid_vertex": "V05"
+      },
+      {
+        "id": "N31",
+        "position": [
+          2.115679456589,
+          2.484045162283
+        ],
+        "solid_vertex": "V29"
+      },
+      {
+        "id": "N32",
+        "position": [
+          2.387844983564,
+          1.521794713634
+        ],
+        "solid_vertex": "V31"
+      },
+      {
+        "id": "N33",
+        "position": [
+          1.214974568558,
+          -1.795583781983
+        ],
+        "solid_vertex": "V20"
+      },
+      {
+        "id": "N34",
+        "position": [
+          0.586435207503,
+          -2.57336155976
+        ],
+        "solid_vertex": "V04"
+      },
+      {
+        "id": "N35",
+        "position": [
+          -0.356373834079,
+          -2.240028226427
+        ],
+        "solid_vertex": "V28"
+      },
+      {
+        "id": "N36",
+        "position": [
+          -0.628539361055,
+          -1.277777777778
+        ],
+        "solid_vertex": "V32"
+      },
+      {
+        "id": "N37",
+        "position": [
+          2.336655891699,
+          -1.072479645071
+        ],
+        "solid_vertex": "V19"
+      },
+      {
+        "id": "N38",
+        "position": [
+          1.520159310772,
+          -1.649829914261
+        ],
+        "solid_vertex": "V20"
+      },
+      {
+        "id": "N39",
+        "position": [
+          3.757757556758,
+          1.893846850117
+        ],
+        "solid_vertex": "V29"
+      },
+      {
+        "id": "N40",
+        "position": [
+          2.94126097583,
+          1.316496580928
+        ],
+        "solid_vertex": "V31"
+      },
+      {
+        "id": "N41",
+        "position": [
+          5.634290701608,
+          2.484045162283
+        ],
+        "solid_vertex": "V21"
+      },
+      {
+        "id": "N42",
+        "position": [
+          5.906456228584,
+          1.521794713634
+        ],
+        "solid_vertex": "V17"
+      },
+      {
+        "id": "N43",
+        "position": [
+          4.062942298971,
+          2.039600717839
+        ],
+        "solid_vertex": "V29"
+      },
+      {
+        "id": "N44",
+        "position": [
+          4.691481660026,
+          2.817378495617
+        ],
+        "solid_vertex": "V05"
+      },
+      {
+        "id": "N45",
+        "position": [
+          3.162237410941,
+          -2.240028226427
+        ],
+        "solid_vertex": "V20"
+      },
+      {
+        "id": "N46",
+        "position": [
+          2.890071883965,
+          -1.277777777778
+        ],
+        "solid_vertex": "V19"
+      },
+      {
+        "id": "N47",
+        "position": [
+          4.733585813578,
+          -1.795583781983
+        ],
+        "solid_vertex": "V12"
+      },
+      {
+        "id": "N48",
+        "position": [
+          4.105046452523,
+          -2.57336155976
+        ],
+        "solid_vertex": "V04"
+      },
+      {
+        "id": "N49",
+        "position": [
+          5.855267136719,
+          -1.072479645071
+        ],
+        "solid_vertex": "V10"
+      },
+      {
+        "id": "N50",
+        "position": [
+          5.038770555791,
+          -1.649829914261
+        ],
+        "solid_vertex": "V12"
+      },
+      {
+        "id": "N51",
+        "position": [
+          6.45987222085,
+          1.316496580928
+        ],
+        "solid_vertex": "V17"
+      },
+      {
+        "id": "N52",
+        "position": [
+          7.276368801777,
+          1.893846850117
+        ],
+        "solid_vertex": "V21"
+      },
+      {
+        "id": "N53",
+        "position": [
+          7.581553543991,
+          2.039600717839
+        ],
+        "solid_vertex": "V21"
+      },
+      {
+        "id": "N54",
+        "position": [
+          8.210092905046,
+          2.817378495617
+        ],
+        "solid_vertex": "V05"
+      },
+      {
+        "id": "N55",
+        "position": [
+          9.152901946628,
+          2.484045162283
+        ],
+        "solid_vertex": "V13"
+      },
+      {
+        "id": "N56",
+        "position": [
+          9.425067473604,
+          1.521794713634
+        ],
+        "solid_vertex": "V14"
+      },
+      {
+        "id": "N57",
+        "position": [
+          6.68084865596,
+          -2.240028226427
+        ],
+        "solid_vertex": "V12"
+      },
+      {
+        "id": "N58",
+        "position": [
+          6.408683128984,
+          -1.277777777778
+        ],
+        "solid_vertex": "V10"
+      },
+      {
+        "id": "N59",
+        "position": [
+          8.252197058597,
+          -1.795583781983
+        ],
+        "solid_vertex": "V28"
+      },
+      {
+        "id": "N60",
+        "position": [
+          7.623657697542,
+          -2.57336155976
+        ],
+        "solid_vertex": "V04"
+      },
+      {
+        "id": "N61",
+        "position": [
+          8.557381800811,
+          -1.649829914261
+        ],
+        "solid_vertex": "V28"
+      },
+      {
+        "id": "N62",
+        "position": [
+          9.373878381739,
+          -1.072479645071
+        ],
+        "solid_vertex": "V32"
+      }
+    ],
+    "edges": [
+      {
+        "id": "NE01",
+        "vertices": [
+          "N01",
+          "N02"
+        ],
+        "solid_edge": "E32",
+        "faces": [
+          "Hxy++",
+          "Sx+"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE02",
+        "vertices": [
+          "N02",
+          "N03"
+        ],
+        "solid_edge": "E19",
+        "faces": [
+          "Hxy++",
+          "Hxz+-"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE03",
+        "vertices": [
+          "N03",
+          "N04"
+        ],
+        "solid_edge": "E20",
+        "faces": [
+          "Hxy++",
+          "Hyz+-"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE04",
+        "vertices": [
+          "N04",
+          "N05"
+        ],
+        "solid_edge": "E40",
+        "faces": [
+          "Hxy++",
+          "Sy+"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE05",
+        "vertices": [
+          "N05",
+          "N06"
+        ],
+        "solid_edge": "E23",
+        "faces": [
+          "Hxy++",
+          "Hyz++"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE06",
+        "vertices": [
+          "N01",
+          "N06"
+        ],
+        "solid_edge": "E22",
+        "faces": [
+          "Hxy++"
+        ],
+        "kind": "cut",
+        "mate": "NE30"
+      },
+      {
+        "id": "NE07",
+        "vertices": [
+          "N07",
+          "N08"
+        ],
+        "solid_edge": "E45",
+        "faces": [
+          "Hyz+-"
+        ],
+        "kind": "cut",
+        "mate": "NE49"
+      },
+      {
+        "id": "NE08",
+        "vertices": [
+          "N08",
+          "N09"
+        ],
+        "solid_edge": "E09",
+        "faces": [
+          "Hyz+-",
+          "Hxz--"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE09",
+        "vertices": [
+          "N09",
+          "N10"
+        ],
+        "solid_edge": "E08",
+        "faces": [
+          "Hyz+-"
+        ],
+        "kind": "cut",
+        "mate": "NE57"
+      },
+      {
+        "id": "NE10",
+        "vertices": [
+          "N04",
+          "N10"
+        ],
+        "solid_edge": "E37",
+        "faces": [
+          "Hyz+-"
+        ],
+        "kind": "cut",
+        "mate": "NE45"
+      },
+      {
+        "id": "NE11",
+        "vertices": [
+          "N03",
+          "N07"
+        ],
+        "solid_edge": "E21",
+        "faces": [
+          "Hyz+-"
+        ],
+        "kind": "cut",
+        "mate": "NE39"
+      },
+      {
+        "id": "NE12",
+        "vertices": [
+          "N08",
+          "N11"
+        ],
+        "solid_edge": "E41",
+        "faces": [
+          "Hxz--",
+          "Sz-"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE13",
+        "vertices": [
+          "N11",
+          "N12"
+        ],
+        "solid_edge": "E03",
+        "faces": [
+          "Hxz--",
+          "Hyz--"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE14",
+        "vertices": [
+          "N12",
+          "N13"
+        ],
+        "solid_edge": "E01",
+        "faces": [
+          "Hxz--",
+          "Hxy--"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE15",
+        "vertices": [
+          "N13",
+          "N14"
+        ],
+        "solid_edge": "E26",
+        "faces": [
+          "Hxz--",
+          "Sx-"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE16",
+        "vertices": [
+          "N09",
+          "N14"
+        ],
+        "solid_edge": "E07",
+        "faces": [
+          "Hxz--",
+          "Hxy-+"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE17",
+        "vertices": [
+          "N13",
+          "N15"
+        ],
+        "solid_edge": "E25",
+        "faces": [
+          "Hxy--"
+        ],
+        "kind": "cut",
+        "mate": "NE61"
+      },
+      {
+        "id": "NE18",
+        "vertices": [
+          "N12",
+          "N16"
+        ],
+        "solid_edge": "E02",
+        "faces": [
+          "Hxy--"
+        ],
+        "kind": "cut",
+        "mate": "NE52"
+      },
+      {
+        "id": "NE19",
+        "vertices": [
+          "N16",
+          "N17"
+        ],
+        "solid_edge": "E33",
+        "faces": [
+          "Hxy--"
+        ],
+        "kind": "cut",
+        "mate": "NE64"
+      },
+      {
+        "id": "NE20",
+        "vertices": [
+          "N17",
+          "N18"
+        ],
+        "solid_edge": "E05",
+        "faces": [
+          "Hxy--",
+          "Hyz-+"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE21",
+        "vertices": [
+          "N15",
+          "N18"
+        ],
+        "solid_edge": "E04",
+        "faces": [
+          "Hxy--"
+        ],
+        "kind": "cut",
+        "mate": "NE73"
+      },
+      {
+        "id": "NE22",
+        "vertices": [
+          "N19",
+          "N20"
+        ],
+        "solid_edge": "E44",
+        "faces": [
+          "Hyz-+",
+          "Sz+"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE23",
+        "vertices": [
+          "N18",
+          "N20"
+        ],
+        "solid_edge": "E06",
+        "faces": [
+          "Hyz-+",
+          "Hxz-+"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE24",
+        "vertices": [
+          "N17",
+          "N21"
+        ],
+        "solid_edge": "E35",
+        "faces": [
+          "Hyz-+",
+          "Sy-"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE25",
+        "vertices": [
+          "N21",
+          "N22"
+        ],
+        "solid_edge": "E17",
+        "faces": [
+          "Hyz-+",
+          "Hxy+-"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE26",
+        "vertices": [
+          "N19",
+          "N22"
+        ],
+        "solid_edge": "E18",
+        "faces": [
+          "Hyz-+",
+          "Hxz++"
+        ],
+        "kind": "fold",
+        "mate": null
+      },
+      {
+        "id": "NE27",
+        "vertices": [
+          "N19",
+          "N23"
+        ],
+        "solid_edge": "E48",
+        "faces": [
+          "Hxz++"
+        ],
+        "kind": "cut",
+        "mate": "NE78"
+      },
+      {
+        "id": "NE28",
+        "vertices": [
+          "N22",
+          "N24"
+        ],
+        "solid_edge": "E16",
+        "faces": [
+          "Hxz++"
+        ],
+        "kind": "cut",
+        "mate": "NE71"
+      },
+      {
+        "id": "NE29",
+        "vertices": [
+          "N24",
+          "N25"
+        ],
+        "solid_edge": "E31",
+        "faces": [
+          "Hxz++"
+        ],
+        "kind": "cut",
+        "mate": "NE34"
+      },
+      {
+        "id": "NE30",
+        "vertices": [
+          "N25",
+          "N26"
+        ],
+        "solid_edge": "E22",
+        "faces": [
+          "Hxz++"
+        ],
+        "kind": "cut",
+        "mate": "NE06"
+      },
+      {
+        "id": "NE31",
+        "vertices": [
+          "N23",
+          "N26"
+        ],
+        "solid_edge": "E24",
+        "faces": [
+          "Hxz++"
+        ],
+        "kind": "cut",
+        "mate": "NE44"
+      },
+      {
+        "id": "NE32",
+        "vertices": [
+          "N27",
+          "N28"
+        ],
+        "solid_edge": "E29",
+        "faces": [
+          "Sx+"
+        ],
+        "kind": "cut",
+        "mate": "NE70"
+      },
+      {
+        "id": "NE33",
+        "vertices": [
+          "N02",
+          "N28"
+        ],
+        "solid_edge": "E30",
+        "faces": [
+          "Sx+"
+        ],
+        "kind": "cut",
+        "mate": "NE35"
+      },
+      {
+        "id": "NE34",
+        "vertices": [
+          "N01",
+          "N27"
+        ],
+        "solid_edge": "E31",
+        "faces": [
+          "Sx+"
+        ],
+        "kind": "cut",
+        "mate": "NE29"
+      },
+      {
+        "id": "NE35",
+        "vertices": [
+          "N02",
+          "N29"
+        ],
+        "solid_edge": "E30",
+        "faces": [
+          "Hxz+-"
+        ],
+        "kind": "cut",
+        "mate": "NE33"
+      },
+      {
+        "id": "NE36",
+        "vertices": [
+          "N29",
+          "N30"
+        ],
+        "solid_edge": "E13",
+        "faces": [
+          "Hxz+-"
+        ],
+        "kind": "cut",
+        "mate": "NE69"
+      },
+      {
+        "id": "NE37",
+        "vertices": [
+          "N30",
+          "N31"
+        ],
+        "solid_edge": "E15",
+        "faces": [
+          "Hxz+-"
+        ],
+        "kind": "cut",
+        "mate": "NE54"
+      },
+      {
+        "id": "NE38",
+        "vertices": [
+          "N31",
+          "N32"
+        ],
+        "solid_edge": "E47",
+        "faces": [
+          "Hxz+-"
+        ],
+        "kind": "cut",
+        "mate": "NE50"
+      },
+      {
+        "id": "NE39",
+        "vertices": [
+          "N03",
+          "N32"
+        ],
+        "solid_edge": "E21",
+        "faces": [
+          "Hxz+-"
+        ],
+        "kind": "cut",
+        "mate": "NE11"
+      },
+      {
+        "id": "NE40",
+        "vertices": [
+          "N05",
+          "N33"
+        ],
+        "solid_edge": "E38",
+        "faces": [
+          "Hyz++"
+        ],
+        "kind": "cut",
+        "mate": "NE47"
+      },
+      {
+        "id": "NE41",
+        "vertices": [
+          "N33",
+          "N34"
+        ],
+        "solid_edge": "E11",
+        "faces": [
+          "Hyz++"
+        ],
+        "kind": "cut",
+        "mate": "NE60"
+      },
+      {
+        "id": "NE42",
+        "vertices": [
+          "N34",
+          "N35"
+        ],
+        "solid_edge": "E12",
+        "faces": [
+          "Hyz++"
+        ],
+        "kind": "cut",
+        "mate": "NE75"
+      },
+      {
+        "id": "NE43",
+        "vertices": [
+          "N35",
+          "N36"
+        ],
+        "solid_edge": "E46",
+        "faces": [
+          "Hyz++"
+        ],
+        "kind": "cut",
+        "mate": "NE79"
+      },
+      {
+        "id": "NE44",
+        "vertices": [
+          "N06",
+          "N36"
+        ],
+        "solid_edge": "E24",
+        "faces": [
+          "Hyz++"
+        ],
+        "kind": "cut",
+        "mate": "NE31"
+      },
+      {
+        "id": "NE45",
+        "vertices": [
+          "N04",
+          "N37"
+        ],
+        "solid_edge": "E37",
+        "faces": [
+          "Sy+"
+        ],
+        "kind": "cut",
+        "mate": "NE10"
+      },
+      {
+        "id": "NE46",
+        "vertices": [
+          "N37",
+          "N38"
+        ],
+        "solid_edge": "E36",
+        "faces": [
+          "Sy+"
+        ],
+        "kind": "cut",
+        "mate": "NE56"
+      },
+      {
+        "id": "NE47",
+        "vertices": [
+          "N05",
+          "N38"
+        ],
+        "solid_edge": "E38",
+        "faces": [
+          "Sy+"
+        ],
+        "kind": "cut",
+        "mate": "NE40"
+      },
+      {
+        "id": "NE48",
+        "vertices": [
+          "N11",
+          "N39"
+        ],
+        "solid_edge": "E42",
+        "faces": [
+          "Sz-"
+        ],
+        "kind": "cut",
+        "mate": "NE53"
+      },
+      {
+        "id": "NE49",
+        "vertices": [
+          "N08",
+          "N40"
+        ],
+        "solid_edge": "E45",
+        "faces": [
+          "Sz-"
+        ],
+        "kind": "cut",
+        "mate": "NE07"
+      },
+      {
+        "id": "NE50",
+        "vertices": [
+          "N39",
+          "N40"
+        ],
+        "solid_edge": "E47",
+        "faces": [
+          "Sz-"
+        ],
+        "kind": "cut",
+        "mate": "NE38"
+      },
+      {
+        "id": "NE51",
+        "vertices": [
+          "N41",
+          "N42"
+        ],
+        "solid_edge": "E34",
+        "faces": [
+          "Hyz--"
+        ],
+        "kind": "cut",
+        "mate": "NE65"
+      },
+      {
+        "id": "NE52",
+        "vertices": [
+          "N12",
+          "N42"
+        ],
+        "solid_edge": "E02",
+        "faces": [
+          "Hyz--"
+        ],
+        "kind": "cut",
+        "mate": "NE18"
+      },
+      {
+        "id": "NE53",
+        "vertices": [
+          "N11",
+          "N43"
+        ],
+        "solid_edge": "E42",
+        "faces": [
+          "Hyz--"
+        ],
+        "kind": "cut",
+        "mate": "NE48"
+      },
+      {
+        "id": "NE54",
+        "vertices": [
+          "N43",
+          "N44"
+        ],
+        "solid_edge": "E15",
+        "faces": [
+          "Hyz--"
+        ],
+        "kind": "cut",
+        "mate": "NE37"
+      },
+      {
+        "id": "NE55",
+        "vertices": [
+          "N41",
+          "N44"
+        ],
+        "solid_edge": "E14",
+        "faces": [
+          "Hyz--"
+        ],
+        "kind": "cut",
+        "mate": "NE68"
+      },
+      {
+        "id": "NE56",
+        "vertices": [
+          "N45",
+          "N46"
+        ],
+        "solid_edge": "E36",
+        "faces": [
+          "Hxy-+"
+        ],
+        "kind": "cut",
+        "mate": "NE46"
+      },
+      {
+        "id": "NE57",
+        "vertices": [
+          "N09",
+          "N46"
+        ],
+        "solid_edge": "E08",
+        "faces": [
+          "Hxy-+"
+        ],
+        "kind": "cut",
+        "mate": "NE09"
+      },
+      {
+        "id": "NE58",
+        "vertices": [
+          "N14",
+          "N47"
+        ],
+        "solid_edge": "E28",
+        "faces": [
+          "Hxy-+"
+        ],
+        "kind": "cut",
+        "mate": "NE63"
+      },
+      {
+        "id": "NE59",
+        "vertices": [
+          "N47",
+          "N48"
+        ],
+        "solid_edge": "E10",
+        "faces": [
+          "Hxy-+"
+        ],
+        "kind": "cut",
+        "mate": "NE76"
+      },
+      {
+        "id": "NE60",
+        "vertices": [
+          "N45",
+          "N48"
+        ],
+        "solid_edge": "E11",
+        "faces": [
+          "Hxy-+"
+        ],
+        "kind": "cut",
+        "mate": "NE41"
+      },
+      {
+        "id": "NE61",
+        "vertices": [
+          "N13",
+          "N49"
+        ],
+        "solid_edge": "E25",
+        "faces": [
+          "Sx-"
+        ],
+        "kind": "cut",
+        "mate": "NE17"
+      },
+      {
+        "id": "NE62",
+        "vertices": [
+          "N49",
+          "N50"
+        ],
+        "solid_edge": "E27",
+        "faces": [
+          "Sx-"
+        ],
+        "kind": "cut",
+        "mate": "NE72"
+      },
+      {
+        "id": "NE63",
+        "vertices": [
+          "N14",
+          "N50"
+        ],
+        "solid_edge": "E28",
+        "faces": [
+          "Sx-"
+        ],
+        "kind": "cut",
+        "mate": "NE58"
+      },
+      {
+        "id": "NE64",
+        "vertices": [
+          "N17",
+          "N51"
+        ],
+        "solid_edge": "E33",
+        "faces": [
+          "Sy-"
+        ],
+        "kind": "cut",
+        "mate": "NE19"
+      },
+      {
+        "id": "NE65",
+        "vertices": [
+          "N51",
+          "N52"
+        ],
+        "solid_edge": "E34",
+        "faces": [
+          "Sy-"
+        ],
+        "kind": "cut",
+        "mate": "NE51"
+      },
+      {
+        "id": "NE66",
+        "vertices": [
+          "N21",
+          "N52"
+        ],
+        "solid_edge": "E39",
+        "faces": [
+          "Sy-"
+        ],
+        "kind": "cut",
+        "mate": "NE67"
+      },
+      {
+        "id": "NE67",
+        "vertices": [
+          "N21",
+          "N53"
+        ],
+        "solid_edge": "E39",
+        "faces": [
+          "Hxy+-"
+        ],
+        "kind": "cut",
+        "mate": "NE66"
+      },
+      {
+        "id": "NE68",
+        "vertices": [
+          "N53",
+          "N54"
+        ],
+        "solid_edge": "E14",
+        "faces": [
+          "Hxy+-"
+        ],
+        "kind": "cut",
+        "mate": "NE55"
+      },
+      {
+        "id": "NE69",
+        "vertices": [
+          "N54",
+          "N55"
+        ],
+        "solid_edge": "E13",
+        "faces": [
+          "Hxy+-"
+        ],
+        "kind": "cut",
+        "mate": "NE36"
+      },
+      {
+        "id": "NE70",
+        "vertices": [
+          "N55",
+          "N56"
+        ],
+        "solid_edge": "E29",
+        "faces": [
+          "Hxy+-"
+        ],
+        "kind": "cut",
+        "mate": "NE32"
+      },
+      {
+        "id": "NE71",
+        "vertices": [
+          "N22",
+          "N56"
+        ],
+        "solid_edge": "E16",
+        "faces": [
+          "Hxy+-"
+        ],
+        "kind": "cut",
+        "mate": "NE28"
+      },
+      {
+        "id": "NE72",
+        "vertices": [
+          "N57",
+          "N58"
+        ],
+        "solid_edge": "E27",
+        "faces": [
+          "Hxz-+"
+        ],
+        "kind": "cut",
+        "mate": "NE62"
+      },
+      {
+        "id": "NE73",
+        "vertices": [
+          "N18",
+          "N58"
+        ],
+        "solid_edge": "E04",
+        "faces": [
+          "Hxz-+"
+        ],
+        "kind": "cut",
+        "mate": "NE21"
+      },
+      {
+        "id": "NE74",
+        "vertices": [
+          "N20",
+          "N59"
+        ],
+        "solid_edge": "E43",
+        "faces": [
+          "Hxz-+"
+        ],
+        "kind": "cut",
+        "mate": "NE77"
+      },
+      {
+        "id": "NE75",
+        "vertices": [
+          "N59",
+          "N60"
+        ],
+        "solid_edge": "E12",
+        "faces": [
+          "Hxz-+"
+        ],
+        "kind": "cut",
+        "mate": "NE42"
+      },
+      {
+        "id": "NE76",
+        "vertices": [
+          "N57",
+          "N60"
+        ],
+        "solid_edge": "E10",
+        "faces": [
+          "Hxz-+"
+        ],
+        "kind": "cut",
+        "mate": "NE59"
+      },
+      {
+        "id": "NE77",
+        "vertices": [
+          "N20",
+          "N61"
+        ],
+        "solid_edge": "E43",
+        "faces": [
+          "Sz+"
+        ],
+        "kind": "cut",
+        "mate": "NE74"
+      },
+      {
+        "id": "NE78",
+        "vertices": [
+          "N19",
+          "N62"
+        ],
+        "solid_edge": "E48",
+        "faces": [
+          "Sz+"
+        ],
+        "kind": "cut",
+        "mate": "NE27"
+      },
+      {
+        "id": "NE79",
+        "vertices": [
+          "N61",
+          "N62"
+        ],
+        "solid_edge": "E46",
+        "faces": [
+          "Sz+"
+        ],
+        "kind": "cut",
+        "mate": "NE43"
+      }
+    ],
+    "faces": [
+      {
+        "id": "Hxy++",
+        "kind": "hexagon",
+        "placement": "strip",
+        "vertices": [
+          "N01",
+          "N02",
+          "N03",
+          "N04",
+          "N05",
+          "N06"
+        ],
+        "parent": null,
+        "hinge": null
+      },
+      {
+        "id": "Hyz+-",
+        "kind": "hexagon",
+        "placement": "strip",
+        "vertices": [
+          "N07",
+          "N08",
+          "N09",
+          "N10",
+          "N04",
+          "N03"
+        ],
+        "parent": "Hxy++",
+        "hinge": "E20"
+      },
+      {
+        "id": "Hxz--",
+        "kind": "hexagon",
+        "placement": "strip",
+        "vertices": [
+          "N08",
+          "N11",
+          "N12",
+          "N13",
+          "N14",
+          "N09"
+        ],
+        "parent": "Hyz+-",
+        "hinge": "E09"
+      },
+      {
+        "id": "Hxy--",
+        "kind": "hexagon",
+        "placement": "strip",
+        "vertices": [
+          "N15",
+          "N13",
+          "N12",
+          "N16",
+          "N17",
+          "N18"
+        ],
+        "parent": "Hxz--",
+        "hinge": "E01"
+      },
+      {
+        "id": "Hyz-+",
+        "kind": "hexagon",
+        "placement": "strip",
+        "vertices": [
+          "N19",
+          "N20",
+          "N18",
+          "N17",
+          "N21",
+          "N22"
+        ],
+        "parent": "Hxy--",
+        "hinge": "E05"
+      },
+      {
+        "id": "Hxz++",
+        "kind": "hexagon",
+        "placement": "strip",
+        "vertices": [
+          "N23",
+          "N19",
+          "N22",
+          "N24",
+          "N25",
+          "N26"
+        ],
+        "parent": "Hyz-+",
+        "hinge": "E18"
+      },
+      {
+        "id": "Sx+",
+        "kind": "square",
+        "placement": "top",
+        "vertices": [
+          "N27",
+          "N28",
+          "N02",
+          "N01"
+        ],
+        "parent": "Hxy++",
+        "hinge": "E32"
+      },
+      {
+        "id": "Hxz+-",
+        "kind": "hexagon",
+        "placement": "top",
+        "vertices": [
+          "N02",
+          "N29",
+          "N30",
+          "N31",
+          "N32",
+          "N03"
+        ],
+        "parent": "Hxy++",
+        "hinge": "E19"
+      },
+      {
+        "id": "Hyz++",
+        "kind": "hexagon",
+        "placement": "bottom",
+        "vertices": [
+          "N05",
+          "N33",
+          "N34",
+          "N35",
+          "N36",
+          "N06"
+        ],
+        "parent": "Hxy++",
+        "hinge": "E23"
+      },
+      {
+        "id": "Sy+",
+        "kind": "square",
+        "placement": "bottom",
+        "vertices": [
+          "N04",
+          "N37",
+          "N38",
+          "N05"
+        ],
+        "parent": "Hxy++",
+        "hinge": "E40"
+      },
+      {
+        "id": "Sz-",
+        "kind": "square",
+        "placement": "top",
+        "vertices": [
+          "N39",
+          "N11",
+          "N08",
+          "N40"
+        ],
+        "parent": "Hxz--",
+        "hinge": "E41"
+      },
+      {
+        "id": "Hyz--",
+        "kind": "hexagon",
+        "placement": "top",
+        "vertices": [
+          "N41",
+          "N42",
+          "N12",
+          "N11",
+          "N43",
+          "N44"
+        ],
+        "parent": "Hxz--",
+        "hinge": "E03"
+      },
+      {
+        "id": "Hxy-+",
+        "kind": "hexagon",
+        "placement": "bottom",
+        "vertices": [
+          "N45",
+          "N46",
+          "N09",
+          "N14",
+          "N47",
+          "N48"
+        ],
+        "parent": "Hxz--",
+        "hinge": "E07"
+      },
+      {
+        "id": "Sx-",
+        "kind": "square",
+        "placement": "bottom",
+        "vertices": [
+          "N14",
+          "N13",
+          "N49",
+          "N50"
+        ],
+        "parent": "Hxz--",
+        "hinge": "E26"
+      },
+      {
+        "id": "Sy-",
+        "kind": "square",
+        "placement": "top",
+        "vertices": [
+          "N17",
+          "N51",
+          "N52",
+          "N21"
+        ],
+        "parent": "Hyz-+",
+        "hinge": "E35"
+      },
+      {
+        "id": "Hxy+-",
+        "kind": "hexagon",
+        "placement": "top",
+        "vertices": [
+          "N21",
+          "N53",
+          "N54",
+          "N55",
+          "N56",
+          "N22"
+        ],
+        "parent": "Hyz-+",
+        "hinge": "E17"
+      },
+      {
+        "id": "Hxz-+",
+        "kind": "hexagon",
+        "placement": "bottom",
+        "vertices": [
+          "N57",
+          "N58",
+          "N18",
+          "N20",
+          "N59",
+          "N60"
+        ],
+        "parent": "Hyz-+",
+        "hinge": "E06"
+      },
+      {
+        "id": "Sz+",
+        "kind": "square",
+        "placement": "bottom",
+        "vertices": [
+          "N61",
+          "N20",
+          "N19",
+          "N62"
+        ],
+        "parent": "Hyz-+",
+        "hinge": "E44"
+      }
+    ]
+  },
+  "validation": {
+    "solid_counts": {
+      "vertices": 32,
+      "edges": 48,
+      "faces": 18
+    },
+    "net_counts": {
+      "vertices": 62,
+      "edges": 79,
+      "faces": 18,
+      "hinges": 17,
+      "cut_pairs": 31
+    },
+    "edge_length_tolerance": 1e-09,
+    "angle_tolerance_degrees": 1e-09,
+    "face_distance_tolerance": 1e-09,
+    "overlapping_face_pairs": 0,
+    "folded_seams_match": true
+  }
+}

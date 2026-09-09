@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1004.749848" height="591.259204" viewBox="0 0 1004.749848 591.259204" role="img" aria-labelledby="title description">
+  <title id="title">Equilateral chamfered cube: 12 hexagons and 6 squares</title>
+  <desc id="description">Unit-edge net with six horizontal alternating hexagons. Top attachments SH--SH--SH--; bottom HS--HS--HS--, left to right. Hexagon angles: 109.471220634491 degrees twice at opposite vertices, 125.264389682755 degrees four times. Square angles: 90 degrees. Cut solid lines, fold dashed lines, and join identical E labels. Cut vertex copies coincide only after folding. JSON supplies their exact correspondence.</desc>
+  <style>
+    .hexagon { fill: #fff0ce; } .square { fill: #dcedff; }
+    .cut { stroke: #20252b; stroke-width: 1.3; }
+    .fold { stroke: #276653; stroke-width: 1; stroke-dasharray: 5 4; }
+    text { font-family: sans-serif; text-anchor: middle; fill: #20252b; }
+    .face-label { font-size: 12px; } .seam-label { font-size: 8px; fill: #555; }
+  </style>
+  <rect width="1004.749848" height="591.259204" fill="white"/>
+  <text x="502.374924" y="25" font-size="18">Equilateral chamfered cube</text>
+  <text x="502.374924" y="45" font-size="12">12 hexagons + 6 squares | all edges equal | fixed, non-overlapping net</text>
+  <g id="faces">
+    <polygon id="Hxy++" class="hexagon" points="105.283149,270.390280 170.602875,224.202258 246.027599,250.868925 246.027599,330.868925 180.707872,377.056946 105.283149,350.390280"/>
+    <polygon id="Hyz+-" class="hexagon" points="321.452322,224.202258 386.772048,270.390280 386.772048,350.390280 311.347325,377.056946 246.027599,330.868925 246.027599,250.868925"/>
+    <polygon id="Hxz--" class="hexagon" points="386.772048,270.390280 452.091775,224.202258 527.516498,250.868925 527.516498,330.868925 462.196772,377.056946 386.772048,350.390280"/>
+    <polygon id="Hxy--" class="hexagon" points="592.836225,377.056946 527.516498,330.868925 527.516498,250.868925 602.941222,224.202258 668.260948,270.390280 668.260948,350.390280"/>
+    <polygon id="Hyz-+" class="hexagon" points="809.005398,330.868925 743.685671,377.056946 668.260948,350.390280 668.260948,270.390280 733.580675,224.202258 809.005398,250.868925"/>
+    <polygon id="Hxz++" class="hexagon" points="874.325124,377.056946 809.005398,330.868925 809.005398,250.868925 884.430121,224.202258 949.749848,270.390280 949.749848,350.390280"/>
+    <polygon id="Sx+" class="square" points="59.095127,205.070553 124.414854,158.882532 170.602875,224.202258 105.283149,270.390280"/>
+    <polygon id="Hxz+-" class="hexagon" points="170.602875,224.202258 148.829633,147.222222 199.112782,85.000000 274.537505,111.666667 296.310748,188.646703 246.027599,250.868925"/>
+    <polygon id="Hyz++" class="hexagon" points="180.707872,377.056946 202.481114,454.036982 152.197965,516.259204 76.773242,489.592538 55.000000,412.612502 105.283149,350.390280"/>
+    <polygon id="Sy+" class="square" points="246.027599,330.868925 292.215620,396.188651 226.895894,442.376673 180.707872,377.056946"/>
+    <polygon id="Sz-" class="square" points="405.903753,158.882532 452.091775,224.202258 386.772048,270.390280 340.584027,205.070553"/>
+    <polygon id="Hyz--" class="hexagon" points="556.026405,111.666667 577.799647,188.646703 527.516498,250.868925 452.091775,224.202258 430.318533,147.222222 480.601682,85.000000"/>
+    <polygon id="Hxy-+" class="hexagon" points="358.262142,489.592538 336.488900,412.612502 386.772048,350.390280 462.196772,377.056946 483.970014,454.036982 433.686865,516.259204"/>
+    <polygon id="Sx-" class="square" points="462.196772,377.056946 527.516498,330.868925 573.704520,396.188651 508.384793,442.376673"/>
+    <polygon id="Sy-" class="square" points="668.260948,270.390280 622.072927,205.070553 687.392653,158.882532 733.580675,224.202258"/>
+    <polygon id="Hxy+-" class="hexagon" points="733.580675,224.202258 711.807432,147.222222 762.090581,85.000000 837.515305,111.666667 859.288547,188.646703 809.005398,250.868925"/>
+    <polygon id="Hxz-+" class="hexagon" points="639.751041,489.592538 617.977799,412.612502 668.260948,350.390280 743.685671,377.056946 765.458914,454.036982 715.175765,516.259204"/>
+    <polygon id="Sz+" class="square" points="789.873693,442.376673 743.685671,377.056946 809.005398,330.868925 855.193419,396.188651"/>
+  </g>
+  <g id="edges" fill="none">
+    <line id="NE01" class="fold" data-solid-edge="E32" x1="105.283149" y1="270.390280" x2="170.602875" y2="224.202258"/>
+    <line id="NE02" class="fold" data-solid-edge="E19" x1="170.602875" y1="224.202258" x2="246.027599" y2="250.868925"/>
+    <line id="NE03" class="fold" data-solid-edge="E20" x1="246.027599" y1="250.868925" x2="246.027599" y2="330.868925"/>
+    <line id="NE04" class="fold" data-solid-edge="E40" x1="246.027599" y1="330.868925" x2="180.707872" y2="377.056946"/>
+    <line id="NE05" class="fold" data-solid-edge="E23" x1="180.707872" y1="377.056946" x2="105.283149" y2="350.390280"/>
+    <line id="NE06" class="cut" data-solid-edge="E22" x1="105.283149" y1="270.390280" x2="105.283149" y2="350.390280"/>
+    <line id="NE07" class="cut" data-solid-edge="E45" x1="321.452322" y1="224.202258" x2="386.772048" y2="270.390280"/>
+    <line id="NE08" class="fold" data-solid-edge="E09" x1="386.772048" y1="270.390280" x2="386.772048" y2="350.390280"/>
+    <line id="NE09" class="cut" data-solid-edge="E08" x1="386.772048" y1="350.390280" x2="311.347325" y2="377.056946"/>
+    <line id="NE10" class="cut" data-solid-edge="E37" x1="246.027599" y1="330.868925" x2="311.347325" y2="377.056946"/>
+    <line id="NE11" class="cut" data-solid-edge="E21" x1="246.027599" y1="250.868925" x2="321.452322" y2="224.202258"/>
+    <line id="NE12" class="fold" data-solid-edge="E41" x1="386.772048" y1="270.390280" x2="452.091775" y2="224.202258"/>
+    <line id="NE13" class="fold" data-solid-edge="E03" x1="452.091775" y1="224.202258" x2="527.516498" y2="250.868925"/>
+    <line id="NE14" class="fold" data-solid-edge="E01" x1="527.516498" y1="250.868925" x2="527.516498" y2="330.868925"/>
+    <line id="NE15" class="fold" data-solid-edge="E26" x1="527.516498" y1="330.868925" x2="462.196772" y2="377.056946"/>
+    <line id="NE16" class="fold" data-solid-edge="E07" x1="386.772048" y1="350.390280" x2="462.196772" y2="377.056946"/>
+    <line id="NE17" class="cut" data-solid-edge="E25" x1="527.516498" y1="330.868925" x2="592.836225" y2="377.056946"/>
+    <line id="NE18" class="cut" data-solid-edge="E02" x1="527.516498" y1="250.868925" x2="602.941222" y2="224.202258"/>
+    <line id="NE19" class="cut" data-solid-edge="E33" x1="602.941222" y1="224.202258" x2="668.260948" y2="270.390280"/>
+    <line id="NE20" class="fold" data-solid-edge="E05" x1="668.260948" y1="270.390280" x2="668.260948" y2="350.390280"/>
+    <line id="NE21" class="cut" data-solid-edge="E04" x1="592.836225" y1="377.056946" x2="668.260948" y2="350.390280"/>
+    <line id="NE22" class="fold" data-solid-edge="E44" x1="809.005398" y1="330.868925" x2="743.685671" y2="377.056946"/>
+    <line id="NE23" class="fold" data-solid-edge="E06" x1="668.260948" y1="350.390280" x2="743.685671" y2="377.056946"/>
+    <line id="NE24" class="fold" data-solid-edge="E35" x1="668.260948" y1="270.390280" x2="733.580675" y2="224.202258"/>
+    <line id="NE25" class="fold" data-solid-edge="E17" x1="733.580675" y1="224.202258" x2="809.005398" y2="250.868925"/>
+    <line id="NE26" class="fold" data-solid-edge="E18" x1="809.005398" y1="330.868925" x2="809.005398" y2="250.868925"/>
+    <line id="NE27" class="cut" data-solid-edge="E48" x1="809.005398" y1="330.868925" x2="874.325124" y2="377.056946"/>
+    <line id="NE28" class="cut" data-solid-edge="E16" x1="809.005398" y1="250.868925" x2="884.430121" y2="224.202258"/>
+    <line id="NE29" class="cut" data-solid-edge="E31" x1="884.430121" y1="224.202258" x2="949.749848" y2="270.390280"/>
+    <line id="NE30" class="cut" data-solid-edge="E22" x1="949.749848" y1="270.390280" x2="949.749848" y2="350.390280"/>
+    <line id="NE31" class="cut" data-solid-edge="E24" x1="874.325124" y1="377.056946" x2="949.749848" y2="350.390280"/>
+    <line id="NE32" class="cut" data-solid-edge="E29" x1="59.095127" y1="205.070553" x2="124.414854" y2="158.882532"/>
+    <line id="NE33" class="cut" data-solid-edge="E30" x1="170.602875" y1="224.202258" x2="124.414854" y2="158.882532"/>
+    <line id="NE34" class="cut" data-solid-edge="E31" x1="105.283149" y1="270.390280" x2="59.095127" y2="205.070553"/>
+    <line id="NE35" class="cut" data-solid-edge="E30" x1="170.602875" y1="224.202258" x2="148.829633" y2="147.222222"/>
+    <line id="NE36" class="cut" data-solid-edge="E13" x1="148.829633" y1="147.222222" x2="199.112782" y2="85.000000"/>
+    <line id="NE37" class="cut" data-solid-edge="E15" x1="199.112782" y1="85.000000" x2="274.537505" y2="111.666667"/>
+    <line id="NE38" class="cut" data-solid-edge="E47" x1="274.537505" y1="111.666667" x2="296.310748" y2="188.646703"/>
+    <line id="NE39" class="cut" data-solid-edge="E21" x1="246.027599" y1="250.868925" x2="296.310748" y2="188.646703"/>
+    <line id="NE40" class="cut" data-solid-edge="E38" x1="180.707872" y1="377.056946" x2="202.481114" y2="454.036982"/>
+    <line id="NE41" class="cut" data-solid-edge="E11" x1="202.481114" y1="454.036982" x2="152.197965" y2="516.259204"/>
+    <line id="NE42" class="cut" data-solid-edge="E12" x1="152.197965" y1="516.259204" x2="76.773242" y2="489.592538"/>
+    <line id="NE43" class="cut" data-solid-edge="E46" x1="76.773242" y1="489.592538" x2="55.000000" y2="412.612502"/>
+    <line id="NE44" class="cut" data-solid-edge="E24" x1="105.283149" y1="350.390280" x2="55.000000" y2="412.612502"/>
+    <line id="NE45" class="cut" data-solid-edge="E37" x1="246.027599" y1="330.868925" x2="292.215620" y2="396.188651"/>
+    <line id="NE46" class="cut" data-solid-edge="E36" x1="292.215620" y1="396.188651" x2="226.895894" y2="442.376673"/>
+    <line id="NE47" class="cut" data-solid-edge="E38" x1="180.707872" y1="377.056946" x2="226.895894" y2="442.376673"/>
+    <line id="NE48" class="cut" data-solid-edge="E42" x1="452.091775" y1="224.202258" x2="405.903753" y2="158.882532"/>
+    <line id="NE49" class="cut" data-solid-edge="E45" x1="386.772048" y1="270.390280" x2="340.584027" y2="205.070553"/>
+    <line id="NE50" class="cut" data-solid-edge="E47" x1="405.903753" y1="158.882532" x2="340.584027" y2="205.070553"/>
+    <line id="NE51" class="cut" data-solid-edge="E34" x1="556.026405" y1="111.666667" x2="577.799647" y2="188.646703"/>
+    <line id="NE52" class="cut" data-solid-edge="E02" x1="527.516498" y1="250.868925" x2="577.799647" y2="188.646703"/>
+    <line id="NE53" class="cut" data-solid-edge="E42" x1="452.091775" y1="224.202258" x2="430.318533" y2="147.222222"/>
+    <line id="NE54" class="cut" data-solid-edge="E15" x1="430.318533" y1="147.222222" x2="480.601682" y2="85.000000"/>
+    <line id="NE55" class="cut" data-solid-edge="E14" x1="556.026405" y1="111.666667" x2="480.601682" y2="85.000000"/>
+    <line id="NE56" class="cut" data-solid-edge="E36" x1="358.262142" y1="489.592538" x2="336.488900" y2="412.612502"/>
+    <line id="NE57" class="cut" data-solid-edge="E08" x1="386.772048" y1="350.390280" x2="336.488900" y2="412.612502"/>
+    <line id="NE58" class="cut" data-solid-edge="E28" x1="462.196772" y1="377.056946" x2="483.970014" y2="454.036982"/>
+    <line id="NE59" class="cut" data-solid-edge="E10" x1="483.970014" y1="454.036982" x2="433.686865" y2="516.259204"/>
+    <line id="NE60" class="cut" data-solid-edge="E11" x1="358.262142" y1="489.592538" x2="433.686865" y2="516.259204"/>
+    <line id="NE61" class="cut" data-solid-edge="E25" x1="527.516498" y1="330.868925" x2="573.704520" y2="396.188651"/>
+    <line id="NE62" class="cut" data-solid-edge="E27" x1="573.704520" y1="396.188651" x2="508.384793" y2="442.376673"/>
+    <line id="NE63" class="cut" data-solid-edge="E28" x1="462.196772" y1="377.056946" x2="508.384793" y2="442.376673"/>
+    <line id="NE64" class="cut" data-solid-edge="E33" x1="668.260948" y1="270.390280" x2="622.072927" y2="205.070553"/>
+    <line id="NE65" class="cut" data-solid-edge="E34" x1="622.072927" y1="205.070553" x2="687.392653" y2="158.882532"/>
+    <line id="NE66" class="cut" data-solid-edge="E39" x1="733.580675" y1="224.202258" x2="687.392653" y2="158.882532"/>
+    <line id="NE67" class="cut" data-solid-edge="E39" x1="733.580675" y1="224.202258" x2="711.807432" y2="147.222222"/>
+    <line id="NE68" class="cut" data-solid-edge="E14" x1="711.807432" y1="147.222222" x2="762.090581" y2="85.000000"/>
+    <line id="NE69" class="cut" data-solid-edge="E13" x1="762.090581" y1="85.000000" x2="837.515305" y2="111.666667"/>
+    <line id="NE70" class="cut" data-solid-edge="E29" x1="837.515305" y1="111.666667" x2="859.288547" y2="188.646703"/>
+    <line id="NE71" class="cut" data-solid-edge="E16" x1="809.005398" y1="250.868925" x2="859.288547" y2="188.646703"/>
+    <line id="NE72" class="cut" data-solid-edge="E27" x1="639.751041" y1="489.592538" x2="617.977799" y2="412.612502"/>
+    <line id="NE73" class="cut" data-solid-edge="E04" x1="668.260948" y1="350.390280" x2="617.977799" y2="412.612502"/>
+    <line id="NE74" class="cut" data-solid-edge="E43" x1="743.685671" y1="377.056946" x2="765.458914" y2="454.036982"/>
+    <line id="NE75" class="cut" data-solid-edge="E12" x1="765.458914" y1="454.036982" x2="715.175765" y2="516.259204"/>
+    <line id="NE76" class="cut" data-solid-edge="E10" x1="639.751041" y1="489.592538" x2="715.175765" y2="516.259204"/>
+    <line id="NE77" class="cut" data-solid-edge="E43" x1="743.685671" y1="377.056946" x2="789.873693" y2="442.376673"/>
+    <line id="NE78" class="cut" data-solid-edge="E48" x1="809.005398" y1="330.868925" x2="855.193419" y2="396.188651"/>
+    <line id="NE79" class="cut" data-solid-edge="E46" x1="789.873693" y1="442.376673" x2="855.193419" y2="396.188651"/>
+  </g>
+  <g id="labels">
+    <text class="face-label" x="175.655374" y="300.629602" dominant-baseline="middle">Hxy++</text>
+    <text class="face-label" x="316.399824" y="300.629602" dominant-baseline="middle">Hyz+-</text>
+    <text class="face-label" x="457.144273" y="300.629602" dominant-baseline="middle">Hxz--</text>
+    <text class="face-label" x="597.888723" y="300.629602" dominant-baseline="middle">Hxy--</text>
+    <text class="face-label" x="738.633173" y="300.629602" dominant-baseline="middle">Hyz-+</text>
+    <text class="face-label" x="879.377623" y="300.629602" dominant-baseline="middle">Hxz++</text>
+    <text class="face-label" x="114.849001" y="214.636406" dominant-baseline="middle">Sx+</text>
+    <text class="face-label" x="222.570190" y="167.934462" dominant-baseline="middle">Hxz+-</text>
+    <text class="face-label" x="128.740557" y="433.324742" dominant-baseline="middle">Hyz++</text>
+    <text class="face-label" x="236.461746" y="386.622799" dominant-baseline="middle">Sy+</text>
+    <text class="face-label" x="396.337901" y="214.636406" dominant-baseline="middle">Sz-</text>
+    <text class="face-label" x="504.059090" y="167.934462" dominant-baseline="middle">Hyz--</text>
+    <text class="face-label" x="410.229457" y="433.324742" dominant-baseline="middle">Hxy-+</text>
+    <text class="face-label" x="517.950646" y="386.622799" dominant-baseline="middle">Sx-</text>
+    <text class="face-label" x="677.826801" y="214.636406" dominant-baseline="middle">Sy-</text>
+    <text class="face-label" x="785.547990" y="167.934462" dominant-baseline="middle">Hxy+-</text>
+    <text class="face-label" x="691.718356" y="433.324742" dominant-baseline="middle">Hxz-+</text>
+    <text class="face-label" x="799.439545" y="386.622799" dominant-baseline="middle">Sz+</text>
+    <text class="seam-label" x="115.584532" y="308.961470" dominant-baseline="middle">E22</text>
+    <text class="seam-label" x="348.107742" y="255.787833" dominant-baseline="middle">E45</text>
+    <text class="seam-label" x="344.278798" y="354.487645" dominant-baseline="middle">E08</text>
+    <text class="seam-label" x="284.691905" y="345.471371" dominant-baseline="middle">E37</text>
+    <text class="seam-label" x="288.520849" y="246.771559" dominant-baseline="middle">E21</text>
+    <text class="seam-label" x="566.180804" y="345.471371" dominant-baseline="middle">E25</text>
+    <text class="seam-label" x="570.009749" y="246.771559" dominant-baseline="middle">E02</text>
+    <text class="seam-label" x="629.596642" y="255.787833" dominant-baseline="middle">E33</text>
+    <text class="seam-label" x="625.767698" y="354.487645" dominant-baseline="middle">E04</text>
+    <text class="seam-label" x="847.669704" y="345.471371" dominant-baseline="middle">E48</text>
+    <text class="seam-label" x="851.498648" y="246.771559" dominant-baseline="middle">E16</text>
+    <text class="seam-label" x="911.085542" y="255.787833" dominant-baseline="middle">E31</text>
+    <text class="seam-label" x="939.448464" y="308.961470" dominant-baseline="middle">E22</text>
+    <text class="seam-label" x="907.256597" y="354.487645" dominant-baseline="middle">E24</text>
+    <text class="seam-label" x="97.759433" y="190.468107" dominant-baseline="middle">E29</text>
+    <text class="seam-label" x="139.017300" y="197.546838" dominant-baseline="middle">E30</text>
+    <text class="seam-label" x="90.680703" y="231.725974" dominant-baseline="middle">E31</text>
+    <text class="seam-label" x="169.723659" y="182.881719" dominant-baseline="middle">E30</text>
+    <text class="seam-label" x="181.085332" y="123.697232" dominant-baseline="middle">E13</text>
+    <text class="seam-label" x="234.738443" y="108.521841" dominant-baseline="middle">E15</text>
+    <text class="seam-label" x="275.416722" y="152.987206" dominant-baseline="middle">E47</text>
+    <text class="seam-label" x="264.055049" y="212.171693" dominant-baseline="middle">E21</text>
+    <text class="seam-label" x="181.587089" y="418.377486" dominant-baseline="middle">E38</text>
+    <text class="seam-label" x="170.225415" y="477.561972" dominant-baseline="middle">E11</text>
+    <text class="seam-label" x="116.572304" y="492.737364" dominant-baseline="middle">E12</text>
+    <text class="seam-label" x="75.894026" y="448.271998" dominant-baseline="middle">E46</text>
+    <text class="seam-label" x="87.255699" y="389.087512" dominant-baseline="middle">E24</text>
+    <text class="seam-label" x="260.630045" y="369.533231" dominant-baseline="middle">E37</text>
+    <text class="seam-label" x="253.551314" y="410.791098" dominant-baseline="middle">E36</text>
+    <text class="seam-label" x="212.293447" y="403.712367" dominant-baseline="middle">E38</text>
+    <text class="seam-label" x="420.506200" y="197.546838" dominant-baseline="middle">E42</text>
+    <text class="seam-label" x="372.169602" y="231.725974" dominant-baseline="middle">E45</text>
+    <text class="seam-label" x="379.248333" y="190.468107" dominant-baseline="middle">E47</text>
+    <text class="seam-label" x="556.905621" y="152.987206" dominant-baseline="middle">E34</text>
+    <text class="seam-label" x="545.543948" y="212.171693" dominant-baseline="middle">E02</text>
+    <text class="seam-label" x="451.212559" y="182.881719" dominant-baseline="middle">E42</text>
+    <text class="seam-label" x="462.574232" y="123.697232" dominant-baseline="middle">E15</text>
+    <text class="seam-label" x="516.227343" y="108.521841" dominant-baseline="middle">E14</text>
+    <text class="seam-label" x="357.382925" y="448.271998" dominant-baseline="middle">E36</text>
+    <text class="seam-label" x="368.744598" y="389.087512" dominant-baseline="middle">E08</text>
+    <text class="seam-label" x="463.075988" y="418.377486" dominant-baseline="middle">E28</text>
+    <text class="seam-label" x="451.714315" y="477.561972" dominant-baseline="middle">E10</text>
+    <text class="seam-label" x="398.061204" y="492.737364" dominant-baseline="middle">E11</text>
+    <text class="seam-label" x="542.118945" y="369.533231" dominant-baseline="middle">E25</text>
+    <text class="seam-label" x="535.040214" y="410.791098" dominant-baseline="middle">E27</text>
+    <text class="seam-label" x="493.782347" y="403.712367" dominant-baseline="middle">E28</text>
+    <text class="seam-label" x="653.658502" y="231.725974" dominant-baseline="middle">E33</text>
+    <text class="seam-label" x="660.737233" y="190.468107" dominant-baseline="middle">E34</text>
+    <text class="seam-label" x="701.995099" y="197.546838" dominant-baseline="middle">E39</text>
+    <text class="seam-label" x="732.701458" y="182.881719" dominant-baseline="middle">E39</text>
+    <text class="seam-label" x="744.063131" y="123.697232" dominant-baseline="middle">E14</text>
+    <text class="seam-label" x="797.716243" y="108.521841" dominant-baseline="middle">E13</text>
+    <text class="seam-label" x="838.394521" y="152.987206" dominant-baseline="middle">E29</text>
+    <text class="seam-label" x="827.032848" y="212.171693" dominant-baseline="middle">E16</text>
+    <text class="seam-label" x="638.871825" y="448.271998" dominant-baseline="middle">E27</text>
+    <text class="seam-label" x="650.233498" y="389.087512" dominant-baseline="middle">E04</text>
+    <text class="seam-label" x="744.564888" y="418.377486" dominant-baseline="middle">E43</text>
+    <text class="seam-label" x="733.203215" y="477.561972" dominant-baseline="middle">E12</text>
+    <text class="seam-label" x="679.550103" y="492.737364" dominant-baseline="middle">E10</text>
+    <text class="seam-label" x="775.271247" y="403.712367" dominant-baseline="middle">E43</text>
+    <text class="seam-label" x="823.607844" y="369.533231" dominant-baseline="middle">E48</text>
+    <text class="seam-label" x="816.529113" y="410.791098" dominant-baseline="middle">E46</text>
+  </g>
+  <text x="502.374924" y="561.259204" font-size="12">Solid: cut | Dashed: fold | Join matching E labels (31 seam pairs) | No glue tabs</text>
+  <text x="502.374924" y="579.259204" font-size="11">Hexagon angles: 109.47122&#176; (2 opposite), 125.26439&#176; (4) | Square angles: 90&#176;</text>
+</svg>
