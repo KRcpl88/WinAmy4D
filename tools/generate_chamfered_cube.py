@@ -32,7 +32,8 @@ not necessarily at one point of the paper: their angle deficit is positive.
 JSON includes both the 3D solid and 2D net, ordered face boundaries, every edge,
 fold hinges, and paired cut seams. Coordinates are in edge-length units, with
 y up in the net; the SVG reverses y and uses 80 SVG units per edge. Face/vertex
-IDs identify the same objects in both exports. Equal cut-edge labels are glued
+IDs identify the same objects in both exports. JSON coordinates are rounded to
+12 decimal places for reproducibility across Python versions. Equal cut-edge labels are glued
 together, matching endpoints by their solid_vertex IDs. No glue tabs are added.
 """
 
@@ -401,15 +402,25 @@ def Validate(Vertices, Faces, Edges, NetVertices, NetFaces, NetEdges, Strip):
     return {
         "solid_counts": {"vertices": 32, "edges": 48, "faces": 18},
         "net_counts": {"vertices": 62, "edges": 79, "faces": 18, "hinges": 17, "cut_pairs": 31},
-        "max_edge_length_error": dMaxLengthError,
-        "max_angle_error_degrees": dMaxAngleError,
-        "max_face_distance_error": dMaxDistanceError,
+        "edge_length_tolerance": g_dTolerance,
+        "angle_tolerance_degrees": g_dTolerance,
+        "face_distance_tolerance": g_dTolerance,
         "overlapping_face_pairs": 0,
         "folded_seams_match": True,
     }
 
 
 def SerializeJson(Vertices, Faces, Edges, NetVertices, NetFaces, NetEdges, Strip, Validation):
+    def Canonicalize(Value):
+        if isinstance(Value, float):
+            dRounded = round(Value, 12)
+            return dRounded if dRounded != 0.0 else 0.0
+        if isinstance(Value, dict):
+            return {szKey: Canonicalize(Item) for szKey, Item in Value.items()}
+        if isinstance(Value, (list, tuple)):
+            return [Canonicalize(Item) for Item in Value]
+        return Value
+
     Data = {
         "schema_version": 1,
         "name": "Equilateral chamfered cube",
@@ -427,6 +438,7 @@ def SerializeJson(Vertices, Faces, Edges, NetVertices, NetFaces, NetEdges, Strip
         },
         "net": {
             "coordinate_system": "xy, x right, y up; unit edge length",
+            "coordinate_decimal_places": 12,
             "strip_left_to_right": Strip,
             "top_left_to_right": "SH--SH--SH--",
             "bottom_left_to_right": "HS--HS--HS--",
@@ -438,7 +450,7 @@ def SerializeJson(Vertices, Faces, Edges, NetVertices, NetFaces, NetEdges, Strip
         },
         "validation": Validation,
     }
-    return json.dumps(Data, indent=2, allow_nan=False) + "\n"
+    return json.dumps(Canonicalize(Data), indent=2, allow_nan=False) + "\n"
 
 
 def SerializeSvg(NetVertices, NetFaces, NetEdges):
@@ -529,7 +541,20 @@ def Main():
         "json": SerializeJson(Vertices, Faces, Edges, NetVertices, NetFaces, NetEdges, Strip, Validation),
         "svg": SerializeSvg(NetVertices, NetFaces, NetEdges),
     }
-    json.loads(Outputs["json"])
+    Data = json.loads(Outputs["json"])
+    # Check the rounded, exported geometry too, not just the in-memory model.
+    Validate(
+        {Vertex["id"]: Vertex["position"] for Vertex in Data["solid"]["vertices"]},
+        {Face["id"]: Face for Face in Data["solid"]["faces"]},
+        {
+            EdgeKey(*Edge["vertices"]): {**Edge, "vertices": tuple(Edge["vertices"])}
+            for Edge in Data["solid"]["edges"]
+        },
+        {Vertex["id"]: Vertex for Vertex in Data["net"]["vertices"]},
+        {Face["id"]: Face for Face in Data["net"]["faces"]},
+        {EdgeKey(*Edge["vertices"]): Edge for Edge in Data["net"]["edges"]},
+        Data["net"]["strip_left_to_right"],
+    )
     ET.fromstring(Outputs["svg"])
     if not Args.check:
         Args.output_dir.mkdir(parents=True, exist_ok=True)
