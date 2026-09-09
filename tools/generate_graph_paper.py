@@ -111,8 +111,8 @@ def svg_document(polygons: list[str]) -> str:
 def positive_number(value: str) -> float:
     """Parse a positive numeric command-line argument."""
     number = float(value)
-    if number <= 0:
-        raise argparse.ArgumentTypeError("must be greater than zero")
+    if not math.isfinite(number) or number <= 0:
+        raise argparse.ArgumentTypeError("must be a finite value greater than zero")
     return number
 
 
