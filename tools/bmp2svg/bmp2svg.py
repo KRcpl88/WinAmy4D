@@ -74,7 +74,8 @@ class Options:
     non_scaling_stroke: bool = False
     coordinate_precision: int = 2
     path_ordering: str = "nearest"  # raster | nearest
-    size_units: str = "auto"  # auto | px | mm
+    dpi: float = 300.0  # source scale in pixels per inch; 0 = use the BMP header resolution
+    size_units: str = "auto"  # auto | px | mm | in
     debug_layers: bool = False
     verbose: bool = False
 
@@ -1762,36 +1763,53 @@ def order_paths(paths: List[OutputPath], mode: str) -> List[OutputPath]:
     return ordered
 
 
-def _stroke_width_user_units(result: Result, opts: Options, physical: bool) -> float:
-    """Convert the configured output stroke width to viewBox (source pixel) units."""
+def _source_dpi(result: Result, opts: Options) -> Optional[Tuple[float, float]]:
+    """Source scale in pixels per inch (x, y): ``opts.dpi``, or the BMP header
+    resolution when ``opts.dpi`` is 0. None when no scale is known."""
+    if opts.dpi < 0:
+        raise ValueError("dpi must be >= 0")
+    if opts.dpi > 0:
+        return (opts.dpi, opts.dpi)
+    if result.ppm_x > 0 and result.ppm_y > 0:
+        return (result.ppm_x * 0.0254, result.ppm_y * 0.0254)
+    return None
+
+
+def _stroke_width_user_units(opts: Options, dpi_x: Optional[float]) -> float:
+    """Convert the configured output stroke width to viewBox (source pixel) units.
+
+    ``dpi_x`` is the source scale when the SVG is written at physical size;
+    otherwise one viewBox unit is one CSS px (96 per inch)."""
     w = opts.output_stroke_width
     units = opts.output_stroke_units
     if units == "px":
         return w
     if units == "pt":
-        w_mm = w * 25.4 / 72.0
+        w_in = w / 72.0
     elif units == "mm":
-        w_mm = w
+        w_in = w / 25.4
     else:
         raise ValueError(f"unknown stroke units '{units}'")
-    if physical:
-        return w_mm * result.ppm_x / 1000.0
-    return w_mm * 96.0 / 25.4  # CSS px
+    return w_in * (dpi_x if dpi_x else 96.0)
 
 
 def to_svg(result: Result, opts: Optional[Options] = None) -> str:
     opts = opts or Options()
     prec = opts.coordinate_precision
-    has_resolution = result.ppm_x > 0 and result.ppm_y > 0
-    physical = opts.size_units in ("auto", "mm") and has_resolution
-    if opts.size_units == "mm" and not has_resolution:
-        print("warning: BMP has no resolution; writing size in px", file=sys.stderr)
+    if opts.size_units not in ("auto", "px", "mm", "in"):
+        raise ValueError(f"unknown size units '{opts.size_units}'")
+    dpi = _source_dpi(result, opts)
+    physical = opts.size_units != "px" and dpi is not None
+    if opts.size_units in ("mm", "in") and dpi is None:
+        print("warning: no source resolution; writing size in px", file=sys.stderr)
     if physical:
-        size = (f'width="{_fmt(result.width * 1000.0 / result.ppm_x, 3)}mm" '
-                f'height="{_fmt(result.height * 1000.0 / result.ppm_y, 3)}mm"')
+        unit = "in" if opts.size_units == "in" else "mm"
+        per_inch = 1.0 if unit == "in" else 25.4
+        size = (f'width="{_fmt(result.width * per_inch / dpi[0], 3)}{unit}" '
+                f'height="{_fmt(result.height * per_inch / dpi[1], 3)}{unit}"')
     else:
         size = f'width="{result.width}" height="{result.height}"'
-    sw = _stroke_width_user_units(result, opts, physical)
+    sw = _stroke_width_user_units(opts, dpi[0] if physical else None)
 
     def f(v: float) -> str:
         return _fmt(v, prec)
@@ -1888,7 +1906,11 @@ def _parse_args(argv) -> Tuple[argparse.Namespace, Options]:
     p.add_argument("--non-scaling-stroke", action="store_true")
     p.add_argument("--precision", type=int, default=d.coordinate_precision)
     p.add_argument("--path-ordering", choices=("raster", "nearest"), default=d.path_ordering)
-    p.add_argument("--size-units", choices=("auto", "px", "mm"), default=d.size_units)
+    p.add_argument("--dpi", type=float, default=d.dpi,
+                   help="BMP scale in pixels per inch, used to size the SVG and convert "
+                        "mm/pt stroke widths (default %(default)s; 0 = use the BMP header)")
+    p.add_argument("--size-units", choices=("auto", "px", "mm", "in"), default=d.size_units,
+                   help="SVG width/height units; auto = mm (default %(default)s)")
     p.add_argument("--debug-layers", action="store_true")
     p.add_argument("-v", "--verbose", action="store_true")
     a = p.parse_args(argv)
@@ -1907,7 +1929,7 @@ def _parse_args(argv) -> Tuple[argparse.Namespace, Options]:
         output_stroke_units=a.stroke_units, output_stroke_color=a.stroke_color,
         line_cap=a.line_cap, line_join=a.line_join, non_scaling_stroke=a.non_scaling_stroke,
         coordinate_precision=a.precision, path_ordering=a.path_ordering,
-        size_units=a.size_units, debug_layers=a.debug_layers, verbose=a.verbose)
+        size_units=a.size_units, dpi=a.dpi, debug_layers=a.debug_layers, verbose=a.verbose)
     return a, opts
 
 

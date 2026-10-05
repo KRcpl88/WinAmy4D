@@ -327,14 +327,43 @@ class SvgOutputTests(unittest.TestCase):
         self.assertEqual(svg.count("<path"), 2)
 
     def test_stroke_units_are_converted(self):
+        # Default scale is 300 dpi: 80 px = 6.773 mm and 0.5 mm = 5.91 source px.
         svg, _ = b.convert(b.write_bmp(self.bm),
                            b.Options(output_stroke_width=0.5, output_stroke_units="mm"))
-        self.assertIn('stroke-width="1.89"', svg)  # 0.5 mm at 96 px/in
-        self.bm.ppm_x = self.bm.ppm_y = 11811  # 300 dpi -> physical size
-        svg, _ = b.convert(b.write_bmp(self.bm),
-                           b.Options(output_stroke_width=0.5, output_stroke_units="mm"))
-        self.assertIn('width="6.773mm"', svg)
+        self.assertIn('width="6.773mm" height="6.773mm"', svg)
+        self.assertIn('viewBox="0 0 80 80"', svg)
         self.assertIn('stroke-width="5.91"', svg)
+        svg, _ = b.convert(b.write_bmp(self.bm),
+                           b.Options(output_stroke_width=1, output_stroke_units="pt"))
+        self.assertIn('stroke-width="4.17"', svg)  # 1/72 in at 300 dpi
+
+    def test_dpi_option_scales_output(self):
+        svg, _ = b.convert(b.write_bmp(self.bm),
+                           b.Options(dpi=600, output_stroke_width=0.5, output_stroke_units="mm"))
+        self.assertIn('width="3.387mm" height="3.387mm"', svg)
+        self.assertIn('stroke-width="11.81"', svg)
+        svg, _ = b.convert(b.write_bmp(self.bm), b.Options(dpi=160, size_units="in"))
+        self.assertIn('width="0.5in" height="0.5in"', svg)
+        self.assertIn('stroke-width="1"', svg)  # px stroke widths are not scaled
+
+    def test_dpi_zero_uses_bmp_header_resolution(self):
+        svg, _ = b.convert(b.write_bmp(self.bm),
+                           b.Options(dpi=0, output_stroke_width=0.5, output_stroke_units="mm"))
+        self.assertIn('width="80" height="80"', svg)  # no header resolution: CSS px
+        self.assertIn('stroke-width="1.89"', svg)  # 0.5 mm at 96 px/in
+        self.bm.ppm_x = self.bm.ppm_y = 23622  # 600 dpi
+        svg, _ = b.convert(b.write_bmp(self.bm),
+                           b.Options(dpi=0, output_stroke_width=0.5, output_stroke_units="mm"))
+        self.assertIn('width="3.387mm"', svg)
+        self.assertIn('stroke-width="11.81"', svg)
+
+    def test_size_units_px_ignores_dpi(self):
+        svg, _ = b.convert(b.write_bmp(self.bm), b.Options(size_units="px"))
+        self.assertIn('width="80" height="80"', svg)
+
+    def test_negative_dpi_is_rejected(self):
+        with self.assertRaises(ValueError):
+            b.convert(b.write_bmp(self.bm), b.Options(dpi=-1))
 
     def test_stroke_color_is_escaped(self):
         svg, _ = b.convert(b.write_bmp(self.bm), b.Options(output_stroke_color='red" onload="x'))
@@ -364,6 +393,10 @@ class SvgOutputTests(unittest.TestCase):
                 svg = fh.read()
             self.assertIn('stroke-width="3"', svg)
             self.assertEqual(svg.count("<path"), 2)
+            self.assertIn('width="6.773mm"', svg)  # default 300 dpi
+            self.assertEqual(b.main([src, out, "--dpi", "600", "--size-units", "in"]), 0)
+            with open(out, encoding="utf-8") as fh:
+                self.assertIn('width="0.133in"', fh.read())
             self.assertEqual(b.main([src]), 0)
             self.assertTrue(os.path.exists(os.path.join(tmp, "in.svg")))
 

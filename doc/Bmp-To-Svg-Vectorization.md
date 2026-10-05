@@ -77,6 +77,8 @@ settings work across scan resolutions.
 | `CurveFitting` | off | Fit cubic Béziers instead of straight segments |
 | `OutputStrokeWidth` | 1.0 | Uniform SVG stroke width |
 | `OutputStrokeUnits` | `px` | `px`, `mm`, or `pt` |
+| `Dpi` | 300 | Source scale in pixels per inch; sets the SVG's physical size and converts `mm`/`pt` stroke widths (0 = use the BMP header resolution) |
+| `SizeUnits` | `auto` (= `mm`) | Units of the SVG `width`/`height`: `px`, `mm` or `in` |
 | `OutputStrokeColor` | `#000000` | SVG stroke color |
 | `LineCap` / `LineJoin` | `round` / `round` | SVG cap and join style |
 | `NonScalingStroke` | off | Emit `vector-effect="non-scaling-stroke"` |
@@ -97,7 +99,8 @@ settings work across scan resolutions.
   map the darker entry to ink. This also handles inverted palettes.
 - If 4/8/24/32 bpp images are supplied, convert to luminance and threshold
   (fixed 50% or Otsu) so the tool degrades gracefully.
-- Record the BMP's pixels-per-meter for optional physical SVG sizing.
+- Record the BMP's pixels-per-meter; it is used for physical SVG sizing only
+  when the `Dpi` setting is 0 (see 3.18).
 
 ### 3.2 Pad
 
@@ -356,14 +359,20 @@ stroke, and maximum deviation from the skeleton.
 
 ### 3.18 SVG Emission
 
-- Root: `width`/`height` in physical units if the BMP has a resolution,
-  otherwise pixels; `viewBox="0 0 <imageWidth> <imageHeight>"` in pixel units.
+- Root: `viewBox="0 0 <imageWidth> <imageHeight>"` in source pixel units, and
+  `width`/`height` in physical units (`SizeUnits` = `mm` or `in`; `auto` means
+  `mm`) computed from the source scale `Dpi` (pixels per inch, default 300):
+  `width = imageWidth / Dpi` inches. With `Dpi = 0` the BMP header resolution is
+  used instead, and if the header has none the size is written in pixels.
+  `SizeUnits = px` always writes the size in pixels.
 - Coordinates refer to **pixel centers** (`x + 0.5`, `y + 0.5`) after removing
   the padding offset; the grid is already top-down, matching SVG's y-axis.
 - Wrap all strokes in one `<g>` that carries the uniform style:
   `fill="none"`, `stroke=OutputStrokeColor`,
   `stroke-width=OutputStrokeWidth` (converted from `OutputStrokeUnits` to
-  viewBox units), `stroke-linecap`, `stroke-linejoin`, and optionally
+  viewBox units: `mm`/`pt` widths are multiplied by `Dpi` / 25.4 or `Dpi` / 72,
+  so a 0.5 mm line is 0.5 mm on the printed page; with no source scale, 96 CSS
+  px per inch is used), `stroke-linecap`, `stroke-linejoin`, and optionally
   `vector-effect="non-scaling-stroke"`.
 - Each stroke is one `<path>` (`M … L …` or `M … C …`, with `Z` for closed
   loops). Individual paths carry no width of their own – the measured source
@@ -441,7 +450,8 @@ in section 2):
 | `--gap-close-distance PX` (0 = off) | Gap closing |
 | `--simplify-tolerance PX`, `--max-nodes-per-path N`, `--curves` | Node count |
 | `--stroke-width W`, `--stroke-units {px,mm,pt}`, `--stroke-color C` | Uniform output stroke |
-| `--path-ordering {raster,nearest}`, `--precision N`, `--size-units {auto,px,mm}` | Output layout |
+| `--dpi N` (default 300; 0 = BMP header) | `Dpi` – source scale used for SVG size and `mm`/`pt` stroke widths |
+| `--path-ordering {raster,nearest}`, `--precision N`, `--size-units {auto,px,mm,in}` | Output layout |
 | `--debug-layers` | Adds hidden layers marking rejected blobs and tangle regions |
 
 The module can also be used from Python: `convert(bmp_bytes, Options(...))`
