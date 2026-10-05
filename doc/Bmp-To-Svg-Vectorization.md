@@ -13,6 +13,10 @@ centerline paths with a **uniform, configurable stroke width**.
   single centerline `<path>`; its stroke width in the SVG is a program setting,
   not the width measured in the source.
 
+A pure-Python (standard library only) implementation lives in
+[`tools/bmp2svg/bmp2svg.py`](../tools/bmp2svg/bmp2svg.py); see
+[section 7](#7-implementation-and-usage).
+
 ---
 
 ## 1. Pipeline Overview
@@ -65,6 +69,9 @@ settings work across scan resolutions.
 | `TangleRadius` | 3·MaxStrokeWidth | Window used to measure junction density |
 | `TangleJunctionCount` | 4 | Junctions in window needed to flag a tangle |
 | `TanglePolicy` | `Simplify` | `Keep` / `Simplify` / `Drop` |
+| `TangleKeepScore` | 0.6 | Tangles scoring at least this are kept regardless of policy |
+| `MaxStrokeLikeness` | 0 (off) | Reject components whose `area / (skeletonLength · W)` exceeds this |
+| `Smooth` / `SmoothIterations` | `none` / 1 | Optional ragged-edge smoothing: `none`, `majority` or `closing` |
 | `SimplifyTolerance` | 0.75 px | Ramer–Douglas–Peucker epsilon |
 | `MaxNodesPerPath` | 0 (unlimited) | Hard cap; tolerance is raised until satisfied |
 | `CurveFitting` | off | Fit cubic Béziers instead of straight segments |
@@ -127,6 +134,16 @@ removes ragged single-pixel bumps and notches that would otherwise produce
 spurs. Keep it optional: it can merge two strokes that are separated by a
 1-pixel white gap.
 
+- **Majority** (`Smooth = majority`): a pixel becomes ink when at least 5 of the
+  9 pixels in its 3×3 neighbourhood are ink. Shaves bumps and fills notches;
+  shortens stroke ends by about one pixel per iteration.
+- **Closing** (`Smooth = closing`): dilation then erosion with a radius-1 cross.
+  Fills notches and pin-holes but keeps outward bumps.
+- `SmoothIterations` repeats the filter. The 1-pixel paper border is preserved.
+
+Without smoothing, very ragged strokes can bend the traced centre line near
+their ends; with either filter they trace straight.
+
 ### 3.6 Distance Transform
 
 Compute, for each ink pixel, the Euclidean distance to the nearest white pixel
@@ -142,19 +159,27 @@ junction bulges. Clamp to `[MinStrokeWidth, MaxStrokeWidth]` and use it as `W`.
 Variable width along strokes is expected; per-pixel `localWidth` is retained
 and used for pruning and junction radii, but **never** for output styling.
 
+Because `MinBlobArea` and `MaxHoleArea` depend on `W` but must be applied before
+the final measurement, a preliminary `W` is measured on the raw image first and
+`W` is measured again after noise cleanup.
+
 ### 3.8 Solid-Block Rejection
 
 A region of black wider than `MaxStrokeWidth` is a fill, a smudge, a scanner
 artifact, or a shadow – not a stroke.
 
-1. **Core seeds:** ink pixels with `Dist > MaxStrokeWidth/2`.
+1. **Core seeds:** ink pixels with `Dist > MaxStrokeWidth/2`. A connected seed
+   region with fewer than `MaxStrokeWidth` pixels is ignored, so a momentary
+   bulge where strokes cross is not treated as a blob.
 2. **Blob extent:** reconstruct the full blob as the union of disks of radius
    `Dist(p)` centered on every core pixel `p` (reverse distance transform).
    This covers the blob up to its edge but stops where narrow strokes leave it.
 3. Erase the blob pixels and remember them in a `BlobMask`.
 4. Strokes that touched the blob now end at its boundary. Mark those endpoints
    as `BlobTruncated` so they are exempt from spur pruning and gap closing
-   (they are real strokes, merely cut short).
+   (they are real strokes, merely cut short). Small ink remnants that lie
+   entirely within about `MaxStrokeWidth/2` of the blob (its ragged rim) are
+   removed.
 5. Optionally also reject whole components whose *stroke-likeness*
    `area / (skeletonLength · W)` is far above 1 (wide, dense shapes).
 
@@ -174,7 +199,9 @@ to strokes. Iteratively:
 1. Find every branch from an endpoint to the nearest junction.
 2. If its length `< SpurLengthFactor · localWidth(junction)` and it is not
    `BlobTruncated`, delete it (excluding the junction pixel).
-3. Repeat until stable (deleting a spur can turn a junction into a path pixel
+3. "Hairs" – branches whose mean `localWidth` is below `W/2`, typically left by
+   ragged-edge bumps – may be up to 1.5× longer and still be pruned.
+4. Repeat until stable (deleting a spur can turn a junction into a path pixel
    and expose a new spur).
 
 Never prune a branch if that would delete an entire isolated component – such
@@ -237,6 +264,17 @@ Then apply `TanglePolicy`:
 A practical rule: score ≥ threshold → `Keep`; otherwise use the configured
 policy. Log each decision (region bounds, score) for review.
 
+The implementation scores six indicators, each in `[0, 1]`, and averages them:
+fraction of inner edges at least `3·max(W, 3)` long; width uniformity
+(`1 − stddev/mean` of inner-edge widths); smoothness (chord length ÷ path
+length); sparseness (ink density of the region box); continuation (fraction of
+external edges that pair up straight through the region); and junction spacing
+(`sqrt(area / junctions)` relative to `max(W, 3)`, i.e. how large the enclosed
+faces are). The `max(W, 3)` floor is used because noise tends to pull the
+measured `W` down to the minimum. The region is the bounding box of the
+clustered junctions grown by `W`; every node inside the box, including stray
+endpoints, belongs to the tangle. `TangleKeepScore` defaults to 0.6.
+
 ### 3.14 Tracing (scan start and avoiding retracing)
 
 Every edge is walked **exactly once**:
@@ -261,6 +299,11 @@ Every edge is walked **exactly once**:
 Using the raster scan only to *select start points* (rather than to trace)
 makes the output deterministic and independent of the internal storage.
 
+In the implementation, junction pairing (3.15) is decided **before** tracing.
+The tracer then extends each stroke in both directions through paired edge ends
+and stops at unpaired ones, marking every edge it uses. Joining therefore never
+needs to revisit an edge.
+
 ### 3.15 Stroke Joining
 
 Raw tracing stops at every junction. Join edges into longer strokes:
@@ -278,7 +321,9 @@ Raw tracing stops at every junction. Join edges into longer strokes:
 - **Gap closing (optional):** two endpoints within `GapCloseDistance`, whose
   tangents point toward each other within `GapCloseAngle`, are joined by a
   straight segment. This repairs strokes broken by faint scanning. Do not close
-  gaps involving `BlobTruncated` endpoints.
+  gaps involving `BlobTruncated` endpoints. The distance compared is the gap in
+  the *ink*: skeleton endpoints sit about `W/2` inside each stroke end, so
+  `ink gap ≈ skeleton endpoint distance − W`.
 - If a joined stroke returns to its own start, mark it closed.
 
 Joined strokes share exact node coordinates at junctions, so in the SVG the
@@ -342,7 +387,7 @@ stroke, and maximum deviation from the skeleton.
 | Strokes touching the image border | Handled by padding; they produce normal endpoints |
 | 1-px-wide lines (below `MinStrokeWidth`) | Kept if long (pass length filter); speck filter removes short ones |
 | Two strokes 1 px apart | Not merged unless edge smoothing is enabled |
-| Stroke wider than `MaxStrokeWidth` only at a junction bulge | Not a blob: core seeds require a sustained wide region; use `area > 2·MaxStrokeWidth²` for the seed region as a guard |
+| Stroke wider than `MaxStrokeWidth` only at a junction bulge | Not a blob: core seeds require a sustained wide region; seed regions smaller than `MaxStrokeWidth` pixels are ignored |
 | Inverted palette (white = index 0) | Palette lookup in 3.1 |
 | Very large images | All stages are linear in pixel count; use iterative (non-recursive) flood fills |
 
@@ -371,3 +416,42 @@ grid over endpoints to keep it near-linear).
    small tolerance of the skeleton length (overlapping output would exceed it).
 5. **Determinism:** the same input and parameters must produce byte-identical
    SVG output.
+
+---
+
+## 7. Implementation and Usage
+
+`tools/bmp2svg/bmp2svg.py` implements every stage above using only the Python 3
+standard library (no NumPy or SciPy needed). It reads 1/4/8/16/24/32-bpp BMPs
+(uncompressed or `BI_BITFIELDS`, bottom-up or top-down).
+
+```
+python tools/bmp2svg/bmp2svg.py drawing.bmp [drawing.svg] [options]
+```
+
+Common options (run with `--help` for the full list; each maps to a parameter
+in section 2):
+
+| Option | Parameter |
+|--------|-----------|
+| `--smooth {none,majority,closing}`, `--smooth-iterations N` | Ragged-edge smoothing (3.5) |
+| `--max-stroke-width PX` | `MaxStrokeWidth` |
+| `--min-blob-area PX`, `--max-hole-area PX` | Noise thresholds |
+| `--tangle-policy {keep,simplify,drop}`, `--tangle-keep-score S` | Tangle handling |
+| `--gap-close-distance PX` (0 = off) | Gap closing |
+| `--simplify-tolerance PX`, `--max-nodes-per-path N`, `--curves` | Node count |
+| `--stroke-width W`, `--stroke-units {px,mm,pt}`, `--stroke-color C` | Uniform output stroke |
+| `--path-ordering {raster,nearest}`, `--precision N`, `--size-units {auto,px,mm}` | Output layout |
+| `--debug-layers` | Adds hidden layers marking rejected blobs and tangle regions |
+
+The module can also be used from Python: `convert(bmp_bytes, Options(...))`
+returns the SVG text and a `Result` with statistics, blob and tangle reports,
+and per-edge usage counts.
+
+Unit tests (synthetic shapes, noise, blobs, tangles, smoothing, determinism and
+the "every edge traced exactly once" check) run with:
+
+```
+cd tools/bmp2svg
+python -m unittest test_bmp2svg
+```
