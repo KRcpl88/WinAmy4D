@@ -149,6 +149,21 @@ class MergeSvgTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate"):
             self.Merge(["a.svg"])
 
+    def test_FragmentReferencesRespectExternalXmlBase(self):
+        self.WriteSvg(szBody="""
+            <rect id="icon"/>
+            <g xml:base="symbols.svg">
+                <use href="#icon"/>
+                <rect fill="url(#icon)"/>
+            </g>
+            <use href="a.svg#icon"/>
+        """)
+        Svg = self.Merge(["a.svg"])[0][0]
+        szExternal = (self.Directory / "symbols.svg").resolve().as_uri() + "#icon"
+        self.assertEqual(szExternal, Svg[1][0].get("href"))
+        self.assertEqual(f"url({szExternal})", Svg[1][1].get("fill"))
+        self.assertEqual("#svg0_icon", Svg[2].get("href"))
+
     def test_RejectsUnsafeYamlAndPreservesOutputOnError(self):
         self.OutputPath.write_text("unchanged", encoding="utf-8")
         self.LayoutPath.write_text("!!python/object/apply:os.system ['echo unsafe']", encoding="utf-8")

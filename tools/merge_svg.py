@@ -6,7 +6,7 @@ import math
 from pathlib import Path
 import re
 import sys
-from urllib.parse import urljoin
+from urllib.parse import urldefrag, urljoin
 import xml.etree.ElementTree as ET
 
 import yaml
@@ -120,28 +120,35 @@ def IsolateIds(Root, nIndex):
             Element.text = re.sub(r"[^{}]+\{", Selectors, References(Element.text))
 
 
-def ResolveResources(Element, szBase):
+def ResolveResources(Element, szBase, szDocument):
     szBase = urljoin(szBase, Element.attrib.pop(f"{{{XML_NS}}}base", ""))
+
+    def Reference(szUrl):
+        szResolved = urljoin(szBase, szUrl)
+        szTarget, szFragment = urldefrag(szResolved)
+        if szFragment and szTarget == urldefrag(szDocument)[0]:
+            return "#" + szFragment
+        return szResolved
 
     def AbsoluteUrl(Match):
         szQuote = Match[1] or ""
         szUrl = (Match[2] if Match[1] else Match[3]).strip()
-        if not szUrl or szUrl.startswith("#"):
+        if not szUrl:
             return Match[0]
-        return f"url({szQuote}{urljoin(szBase, szUrl)}{szQuote})"
+        return f"url({szQuote}{Reference(szUrl)}{szQuote})"
 
     def Urls(szText):
         return re.sub(r"""url\(\s*(?:(['"])(.*?)\1|([^)]*?))\s*\)""", AbsoluteUrl, szText)
 
     for szKey, szValue in list(Element.attrib.items()):
-        if szKey in ("href", f"{{{XLINK_NS}}}href") and szValue and not szValue.startswith("#"):
-            Element.set(szKey, urljoin(szBase, szValue))
+        if szKey in ("href", f"{{{XLINK_NS}}}href") and szValue:
+            Element.set(szKey, Reference(szValue))
         else:
             Element.set(szKey, Urls(szValue))
     if Element.tag == f"{{{SVG_NS}}}style" and Element.text:
         Element.text = Urls(Element.text)
     for Child in Element:
-        ResolveResources(Child, szBase)
+        ResolveResources(Child, szBase, szDocument)
 
 
 def MergeSvg(LayoutPath, OutputPath):
@@ -176,8 +183,8 @@ def MergeSvg(LayoutPath, OutputPath):
             if Root.tag != f"{{{SVG_NS}}}svg":
                 raise ValueError("document root must be an SVG in the SVG namespace")
             dWidth, dHeight = Dimensions(Root)
+            ResolveResources(Root, SvgPath.as_uri(), SvgPath.as_uri())
             IsolateIds(Root, nIndex)
-            ResolveResources(Root, SvgPath.as_uri())
         except (OSError, ET.ParseError, ValueError) as Error:
             raise ValueError(f"{SvgPath}: {Error}") from Error
         dCos = math.cos(math.radians(dRotation))
