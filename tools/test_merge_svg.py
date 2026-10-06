@@ -1,5 +1,6 @@
 import math
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -13,13 +14,13 @@ from merge_svg import MergeSvg, SVG_NS, XLINK_NS, XML_NS
 
 class MergeSvgTests(unittest.TestCase):
     def setUp(self):
-        self.Temp = tempfile.TemporaryDirectory()
+        self.Temp = tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parent)
         self.addCleanup(self.Temp.cleanup)
         self.Directory = Path(self.Temp.name)
         self.LayoutPath = self.Directory / "layout.yaml"
         self.OutputPath = self.Directory / "output.svg"
 
-    def WriteSvg(self, szName="a.svg", szAttributes='width="20in" height="10in"', szBody=""):
+    def WriteSvg(self, szName="a.svg", szAttributes='width="20" height="10"', szBody=""):
         SvgPath = self.Directory / szName
         SvgPath.write_text(
             f'<svg xmlns="{SVG_NS}" xmlns:xlink="{XLINK_NS}" {szAttributes}>{szBody}</svg>',
@@ -35,12 +36,176 @@ class MergeSvgTests(unittest.TestCase):
     def ViewBox(self, Root):
         return [float(szValue) for szValue in Root.get("viewBox").split()]
 
+    def StrokeWidth(self, Svg, Target):
+        Parents = {Child: Parent for Parent in Svg.iter() for Child in Parent}
+        Element = Target
+        while Element is not None:
+            Match = re.search(r"--svg\d+-original-stroke-width:([^;]+?) !important;",
+                              Element.get("style", ""))
+            if Match:
+                szWidth = Match[1]
+                break
+            Element = Parents.get(Element)
+        Match = re.search(r"stroke-width:calc\(var\(--svg\d+-original-stroke-width\) \* ([^)]+)\)",
+                          Target.get("style", ""))
+        return szWidth, float(Match[1])
+
+    def test_IndependentStrokeMultiplierAndUnits(self):
+        for dScale, dStrokeScale in ((1, 1), (4, 1), (4, 3), (0.5, 0)):
+            self.WriteSvg(szBody="""
+                <path stroke="black" stroke-width="2"/>
+                <path stroke-width="3pt"/>
+                <path style="stroke-width:0.25mm"/>
+                <path stroke-width="5%"/>
+                <path stroke-width="0"/>
+            """)
+            Svg = self.Merge([{"file": "a.svg", "scale": dScale,
+                               "stroke_scale": dStrokeScale}])[0][0]
+            for Element, szOriginal in zip(Svg, ("2.0px", "3.0pt", "0.25mm", "5.0%", "0.0px")):
+                szWidth, dFactor = self.StrokeWidth(Svg, Element)
+                self.assertEqual(szOriginal, szWidth)
+                self.assertEqual(dStrokeScale, dFactor * dScale)
+
+    def test_DefaultWidthsAndInheritedWidths(self):
+        self.WriteSvg(szBody="""
+            <path stroke="black"/>
+            <g stroke-width="6"><path/><path stroke-width="initial"/>
+                <path style="stroke-width:inherit"/><path style="stroke-width:unset"/>
+            </g>
+            <use href="#symbol" stroke-width="9"/>
+            <defs><path id="symbol"/></defs>
+        """)
+        Svg = self.Merge([{"file": "a.svg", "scale": 2}])[0][0]
+        self.assertEqual(("1.0px", 0.5), self.StrokeWidth(Svg, Svg[0]))
+        for Element, szWidth in zip(Svg[1], ("6.0px", "1.0px", "6.0px", "6.0px")):
+            self.assertEqual((szWidth, 0.5), self.StrokeWidth(Svg, Element))
+        self.assertEqual(("9.0px", 0.5), self.StrokeWidth(Svg, Svg[2]))
+        self.assertNotIn("--svg0-original-stroke-width:", Svg[3][0].get("style"))
+
+    def test_StylesheetCascadeAndQuotedContentRemainIntact(self):
+        self.WriteSvg(szBody="""
+            <style>
+                /* #shape { stroke-width:999; } */
+                path {stroke-width:2}
+                .heavy {stroke-width:4 !important}
+                #shape {stroke-width:7}
+                .heavy {stroke-width: /* actual width */ 6 /* px default */ !important}
+                .quoted {content:"#shape { stroke-width:99; } url(#missing)";}
+            </style>
+            <path id="shape" class="heavy" stroke-width="1" style="stroke-width:8"/>
+            <path class="heavy" style="stroke-width:9 !important"/>
+            <path style="stroke-width:10; stroke-width:11"/>
+        """)
+        Svg = self.Merge([{"file": "a.svg", "scale": 3}])[0][0]
+        for Element, szWidth in zip(list(Svg)[1:], ("6.0px", "9.0px", "11.0px")):
+            self.assertEqual((szWidth, 1 / 3), self.StrokeWidth(Svg, Element))
+        self.assertIn('content:"#shape { stroke-width:99; } url(#missing)"', Svg[0].text)
+        self.assertIn("/* #shape { stroke-width:999; } */", Svg[0].text)
+        self.assertIn("#svg0_shape {stroke-width:7}", Svg[0].text)
+
+    def test_NonScalingStrokeUsesOnlyStrokeMultiplier(self):
+        self.WriteSvg(szBody="""
+            <style>.fixed {vector-effect:non-scaling-stroke !important;stroke-width:3}</style>
+            <g stroke-width="5" vector-effect="non-scaling-stroke">
+                <path/>
+                <path vector-effect="inherit"/>
+                <path class="fixed" vector-effect="none"/>
+                <path style="vector-effect:non-scaling-stroke"/>
+            </g>
+        """)
+        Svg = self.Merge([{"file": "a.svg", "scale": 4, "stroke_scale": 2}])[0][0]
+        for Element, Expected in zip(Svg[1], (("5.0px", 0.5), ("5.0px", 2),
+                                              ("3.0px", 2), ("5.0px", 2))):
+            self.assertEqual(Expected, self.StrokeWidth(Svg, Element))
+
+    def test_ViewBoxAndNestedTransformsRetainStrokeSizes(self):
+        self.WriteSvg(szAttributes='width="160" height="80" viewBox="10 -5 80 40"',
+                      szBody='<g transform="scale(3) rotate(30)"><path stroke-width="2"/></g>')
+        Root = self.Merge([{"file": "a.svg", "scale": 4, "flipx": True}])
+        Svg = Root[0][0]
+        self.assertEqual("10 -5 80 40", Svg.get("viewBox"))
+        self.assertEqual("scale(3) rotate(30)", Svg[0].get("transform"))
+        szWidth, dFactor = self.StrokeWidth(Svg, Svg[0][0])
+        self.assertEqual("2.0px", szWidth)
+        self.assertEqual(12, 2 * dFactor * 4 * 2 * 3)
+        self.assertNotIn("vector-effect", Svg[0][0].attrib)
+
+    def test_FontRelativeStrokeWidthsComputeBeforeInheritance(self):
+        self.WriteSvg(szBody='<g style="font-size:20px;stroke-width:0.5em">'
+                             '<path style="font-size:10px"/></g>')
+        Svg = self.Merge([{"file": "a.svg", "scale": 2}])[0][0]
+        self.assertEqual(("10.0px", 0.5), self.StrokeWidth(Svg, Svg[0][0]))
+
+    def test_FlipsAboutOriginThenRotationAndFinalOffset(self):
+        self.WriteSvg()
+        for fFlipX, fFlipY, Expected in (
+                (True, False, [-40, 0, 40, 20]),
+                (False, True, [0, -20, 40, 20]),
+                (True, True, [-40, -20, 40, 20])):
+            Root = self.Merge([{"file": "a.svg", "scale": 2,
+                               "flipx": fFlipX, "flipy": fFlipY}])
+            self.assertEqual(Expected, self.ViewBox(Root))
+        Root = self.Merge([{"file": "a.svg", "scale": 2, "flipx": True,
+                           "rotation": 90, "offset": [50, 30]}])
+        self.assertEqual([0, -10, 50, 40], self.ViewBox(Root))
+        self.assertEqual("translate(50.0 30.0) rotate(90.0) scale(-2.0 2.0)",
+                         Root[0].get("transform"))
+
+    def test_UniformTransformsPreserveAnglesAndLengthRatios(self):
+        self.WriteSvg()
+        for fFlipX in (False, True):
+            for fFlipY in (False, True):
+                Root = self.Merge([{"file": "a.svg", "scale": 3, "rotation": 37,
+                                   "flipx": fFlipX, "flipy": fFlipY}])
+                Match = re.search(r"scale\(([^)]+)\)", Root[0].get("transform"))
+                Scales = [float(szValue) for szValue in Match[1].split()]
+                dScaleX, dScaleY = (Scales * 2)[:2] if len(Scales) == 1 else Scales
+                dCos, dSin = math.cos(math.radians(37)), math.sin(math.radians(37))
+                def Transform(dX, dY):
+                    return (dCos * dScaleX * dX - dSin * dScaleY * dY,
+                            dSin * dScaleX * dX + dCos * dScaleY * dY)
+                First, Second = Transform(3, 4), Transform(4, -3)
+                self.assertAlmostEqual(15, math.hypot(*First))
+                self.assertAlmostEqual(15, math.hypot(*Second))
+                self.assertAlmostEqual(0, sum(dA * dB for dA, dB in zip(First, Second)))
+
+    def test_PreserveAspectRatioRejectsAnisotropicViewBox(self):
+        self.WriteSvg(szAttributes='width="160" height="40" viewBox="0 0 80 40" '
+                                   'preserveAspectRatio="none"')
+        with self.assertRaisesRegex(ValueError, "distort angles"):
+            self.Merge(["a.svg"])
+        for szAspect in ("xMidYMid meet", "xMinYMin slice"):
+            self.WriteSvg(szAttributes=f'width="160" height="40" viewBox="0 0 80 40" '
+                                       f'preserveAspectRatio="{szAspect}"')
+            Svg = self.Merge([{"file": "a.svg", "scale": 2}])[0][0]
+            self.assertEqual(szAspect, Svg.get("preserveAspectRatio"))
+
+    def test_DifferentInputsKeepIndependentCssStrokeWidths(self):
+        self.WriteSvg(szBody='<style>path {stroke-width:4}</style><path/>')
+        self.WriteSvg("b.svg", szBody='<style>path {stroke-width:6}</style><path/>')
+        Root = self.Merge([{"file": "a.svg", "scale": 2},
+                           {"file": "b.svg", "scale": 3, "stroke_scale": 2}])
+        self.assertEqual(("4.0px", 0.5), self.StrokeWidth(Root[0][0], Root[0][0][1]))
+        self.assertEqual(("6.0px", 2 / 3), self.StrokeWidth(Root[1][0], Root[1][0][1]))
+
+    def test_RejectsUnsupportedDynamicStrokeStyling(self):
+        for szBody in (
+                '<style>@media screen {path {stroke-width:4}}</style><path/>',
+                '<style>@import url("remote.css");</style><path/>',
+                '<path style="stroke-width:calc(2px + 1px)"/>',
+                '<path style="stroke-width:var(--width)"/>',
+                '<path style="stroke-width:revert"/>',
+                '<path style="vector-effect:var(--effect)"/>'):
+            self.WriteSvg(szBody=szBody)
+            with self.subTest(szBody=szBody), self.assertRaises(ValueError):
+                self.Merge([{"file": "a.svg", "scale": 2}])
+
     def test_DefaultsAndRelativePaths(self):
         self.WriteSvg(szBody='<rect width="20" height="10" fill="red"/>')
         Root = self.Merge(["a.svg"])
         self.assertEqual([0, 0, 20, 10], self.ViewBox(Root))
         Group = Root[0]
-        self.assertEqual("translate(0.0 0.0) rotate(0.0) scale(0.010416666666666666)", Group.get("transform"))
+        self.assertEqual("translate(0.0 0.0) rotate(0.0) scale(1.0)", Group.get("transform"))
         self.assertEqual("red", Group[0][0].get("fill"))
         self.assertIsNone(Group[0].get(f"{{{XML_NS}}}base"))
 
@@ -50,12 +215,12 @@ class MergeSvgTests(unittest.TestCase):
         Root = self.Merge(["a.svg", {"file": "b.svg", "scale": 2, "offset": [50, 30]}])
         self.assertEqual(2, len(Root))
         self.assertEqual([0, 0, 90, 50], self.ViewBox(Root))
-        self.assertEqual("translate(50.0 30.0) rotate(0.0) scale(0.020833333333333332)", Root[1].get("transform"))
+        self.assertEqual("translate(50.0 30.0) rotate(0.0) scale(2.0)", Root[1].get("transform"))
 
     def test_RotationAfterScaleBeforeOffset(self):
         self.WriteSvg()
         Root = self.Merge([{"file": "a.svg", "scale": 2, "rotation": 90, "offset": [50, 30]}])
-        self.assertEqual("translate(50.0 30.0) rotate(90.0) scale(0.020833333333333332)", Root[0].get("transform"))
+        self.assertEqual("translate(50.0 30.0) rotate(90.0) scale(2.0)", Root[0].get("transform"))
         self.assertEqual([0, 0, 50, 70], self.ViewBox(Root))
         Root = self.Merge([{"file": "a.svg", "scale": 2, "rotation": 90, "offset": [5, 7]}])
         self.assertEqual([-15, 0, 20, 47], self.ViewBox(Root))
@@ -78,25 +243,25 @@ class MergeSvgTests(unittest.TestCase):
     def test_ViewBoxOriginAndAspectRatioPreserved(self):
         self.WriteSvg(szAttributes='viewBox="10 -5 80 40" width="160"')
         Root = self.Merge(["a.svg"])
-        self.assertEqual([0, 0, 160 / 96, 80 / 96], self.ViewBox(Root))
+        self.assertEqual([0, 0, 160, 80], self.ViewBox(Root))
         self.assertEqual("10 -5 80 40", Root[0][0].get("viewBox"))
         self.WriteSvg(szAttributes='viewBox="10 -5 80 40"')
-        self.assertEqual([0, 0, 80 / 96, 40 / 96], self.ViewBox(self.Merge(["a.svg"])))
+        self.assertEqual([0, 0, 80, 40], self.ViewBox(self.Merge(["a.svg"])))
 
     def test_AbsoluteUnits(self):
         self.WriteSvg(szAttributes='width="1in" height="72pt"')
         Root = self.Merge(["a.svg"])
-        self.assertEqual([0, 0, 1, 1], self.ViewBox(Root))
-        self.assertEqual("1.0in", Root.get("width"))
-        self.assertEqual("1.0in", Root.get("height"))
+        self.assertEqual([0, 0, 96, 96], self.ViewBox(Root))
+        self.assertEqual("96.0", Root.get("width"))
+        self.assertEqual("96.0", Root.get("height"))
 
-    def test_MixedUnitsUseInchOffsetsAndPreservePhysicalSize(self):
+    def test_MixedUnitsUseFinalPixelOffsetsAndPreservePhysicalSize(self):
         self.WriteSvg(szAttributes='width="1in" height="1in" viewBox="0 0 10 10"')
         self.WriteSvg("b.svg", 'width="25.4mm" height="2.54cm" viewBox="0 0 100 100"')
-        Root = self.Merge(["a.svg", {"file": "b.svg", "offset": [2, 0.5]}])
-        self.assertEqual([0, 0, 3, 1.5], self.ViewBox(Root))
-        self.assertEqual("3.0in", Root.get("width"))
-        self.assertEqual("1.5in", Root.get("height"))
+        Root = self.Merge(["a.svg", {"file": "b.svg", "offset": [192, 48]}])
+        self.assertEqual([0, 0, 288, 144], self.ViewBox(Root))
+        self.assertEqual("288.0", Root.get("width"))
+        self.assertEqual("144.0", Root.get("height"))
         for Group in Root:
             self.assertEqual(96, float(Group[0].get("width")))
             self.assertEqual(96, float(Group[0].get("height")))
@@ -107,9 +272,9 @@ class MergeSvgTests(unittest.TestCase):
         self.WriteSvg(szAttributes='width="96px" height="48"',
                       szBody='<rect width="96" height="48"/>')
         Root = self.Merge(["a.svg"])
-        self.assertEqual([0, 0, 1, 0.5], self.ViewBox(Root))
-        self.assertEqual("1.0in", Root.get("width"))
-        self.assertEqual("0.5in", Root.get("height"))
+        self.assertEqual([0, 0, 96, 48], self.ViewBox(Root))
+        self.assertEqual("96.0", Root.get("width"))
+        self.assertEqual("48.0", Root.get("height"))
         self.assertEqual("96", Root[0][0][0].get("width"))
         self.assertEqual("48", Root[0][0][0].get("height"))
         self.assertIsNone(Root[0][0].get("viewBox"))
@@ -141,6 +306,9 @@ class MergeSvgTests(unittest.TestCase):
             "scale": [0, -1, True, "2", float("nan"), float("inf")],
             "rotation": [False, "90", float("nan"), float("inf")],
             "offset": [[1], [True, 2], [1, float("inf")], "1,2"],
+            "stroke_scale": [-1, True, "2", float("nan"), float("inf")],
+            "flipx": [0, 1, "true", None],
+            "flipy": [0, 1, "false", None],
         }.items():
             for Value in Values:
                 with self.subTest(szField=szField, Value=Value), self.assertRaises(ValueError):

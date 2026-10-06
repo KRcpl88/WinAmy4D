@@ -1,1 +1,3 @@
 PyYAML==6.0.3
+tinycss2==1.4.0
+cssselect2==0.8.0
