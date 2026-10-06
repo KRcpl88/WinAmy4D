@@ -73,6 +73,57 @@ and select one of the available configurations:
 > the VS 2022 Developer Command Prompt or by launching VS Code from one).
 
 
+### Merging SVG files
+
+The standalone `tools/merge_svg.py` utility combines one or more SVGs using a
+YAML layout. Install its dependency and run it from the repository root:
+
+```powershell
+python -m pip install -r tools/requirements.txt
+python tools/merge_svg.py layout.yaml combined.svg
+```
+
+The YAML input is a non-empty list. Each item is either a filename or a mapping:
+
+```yaml
+- background.svg
+- file: pieces/rook.svg
+  scale: 0.5
+  rotation: 90
+  offset: [120, 40]
+```
+
+Paths are relative to the YAML file. `scale` defaults to `1` and must be
+positive; `rotation` defaults to `0` and is in degrees (positive angles turn
+clockwise in SVG's usual downward-pointing Y axis). `offset` defaults to
+`[0, 0]`. Each SVG is scaled, then rotated about its viewport origin `(0, 0)`,
+then translated: **offsets are in final-output SVG units**, unaffected by scale
+or rotation. Files are drawn in list order, with later files on top.
+
+The output canvas includes the origin and all transformed viewport corners,
+including negative offsets and rotations. Source `viewBox` and aspect-ratio
+settings are preserved using nested SVGs. Sources need absolute width/height
+(unitless, px, in, cm, mm, pt, or pc) or a `viewBox`; missing dimensions are
+inferred from the `viewBox`. Percentage dimensions are not supported.
+
+IDs and local `href`, `url(#id)`, simple CSS ID selectors, and accessibility
+references are renamed per input to avoid collisions. General CSS selectors
+(such as classes and element names) remain shared across the combined document;
+use inline styles/presentation attributes for independent artwork. Scripts,
+SMIL animation references, and complex escaped CSS selectors are not rewritten.
+Linked images and other external resources are not embedded; relative `href`
+and CSS `url(...)` references are made absolute against the original SVG
+location (including any `xml:base`). Those resources must remain available.
+Use trusted SVG inputs: this utility does not sanitize active SVG content.
+SVGs containing a DOCTYPE are rejected, and YAML uses a safe loader.
+
+Run the utility's regression tests with:
+
+```powershell
+Set-Location tools
+python -m unittest test_merge_svg
+```
+
 Invoking Amy
 ============
 
@@ -213,4 +264,3 @@ THANKS
 ======
 
 - to Allen Lake for tuning Amy's timing algorithm
-

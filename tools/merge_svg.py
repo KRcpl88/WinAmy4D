@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 import re
 import sys
+from urllib.parse import urljoin
 import xml.etree.ElementTree as ET
 
 import yaml
@@ -119,6 +120,30 @@ def IsolateIds(Root, nIndex):
             Element.text = re.sub(r"[^{}]+\{", Selectors, References(Element.text))
 
 
+def ResolveResources(Element, szBase):
+    szBase = urljoin(szBase, Element.attrib.pop(f"{{{XML_NS}}}base", ""))
+
+    def AbsoluteUrl(Match):
+        szQuote = Match[1] or ""
+        szUrl = (Match[2] if Match[1] else Match[3]).strip()
+        if not szUrl or szUrl.startswith("#"):
+            return Match[0]
+        return f"url({szQuote}{urljoin(szBase, szUrl)}{szQuote})"
+
+    def Urls(szText):
+        return re.sub(r"""url\(\s*(?:(['"])(.*?)\1|([^)]*?))\s*\)""", AbsoluteUrl, szText)
+
+    for szKey, szValue in list(Element.attrib.items()):
+        if szKey in ("href", f"{{{XLINK_NS}}}href") and szValue and not szValue.startswith("#"):
+            Element.set(szKey, urljoin(szBase, szValue))
+        else:
+            Element.set(szKey, Urls(szValue))
+    if Element.tag == f"{{{SVG_NS}}}style" and Element.text:
+        Element.text = Urls(Element.text)
+    for Child in Element:
+        ResolveResources(Child, szBase)
+
+
 def MergeSvg(LayoutPath, OutputPath):
     with LayoutPath.open(encoding="utf-8") as Stream:
         Entries = yaml.safe_load(Stream)
@@ -130,14 +155,15 @@ def MergeSvg(LayoutPath, OutputPath):
     for nIndex, Entry in enumerate(Entries):
         if isinstance(Entry, str):
             Entry = {"file": Entry}
-        if not isinstance(Entry, dict) or set(Entry) - {"file", "scale", "offset"}:
-            raise ValueError(f"entry {nIndex + 1}: expected file, scale, and offset fields")
+        if not isinstance(Entry, dict) or set(Entry) - {"file", "scale", "rotation", "offset"}:
+            raise ValueError(f"entry {nIndex + 1}: expected file, scale, rotation, and offset fields")
         szFile = Entry.get("file")
         if not isinstance(szFile, str) or not szFile.strip():
             raise ValueError(f"entry {nIndex + 1}: file must be a non-empty string")
         dScale = Number(Entry.get("scale", 1), "scale")
         if dScale <= 0:
             raise ValueError("scale must be positive")
+        dRotation = Number(Entry.get("rotation", 0), "rotation") % 360
         Offset = Entry.get("offset", [0, 0])
         if not isinstance(Offset, list) or len(Offset) != 2:
             raise ValueError("offset must be a two-number list [x, y]")
@@ -151,32 +177,40 @@ def MergeSvg(LayoutPath, OutputPath):
                 raise ValueError("document root must be an SVG in the SVG namespace")
             dWidth, dHeight = Dimensions(Root)
             IsolateIds(Root, nIndex)
+            ResolveResources(Root, SvgPath.as_uri())
         except (OSError, ET.ParseError, ValueError) as Error:
             raise ValueError(f"{SvgPath}: {Error}") from Error
-        dRight, dBottom = dX + dScale * dWidth, dY + dScale * dHeight
-        if not all(math.isfinite(dValue) for dValue in (dRight, dBottom)):
+        dCos = math.cos(math.radians(dRotation))
+        dSin = math.sin(math.radians(dRotation))
+        # Keep exact quarter turns from adding tiny floating-point margins.
+        if abs(dCos) < 1e-15:
+            dCos = 0
+        if abs(dSin) < 1e-15:
+            dSin = 0
+        Corners = [
+            (dX + dScale * (dCos * dCornerX - dSin * dCornerY),
+             dY + dScale * (dSin * dCornerX + dCos * dCornerY))
+            for dCornerX, dCornerY in ((0, 0), (dWidth, 0), (0, dHeight), (dWidth, dHeight))
+        ]
+        if not all(math.isfinite(dValue) for Corner in Corners for dValue in Corner):
             raise ValueError("scaled SVG bounds must be finite")
-        Bounds.append((dX, dY, dRight, dBottom))
+        Bounds.append((min(Corner[0] for Corner in Corners),
+                       min(Corner[1] for Corner in Corners),
+                       max(Corner[0] for Corner in Corners),
+                       max(Corner[1] for Corner in Corners)))
         Group = ET.SubElement(Output, f"{{{SVG_NS}}}g", {
-            "transform": f"translate({dX:g} {dY:g}) scale({dScale:g})"
+            "transform": f"translate({dX!r} {dY!r}) rotate({dRotation!r}) scale({dScale!r})"
         })
         Root.set("x", "0")
         Root.set("y", "0")
         Root.set("width", repr(dWidth))
         Root.set("height", repr(dHeight))
-        # Resolve linked resources against the original SVG, not the output file.
-        szBase = Root.get(f"{{{XML_NS}}}base")
-        if szBase is None:
-            Root.set(f"{{{XML_NS}}}base", SvgPath.as_uri())
-        else:
-            from urllib.parse import urljoin
-            Root.set(f"{{{XML_NS}}}base", urljoin(SvgPath.as_uri(), szBase))
         Group.append(Root)
 
     dLeft = min(0, *(Bound[0] for Bound in Bounds))
     dTop = min(0, *(Bound[1] for Bound in Bounds))
-    dWidth = max(Bound[2] for Bound in Bounds) - dLeft
-    dHeight = max(Bound[3] for Bound in Bounds) - dTop
+    dWidth = max(0, *(Bound[2] for Bound in Bounds)) - dLeft
+    dHeight = max(0, *(Bound[3] for Bound in Bounds)) - dTop
     if not all(math.isfinite(dValue) and dValue > 0 for dValue in (dWidth, dHeight)):
         raise ValueError("output dimensions must be positive and finite")
     Output.set("viewBox", " ".join(repr(dValue) for dValue in (dLeft, dTop, dWidth, dHeight)))
