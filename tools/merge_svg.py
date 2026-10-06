@@ -15,6 +15,7 @@ import yaml
 SVG_NS = "http://www.w3.org/2000/svg"
 XLINK_NS = "http://www.w3.org/1999/xlink"
 XML_NS = "http://www.w3.org/XML/1998/namespace"
+PIXELS_PER_INCH = 96
 ET.register_namespace("", SVG_NS)
 ET.register_namespace("xlink", XLINK_NS)
 
@@ -173,7 +174,7 @@ def MergeSvg(LayoutPath, OutputPath):
         dRotation = Number(Entry.get("rotation", 0), "rotation") % 360
         Offset = Entry.get("offset", [0, 0])
         if not isinstance(Offset, list) or len(Offset) != 2:
-            raise ValueError("offset must be a two-number list [x, y]")
+            raise ValueError("offset must be a two-number list [x, y] in inches")
         dX, dY = (Number(Value, "offset") for Value in Offset)
         SvgPath = (LayoutPath.parent / szFile).resolve()
         if SvgPath == OutputPath.resolve():
@@ -195,8 +196,8 @@ def MergeSvg(LayoutPath, OutputPath):
         if abs(dSin) < 1e-15:
             dSin = 0
         Corners = [
-            (dX + dScale * (dCos * dCornerX - dSin * dCornerY),
-             dY + dScale * (dSin * dCornerX + dCos * dCornerY))
+            (dX + dScale * (dCos * dCornerX - dSin * dCornerY) / PIXELS_PER_INCH,
+             dY + dScale * (dSin * dCornerX + dCos * dCornerY) / PIXELS_PER_INCH)
             for dCornerX, dCornerY in ((0, 0), (dWidth, 0), (0, dHeight), (dWidth, dHeight))
         ]
         if not all(math.isfinite(dValue) for Corner in Corners for dValue in Corner):
@@ -206,7 +207,8 @@ def MergeSvg(LayoutPath, OutputPath):
                        max(Corner[0] for Corner in Corners),
                        max(Corner[1] for Corner in Corners)))
         Group = ET.SubElement(Output, f"{{{SVG_NS}}}g", {
-            "transform": f"translate({dX!r} {dY!r}) rotate({dRotation!r}) scale({dScale!r})"
+            "transform": (f"translate({dX!r} {dY!r}) rotate({dRotation!r}) "
+                          f"scale({dScale / PIXELS_PER_INCH!r})")
         })
         Root.set("x", "0")
         Root.set("y", "0")
@@ -221,8 +223,8 @@ def MergeSvg(LayoutPath, OutputPath):
     if not all(math.isfinite(dValue) and dValue > 0 for dValue in (dWidth, dHeight)):
         raise ValueError("output dimensions must be positive and finite")
     Output.set("viewBox", " ".join(repr(dValue) for dValue in (dLeft, dTop, dWidth, dHeight)))
-    Output.set("width", repr(dWidth))
-    Output.set("height", repr(dHeight))
+    Output.set("width", f"{dWidth!r}in")
+    Output.set("height", f"{dHeight!r}in")
     if OutputPath.resolve() == LayoutPath.resolve():
         raise ValueError("output must not overwrite the YAML input")
     ET.ElementTree(Output).write(OutputPath, encoding="utf-8", xml_declaration=True)
@@ -231,7 +233,7 @@ def MergeSvg(LayoutPath, OutputPath):
 def Main():
     Parser = argparse.ArgumentParser(description=__doc__)
     Parser.add_argument("layout", type=Path, help="YAML list; file paths are relative to this file")
-    Parser.add_argument("output", type=Path, help="destination SVG")
+    Parser.add_argument("output", type=Path, help="destination SVG; output coordinates and offsets use inches")
     Args = Parser.parse_args()
     try:
         MergeSvg(Args.layout.resolve(), Args.output)

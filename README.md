@@ -90,21 +90,28 @@ The YAML input is a non-empty list. Each item is either a filename or a mapping:
 - file: pieces/rook.svg
   scale: 0.5
   rotation: 90
-  offset: [120, 40]
+  offset: [1.25, 0.5]
 ```
 
 Paths are relative to the YAML file. `scale` defaults to `1` and must be
 positive; `rotation` defaults to `0` and is in degrees (positive angles turn
 clockwise in SVG's usual downward-pointing Y axis). `offset` defaults to
 `[0, 0]`. Each SVG is scaled, then rotated about its viewport origin `(0, 0)`,
-then translated: **offsets are in final-output SVG units**, unaffected by scale
-or rotation. Files are drawn in list order, with later files on top.
+then translated: **offsets are in inches**, unaffected by scale or rotation.
+The output `width` and `height` use `in`, and its `viewBox` coordinates are
+also in inches (one output coordinate unit equals one inch). Inputs in inches,
+millimeters, or other supported units keep their physical size before `scale`
+is applied. Pixel and unitless dimensions use 96 pixels per inch. Existing
+layouts with pixel-based offsets must divide those offsets by 96.
+Files are drawn in list order, with later files on top.
 
 The output canvas includes the origin and all transformed viewport corners,
 including negative offsets and rotations. Source `viewBox` and aspect-ratio
 settings are preserved using nested SVGs. Sources need absolute width/height
 (unitless, px, in, cm, mm, pt, or pc) or a `viewBox`; missing dimensions are
-inferred from the `viewBox`. Percentage dimensions are not supported.
+inferred from the `viewBox`. If both dimensions are absent, `viewBox` width and
+height are treated as pixels at 96 pixels per inch. Percentage dimensions are
+not supported.
 
 IDs and local `href`, `url(#id)`, simple CSS ID selectors, and accessibility
 references are renamed per input to avoid collisions. General CSS selectors

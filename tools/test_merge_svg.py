@@ -19,7 +19,7 @@ class MergeSvgTests(unittest.TestCase):
         self.LayoutPath = self.Directory / "layout.yaml"
         self.OutputPath = self.Directory / "output.svg"
 
-    def WriteSvg(self, szName="a.svg", szAttributes='width="20" height="10"', szBody=""):
+    def WriteSvg(self, szName="a.svg", szAttributes='width="20in" height="10in"', szBody=""):
         SvgPath = self.Directory / szName
         SvgPath.write_text(
             f'<svg xmlns="{SVG_NS}" xmlns:xlink="{XLINK_NS}" {szAttributes}>{szBody}</svg>',
@@ -40,7 +40,7 @@ class MergeSvgTests(unittest.TestCase):
         Root = self.Merge(["a.svg"])
         self.assertEqual([0, 0, 20, 10], self.ViewBox(Root))
         Group = Root[0]
-        self.assertEqual("translate(0.0 0.0) rotate(0.0) scale(1.0)", Group.get("transform"))
+        self.assertEqual("translate(0.0 0.0) rotate(0.0) scale(0.010416666666666666)", Group.get("transform"))
         self.assertEqual("red", Group[0][0].get("fill"))
         self.assertIsNone(Group[0].get(f"{{{XML_NS}}}base"))
 
@@ -50,12 +50,12 @@ class MergeSvgTests(unittest.TestCase):
         Root = self.Merge(["a.svg", {"file": "b.svg", "scale": 2, "offset": [50, 30]}])
         self.assertEqual(2, len(Root))
         self.assertEqual([0, 0, 90, 50], self.ViewBox(Root))
-        self.assertEqual("translate(50.0 30.0) rotate(0.0) scale(2.0)", Root[1].get("transform"))
+        self.assertEqual("translate(50.0 30.0) rotate(0.0) scale(0.020833333333333332)", Root[1].get("transform"))
 
     def test_RotationAfterScaleBeforeOffset(self):
         self.WriteSvg()
         Root = self.Merge([{"file": "a.svg", "scale": 2, "rotation": 90, "offset": [50, 30]}])
-        self.assertEqual("translate(50.0 30.0) rotate(90.0) scale(2.0)", Root[0].get("transform"))
+        self.assertEqual("translate(50.0 30.0) rotate(90.0) scale(0.020833333333333332)", Root[0].get("transform"))
         self.assertEqual([0, 0, 50, 70], self.ViewBox(Root))
         Root = self.Merge([{"file": "a.svg", "scale": 2, "rotation": 90, "offset": [5, 7]}])
         self.assertEqual([-15, 0, 20, 47], self.ViewBox(Root))
@@ -78,14 +78,41 @@ class MergeSvgTests(unittest.TestCase):
     def test_ViewBoxOriginAndAspectRatioPreserved(self):
         self.WriteSvg(szAttributes='viewBox="10 -5 80 40" width="160"')
         Root = self.Merge(["a.svg"])
-        self.assertEqual([0, 0, 160, 80], self.ViewBox(Root))
+        self.assertEqual([0, 0, 160 / 96, 80 / 96], self.ViewBox(Root))
         self.assertEqual("10 -5 80 40", Root[0][0].get("viewBox"))
         self.WriteSvg(szAttributes='viewBox="10 -5 80 40"')
-        self.assertEqual([0, 0, 80, 40], self.ViewBox(self.Merge(["a.svg"])))
+        self.assertEqual([0, 0, 80 / 96, 40 / 96], self.ViewBox(self.Merge(["a.svg"])))
 
     def test_AbsoluteUnits(self):
         self.WriteSvg(szAttributes='width="1in" height="72pt"')
-        self.assertEqual([0, 0, 96, 96], self.ViewBox(self.Merge(["a.svg"])))
+        Root = self.Merge(["a.svg"])
+        self.assertEqual([0, 0, 1, 1], self.ViewBox(Root))
+        self.assertEqual("1.0in", Root.get("width"))
+        self.assertEqual("1.0in", Root.get("height"))
+
+    def test_MixedUnitsUseInchOffsetsAndPreservePhysicalSize(self):
+        self.WriteSvg(szAttributes='width="1in" height="1in" viewBox="0 0 10 10"')
+        self.WriteSvg("b.svg", 'width="25.4mm" height="2.54cm" viewBox="0 0 100 100"')
+        Root = self.Merge(["a.svg", {"file": "b.svg", "offset": [2, 0.5]}])
+        self.assertEqual([0, 0, 3, 1.5], self.ViewBox(Root))
+        self.assertEqual("3.0in", Root.get("width"))
+        self.assertEqual("1.5in", Root.get("height"))
+        for Group in Root:
+            self.assertEqual(96, float(Group[0].get("width")))
+            self.assertEqual(96, float(Group[0].get("height")))
+        self.assertEqual("0 0 10 10", Root[0][0].get("viewBox"))
+        self.assertEqual("0 0 100 100", Root[1][0].get("viewBox"))
+
+    def test_PixelAndUnitlessArtworkWithoutViewBoxKeepsItsScale(self):
+        self.WriteSvg(szAttributes='width="96px" height="48"',
+                      szBody='<rect width="96" height="48"/>')
+        Root = self.Merge(["a.svg"])
+        self.assertEqual([0, 0, 1, 0.5], self.ViewBox(Root))
+        self.assertEqual("1.0in", Root.get("width"))
+        self.assertEqual("0.5in", Root.get("height"))
+        self.assertEqual("96", Root[0][0][0].get("width"))
+        self.assertEqual("48", Root[0][0][0].get("height"))
+        self.assertIsNone(Root[0][0].get("viewBox"))
 
     def test_IdsAndReferencesAreIsolated(self):
         self.WriteSvg(szBody="""
