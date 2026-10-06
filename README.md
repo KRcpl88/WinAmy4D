@@ -134,9 +134,18 @@ references are renamed per input to avoid collisions. General CSS selectors
 (such as classes and element names) remain shared across the combined document;
 use inline styles/presentation attributes for independent artwork. Stroke widths
 are resolved independently per source before merging, then emitted using CSS
-custom properties and `calc()` (a modern SVG/CSS renderer is required).
+typed CSS custom properties (`@property`) and `calc()` (a modern SVG/CSS renderer
+supporting property registration is required; unregistered-property fallbacks
+do not preserve font-relative inheritance).
 Widths support numeric unitless, px, in, cm, mm, pt, pc, %, em, and rem values;
-simple font-relative widths are resolved before inheritance.
+`em` widths compute in each element's context, including `<use>` shadow trees,
+and descendants inherit the computed width without recomputing it for their
+own font size. Explicit `vector-effect:inherit` follows the instance ancestors.
+Common static `font` shorthands (size and family, optionally style, weight,
+variant, stretch, and line height) participate in the font-size cascade, including
+`!important`, declaration order, and `inherit`/`unset`/`initial`. System-font
+shorthands, variable/calculated shorthands, and oblique-angle shorthands are
+rejected with an explicit error.
 Calculated/variable stroke widths, cascade rollback keywords, conditional
 stylesheets (`@media`, `@supports`, `@layer`, etc.), imports, and CSS keyframes
 are rejected. Remote stylesheets, dynamic pseudo-class changes, scripts, SMIL

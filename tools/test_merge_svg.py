@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 
 import yaml
 
-from merge_svg import MergeSvg, SVG_NS, XLINK_NS, XML_NS
+from merge_svg import FontSize, MergeSvg, SVG_NS, XLINK_NS, XML_NS
 
 
 class MergeSvgTests(unittest.TestCase):
@@ -36,19 +36,39 @@ class MergeSvgTests(unittest.TestCase):
     def ViewBox(self, Root):
         return [float(szValue) for szValue in Root.get("viewBox").split()]
 
-    def StrokeWidth(self, Svg, Target):
+    def StrokeWidth(self, Svg, Target, ShadowRoot=None, Instance=None, ParentOverrides=None):
         Parents = {Child: Parent for Parent in Svg.iter() for Child in Parent}
+        Parents.update(ParentOverrides or {})
+        if ShadowRoot is not None:
+            Parents[ShadowRoot] = Instance
+        Chain = []
         Element = Target
         while Element is not None:
+            Chain.append(Element)
+            Element = Parents.get(Element)
+        dFont = 16
+        Fonts = {}
+        for Element in reversed(Chain):
+            Matches = re.findall(r"(?:^|;)font-size:([^;]+) !important;", Element.get("style", ""))
+            if Matches:
+                dFont = FontSize(Matches[-1], dFont, Fonts.get(Svg, 16))
+            Fonts[Element] = dFont
+        for Element in Chain:
             Match = re.search(r"--svg\d+-original-stroke-width:([^;]+?) !important;",
                               Element.get("style", ""))
             if Match:
                 szWidth = Match[1]
+                if szWidth.endswith("em"):
+                    szWidth = f"{float(szWidth[:-2]) * Fonts[Element]!r}px"
                 break
-            Element = Parents.get(Element)
-        Match = re.search(r"stroke-width:calc\(var\(--svg\d+-original-stroke-width\) \* ([^)]+)\)",
-                          Target.get("style", ""))
-        return szWidth, float(Match[1])
+        self.assertIn('syntax:"<length-percentage>";inherits:true;', Svg[-1].text)
+        self.assertIn('syntax:"<number>";inherits:false;', Svg[-1].text)
+        self.assertIn("stroke-width:calc(var(", Target.get("style", ""))
+        for Element in Chain:
+            Match = re.search(r"--svg\d+-stroke-factor:([^;]+) !important;", Element.get("style", ""))
+            if Match[1] != "inherit":
+                return szWidth, float(Match[1])
+        self.fail("missing stroke factor")
 
     def test_IndependentStrokeMultiplierAndUnits(self):
         for dScale, dStrokeScale in ((1, 1), (4, 1), (4, 3), (0.5, 0)):
@@ -135,6 +155,111 @@ class MergeSvgTests(unittest.TestCase):
                              '<path style="font-size:10px"/></g>')
         Svg = self.Merge([{"file": "a.svg", "scale": 2}])[0][0]
         self.assertEqual(("10.0px", 0.5), self.StrokeWidth(Svg, Svg[0][0]))
+        self.assertIn("--svg0-original-stroke-width:0.5em !important;", Svg[0].get("style"))
+
+    def test_UseInstanceComputesFontRelativeWidthsAndInheritedVectorEffect(self):
+        self.WriteSvg(szBody="""
+            <defs>
+                <path id="shape" stroke-width="1em" vector-effect="inherit"/>
+                <path id="inherited" vector-effect="inherit"/>
+            </defs>
+            <use href="#shape" font-size="32" stroke-width="4" vector-effect="non-scaling-stroke"/>
+            <use href="#shape" font-size="12" stroke-width="7"/>
+            <use href="#inherited" stroke-width="4" vector-effect="non-scaling-stroke"/>
+            <use href="#inherited" stroke-width="8"/>
+        """)
+        Svg = self.Merge([{"file": "a.svg", "scale": 2}])[0][0]
+        Shape = Svg[0][0]
+        self.assertIn("--svg0-stroke-factor:inherit !important;", Shape.get("style"))
+        self.assertIn("--svg0-original-stroke-width:1.0em !important;", Shape.get("style"))
+        self.assertEqual(("32.0px", 1), self.StrokeWidth(Svg, Shape, Shape, Svg[1]))
+        self.assertEqual(("12.0px", 0.5), self.StrokeWidth(Svg, Shape, Shape, Svg[2]))
+        Inherited = Svg[0][1]
+        self.assertEqual(("4.0px", 1), self.StrokeWidth(Svg, Inherited, Inherited, Svg[3]))
+        self.assertEqual(("8.0px", 0.5), self.StrokeWidth(Svg, Inherited, Inherited, Svg[4]))
+
+    def test_UseInheritedWidthAndNestedShadowFontsKeepComputedInheritance(self):
+        self.WriteSvg(szBody="""
+            <defs>
+                <g id="shape" font-size="2em"><path font-size="10" vector-effect="inherit"/></g>
+                <path id="leaf" stroke-width="0.5em" vector-effect="inherit"/>
+                <g id="nested" font-size="2em" vector-effect="inherit">
+                    <use href="#leaf" vector-effect="inherit"/>
+                </g>
+            </defs>
+            <g font-size="20" stroke-width="1em">
+                <use href="#shape" font-size="32" vector-effect="non-scaling-stroke"/>
+                <use href="#nested" font-size="30" vector-effect="non-scaling-stroke"/>
+            </g>
+        """)
+        Svg = self.Merge([{"file": "a.svg", "scale": 2}])[0][0]
+        Shape, Leaf, Nested = Svg[0]
+        Group = Svg[1]
+        # Width computed on the 20px ancestor stays 20, despite the shadow fonts.
+        self.assertEqual(("20.0px", 0.5),
+                         self.StrokeWidth(Svg, Shape[0], Shape, Group[0]))
+        # Nested use establishes a second shadow inheritance boundary.
+        # Check the two contexts separately: the nested group computes 60px.
+        self.assertEqual(("20.0px", 1), self.StrokeWidth(Svg, Nested[0], Nested, Group[1]))
+        self.assertIn("font-size:2em !important;", Nested.get("style"))
+        self.assertEqual(("30.0px", 1), self.StrokeWidth(
+            Svg, Leaf, Leaf, Nested[0], {Nested: Group[1]}))
+
+    def test_FontShorthandSizeCascadeOrderAndImportance(self):
+        self.WriteSvg(szBody="""
+            <style>
+                .strong {font:italic bold 24px/1.5 "Times New Roman", serif !important}
+                .strong {font-size:30px}
+                .ordered {font-size:30px !important;font:20px serif !important}
+            </style>
+            <path style="font:20px serif;stroke-width:0.5em"/>
+            <path style="font-size:30px;font:20px serif;stroke-width:0.5em"/>
+            <path style="font:20px serif;font-size:30px;stroke-width:0.5em"/>
+            <path class="strong" style="font:10px serif;stroke-width:0.5em"/>
+            <path class="strong" style="font-size:40px !important;stroke-width:0.5em"/>
+            <path class="ordered" style="stroke-width:0.5em"/>
+            <path style="font-size:30px !important;font:20px serif;stroke-width:0.5em"/>
+        """)
+        Svg = self.Merge([{"file": "a.svg", "scale": 2}])[0][0]
+        for Element, dWidth in zip(list(Svg)[1:-1], (10, 10, 15, 12, 20, 10, 15)):
+            self.assertEqual((f"{float(dWidth)!r}px", 0.5), self.StrokeWidth(Svg, Element))
+
+    def test_FontShorthandGlobalKeywordsAndUseCascade(self):
+        self.WriteSvg(szBody="""
+            <style>#shape {font:20px serif !important;vector-effect:inherit !important}</style>
+            <defs><path id="shape" style="font:10px serif;stroke-width:0.5em"/></defs>
+            <g style="font:32px serif">
+                <path style="font:inherit;stroke-width:0.5em"/>
+                <path style="font:unset;stroke-width:0.5em"/>
+                <path style="font:initial;stroke-width:0.5em"/>
+                <use href="#shape" vector-effect="non-scaling-stroke"/>
+            </g>
+        """)
+        Svg = self.Merge([{"file": "a.svg", "scale": 2}])[0][0]
+        for Element, dWidth in zip(Svg[2], (16, 16, 8)):
+            self.assertEqual((f"{float(dWidth)!r}px", 0.5), self.StrokeWidth(Svg, Element))
+        Shape = Svg[1][0]
+        self.assertEqual(("10.0px", 1), self.StrokeWidth(Svg, Shape, Shape, Svg[2][3]))
+
+    def test_MergedSourcesKeepIndependentFontsAndRootRelativeWidths(self):
+        self.WriteSvg(szAttributes='width="20" height="10" style="font:20px serif"',
+                      szBody='<style>path {font:24px serif !important}</style>'
+                             '<path stroke-width="0.5em"/><path stroke-width="0.5rem"/>')
+        self.WriteSvg("b.svg", szAttributes='width="20" height="10" style="font:40px serif"',
+                      szBody='<style>path {font-size:30px !important}</style>'
+                             '<path stroke-width="0.5em"/><path stroke-width="0.5rem"/>')
+        Root = self.Merge([{"file": "a.svg", "scale": 2}, {"file": "b.svg", "scale": 4}])
+        for Svg, Expected in ((Root[0][0], (("12.0px", 0.5), ("10.0px", 0.5))),
+                              (Root[1][0], (("15.0px", 0.25), ("20.0px", 0.25)))):
+            for Element, Width in zip(list(Svg)[1:-1], Expected):
+                self.assertEqual(Width, self.StrokeWidth(Svg, Element))
+
+    def test_RejectsUnsupportedFontShorthandsClearly(self):
+        for szFont in ("caption", "menu", "var(--font)", "20px", "oblique 10deg 20px serif",
+                       "20px/calc(1 + 1) serif", "revert", "revert-layer"):
+            self.WriteSvg(szBody=f'<path style="font:{szFont};stroke-width:1em"/>')
+            with self.subTest(szFont=szFont), self.assertRaisesRegex(ValueError, "font shorthand"):
+                self.Merge(["a.svg"])
 
     def test_FlipsAboutOriginThenRotationAndFinalOffset(self):
         self.WriteSvg()

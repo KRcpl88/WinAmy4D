@@ -112,7 +112,7 @@ def CssReferences(szText, Replace):
 
 
 def StrokeStyles(Root, dScale, dStrokeScale, nIndex):
-    """Resolve static CSS before nesting, retaining width inheritance for use instances."""
+    """Resolve the cascade, leaving instance-dependent computation to typed CSS."""
     Matcher = cssselect2.Matcher()
     for Element in Root.iter(f"{{{SVG_NS}}}style"):
         for Rule in tinycss2.parse_stylesheet(Element.text or "", skip_comments=True,
@@ -134,12 +134,18 @@ def StrokeStyles(Root, dScale, dStrokeScale, nIndex):
                     Matcher.add_selector(Selector, Rules)
 
     szProperty = f"--svg{nIndex}-original-stroke-width"
+    szFactorProperty = f"--svg{nIndex}-stroke-factor"
+    dOrdinaryFactor = dStrokeScale / dScale
+    if not math.isfinite(dOrdinaryFactor):
+        raise ValueError("stroke width multiplier must be finite")
     Styles = {}
     for Wrapper in cssselect2.ElementWrapper.from_xml_root(Root).iter_subtree():
         Element = Wrapper.etree_element
         Winners = {}
 
         def Apply(szName, szValue, Priority):
+            if szName == "font":
+                Apply("font-size", FontShorthandSize(szValue), Priority)
             if szName not in Winners or Priority >= Winners[szName][0]:
                 Winners[szName] = (Priority, szValue.strip())
 
@@ -159,11 +165,9 @@ def StrokeStyles(Root, dScale, dStrokeScale, nIndex):
         szFont = Winners.get("font-size", (None, "inherit"))[1]
         dFont = FontSize(szFont, dParentFont, Styles.get(Root, ("none", 16))[1])
         szEffect = Winners.get("vector-effect", (None, "none"))[1]
-        if szEffect == "inherit":
-            szEffect = ParentStyle[0] if ParentStyle else "none"
-        elif szEffect in ("initial", "unset", "revert"):
+        if szEffect in ("initial", "unset"):
             szEffect = "none"
-        if szEffect not in ("none", "non-scaling-stroke"):
+        if szEffect not in ("none", "non-scaling-stroke", "inherit"):
             raise ValueError(f"unsupported vector-effect: {szEffect}")
         Styles[Element] = (szEffect, dFont)
 
@@ -180,15 +184,72 @@ def StrokeStyles(Root, dScale, dStrokeScale, nIndex):
         if szStyle and not szStyle.endswith(";"):
             szStyle += ";"
         if szWidth is not None:
-            szWidth = StrokeLength(szWidth, dFont, Styles[Root][1])
+            szWidth = StrokeLength(szWidth, Styles[Root][1])
             szStyle += f"{szProperty}:{szWidth} !important;"
-        dFactor = dStrokeScale if szEffect == "non-scaling-stroke" else dStrokeScale / dScale
-        if not math.isfinite(dFactor):
-            raise ValueError("stroke width multiplier must be finite")
-        # The private inherited property keeps <use> shadow-tree inheritance intact.
+        szFactor = ("inherit" if szEffect == "inherit" else
+                    repr(dStrokeScale if szEffect == "non-scaling-stroke" else dOrdinaryFactor))
+        # Pin the source cascade without freezing relative font sizes in definitions.
+        # A registered length computes em before inheritance, including in use shadows.
+        if (Element is Root or szFont.endswith("rem") or
+                re.fullmatch(r"[+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", szFont)):
+            szFont = f"{dFont!r}px"
         Element.set("style", szStyle + (
-            f"stroke-width:calc(var({szProperty}) * {dFactor!r}) !important;"
+            f"font-size:{szFont} !important;vector-effect:{szEffect} !important;"
+            f"{szFactorProperty}:{szFactor} !important;"
+            f"stroke-width:calc(var({szProperty}) * var({szFactorProperty})) !important;"
         ))
+    # Registration is document-wide, and names are unique for each input. Untyped
+    # properties would inherit the text "1em" and recompute it on every descendant.
+    Registration = ET.SubElement(Root, f"{{{SVG_NS}}}style")
+    Registration.text = (
+        f'@property {szProperty} {{syntax:"<length-percentage>";inherits:true;initial-value:1px;}}'
+        f'@property {szFactorProperty} {{syntax:"<number>";inherits:false;'
+        f'initial-value:{dOrdinaryFactor!r};}}'
+    )
+
+
+def FontShorthandSize(szValue):
+    if szValue in ("inherit", "unset", "initial"):
+        return szValue
+    Tokens = [Token for Token in tinycss2.parse_component_value_list(szValue)
+              if Token.type not in ("whitespace", "comment")]
+    Sizes = {"xx-small", "x-small", "small", "medium", "large", "x-large",
+             "xx-large", "xxx-large", "larger", "smaller"}
+    Prefixes = {"normal", "italic", "oblique", "small-caps", "bold", "bolder",
+                "lighter", "ultra-condensed", "extra-condensed", "condensed",
+                "semi-condensed", "semi-expanded", "expanded", "extra-expanded",
+                "ultra-expanded"}
+    for nIndex, Token in enumerate(Tokens):
+        if (Token.type in ("dimension", "percentage") or
+                (Token.type == "ident" and Token.lower_value in Sizes) or
+                (Token.type == "number" and Token.value == 0)):
+            szSize = CssValue([Token])
+            try:
+                FontSize(szSize, 16, 16)
+            except ValueError as Error:
+                raise ValueError(f"unsupported font shorthand for stroke resolution: {szValue}") from Error
+            nFamily = nIndex + 1
+            if nFamily < len(Tokens) and Tokens[nFamily].type == "literal" and Tokens[nFamily].value == "/":
+                nFamily += 1
+                if nFamily >= len(Tokens):
+                    break
+                LineHeight = Tokens[nFamily]
+                if not (LineHeight.type in ("dimension", "percentage", "number") or
+                        (LineHeight.type == "ident" and LineHeight.lower_value == "normal")):
+                    break
+                if LineHeight.type != "ident" and LineHeight.value < 0:
+                    break
+                nFamily += 1
+            Family = Tokens[nFamily:]
+            if (not Family or Family[0].type == "literal" or Family[-1].type == "literal" or
+                    any(Part.type not in ("ident", "string") and
+                        not (Part.type == "literal" and Part.value == ",") for Part in Family)):
+                break
+            return szSize
+        if not ((Token.type == "ident" and Token.lower_value in Prefixes) or
+                (Token.type == "number" and 1 <= Token.value <= 1000)):
+            break
+    raise ValueError(f"unsupported font shorthand for stroke resolution: {szValue}")
 
 
 def FontSize(szValue, dParent, dRoot):
@@ -196,7 +257,7 @@ def FontSize(szValue, dParent, dRoot):
         return dParent
     Sizes = {"xx-small": 9, "x-small": 10, "small": 13, "medium": 16,
              "large": 18, "x-large": 24, "xx-large": 32, "xxx-large": 48,
-             "initial": 16, "revert": 16, "larger": dParent * 1.2, "smaller": dParent / 1.2}
+             "initial": 16, "larger": dParent * 1.2, "smaller": dParent / 1.2}
     if szValue in Sizes:
         return Sizes[szValue]
     Match = re.fullmatch(r"([+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)([a-z%]*)", szValue)
@@ -213,7 +274,7 @@ def FontSize(szValue, dParent, dRoot):
     return dValue
 
 
-def StrokeLength(szValue, dFont, dRootFont):
+def StrokeLength(szValue, dRootFont):
     Match = re.fullmatch(
         r"\s*([+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*([a-z%]*)\s*", szValue
     )
@@ -223,8 +284,8 @@ def StrokeLength(szValue, dFont, dRootFont):
     if not math.isfinite(dValue):
         raise ValueError("stroke-width must be finite")
     szUnit = Match[2]
-    if szUnit in ("em", "rem"):
-        dValue *= dFont if szUnit == "em" else dRootFont
+    if szUnit == "rem":
+        dValue *= dRootFont
         szUnit = "px"
     if not math.isfinite(dValue):
         raise ValueError("resolved stroke-width must be finite")
